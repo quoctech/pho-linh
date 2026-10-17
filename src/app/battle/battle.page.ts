@@ -11,6 +11,7 @@ import {
 } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { IonContent, IonProgressBar, IonSpinner } from '@ionic/angular';
+import { StatusBar } from '@capacitor/status-bar';
 import type Phaser from 'phaser';
 import { applyBattleReward, createBattleState, createPlayerBattleState, equipmentBonuses, type BattleState, type LocalSaveV1 } from '../../game-core';
 import { BattleController } from './battle.controller';
@@ -53,6 +54,7 @@ export class BattlePage implements AfterViewInit, OnDestroy {
 
   ionViewDidEnter(): void {
     this.visible = true;
+    void this.setBattleFullscreen(true);
     this.isLoading = true;
     this.loadingProgress = 0.05;
     this.loadingMessage = 'Đang đọc dữ liệu trận đấu...';
@@ -62,6 +64,7 @@ export class BattlePage implements AfterViewInit, OnDestroy {
 
   ionViewDidLeave(): void {
     this.visible = false;
+    void this.setBattleFullscreen(false);
     this.isLoading = false;
     void this.leaveBattle();
   }
@@ -155,6 +158,7 @@ export class BattlePage implements AfterViewInit, OnDestroy {
             preBoot: (game) => {
               game.registry.set('battleController', this.controller);
               game.registry.set('heroGender', this.saveSnapshot?.settings.gender ?? 'male');
+              game.registry.set('sfxEnabled', this.saveSnapshot?.settings.sfx ?? true);
               game.registry.set('battleReady', () => {
                 this.zone.run(() => {
                   if (!this.visible) return;
@@ -179,6 +183,18 @@ export class BattlePage implements AfterViewInit, OnDestroy {
     this.loadingProgress = progress;
     this.loadingMessage = message;
     this.cdr.markForCheck();
+  }
+
+  private async setBattleFullscreen(active: boolean): Promise<void> {
+    try {
+      if (active) {
+        await StatusBar.hide();
+      } else {
+        await StatusBar.show();
+      }
+    } catch {
+      // StatusBar is unavailable in browser preview; battle remains playable.
+    }
   }
 
   private stopGame(): void {

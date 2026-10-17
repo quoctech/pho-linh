@@ -84,6 +84,16 @@ const SKILL_VFX_KEYS = {
   finishFlash: 'fx-cloudbreaker-finish-flash',
   spark: 'fx-cloudbreaker-spark',
 } as const;
+const SFX_KEYS = {
+  heroAttack: 'sfx-hero-attack',
+  heroHit: 'sfx-hero-hit',
+  mistAttack: 'sfx-mist-attack',
+  mistHit: 'sfx-mist-hit',
+  mistProjectile: 'sfx-mist-projectile',
+  skillCast: 'sfx-cloudbreaker-cast',
+  skillRelease: 'sfx-cloudbreaker-release',
+  skillImpact: 'sfx-cloudbreaker-impact',
+} as const;
 
 export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
   private controller!: BattleController;
@@ -149,6 +159,7 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
   private displayedPlayerPoisonPotency?: number;
   private displayedPlayerPoisonTurns?: number;
   private lastBoard?: Board;
+  private sfxEnabled = true;
 
   constructor() {
     super({ key: 'BattleScene' });
@@ -228,6 +239,20 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
         frameHeight: 443,
       });
     }
+    const sfxPath = 'assets/audio/combat';
+    const sfxFiles: Readonly<Record<string, string>> = {
+      [SFX_KEYS.heroAttack]: 'hero-attack-sword.mp3',
+      [SFX_KEYS.heroHit]: 'hero-hit.mp3',
+      [SFX_KEYS.mistAttack]: 'mist-dust-attack.mp3',
+      [SFX_KEYS.mistHit]: 'mist-dust-hit.mp3',
+      [SFX_KEYS.mistProjectile]: 'mist-dust-projectile.mp3',
+      [SFX_KEYS.skillCast]: 'cloudbreaker-cast.mp3',
+      [SFX_KEYS.skillRelease]: 'cloudbreaker-release.mp3',
+      [SFX_KEYS.skillImpact]: 'cloudbreaker-impact.mp3',
+    };
+    for (const [key, file] of Object.entries(sfxFiles)) {
+      this.load.audio(key, `${sfxPath}/${file}`);
+    }
     this.load.image('monster-mist-blob', 'assets/monsters/mist_blob.webp');
     const controller = this.registry.get('battleController') as BattleController | undefined;
     if (!controller || controller.currentState.monster.id === 'mist_blob') {
@@ -256,6 +281,7 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
 
   create(): void {
     this.controller = this.registry.get('battleController') as BattleController;
+    this.sfxEnabled = this.registry.get('sfxEnabled') !== false;
     if (!this.controller) {
       this.controller = new BattleController(0x50484f, this);
     } else {
@@ -992,6 +1018,15 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
     return typeof value === 'number' && Number.isFinite(value) ? value : fallback;
   }
 
+  private playSfx(key: string, volume: number): void {
+    if (!this.sfxEnabled || !this.cache.audio.exists(key)) return;
+    try {
+      this.sound.play(key, { volume });
+    } catch {
+      // Audio is an optional presentation layer; never interrupt gameplay.
+    }
+  }
+
   private clampDisplay(value: number | undefined, min: number, max: number): number {
     return Math.max(min, Math.min(max, this.safeNumber(value, min)));
   }
@@ -1298,9 +1333,11 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
           const matchCount = this.safeNumber(Number(event.payload['matchCount'] ?? 0));
           const matchLabel = matchCount >= 3 ? `X${matchCount} · ` : '';
           this.playHeroAnimation('attack');
+          this.playSfx(SFX_KEYS.heroAttack, 0.5);
           // Let the sword swing read before launching the projectile.
           this.time.delayedCall(180, () => {
             this.spawnHeroProjectile(() => {
+              this.playSfx(SFX_KEYS.mistHit, 0.52);
               this.playMonsterAnimation('mist-dust-hit');
               this.flashMonster(0xffe7a6);
               this.shakeMonster();
@@ -1447,11 +1484,14 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
           hpDamage > 0 ? '#ff9aa4' : '#9dceff',
         );
         if (shieldBroken) this.playShieldBreakEffect();
+        this.playSfx(SFX_KEYS.mistAttack, 0.5);
         this.playMonsterAnimation('mist-dust-attack');
         // Let the attack pose read first; the projectile launches from the
         // monster's extended strike instead of appearing at the same moment.
         this.time.delayedCall(260, () => {
+          this.playSfx(SFX_KEYS.mistProjectile, 0.42);
           this.spawnMonsterProjectile(() => {
+            this.playSfx(SFX_KEYS.heroHit, 0.52);
             this.playHeroAnimation('hit');
             this.flashHero(0xff7a80);
             this.shakeHero();
@@ -1473,6 +1513,7 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
         break;
       case 'SKILL_USED':
         this.statusLabel?.setText('Đèn Phá Mây!');
+        this.playSfx(SFX_KEYS.skillCast, 0.48);
         this.flashMonster(0xcda8ff);
         this.playCloudbreakerEffect();
         break;
@@ -1758,6 +1799,7 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
         .setBlendMode(Phaser.BlendModes.ADD)
         .setDepth(15)
         .play(SKILL_VFX_KEYS.projectile);
+      this.playSfx(SFX_KEYS.skillRelease, 0.5);
       this.transientEffects.add(projectile);
       this.tweens.add({
         targets: projectile,
@@ -1769,6 +1811,7 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
         ease: 'Cubic.In',
         onComplete: () => {
           this.destroyTransientEffect(projectile);
+          this.playSfx(SFX_KEYS.skillImpact, 0.56);
           this.spawnVfx(SKILL_VFX_KEYS.cloudSplit, target.x, target.y, 150, 15);
           this.spawnVfx(SKILL_VFX_KEYS.impact, target.x, target.y, 132, 16);
           this.spawnVfx(SKILL_VFX_KEYS.spark, target.x, target.y, 108, 17);
