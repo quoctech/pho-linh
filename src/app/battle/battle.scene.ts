@@ -72,6 +72,17 @@ const VFX_SHEET_KEYS = {
   match5: 'fx-match5-burst',
   impact: 'fx-gem-impact',
 } as const;
+const SKILL_VFX_KEYS = {
+  icon: 'skill-cloudbreaker-icon',
+  castCircle: 'fx-cloudbreaker-cast-circle',
+  chargeAura: 'fx-cloudbreaker-charge-aura',
+  swordGlow: 'fx-cloudbreaker-sword-glow',
+  projectile: 'fx-cloudbreaker-projectile',
+  cloudSplit: 'fx-cloudbreaker-cloud-split',
+  impact: 'fx-cloudbreaker-impact',
+  finishFlash: 'fx-cloudbreaker-finish-flash',
+  spark: 'fx-cloudbreaker-spark',
+} as const;
 
 export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
   private controller!: BattleController;
@@ -114,6 +125,7 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
   private telegraphLabel?: Phaser.GameObjects.Text;
   private statusLabel?: Phaser.GameObjects.Text;
   private skillButton?: Phaser.GameObjects.Rectangle;
+  private skillIcon?: Phaser.GameObjects.Image;
   private skillButtonText?: Phaser.GameObjects.Text;
   private abandonButtonBackground?: Phaser.GameObjects.Rectangle;
   private abandonButton?: Phaser.GameObjects.Text;
@@ -194,6 +206,25 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
       frameWidth: 256,
       frameHeight: 256,
     });
+    this.load.image(SKILL_VFX_KEYS.icon, 'assets/skills/den-pha-may/icon/skill-cloudbreaker-icon.webp');
+    const skillVfxPath = 'assets/skills/den-pha-may/fx';
+    for (const key of [
+      SKILL_VFX_KEYS.castCircle,
+      SKILL_VFX_KEYS.chargeAura,
+      SKILL_VFX_KEYS.swordGlow,
+      SKILL_VFX_KEYS.projectile,
+      SKILL_VFX_KEYS.cloudSplit,
+      SKILL_VFX_KEYS.impact,
+      SKILL_VFX_KEYS.finishFlash,
+      SKILL_VFX_KEYS.spark,
+    ] as const) {
+      this.load.spritesheet(key, `${skillVfxPath}/${key}-sheet.webp`, {
+        // The supplied 4 × 2 sheets are 1774 × 887; the two-pixel export
+        // padding is intentionally ignored by Phaser's integer frame size.
+        frameWidth: 443,
+        frameHeight: 443,
+      });
+    }
     this.load.image('monster-mist-blob', 'assets/monsters/mist_blob.webp');
     const controller = this.registry.get('battleController') as BattleController | undefined;
     if (!controller || controller.currentState.monster.id === 'mist_blob') {
@@ -231,6 +262,7 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
     this.cameras.main.setBackgroundColor('#171426');
     this.createBattleBackground();
     this.ensureMatch3VfxAnimations();
+    this.ensureSkillVfxAnimations();
     this.ensureHeroAnimations();
     this.createHeroVisual();
     this.createHud();
@@ -639,6 +671,21 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
     this.createVfxAnimation(VFX_SHEET_KEYS.impact, VFX_SHEET_KEYS.impact, 0);
   }
 
+  private ensureSkillVfxAnimations(): void {
+    for (const key of [
+      SKILL_VFX_KEYS.castCircle,
+      SKILL_VFX_KEYS.chargeAura,
+      SKILL_VFX_KEYS.swordGlow,
+      SKILL_VFX_KEYS.projectile,
+      SKILL_VFX_KEYS.cloudSplit,
+      SKILL_VFX_KEYS.impact,
+      SKILL_VFX_KEYS.finishFlash,
+      SKILL_VFX_KEYS.spark,
+    ] as const) {
+      this.createVfxAnimation(key, key, 0);
+    }
+  }
+
   private createVfxAnimation(key: string, textureKey: string, repeat: number): void {
     if (this.anims.exists(key) || !this.textures.exists(textureKey)) return;
     this.anims.create({
@@ -802,8 +849,13 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
       .rectangle(274, 548, 128, 38, 0x6b4fa3, 1)
       .setStrokeStyle(2, 0xd8c2ff, 0.7)
       .setInteractive({ useHandCursor: true });
+    this.skillIcon = this.add
+      .image(226, 548, SKILL_VFX_KEYS.icon)
+      .setDisplaySize(30, 30)
+      .setDepth(2)
+      .setBlendMode(Phaser.BlendModes.ADD);
     this.skillButtonText = this.add
-      .text(274, 548, 'Đèn Phá Mây', { color: '#fff8e8', fontSize: '12px', fontStyle: 'bold' })
+      .text(286, 548, 'Đèn Phá Mây', { color: '#fff8e8', fontSize: '12px', fontStyle: 'bold' })
       .setOrigin(0.5);
     this.skillButton.on('pointerdown', () => void this.dispatchSkill());
 
@@ -934,6 +986,7 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
     const canAct = state.phase === 'PLAYER_READY';
     const skillReady = canAct && state.player.energy >= DEFAULT_BATTLE_CONFIG.energyCap;
     this.skillButton?.setFillStyle(skillReady ? 0x8c5fd1 : 0x403653, 1).setAlpha(skillReady ? 1 : 0.55);
+    this.skillIcon?.setAlpha(skillReady ? 1 : 0.55);
     this.skillButtonText?.setAlpha(skillReady ? 1 : 0.55);
     this.setPlayerControlsEnabled(canAct, skillReady);
   }
@@ -1383,6 +1436,7 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
       case 'SKILL_USED':
         this.statusLabel?.setText('Đèn Phá Mây!');
         this.flashMonster(0xcda8ff);
+        this.playCloudbreakerEffect();
         break;
       case 'BATTLE_WON':
         this.statusLabel?.setText('Chiến thắng!');
@@ -1643,6 +1697,49 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
     const { x, y } = this.combatPoint(target);
     this.spawnCombatImpact(x, y, 0xffd45e, target === 'monster' ? 62 : 72);
     this.flashCombatant(target, 0xffd45e);
+  }
+
+  private playCloudbreakerEffect(): void {
+    const start = this.combatPoint('player');
+    const target = this.combatPoint('monster');
+    this.spawnVfx(SKILL_VFX_KEYS.castCircle, start.x, start.y, 112, 12);
+    this.spawnVfx(SKILL_VFX_KEYS.chargeAura, start.x, start.y, 100, 13);
+    this.spawnVfx(SKILL_VFX_KEYS.swordGlow, start.x + 12, start.y - 8, 96, 14);
+
+    this.time.delayedCall(180, () => {
+      if (!this.textures.exists(SKILL_VFX_KEYS.projectile) || !this.anims.exists(SKILL_VFX_KEYS.projectile)) {
+        this.spawnVfx(SKILL_VFX_KEYS.impact, target.x, target.y, 132, 15);
+        return;
+      }
+
+      const projectile = this.add
+        .sprite(start.x + 22, start.y - 16, SKILL_VFX_KEYS.projectile, 0)
+        .setOrigin(0.5)
+        .setDisplaySize(92, 92)
+        .setRotation(Phaser.Math.Angle.Between(start.x, start.y, target.x, target.y))
+        .setBlendMode(Phaser.BlendModes.ADD)
+        .setDepth(15)
+        .play(SKILL_VFX_KEYS.projectile);
+      this.transientEffects.add(projectile);
+      this.tweens.add({
+        targets: projectile,
+        x: target.x,
+        y: target.y,
+        scale: 1.18,
+        alpha: 0.9,
+        duration: 420,
+        ease: 'Cubic.In',
+        onComplete: () => {
+          this.destroyTransientEffect(projectile);
+          this.spawnVfx(SKILL_VFX_KEYS.cloudSplit, target.x, target.y, 150, 15);
+          this.spawnVfx(SKILL_VFX_KEYS.impact, target.x, target.y, 132, 16);
+          this.spawnVfx(SKILL_VFX_KEYS.spark, target.x, target.y, 108, 17);
+          this.time.delayedCall(100, () => {
+            this.spawnVfx(SKILL_VFX_KEYS.finishFlash, target.x, target.y, 156, 18);
+          });
+        },
+      });
+    });
   }
 
   private playShieldGainEffect(target: 'player' | 'monster' = 'player'): void {

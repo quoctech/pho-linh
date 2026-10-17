@@ -128,6 +128,7 @@ Một tính năng chỉ vào milestone hiện tại nếu **(a)** chứng minh v
 - [x] State machine battle; một swap hợp lệ = một lượt; quái phản công sau cascade. (Đã làm)
 - [x] Hành vi quái `basic`, telegraph ở UI, boss/heavy sau; combat math config-driven. (Đã làm)
 - [x] Kỹ năng **Đèn Phá Mây**, energy ≥100, người chơi bấm chủ động ở đầu lượt. (Đã làm)
+- [x] Tích hợp icon và bộ VFX WebP của Đèn Phá Mây: triệu hồi, tích năng lượng, projectile, tách mây, impact và flash kết thúc. (Đã làm)
 - [x] Trạng thái `VICTORY`, `DEFEAT`, `ABANDON` có kết quả rõ ràng. (Đã làm)
 - [x] Floating numbers, flash trúng đòn, thanh HP, cảnh báo chiêu, button săn tiếp. (Đã làm)
 - [x] Pause/resume ở ranh giới lượt bằng checkpoint offline; reward vẫn để M2. (Đã làm)
