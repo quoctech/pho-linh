@@ -33,6 +33,7 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
   private monsterVisual?: Phaser.GameObjects.Container;
   private monsterBody?: Phaser.GameObjects.Arc;
   private monsterArt?: Phaser.GameObjects.Image | Phaser.GameObjects.Sprite;
+  private monsterSprite?: Phaser.GameObjects.Sprite;
   private playerBar?: Phaser.GameObjects.Graphics;
   private monsterBar?: Phaser.GameObjects.Graphics;
   private playerHpLabel?: Phaser.GameObjects.Text;
@@ -70,6 +71,18 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
     const controller = this.registry.get('battleController') as BattleController | undefined;
     if (!controller || controller.currentState.monster.id === 'mist_blob') {
       this.load.spritesheet('mist-dust-idle', 'assets/monsters/mist-dust/mist-dust-idle-sheet.png', {
+        frameWidth: 512,
+        frameHeight: 512,
+      });
+      this.load.spritesheet('mist-dust-attack', 'assets/monsters/mist-dust/combat/attack/mist-dust-attack-sheet.png', {
+        frameWidth: 512,
+        frameHeight: 512,
+      });
+      this.load.spritesheet('mist-dust-hit', 'assets/monsters/mist-dust/combat/hit/mist-dust-hit-sheet.png', {
+        frameWidth: 512,
+        frameHeight: 512,
+      });
+      this.load.spritesheet('mist-dust-death', 'assets/monsters/mist-dust/combat/death/mist-dust-death-sheet.png', {
         frameWidth: 512,
         frameHeight: 512,
       });
@@ -167,19 +180,13 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
   private createMonsterVisual(): void {
     const monster = this.add.container(294, 104);
     if (this.controller.currentState.monster.id === 'mist_blob' && this.textures.exists('mist-dust-idle')) {
-      if (!this.anims.exists('mist-dust-idle')) {
-        this.anims.create({
-          key: 'mist-dust-idle',
-          frames: this.anims.generateFrameNumbers('mist-dust-idle', { start: 0, end: 7 }),
-          frameRate: 8,
-          repeat: -1,
-        });
-      }
+      this.ensureMistDustAnimations();
       const sprite = this.add.sprite(0, 0, 'mist-dust-idle')
         .setOrigin(0.5, 0.88)
         .setDisplaySize(80, 80)
         .play('mist-dust-idle');
       this.monsterArt = sprite;
+      this.monsterSprite = sprite;
       monster.add(sprite);
       this.monsterVisual = monster;
       return;
@@ -200,6 +207,28 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
     monster.add([body, leftEye, rightEye, mouth]);
     this.monsterVisual = monster;
     this.monsterBody = body;
+  }
+
+  private ensureMistDustAnimations(): void {
+    this.createMonsterAnimation('mist-dust-idle', 'mist-dust-idle', 8, -1);
+    this.createMonsterAnimation('mist-dust-attack', 'mist-dust-attack', 8, 0);
+    this.createMonsterAnimation('mist-dust-hit', 'mist-dust-hit', 8, 0);
+    this.createMonsterAnimation('mist-dust-death', 'mist-dust-death', 8, 0);
+  }
+
+  private createMonsterAnimation(
+    key: string,
+    textureKey: string,
+    frameRate: number,
+    repeat: number,
+  ): void {
+    if (this.anims.exists(key) || !this.textures.exists(textureKey)) return;
+    this.anims.create({
+      key,
+      frames: this.anims.generateFrameNumbers(textureKey, { start: 0, end: 7 }),
+      frameRate,
+      repeat,
+    });
   }
 
   private createBoardFrame(): void {
@@ -471,10 +500,11 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
           this.statusLabel?.setText(`-${amount} HP`);
           this.floatNumber(`-${amount} HP`, 80, 59, '#ff9aa4');
           this.shakePlayerBar();
-        } else {
+        } else if (event.payload['target'] === 'monster') {
           this.displayedMonsterHp = Math.max(0, (this.displayedMonsterHp ?? this.controller.currentState.monster.currentHp) - amount);
           this.statusLabel?.setText(`-${amount} HP quái`);
           this.floatNumber(`-${amount} HP`, 294, 104, '#ff9aa4');
+          this.playMonsterAnimation('mist-dust-hit');
           this.shakeMonster();
         }
         this.refreshDisplayedBars();
@@ -516,6 +546,7 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
         this.refreshDisplayedBars();
         break;
       case 'MONSTER_ATTACKED':
+        if (event.payload['target'] !== 'player') return;
         const shieldAbsorbed = this.safeNumber(Number(event.payload['shieldAbsorbed'] ?? 0));
         const hpDamage = this.safeNumber(Number(event.payload['hpDamage'] ?? Math.max(0, amount - shieldAbsorbed)));
         this.displayedShield = Math.max(
@@ -527,8 +558,18 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
           (this.displayedPlayerHp ?? this.controller.currentState.player.currentHp) - hpDamage,
         );
         this.telegraphLabel?.setText(`⚔ ${this.monsterActionText(String(event.payload['action'] ?? 'basic'))}`);
-        this.statusLabel?.setText(`${this.controller.currentState.monster.name} gây ${amount} damage`);
-        this.floatNumber(`-${amount}`, 80, 59, '#ff9aa4');
+        this.statusLabel?.setText(
+          hpDamage > 0
+            ? `${this.controller.currentState.monster.name} gây ${hpDamage} damage${shieldAbsorbed > 0 ? ` · khiên -${shieldAbsorbed}` : ''}`
+            : `${this.controller.currentState.monster.name} đánh vào khiên -${shieldAbsorbed}`,
+        );
+        this.floatNumber(
+          hpDamage > 0 ? `-${hpDamage} HP` : `-${shieldAbsorbed} khiên`,
+          80,
+          59,
+          hpDamage > 0 ? '#ff9aa4' : '#9dceff',
+        );
+        this.playMonsterAnimation('mist-dust-attack');
         this.flashMonster(0xff7a80);
         this.shakePlayerBar();
         this.refreshDisplayedBars();
@@ -549,6 +590,7 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
       case 'BATTLE_WON':
         this.statusLabel?.setText('Chiến thắng!');
         this.setPlayerControlsEnabled(false);
+        this.playMonsterAnimation('mist-dust-death');
         this.flashMonster(0xffe7a6);
         break;
       case 'BATTLE_LOST':
@@ -593,6 +635,21 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
     if (!this.monsterBody) return;
     this.monsterBody.setFillStyle(color, 1);
     this.time.delayedCall(180, () => this.monsterBody?.setFillStyle(0x8b9bc7, 1));
+  }
+
+  private playMonsterAnimation(key: 'mist-dust-attack' | 'mist-dust-hit' | 'mist-dust-death'): void {
+    const sprite = this.monsterSprite;
+    if (!sprite || !this.anims.exists(key)) return;
+
+    sprite.stop();
+    sprite.play(key);
+    if (key === 'mist-dust-death') return;
+
+    sprite.once(`animationcomplete-${key}`, () => {
+      if (this.monsterSprite === sprite && this.anims.exists('mist-dust-idle')) {
+        sprite.play('mist-dust-idle');
+      }
+    });
   }
 
   private monsterActionText(action: string): string {
@@ -725,7 +782,7 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
       case 'HEAL_APPLIED': return 360;
       case 'GEMS_FALLING': return 220;
       case 'GEMS_REFILLED': return 100;
-      case 'MONSTER_ATTACKED': return 380;
+      case 'MONSTER_ATTACKED': return 1000;
       case 'MONSTER_GUARDED': return 260;
       case 'MONSTER_THINKING': return Number(event.payload['seconds'] ?? 1) * 1000;
       case 'MONSTER_MOVE_SELECTED': return 500;
@@ -734,7 +791,7 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
       case 'TURN_TIMED_OUT': return 500;
       case 'BATTLE_WON':
       case 'BATTLE_LOST':
-      case 'BATTLE_ABANDONED': return 500;
+      case 'BATTLE_ABANDONED': return event.type === 'BATTLE_WON' ? 1000 : 500;
       default: return 80;
     }
   }

@@ -2,6 +2,7 @@ import {
   computeDerivedStats,
   createBattleState,
   areAdjacent,
+  DEFAULT_BATTLE_CONFIG,
   clampPlayerState,
   findLegalMoves,
   resolveBattleAction,
@@ -146,6 +147,34 @@ describe('M1 battle core', () => {
     expect(attack?.payload['hpDamage']).toBe(amount);
     expect(result.nextState.player.currentHp).toBe(300 - amount);
     expect(result.nextState.monster.currentHp).toBe(999);
+  });
+
+  it('keeps monster HP unchanged during the monster response to a player swap', () => {
+    const initial = createBattleState(123);
+    const move = findLegalMoves(initial.board)[0];
+    const state: BattleState = {
+      ...initial,
+      player: { ...initial.player, shield: 0, currentHp: 300 },
+      monster: { ...initial.monster, currentHp: 999 },
+    };
+
+    const result = resolveBattleAction(state, {
+      kind: 'swap',
+      ...move,
+      actionId: 'monster-response-target',
+    }, { ...DEFAULT_BATTLE_CONFIG, shieldCapMaxHpRatio: 0 });
+    const attack = result.events.find((event) => event.type === 'MONSTER_ATTACKED');
+    const playerDamage = result.events
+      .filter((event) => event.type === 'DAMAGE_APPLIED' && event.payload['target'] === 'monster')
+      .reduce((total, event) => total + Number(event.payload['amount'] ?? 0), 0);
+    const poisonDamage = result.events
+      .filter((event) => event.type === 'POISON_TICKED' && event.payload['target'] === 'monster')
+      .reduce((total, event) => total + Number(event.payload['amount'] ?? 0), 0);
+
+    expect(attack?.payload['actor']).toBe('monster');
+    expect(attack?.payload['target']).toBe('player');
+    expect(result.nextState.player.currentHp).toBe(300 - Number(attack?.payload['hpDamage']));
+    expect(result.nextState.monster.currentHp).toBe(999 - playerDamage - poisonDamage);
   });
 
   it('lets the monster choose a deterministic legal adjacent swap before attacking', () => {

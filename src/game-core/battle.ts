@@ -234,11 +234,10 @@ function appendOutcome(
   };
 }
 
-function applyDamage(
+function applyMonsterAttackDamage(
   player: PlayerBattleState,
-  monster: BattleState['monster'],
   amount: number,
-): { readonly player: PlayerBattleState; readonly monster: BattleState['monster']; readonly absorbed: number } {
+): { readonly player: PlayerBattleState; readonly absorbed: number } {
   const incoming = Number.isFinite(amount) ? Math.max(1, amount) : 1;
   const safePlayer = clampPlayerState(player);
   const absorbed = Math.min(safePlayer.shield, incoming);
@@ -249,7 +248,6 @@ function applyDamage(
       shield: safePlayer.shield - absorbed,
       currentHp: safePlayer.currentHp - (incoming - absorbed),
     }),
-    monster,
   };
 }
 
@@ -326,7 +324,7 @@ function applyGemEffects(
         const amount = Math.round(count * (8 + player.attributes.vit * 0.5) * multiplier);
         const cap = Math.round(player.stats.maxHp * config.shieldCapMaxHpRatio);
         const gained = Math.min(cap - player.shield, amount);
-        player = clampPlayerState({ ...player, shield: player.shield + amount });
+        player = clampPlayerState({ ...player, shield: player.shield + gained });
         events.push(
           event(state, actionId, sequence, 'SHIELD_GAINED', {
             actor: 'player',
@@ -455,7 +453,7 @@ function resolveMonsterTurn(
   } else {
     const multiplier = action === 'heavy' ? 1.7 : 1;
     const incoming = Math.max(1, Math.round(monster.attack * multiplier) - Math.floor(player.stats.defense * 0.6));
-    const damage = applyDamage(player, monster, incoming);
+    const damage = applyMonsterAttackDamage(player, incoming);
     player = damage.player;
     events.push(
       event(state, actionId, sequence, 'MONSTER_ATTACKED', {
