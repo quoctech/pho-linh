@@ -236,17 +236,45 @@ describe('M1 battle core', () => {
     expect(poison.events.find((event) => event.type === 'POISON_TICKED')?.payload['target']).toBe('monster');
   });
 
+  it('applies monster poison to the player, ticks it, then clears it', () => {
+    const initial = createBattleState(44);
+    const poisoned = resolveBattleAction(
+      {
+        ...initial,
+        player: { ...initial.player, currentHp: 250 },
+        monster: { ...initial.monster, nextAction: 'poison', currentHp: 999 },
+      },
+      { kind: 'timeout', actionId: 'monster-poison-1' },
+    );
+
+    expect(poisoned.events.some((event) =>
+      event.type === 'POISON_APPLIED' && event.payload['target'] === 'player')).toBe(true);
+    expect(poisoned.nextState.player.poisonPotency).toBeGreaterThan(0);
+    expect(poisoned.nextState.player.poisonTurns).toBe(3);
+
+    const ticked = resolveBattleAction(poisoned.nextState, {
+      kind: 'timeout',
+      actionId: 'monster-poison-2',
+    });
+    const tick = ticked.events.find((event) =>
+      event.type === 'POISON_TICKED' && event.payload['target'] === 'player');
+
+    expect(tick).toBeDefined();
+    expect(ticked.nextState.player.currentHp).toBeLessThan(poisoned.nextState.player.currentHp);
+    expect(ticked.nextState.player.poisonTurns).toBe(2);
+  });
+
   it('defeats the player when the monster attack reaches zero HP', () => {
     const initial = createBattleState(13);
-    const move = findLegalMoves(initial.board)[0];
     const state: BattleState = {
       ...initial,
       player: { ...initial.player, currentHp: 1 },
       monster: { ...initial.monster, currentHp: 999 },
     };
+    // Use timeout so the assertion isolates the monster hit and cannot be
+    // changed by a board seed producing a simultaneous healing cascade.
     const result = resolveBattleAction(state, {
-      kind: 'swap',
-      ...move,
+      kind: 'timeout',
       actionId: 'swap-defeat',
     });
 

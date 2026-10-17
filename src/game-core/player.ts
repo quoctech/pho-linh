@@ -43,6 +43,8 @@ export function createPlayerBattleState(
     currentHp: stats.maxHp,
     shield: 0,
     energy: 0,
+    poisonPotency: 0,
+    poisonTurns: 0,
   };
 }
 
@@ -64,6 +66,8 @@ export function clampPlayerState(player: PlayerBattleState): PlayerBattleState {
     currentHp: Math.max(0, Math.min(maxHp, safeNonNegative(player.currentHp, 0))),
     shield: Math.max(0, Math.min(Math.round(maxHp * 0.5), safeNonNegative(player.shield, 0))),
     energy: Math.max(0, Math.min(100, safeNonNegative(player.energy, 0))),
+    poisonPotency: safeNonNegative(player.poisonPotency, 0),
+    poisonTurns: Math.max(0, Math.floor(safeNonNegative(player.poisonTurns, 0))),
   };
 }
 

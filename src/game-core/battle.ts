@@ -412,10 +412,12 @@ function resolveMonsterTurn(
 
   if (monster.poisonTurns > 0 && monster.poisonPotency > 0) {
     const poisonDamage = monster.poisonPotency;
+    const remainingTurns = monster.poisonTurns - 1;
     monster = {
       ...monster,
       currentHp: Math.max(0, monster.currentHp - poisonDamage),
-      poisonTurns: monster.poisonTurns - 1,
+      poisonTurns: remainingTurns,
+      poisonPotency: remainingTurns > 0 ? monster.poisonPotency : 0,
     };
     events.push(
       event(state, actionId, sequence, 'POISON_TICKED', {
@@ -436,6 +438,40 @@ function resolveMonsterTurn(
           sequence,
           'VICTORY',
           'monster_defeated_by_poison',
+        ),
+        events,
+      };
+    }
+  }
+
+  if (player.poisonTurns > 0 && player.poisonPotency > 0) {
+    const poisonDamage = player.poisonPotency;
+    const remainingTurns = player.poisonTurns - 1;
+    player = clampPlayerState({
+      ...player,
+      currentHp: player.currentHp - poisonDamage,
+      poisonTurns: remainingTurns,
+      poisonPotency: remainingTurns > 0 ? player.poisonPotency : 0,
+    });
+    events.push(
+      event(state, actionId, sequence, 'POISON_TICKED', {
+        actor: 'player',
+        amount: poisonDamage,
+        remainingTurns,
+        source: 'monster_poison',
+        target: 'player',
+      }),
+    );
+    sequence += 1;
+    if (player.currentHp <= 0) {
+      return {
+        state: appendOutcome(
+          { ...state, player, monster },
+          events,
+          actionId,
+          sequence,
+          'DEFEAT',
+          'player_defeated_by_poison',
         ),
         events,
       };
@@ -463,7 +499,11 @@ function resolveMonsterTurn(
         actor: 'monster',
         actionId: `${actionId}:monster:${monster.actionCount}`,
         action,
-        label: action === 'heavy' ? `${monster.name} tung đòn nặng` : `${monster.name} tấn công`,
+        label: action === 'heavy'
+          ? `${monster.name} tung đòn nặng`
+          : action === 'poison'
+            ? `${monster.name} gieo độc`
+            : `${monster.name} tấn công`,
         amount: incoming,
         hpDamage: Math.max(0, incoming - damage.absorbed),
         shieldAbsorbed: damage.absorbed,
@@ -471,6 +511,28 @@ function resolveMonsterTurn(
       }),
     );
     sequence += 1;
+
+    if (action === 'poison' && monster.tactics.poison > 0) {
+      const requested = Math.max(1, Math.round(monster.tactics.poison * 1.5));
+      const cap = Math.max(1, Math.round(player.stats.maxHp * 0.2));
+      const applied = Math.max(0, Math.min(cap - player.poisonPotency, requested));
+      player = clampPlayerState({
+        ...player,
+        poisonPotency: Math.min(cap, player.poisonPotency + requested),
+        poisonTurns: 3,
+      });
+      events.push(
+        event(state, actionId, sequence, 'POISON_APPLIED', {
+          actor: 'monster',
+          amount: applied,
+          requested,
+          turns: 3,
+          source: 'monster_poison_action',
+          target: 'player',
+        }),
+      );
+      sequence += 1;
+    }
   }
 
   if (player.currentHp <= 0) {
@@ -508,6 +570,8 @@ function resolveMonsterTurn(
     ? 'đòn nặng'
     : nextAction === 'guard'
       ? 'phòng thủ'
+      : nextAction === 'poison'
+        ? 'gieo độc'
       : 'đánh thường';
   monster = { ...monster, actionCount: nextCount, phase: nextPhase, nextAction };
   events.push(
@@ -530,10 +594,19 @@ function resolveMonsterTurn(
   };
 }
 
-function chooseMonsterAction(monster: BattleState['monster'], phase: 1 | 2, actionCount: number): 'basic' | 'guard' | 'heavy' {
+function chooseMonsterAction(
+  monster: BattleState['monster'],
+  phase: 1 | 2,
+  actionCount: number,
+): 'basic' | 'guard' | 'heavy' | 'poison' {
   const definition = MONSTER_DEFINITIONS[monster.id];
   if (!definition) return 'basic';
   if (monster.id === 'cloud_fox_boss' && phase === 2) return actionCount % 2 === 0 ? 'heavy' : 'basic';
+  if (
+    definition.behaviors.includes('poison') &&
+    monster.tactics.poison > 0 &&
+    actionCount % 4 === 3
+  ) return 'poison';
   if (
     definition.behaviors.includes('guard') &&
     actionCount % 3 === 1 &&

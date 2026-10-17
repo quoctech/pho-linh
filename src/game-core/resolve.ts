@@ -7,9 +7,9 @@ import {
   findMatches,
   isInsideBoard,
   reshuffleBoard,
+  selectGem,
   swapCells,
 } from './board';
-import { nextInt } from './rng';
 import {
   type Board,
   type GameEvent,
@@ -130,9 +130,9 @@ function refillBoard(
       if (gem) {
         working[row][col] = gem;
       } else {
-        const random = nextInt(nextRngState, config.gemTypes.length);
+        const random = selectGem(nextRngState, config);
         nextRngState = random.state;
-        working[row][col] = config.gemTypes[random.value];
+        working[row][col] = random.gem;
       }
     }
   }

@@ -51,6 +51,29 @@ export function swapCells(board: Board, from: Coord, to: Coord): Board {
   return next;
 }
 
+/** Pick one gem using the configured weights while keeping RNG in game-core. */
+export function selectGem(
+  state: number,
+  config: Match3Config = DEFAULT_MATCH3_CONFIG,
+): { readonly gem: GemType; readonly state: number } {
+  const weights = config.gemTypes.map((gem) => {
+    const configured = config.gemWeights?.[gem];
+    return Number.isFinite(configured) && configured !== undefined
+      ? Math.max(1, Math.floor(configured))
+      : 1;
+  });
+  const totalWeight = weights.reduce((total, weight) => total + weight, 0);
+  const random = nextInt(state, totalWeight);
+  let cursor = random.value;
+  for (let index = 0; index < config.gemTypes.length; index += 1) {
+    cursor -= weights[index];
+    if (cursor < 0) {
+      return { gem: config.gemTypes[index], state: random.state };
+    }
+  }
+  return { gem: config.gemTypes[config.gemTypes.length - 1], state: random.state };
+}
+
 export function findMatches(
   board: Board,
   config: Match3Config = DEFAULT_MATCH3_CONFIG,
@@ -138,9 +161,9 @@ function createCandidateBoard(
       let attempts = 0;
 
       while (!selected && attempts < config.gemTypes.length * 2) {
-        const random = nextInt(rngState, config.gemTypes.length);
+        const random = selectGem(rngState, config);
         rngState = random.state;
-        const candidate = config.gemTypes[random.value];
+        const candidate = random.gem;
         const horizontalMatch = col >= 2 && nextRow[col - 1] === candidate && nextRow[col - 2] === candidate;
         const verticalMatch = row >= 2 && board[row - 1][col] === candidate && board[row - 2][col] === candidate;
         if (!horizontalMatch && !verticalMatch) {

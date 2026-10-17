@@ -47,6 +47,8 @@ export interface Match3Config {
   readonly rows: number;
   readonly cols: number;
   readonly gemTypes: readonly GemType[];
+  /** Optional integer weights used when creating/refilling gems. */
+  readonly gemWeights?: Partial<Readonly<Record<GemType, number>>>;
   readonly maxCascade: number;
   readonly maxGenerationAttempts: number;
   readonly balanceVersion: number;
@@ -108,6 +110,8 @@ export interface PlayerBattleState {
   readonly currentHp: number;
   readonly shield: number;
   readonly energy: number;
+  readonly poisonPotency: number;
+  readonly poisonTurns: number;
 }
 
 export interface MonsterDefinition {
@@ -118,7 +122,7 @@ export interface MonsterDefinition {
   readonly attack: number;
   readonly defense: number;
   readonly behaviorId: 'basic' | 'guard' | 'heavy' | 'boss';
-  readonly behaviors: readonly ('basic' | 'guard' | 'heavy')[];
+  readonly behaviors: readonly ('basic' | 'guard' | 'heavy' | 'poison')[];
   readonly tactics: MonsterTactics;
   readonly unlockRequirement?: { readonly monsterId: string; readonly wins: number };
   readonly expReward: number;
@@ -143,7 +147,7 @@ export interface MonsterBattleState extends MonsterDefinition {
   readonly currentHp: number;
   readonly poisonPotency: number;
   readonly poisonTurns: number;
-  readonly nextAction: 'basic' | 'guard' | 'heavy';
+  readonly nextAction: 'basic' | 'guard' | 'heavy' | 'poison';
   readonly phase: 1 | 2;
   readonly actionCount: number;
 }

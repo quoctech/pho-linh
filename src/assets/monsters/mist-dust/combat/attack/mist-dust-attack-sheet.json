@@ -189,6 +189,7 @@
     },
     "rows": 2,
     "cols": 4,
-    "animation": "mist-dust-attack"
+    "animation": "mist-dust-attack",
+    "description": "monster attack animation"
   }
 }
