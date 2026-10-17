@@ -15,7 +15,7 @@
           </ion-item>
         }
       </ion-list>
-      <p class="preview">Preview: HP {{ previewStats?.maxHp ?? stats?.maxHp }} · ATK {{ previewStats?.atk ?? stats?.atk }} · DEF {{ previewStats?.defense ?? stats?.defense }} · SKILL {{ previewStats?.skillPower ?? stats?.skillPower }}</p>
+      <p class="preview">Xem trước: HP {{ previewStats?.maxHp ?? stats?.maxHp }} · Công {{ previewStats?.atk ?? stats?.atk }} · Thủ {{ previewStats?.defense ?? stats?.defense }} · Sức mạnh kỹ năng {{ previewStats?.skillPower ?? stats?.skillPower }}</p>
       <ion-button expand="block" (click)="commit()" [disabled]="!preview || preview.unspentPoints === current.profile.unspentPoints">Xác nhận điểm</ion-button>
       <ion-button expand="block" fill="outline" (click)="cancel()">Hủy draft</ion-button>
       <ion-button expand="block" fill="clear" routerLink="/home">Về nhà</ion-button>

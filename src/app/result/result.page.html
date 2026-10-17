@@ -15,7 +15,7 @@
       <p class="description">{{ description }}</p>
 
       <div class="summary">
-        @if (battle.phase === 'VICTORY' && save; as current) { @let reward = current.rewardJournal.at(-1)?.reward; <span>EXP nhận</span><strong>+{{ reward?.exp ?? 0 }}</strong><span>Gold nhận</span><strong>+{{ reward?.gold ?? 0 }}</strong><span>Level / điểm</span><strong>{{ current.profile.level }} / +{{ current.profile.unspentPoints }}</strong> @if (latestItemName; as itemName) {<span>Vật phẩm</span><strong>{{ itemName }}</strong>} @if (current.pendingRewards.length) {<span>Reward chờ</span><strong>{{ current.pendingRewards.length }}</strong>} }
+        @if (battle.phase === 'VICTORY' && save; as current) { @let reward = current.rewardJournal.at(-1)?.reward; <span>EXP nhận</span><strong>+{{ reward?.exp ?? 0 }}</strong><span>Vàng nhận</span><strong>+{{ reward?.gold ?? 0 }}</strong><span>Cấp / điểm</span><strong>{{ current.profile.level }} / +{{ current.profile.unspentPoints }}</strong> @if (latestItemName; as itemName) {<span>Vật phẩm</span><strong>{{ itemName }}</strong>} @if (current.pendingRewards.length) {<span>Thưởng chờ nhận</span><strong>{{ current.pendingRewards.length }}</strong>} }
         <span>HP nhân vật</span>
         <strong>{{ battle.player.currentHp }} / {{ battle.player.stats.maxHp }}</strong>
         <span>HP {{ battle.monster.name }}</span>

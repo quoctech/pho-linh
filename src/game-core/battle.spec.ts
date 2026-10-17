@@ -190,8 +190,8 @@ describe('M1 battle core', () => {
     expect(result.accepted).toBe(true);
     const thinking = result.events.find((event) => event.type === 'MONSTER_THINKING');
     const thinkingSeconds = Number(thinking?.payload['seconds']);
-    expect(thinkingSeconds).toBeGreaterThanOrEqual(1);
-    expect(thinkingSeconds).toBeLessThanOrEqual(10);
+    expect(thinkingSeconds).toBeGreaterThanOrEqual(1.2);
+    expect(thinkingSeconds).toBeLessThanOrEqual(3);
     expect(selected).toBeDefined();
     expect(areAdjacent(from, to)).toBe(true);
     expect(result.events.some((event) => event.type === 'MONSTER_SWAP_STARTED')).toBe(true);

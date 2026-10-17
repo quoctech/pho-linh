@@ -14,8 +14,10 @@ const GEM_TYPES: readonly GemType[] = ['attack', 'heal', 'shield', 'energy', 'po
 const BOARD_SIZE = 6;
 const CELL_SIZE = 48;
 const BOARD_LEFT = 36;
-const BOARD_TOP = 184;
+const BOARD_TOP = 192;
 const BOARD_WIDTH = BOARD_SIZE * CELL_SIZE;
+const GEM_FALL_DURATION = 200;
+const GEM_REFILL_DURATION = 160;
 const GEM_ATLAS_KEY = 'pho-linh-gems';
 const GEM_ATLAS_FRAMES: Partial<Record<GemType, number>> = {
   attack: 0,
@@ -42,6 +44,7 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
   private controller!: BattleController;
   private readonly gemSprites = new Map<string, Phaser.GameObjects.Container>();
   private readonly vfxSprites = new Set<Phaser.GameObjects.Sprite>();
+  private readonly transientEffects = new Set<Phaser.GameObjects.GameObject>();
   private selection?: Phaser.GameObjects.Rectangle;
   private selectionRing?: Phaser.GameObjects.Sprite;
   private selectedCell?: Coord;
@@ -65,7 +68,9 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
   private abandonButton?: Phaser.GameObjects.Text;
   private unsubscribe?: () => void;
   private turnTimer?: Phaser.Time.TimerEvent;
+  private monsterCountdownTimer?: Phaser.Time.TimerEvent;
   private remainingSeconds = DEFAULT_BATTLE_CONFIG.playerTurnSeconds;
+  private monsterRemainingMs = 0;
   private monsterMoveFrom?: Phaser.GameObjects.Rectangle;
   private monsterMoveTo?: Phaser.GameObjects.Rectangle;
   private displayedPlayerHp?: number;
@@ -176,12 +181,12 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
   async play(events: readonly GameEvent[]): Promise<void> {
     for (const event of events) {
       const board = event.payload['board'];
-      if (this.isBoard(board)) {
-        const previousBoard = this.lastBoard;
+      if (event.type === 'GEMS_FALLING' && this.isPartialBoard(board)) {
+        this.animateBoardFall(board);
+      } else if (event.type === 'GEMS_REFILLED' && this.isBoard(board)) {
+        this.animateBoardRefill(board);
+      } else if (this.isBoard(board)) {
         this.renderBoard(board);
-        if (event.type === 'GEMS_REFILLED' && previousBoard) {
-          this.spawnRefillImpacts(previousBoard, board);
-        }
       }
 
       this.playEventFeedback(event);
@@ -202,22 +207,22 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
 
   private createHud(): void {
     this.turnLabel = this.add
-      .text(336, 20, 'Lượt 0 / 20', { color: '#fff8e8', fontFamily: 'sans-serif', fontSize: '14px' })
-      .setOrigin(1, 0.5);
+      .text(180, 16, 'Lượt 0 / 20', { color: '#fff8e8', fontFamily: 'sans-serif', fontSize: '14px' })
+      .setOrigin(0.5, 0.5);
     this.countdownLabel = this.add
-      .text(336, 42, '', { color: '#f3c64f', fontFamily: 'sans-serif', fontSize: '14px', fontStyle: 'bold' })
-      .setOrigin(1, 0.5);
+      .text(180, 35, '', { color: '#f3c64f', fontFamily: 'sans-serif', fontSize: '14px', fontStyle: 'bold' })
+      .setOrigin(0.5, 0.5);
 
-    this.add.text(24, 45, 'Nhân vật', { color: '#b8b0cf', fontSize: '12px' });
+    this.add.text(8, 54, 'Nhân vật', { color: '#b8b0cf', fontSize: '12px' });
     this.playerBar = this.add.graphics();
-    this.playerHpLabel = this.add.text(24, 72, '', { color: '#fff8e8', fontSize: '12px' });
+    this.playerHpLabel = this.add.text(8, 78, '', { color: '#fff8e8', fontSize: '11px' });
 
-    this.add.text(24, 88, this.controller.currentState.monster.name, { color: '#b8b0cf', fontSize: '12px' });
+    this.add.text(352, 54, this.controller.currentState.monster.name, { color: '#b8b0cf', fontSize: '12px' }).setOrigin(1, 0.5);
     this.monsterBar = this.add.graphics();
-    this.monsterHpLabel = this.add.text(24, 115, '', { color: '#fff8e8', fontSize: '12px' });
+    this.monsterHpLabel = this.add.text(352, 78, '', { color: '#fff8e8', fontSize: '12px' }).setOrigin(1, 0.5);
 
     this.telegraphLabel = this.add
-      .text(180, 140, '', {
+      .text(180, 148, '', {
         color: '#f3c64f',
         fontFamily: 'sans-serif',
         fontSize: '12px',
@@ -225,7 +230,7 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
       })
       .setOrigin(0.5);
     this.statusLabel = this.add
-      .text(180, 158, 'Chọn hai viên ngọc kề nhau', {
+      .text(180, 166, 'Chọn hai viên ngọc kề nhau', {
         color: '#fff8e8',
         fontFamily: 'sans-serif',
         fontSize: '12px',
@@ -234,12 +239,12 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
   }
 
   private createMonsterVisual(): void {
-    const monster = this.add.container(294, 104);
+    const monster = this.add.container(294, 145);
     if (this.controller.currentState.monster.id === 'mist_blob' && this.textures.exists('mist-dust-idle')) {
       this.ensureMistDustAnimations();
       const sprite = this.add.sprite(0, 0, 'mist-dust-idle')
         .setOrigin(0.5, 0.88)
-        .setDisplaySize(80, 80)
+        .setDisplaySize(84, 84)
         .play('mist-dust-idle');
       this.monsterArt = sprite;
       this.monsterSprite = sprite;
@@ -250,12 +255,12 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
     if (this.controller.currentState.monster.id === 'mist_blob' && this.textures.exists('monster-mist-blob')) {
       this.monsterArt = this.add.image(0, 0, 'monster-mist-blob')
         .setOrigin(0.5, 0.88)
-        .setDisplaySize(80, 80);
+        .setDisplaySize(84, 84);
       monster.add(this.monsterArt);
       this.monsterVisual = monster;
       return;
     }
-    const body = this.add.circle(0, 0, 24, 0x8b9bc7, 1);
+    const body = this.add.circle(0, 0, 30, 0x8b9bc7, 1);
     body.setStrokeStyle(2, 0xe9efff, 0.9);
     const leftEye = this.add.circle(-8, -3, 3.5, 0x26203d, 1);
     const rightEye = this.add.circle(8, -3, 3.5, 0x26203d, 1);
@@ -327,6 +332,117 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
     });
   }
 
+  private animateGemsCleared(coords: readonly Coord[]): void {
+    for (const coord of coords) {
+      const point = this.boardPoint(coord);
+      const gem = this.gemSprites.get(`${coord.row}:${coord.col}`);
+      const gemType = gem?.getData('gemType') as GemType | undefined;
+      const accent = this.gemAccentColor(gemType);
+      this.spawnGemFlash(point.x, point.y, accent);
+      this.spawnGemParticles(point.x, point.y, accent);
+      if (!gem) continue;
+
+      this.tweens.killTweensOf(gem);
+      gem.setAlpha(1).setScale(1);
+      this.tweens.add({
+        targets: gem,
+        scale: 1.12,
+        duration: 70,
+        ease: 'Quad.Out',
+        onComplete: () => {
+          this.tweens.add({
+            targets: gem,
+            scale: 0,
+            alpha: 0,
+            duration: 150,
+            ease: 'Back.In',
+          });
+        },
+      });
+    }
+  }
+
+  private animateGemSwap(from: Coord, to: Coord): void {
+    const fromKey = `${from.row}:${from.col}`;
+    const toKey = `${to.row}:${to.col}`;
+    const fromGem = this.gemSprites.get(fromKey);
+    const toGem = this.gemSprites.get(toKey);
+    if (!fromGem || !toGem) return;
+
+    this.gemSprites.set(fromKey, toGem);
+    this.gemSprites.set(toKey, fromGem);
+    const fromPoint = this.boardPoint(from);
+    const toPoint = this.boardPoint(to);
+    this.tweens.killTweensOf([fromGem, toGem]);
+    this.tweens.add({
+      targets: fromGem,
+      x: toPoint.x,
+      y: toPoint.y,
+      scale: 1.06,
+      duration: 160,
+      ease: 'Cubic.InOut',
+      onComplete: () => fromGem.setScale(1),
+    });
+    this.tweens.add({
+      targets: toGem,
+      x: fromPoint.x,
+      y: fromPoint.y,
+      scale: 1.06,
+      duration: 160,
+      ease: 'Cubic.InOut',
+      onComplete: () => toGem.setScale(1),
+    });
+  }
+
+  private gemAccentColor(gem: GemType | undefined): number {
+    if (!gem) return 0xfff0ad;
+    return this.gemVisual(gem).color;
+  }
+
+  private spawnGemFlash(x: number, y: number, color: number): void {
+    const flash = this.add
+      .circle(x, y, 20, color, 0.82)
+      .setDepth(14)
+      .setBlendMode(Phaser.BlendModes.ADD);
+    this.transientEffects.add(flash);
+    this.tweens.add({
+      targets: flash,
+      scale: 1.2,
+      alpha: 0,
+      duration: 120,
+      ease: 'Quad.Out',
+      onComplete: () => this.destroyTransientEffect(flash),
+    });
+  }
+
+  private spawnGemParticles(x: number, y: number, color: number): void {
+    const particleCount = 6;
+    for (let index = 0; index < particleCount; index += 1) {
+      const angle = (Math.PI * 2 * index) / particleCount + Phaser.Math.FloatBetween(-0.18, 0.18);
+      const distance = Phaser.Math.Between(16, 30);
+      const particle = this.add
+        .circle(x, y, Phaser.Math.FloatBetween(1.5, 2.5), color, 0.95)
+        .setDepth(14)
+        .setBlendMode(Phaser.BlendModes.ADD);
+      this.transientEffects.add(particle);
+      this.tweens.add({
+        targets: particle,
+        x: x + Math.cos(angle) * distance,
+        y: y + Math.sin(angle) * distance,
+        scale: 0.15,
+        alpha: 0,
+        duration: Phaser.Math.Between(220, 300),
+        ease: 'Cubic.Out',
+        onComplete: () => this.destroyTransientEffect(particle),
+      });
+    }
+  }
+
+  private destroyTransientEffect(effect: Phaser.GameObjects.GameObject): void {
+    this.transientEffects.delete(effect);
+    effect.destroy();
+  }
+
   private createBoardFrame(): void {
     const frame = this.add.graphics();
     frame.fillStyle(0x28213d, 1);
@@ -336,7 +452,7 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
   }
 
   private createControls(): void {
-    this.energyLabel = this.add.text(24, 495, 'Energy 0 / 100', {
+    this.energyLabel = this.add.text(8, 96, 'Năng lượng 0 / 100', {
       color: '#f3c64f',
       fontSize: '14px',
       fontStyle: 'bold',
@@ -344,16 +460,17 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
     this.energyBar = this.add.graphics();
 
     this.skillButton = this.add
-      .rectangle(274, 524, 128, 38, 0x6b4fa3, 1)
+      .rectangle(274, 548, 128, 38, 0x6b4fa3, 1)
       .setStrokeStyle(2, 0xd8c2ff, 0.7)
       .setInteractive({ useHandCursor: true });
     this.skillButtonText = this.add
-      .text(274, 524, 'Đèn Phá Mây', { color: '#fff8e8', fontSize: '12px', fontStyle: 'bold' })
+      .text(274, 548, 'Đèn Phá Mây', { color: '#fff8e8', fontSize: '12px', fontStyle: 'bold' })
       .setOrigin(0.5);
     this.skillButton.on('pointerdown', () => void this.dispatchSkill());
 
     this.abandonButton = this.add
-      .text(24, 580, 'Bỏ trận', { color: '#eaa1ad', fontSize: '13px' })
+      .text(12, 608, 'Bỏ trận', { color: '#eaa1ad', fontSize: '13px' })
+      .setOrigin(0, 1)
       .setInteractive({ useHandCursor: true });
     this.abandonButton.on('pointerdown', () => void this.dispatchAbandon());
   }
@@ -367,7 +484,7 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
     this.renderBars(state);
     this.telegraphLabel?.setText(state.telegraph);
     this.turnLabel?.setText(`Lượt ${state.turn} / ${state.maxTurns}`);
-    this.energyLabel?.setText(`Energy ${state.player.energy} / 100`);
+    this.energyLabel?.setText(`Năng lượng ${state.player.energy} / 100`);
     this.updateSkillButton(state);
     if (state.phase !== 'PLAYER_READY') this.stopTurnTimer();
   }
@@ -379,12 +496,12 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
     const monsterHp = this.clampDisplay(this.displayedMonsterHp ?? state.monster.currentHp, 0, monsterMaxHp);
     const shield = this.safeNumber(this.displayedShield ?? state.player.shield);
     const energy = this.clampDisplay(this.displayedEnergy ?? state.player.energy, 0, DEFAULT_BATTLE_CONFIG.energyCap);
-    this.drawBar(this.playerBar, 24, 58, 210, playerHp / playerMaxHp, 0x57c982);
-    this.drawBar(this.monsterBar, 24, 101, 210, monsterHp / monsterMaxHp, 0xe75b62);
-    this.drawBar(this.energyBar, 24, 512, 210, energy / DEFAULT_BATTLE_CONFIG.energyCap, 0xf3c64f);
+    this.drawBar(this.playerBar, 8, 64, 150, playerHp / playerMaxHp, 0x57c982);
+    this.drawBar(this.monsterBar, 202, 64, 150, monsterHp / monsterMaxHp, 0xe75b62);
+    this.drawBar(this.energyBar, 8, 112, 150, energy / DEFAULT_BATTLE_CONFIG.energyCap, 0xf3c64f);
     this.playerHpLabel?.setText(`HP ${playerHp} / ${playerMaxHp}  ·  Khiên ${shield}`);
     this.monsterHpLabel?.setText(`HP ${monsterHp} / ${monsterMaxHp}`);
-    this.energyLabel?.setText(`Energy ${energy} / 100`);
+    this.energyLabel?.setText(`Năng lượng ${energy} / 100`);
   }
 
   private refreshDisplayedBars(): void {
@@ -435,12 +552,98 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
           current?.destroy(true);
           this.gemSprites.set(key, this.createGem(x, y, board[row][col]));
         } else {
-          current.setPosition(x, y);
+          this.tweens.killTweensOf(current);
+          current.setPosition(x, y).setScale(1).setAlpha(1).setVisible(true);
         }
       }
     }
     this.lastBoard = board.map((row) => [...row]) as Board;
     this.renderSelection();
+  }
+
+  private animateBoardFall(board: ReadonlyArray<ReadonlyArray<GemType | undefined>>): void {
+    const nextSprites = new Map<string, Phaser.GameObjects.Container>();
+    const claimed = new Set<Phaser.GameObjects.Container>();
+    const candidates = [...this.gemSprites.values()]
+      .filter((gem) => gem.active && gem.visible && gem.alpha > 0.05 && gem.scale > 0.05);
+
+    for (let row = 0; row < BOARD_SIZE; row += 1) {
+      for (let col = 0; col < BOARD_SIZE; col += 1) {
+        const gemType = board[row][col];
+        if (!gemType) continue;
+        const target = this.boardPoint({ row, col });
+        const candidate = candidates
+          .filter((gem) => {
+            const sourceCol = Math.round((gem.x - BOARD_LEFT - CELL_SIZE / 2) / CELL_SIZE);
+            return !claimed.has(gem) && sourceCol === col && gem.getData('gemType') === gemType;
+          })
+          .sort((first, second) => Math.abs(first.y - target.y) - Math.abs(second.y - target.y))[0];
+        const visual = candidate ?? this.createGem(target.x, target.y - CELL_SIZE, gemType);
+        claimed.add(visual);
+        this.tweens.killTweensOf(visual);
+        visual.setVisible(true).setAlpha(1).setScale(1);
+        nextSprites.set(`${row}:${col}`, visual);
+        this.tweens.add({
+          targets: visual,
+          x: target.x,
+          y: target.y,
+          duration: GEM_FALL_DURATION,
+          ease: 'Cubic.Out',
+        });
+      }
+    }
+
+    for (const visual of this.gemSprites.values()) {
+      if (!claimed.has(visual)) visual.destroy(true);
+    }
+    this.gemSprites.clear();
+    for (const [key, visual] of nextSprites) this.gemSprites.set(key, visual);
+    this.renderSelection();
+  }
+
+  private animateBoardRefill(board: Board): void {
+    const nextSprites = new Map<string, Phaser.GameObjects.Container>();
+    const landingPoints: Coord[] = [];
+    for (let row = 0; row < BOARD_SIZE; row += 1) {
+      for (let col = 0; col < BOARD_SIZE; col += 1) {
+        const key = `${row}:${col}`;
+        const target = this.boardPoint({ row, col });
+        const current = this.gemSprites.get(key);
+        let visual = current;
+        if (!visual || visual.getData('gemType') !== board[row][col]) {
+          current?.destroy(true);
+          visual = this.createGem(target.x, BOARD_TOP - (BOARD_SIZE - row + 1) * CELL_SIZE, board[row][col]);
+          landingPoints.push({ row, col });
+        }
+        this.tweens.killTweensOf(visual);
+        visual.setVisible(true).setAlpha(1).setScale(1);
+        nextSprites.set(key, visual);
+        this.tweens.add({
+          targets: visual,
+          x: target.x,
+          y: target.y,
+          duration: GEM_REFILL_DURATION,
+          ease: 'Cubic.Out',
+        });
+      }
+    }
+    for (const [key, visual] of this.gemSprites) {
+      if (!nextSprites.has(key)) visual.destroy(true);
+    }
+    this.gemSprites.clear();
+    for (const [key, visual] of nextSprites) this.gemSprites.set(key, visual);
+    this.lastBoard = board.map((row) => [...row]) as Board;
+    this.renderSelection();
+    this.scheduleLandingImpacts(landingPoints);
+  }
+
+  private scheduleLandingImpacts(coords: readonly Coord[]): void {
+    for (const coord of coords.slice(0, 12)) {
+      this.time.delayedCall(GEM_REFILL_DURATION, () => {
+        const point = this.boardPoint(coord);
+        this.spawnVfx(VFX_SHEET_KEYS.impact, point.x, point.y, 50, 13);
+      });
+    }
   }
 
   private createGem(x: number, y: number, gem: GemType): Phaser.GameObjects.Container {
@@ -564,20 +767,31 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
     const rawAmount = event.payload['amount'];
     const amount = typeof rawAmount === 'number' && Number.isFinite(rawAmount) ? rawAmount : 0;
     switch (event.type) {
+      case 'SWAP_STARTED': {
+        const from = this.coordFromPayload(event.payload['from']);
+        const to = this.coordFromPayload(event.payload['to']);
+        if (from && to) this.animateGemSwap(from, to);
+        this.statusLabel?.setText('Đang đổi ngọc...');
+        break;
+      }
       case 'MATCH_FOUND':
         this.statusLabel?.setText(event.payload['actor'] === 'monster' ? 'Quái tạo nhóm 3' : 'Bạn tạo nhóm 3');
         break;
       case 'GEMS_CLEARED': {
         const counts = event.payload['gemCounts'];
-        this.spawnMatchBurst(this.coordsFromPayload(event.payload['coordinates']));
+        const clearedCoords = this.coordsFromPayload(event.payload['coordinates']);
+        this.animateGemsCleared(clearedCoords);
+        this.spawnMatchBurst(clearedCoords);
         if (typeof counts === 'object' && counts !== null) {
           const [gem, count] = Object.entries(counts as Record<string, unknown>)[0] ?? [];
           const actor = event.payload['actor'] === 'monster' ? 'Quái ghép' : 'Bạn ghép';
-          this.statusLabel?.setText(`${actor} ${this.gemSymbol(String(gem))} × ${String(count ?? 0)}`);
+          this.statusLabel?.setText(`${actor} ${this.gemName(String(gem))} × ${String(count ?? 0)}`);
         }
         break;
       }
       case 'MONSTER_MOVE_SELECTED': {
+        this.stopMonsterCountdown();
+        this.countdownLabel?.setColor('#f3c64f').setText('Quái đang chọn ngọc...');
         const from = this.coordFromPayload(event.payload['from']);
         const to = this.coordFromPayload(event.payload['to']);
         if (from && to) this.showMonsterMove(from, to);
@@ -585,16 +799,24 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
         break;
       }
       case 'MONSTER_SWAP_STARTED':
+        {
+          const from = this.coordFromPayload(event.payload['from']);
+          const to = this.coordFromPayload(event.payload['to']);
+          if (from && to) this.animateGemSwap(from, to);
+        }
+        this.countdownLabel?.setColor('#f3c64f').setText('Quái đang đổi ngọc...');
         this.statusLabel?.setText('Quái đang đổi ngọc...');
         break;
       case 'MONSTER_SWAP_RESOLVED':
+        this.countdownLabel?.setColor('#f3c64f').setText('Quái vừa đổi ngọc');
         this.statusLabel?.setText('Quái đã đổi ngọc');
         break;
       case 'TURN_TIMED_OUT':
         this.statusLabel?.setText('Hết thời gian — mất lượt');
         break;
       case 'MONSTER_THINKING':
-        this.statusLabel?.setText(String(event.payload['label'] ?? 'Quái đang suy nghĩ...'));
+        this.startMonsterCountdown(this.safeNumber(Number(event.payload['seconds'] ?? 1.2), 1.2));
+        this.statusLabel?.setText(String(event.payload['label'] ?? 'Quái đang chuẩn bị...'));
         break;
       case 'DAMAGE_APPLIED':
         if (event.payload['target'] === 'player') {
@@ -632,8 +854,8 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
         break;
       case 'ENERGY_GAINED':
         this.displayedEnergy = Math.min(100, (this.displayedEnergy ?? this.controller.currentState.player.energy) + amount);
-        this.statusLabel?.setText(`+${amount} energy`);
-        this.floatNumber(`+${amount}`, 235, 515, '#ffe28c');
+        this.statusLabel?.setText(`+${amount} năng lượng`);
+        this.floatNumber(`+${amount}`, 83, 112, '#ffe28c');
         this.refreshDisplayedBars();
         break;
       case 'POISON_APPLIED':
@@ -642,7 +864,7 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
         break;
       case 'POISON_TICKED':
         this.displayedMonsterHp = Math.max(0, (this.displayedMonsterHp ?? this.controller.currentState.monster.currentHp) - amount);
-        this.statusLabel?.setText(`Độc gây ${amount} damage lên quái`);
+        this.statusLabel?.setText(`Độc gây ${amount} sát thương lên quái`);
         this.floatNumber(`-${amount} độc`, 294, 104, '#d5aaff');
         this.shakeMonster();
         this.refreshDisplayedBars();
@@ -660,9 +882,10 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
           (this.displayedPlayerHp ?? this.controller.currentState.player.currentHp) - hpDamage,
         );
         this.telegraphLabel?.setText(`⚔ ${this.monsterActionText(String(event.payload['action'] ?? 'basic'))}`);
+        this.countdownLabel?.setColor('#ff7a80').setText('Quái đang tấn công...');
         this.statusLabel?.setText(
           hpDamage > 0
-            ? `${this.controller.currentState.monster.name} gây ${hpDamage} damage${shieldAbsorbed > 0 ? ` · khiên -${shieldAbsorbed}` : ''}`
+            ? `${this.controller.currentState.monster.name} gây ${hpDamage} sát thương${shieldAbsorbed > 0 ? ` · khiên -${shieldAbsorbed}` : ''}`
             : `${this.controller.currentState.monster.name} đánh vào khiên -${shieldAbsorbed}`,
         );
         this.floatNumber(
@@ -677,8 +900,9 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
         this.refreshDisplayedBars();
         break;
       case 'MONSTER_GUARDED':
+        this.countdownLabel?.setColor('#f3c64f').setText('Quái đang phòng thủ...');
         this.telegraphLabel?.setText(`◈ ${this.monsterActionText('guard')}`);
-        this.statusLabel?.setText('Quái tăng DEF trong 1 lượt');
+        this.statusLabel?.setText('Quái tăng phòng thủ trong 1 lượt');
         this.tweenMonsterTelegraph();
         break;
       case 'MONSTER_TELEGRAPH':
@@ -719,7 +943,7 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
 
   private shakePlayerBar(): void {
     if (!this.playerBar) return;
-    this.tweens.add({ targets: this.playerBar, x: 30, yoyo: true, repeat: 2, duration: 45 });
+    this.tweens.add({ targets: this.playerBar, x: 4, yoyo: true, repeat: 2, duration: 45 });
     this.cameras.main.shake(80, 0.002);
   }
 
@@ -755,16 +979,27 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
   }
 
   private monsterActionText(action: string): string {
-    if (action === 'basic') return `${this.controller.currentState.monster.name} · Đánh thường`;
-    return `${this.controller.currentState.monster.name} · ${action}`;
+    const labels: Record<string, string> = {
+      basic: 'Đánh thường',
+      guard: 'Phòng thủ',
+      heavy: 'Đòn nặng',
+    };
+    return `${this.controller.currentState.monster.name} · ${labels[action] ?? 'Hành động'}`;
   }
 
   private gemAt(coord: Coord): string {
-    return this.gemVisual(this.controller.currentState.board[coord.row][coord.col]).symbol;
+    return this.gemName(this.controller.currentState.board[coord.row][coord.col]);
   }
 
-  private gemSymbol(gem: string): string {
-    return GEM_TYPES.includes(gem as GemType) ? this.gemVisual(gem as GemType).symbol : gem;
+  private gemName(gem: string): string {
+    const names: Record<GemType, string> = {
+      attack: 'ngọc kiếm',
+      heal: 'ngọc hồi phục',
+      shield: 'ngọc khiên',
+      energy: 'ngọc năng lượng',
+      poison: 'ngọc độc',
+    };
+    return GEM_TYPES.includes(gem as GemType) ? names[gem as GemType] : gem;
   }
 
   private syncTurnTimer(): void {
@@ -773,6 +1008,7 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
       this.setPlayerControlsEnabled(false);
       return;
     }
+    this.stopMonsterCountdown();
     this.stopTurnTimer();
     this.remainingSeconds = DEFAULT_BATTLE_CONFIG.playerTurnSeconds;
     this.updateCountdownLabel();
@@ -794,9 +1030,41 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
     this.turnTimer = undefined;
   }
 
+  private startMonsterCountdown(seconds: number): void {
+    this.stopTurnTimer();
+    this.stopMonsterCountdown();
+    this.setPlayerControlsEnabled(false);
+    this.monsterRemainingMs = Math.max(0, seconds * 1000);
+    this.updateMonsterCountdownLabel();
+    this.monsterCountdownTimer = this.time.addEvent({
+      delay: 100,
+      loop: true,
+      callback: () => {
+        this.monsterRemainingMs = Math.max(0, this.monsterRemainingMs - 100);
+        this.updateMonsterCountdownLabel();
+        if (this.monsterRemainingMs <= 0) {
+          this.stopMonsterCountdown();
+          this.countdownLabel?.setColor('#f3c64f').setText('Quái đang ra đòn...');
+        }
+      },
+    });
+  }
+
+  private stopMonsterCountdown(): void {
+    this.monsterCountdownTimer?.remove(false);
+    this.monsterCountdownTimer = undefined;
+    this.monsterRemainingMs = 0;
+  }
+
+  private updateMonsterCountdownLabel(): void {
+    const seconds = Math.ceil(this.monsterRemainingMs / 100) / 10;
+    const color = seconds <= 1 ? '#ff7a80' : '#f3c64f';
+    this.countdownLabel?.setColor(color).setText(`Quái đánh sau: ${seconds.toFixed(1)} giây`);
+  }
+
   private updateCountdownLabel(): void {
     const color = this.remainingSeconds <= 3 ? '#ff7a80' : '#f3c64f';
-    this.countdownLabel?.setColor(color).setText(`Thời gian: ${Math.max(0, this.remainingSeconds)}s`);
+    this.countdownLabel?.setColor(color).setText(`Thời gian: ${Math.max(0, this.remainingSeconds)} giây`);
   }
 
   private showMonsterMove(from: Coord, to: Coord): void {
@@ -903,28 +1171,18 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
     }
   }
 
-  private spawnRefillImpacts(previous: Board, next: Board): void {
-    let spawned = 0;
-    for (let row = 0; row < BOARD_SIZE && spawned < 12; row += 1) {
-      for (let col = 0; col < BOARD_SIZE && spawned < 12; col += 1) {
-        if (previous[row][col] === next[row][col]) continue;
-        this.spawnVfx(
-          VFX_SHEET_KEYS.impact,
-          BOARD_LEFT + col * CELL_SIZE + CELL_SIZE / 2,
-          BOARD_TOP + row * CELL_SIZE + CELL_SIZE / 2,
-          50,
-          13,
-        );
-        spawned += 1;
-      }
-    }
-  }
-
   private coordsFromPayload(value: unknown): Coord[] {
     if (!Array.isArray(value)) return [];
     return value
       .map((entry) => this.coordFromPayload(entry))
       .filter((coord): coord is Coord => coord !== undefined);
+  }
+
+  private boardPoint(coord: Coord): { readonly x: number; readonly y: number } {
+    return {
+      x: BOARD_LEFT + coord.col * CELL_SIZE + CELL_SIZE / 2,
+      y: BOARD_TOP + coord.row * CELL_SIZE + CELL_SIZE / 2,
+    };
   }
 
   private durationForEvent(event: GameEvent): number {
@@ -934,11 +1192,11 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
       case 'GEMS_CLEARED': return 520;
       case 'DAMAGE_APPLIED':
       case 'HEAL_APPLIED': return 360;
-      case 'GEMS_FALLING': return 220;
-      case 'GEMS_REFILLED': return 140;
+      case 'GEMS_FALLING': return GEM_FALL_DURATION;
+      case 'GEMS_REFILLED': return GEM_REFILL_DURATION;
       case 'MONSTER_ATTACKED': return 1000;
       case 'MONSTER_GUARDED': return 260;
-      case 'MONSTER_THINKING': return Number(event.payload['seconds'] ?? 1) * 1000;
+      case 'MONSTER_THINKING': return Number(event.payload['seconds'] ?? 1.2) * 1000;
       case 'MONSTER_MOVE_SELECTED': return 500;
       case 'MONSTER_SWAP_STARTED': return 220;
       case 'MONSTER_SWAP_RESOLVED': return 100;
@@ -962,6 +1220,14 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
     );
   }
 
+  private isPartialBoard(value: unknown): value is ReadonlyArray<ReadonlyArray<GemType | undefined>> {
+    return (
+      Array.isArray(value) &&
+      value.length === BOARD_SIZE &&
+      value.every((row) => Array.isArray(row) && row.length === BOARD_SIZE && row.every((gem) => gem === undefined || GEM_TYPES.includes(gem)))
+    );
+  }
+
   private cleanup(): void {
     this.input.off('pointerdown', this.onPointerDown, this);
     this.input.off('pointerup', this.onPointerUp, this);
@@ -969,11 +1235,14 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
     this.unsubscribe = undefined;
     this.controller?.attachEventPlayer(undefined);
     this.stopTurnTimer();
+    this.stopMonsterCountdown();
     this.hideMonsterMove();
     this.selectionRing?.destroy();
     this.selectionRing = undefined;
     for (const fx of this.vfxSprites) fx.destroy();
     this.vfxSprites.clear();
+    for (const effect of this.transientEffects) effect.destroy();
+    this.transientEffects.clear();
     this.gemSprites.clear();
   }
 }

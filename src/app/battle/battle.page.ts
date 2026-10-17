@@ -130,7 +130,10 @@ export class BattlePage implements AfterViewInit, OnDestroy {
           backgroundColor: '#171426',
           scale: {
             mode: PhaserRuntime.Scale.FIT,
-            autoCenter: PhaserRuntime.Scale.CENTER_BOTH,
+            // Keep the fixed 360x620 battle canvas at the top of the phone.
+            // Centering vertically created a large empty band above the HUD;
+            // the board itself keeps its existing centered layout inside the canvas.
+            autoCenter: PhaserRuntime.Scale.CENTER_HORIZONTALLY,
           },
           callbacks: {
             preBoot: (game) => game.registry.set('battleController', this.controller),

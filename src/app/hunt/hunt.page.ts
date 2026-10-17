@@ -52,6 +52,9 @@ export class HuntPage implements OnInit {
   }
   isUnlocked(monster: MonsterDefinition): boolean { return this.save?.monsterProgress[monster.id]?.unlocked ?? monster.id === 'mist_blob'; }
   unlockText(monster: MonsterDefinition): string { const req = monster.unlockRequirement; return req ? `Thắng ${req.wins} trận ${MONSTER_DEFINITIONS[req.monsterId].name}` : 'Mở sẵn'; }
+  behaviorText(behavior: string): string {
+    return { basic: 'đánh thường', guard: 'phòng thủ', heavy: 'đòn nặng' }[behavior] ?? behavior;
+  }
   async hunt(monster: MonsterDefinition): Promise<void> { if (this.isUnlocked(monster)) await this.router.navigate(['/battle', monster.id]); }
 
   ionViewWillLeave(): void {

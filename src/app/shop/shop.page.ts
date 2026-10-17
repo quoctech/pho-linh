@@ -10,6 +10,7 @@ export class ShopPage implements OnInit {
   save?: LocalSaveV1;
   readonly catalogue: readonly ItemTemplate[] = Object.values(ITEM_TEMPLATES);
   async ngOnInit(): Promise<void> { this.save = await this.storage.load(); this.cdr.markForCheck(); }
+  rarityText(rarity: string): string { return rarity === 'rare' ? 'Hiếm' : 'Thường'; }
   canBuy(item: ItemTemplate): boolean { return !!this.save && this.save.profile.gold >= item.price && this.save.inventory.length < INVENTORY_CAPACITY; }
   async buy(item: ItemTemplate): Promise<void> {
     const next = await this.storage.update((save) => {
