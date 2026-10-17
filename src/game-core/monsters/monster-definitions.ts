@@ -4,7 +4,7 @@ export const MIST_BLOB: MonsterDefinition = {
   id: 'mist_blob',
   name: 'Bụi Sương',
   level: 1,
-  maxHp: 180,
+  maxHp: 400,
   attack: 20,
   defense: 2,
   behaviorId: 'basic',

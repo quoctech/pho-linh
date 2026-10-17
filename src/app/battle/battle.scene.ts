@@ -2,6 +2,7 @@ import Phaser from 'phaser';
 import {
   areAdjacent,
   DEFAULT_BATTLE_CONFIG,
+  findLegalMoves,
   type Board,
   type BattleState,
   type Coord,
@@ -57,6 +58,13 @@ const GEM_TEXTURE_KEYS: Partial<Record<GemType, string>> = {
   shield: 'gem-shield',
   energy: 'gem-energy',
 };
+const PARALLAX_BACKGROUND_KEYS = {
+  full: 'pk-full-background',
+  sky: 'pk-layer-sky-moon',
+  mid: 'pk-layer-mid-city',
+  fx: 'pk-layer-fx-mist-petals',
+  ground: 'pk-layer-ground-path',
+} as const;
 const VFX_SHEET_KEYS = {
   selectRing: 'fx-select-ring',
   match3: 'fx-match3-burst',
@@ -86,8 +94,14 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
   private heroEnergyVisual?: Phaser.GameObjects.Container;
   private heroPoisonVisual?: Phaser.GameObjects.Container;
   private energyAuraActive = false;
-  private monsterGuardVisual?: Phaser.GameObjects.Ellipse;
+  private monsterGuardVisual?: Phaser.GameObjects.Container;
   private battleBackground?: Phaser.GameObjects.Image;
+  private parallaxBackgroundLayers?: {
+    readonly sky: Phaser.GameObjects.Image;
+    readonly mid: Phaser.GameObjects.Image;
+    readonly fx: Phaser.GameObjects.Image;
+    readonly ground: Phaser.GameObjects.Image;
+  };
   private battleBackgroundOverlay?: Phaser.GameObjects.Rectangle;
   private playerBar?: Phaser.GameObjects.Graphics;
   private monsterBar?: Phaser.GameObjects.Graphics;
@@ -101,6 +115,7 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
   private statusLabel?: Phaser.GameObjects.Text;
   private skillButton?: Phaser.GameObjects.Rectangle;
   private skillButtonText?: Phaser.GameObjects.Text;
+  private abandonButtonBackground?: Phaser.GameObjects.Rectangle;
   private abandonButton?: Phaser.GameObjects.Text;
   private unsubscribe?: () => void;
   private turnTimer?: Phaser.Time.TimerEvent;
@@ -109,6 +124,9 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
   private monsterRemainingMs = 0;
   private monsterMoveFrom?: Phaser.GameObjects.Rectangle;
   private monsterMoveTo?: Phaser.GameObjects.Rectangle;
+  private hintMoveFrom?: Phaser.GameObjects.Rectangle;
+  private hintMoveTo?: Phaser.GameObjects.Rectangle;
+  private hintActive = false;
   private displayedPlayerHp?: number;
   private displayedMonsterHp?: number;
   private displayedShield?: number;
@@ -122,7 +140,11 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
   }
 
   preload(): void {
-    this.load.image(BATTLE_BACKGROUND_KEY, 'assets/pho-linh-pk-background.webp');
+    this.load.image(BATTLE_BACKGROUND_KEY, 'assets/pk-background-parallax/full-background.webp');
+    this.load.image(PARALLAX_BACKGROUND_KEYS.sky, 'assets/pk-background-parallax/layer-sky-moon.webp');
+    this.load.image(PARALLAX_BACKGROUND_KEYS.mid, 'assets/pk-background-parallax/layer-mid-city.webp');
+    this.load.image(PARALLAX_BACKGROUND_KEYS.fx, 'assets/pk-background-parallax/layer-fx-mist-petals.webp');
+    this.load.image(PARALLAX_BACKGROUND_KEYS.ground, 'assets/pk-background-parallax/layer-ground-path.webp');
     const heroGender = this.getHeroGender();
     this.heroSpriteKeys = HERO_SPRITE_KEYS[heroGender];
     this.heroAssetName = heroGender === 'female' ? 'hero-swordmistress' : 'hero-swordmaster';
@@ -237,6 +259,10 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
       .setStrokeStyle(3, 0x8fd3ff).setFillStyle(0x8fd3ff, 0.12).setDepth(10).setVisible(false);
     this.monsterMoveTo = this.add.rectangle(0, 0, CELL_SIZE - 8, CELL_SIZE - 8)
       .setStrokeStyle(3, 0xa889ff).setFillStyle(0xa889ff, 0.12).setDepth(10).setVisible(false);
+    this.hintMoveFrom = this.add.rectangle(0, 0, CELL_SIZE - 6, CELL_SIZE - 6)
+      .setStrokeStyle(2, 0xffd45e, 0.95).setFillStyle(0xffd45e, 0.1).setDepth(9).setVisible(false);
+    this.hintMoveTo = this.add.rectangle(0, 0, CELL_SIZE - 6, CELL_SIZE - 6)
+      .setStrokeStyle(2, 0xfff0a6, 0.95).setFillStyle(0xfff0a6, 0.1).setDepth(9).setVisible(false);
 
     this.unsubscribe = this.controller.subscribe((state) => this.renderState(state));
     this.syncTurnTimer();
@@ -249,26 +275,88 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
 
   private createBattleBackground(): void {
     if (!this.textures.exists(BATTLE_BACKGROUND_KEY)) return;
-    this.battleBackground = this.add
-      .image(this.scale.width / 2, this.scale.height / 2, BATTLE_BACKGROUND_KEY)
-      .setOrigin(0.5)
-      .setAlpha(0.9)
-      .setDepth(-100);
+    const hasParallaxLayers = [
+      PARALLAX_BACKGROUND_KEYS.sky,
+      PARALLAX_BACKGROUND_KEYS.mid,
+      PARALLAX_BACKGROUND_KEYS.fx,
+      PARALLAX_BACKGROUND_KEYS.ground,
+    ].every((key) => this.textures.exists(key));
+
+    if (hasParallaxLayers) {
+      const centerX = this.scale.width / 2;
+      const centerY = this.scale.height / 2;
+      this.parallaxBackgroundLayers = {
+        sky: this.add.image(centerX, centerY, PARALLAX_BACKGROUND_KEYS.sky).setDepth(-100),
+        mid: this.add.image(centerX, centerY, PARALLAX_BACKGROUND_KEYS.mid).setDepth(-90),
+        fx: this.add.image(centerX, centerY, PARALLAX_BACKGROUND_KEYS.fx).setDepth(-70).setAlpha(0.72),
+        ground: this.add.image(centerX, centerY + 34, PARALLAX_BACKGROUND_KEYS.ground).setDepth(-80),
+      };
+    } else {
+      this.battleBackground = this.add
+        .image(this.scale.width / 2, this.scale.height / 2, BATTLE_BACKGROUND_KEY)
+        .setOrigin(0.5)
+        .setAlpha(0.9)
+        .setDepth(-100);
+    }
     this.battleBackgroundOverlay = this.add
       .rectangle(this.scale.width / 2, this.scale.height / 2, this.scale.width, this.scale.height, 0x090817, 0.16)
-      .setDepth(-99);
+      .setDepth(-60);
     this.resizeBattleBackground();
     this.scale.on('resize', this.resizeBattleBackground, this);
   }
 
   private resizeBattleBackground(): void {
-    if (!this.battleBackground || !this.battleBackgroundOverlay) return;
-    const source = this.textures.get(BATTLE_BACKGROUND_KEY).getSourceImage() as HTMLImageElement;
+    if (!this.battleBackgroundOverlay) return;
     const width = this.scale.width;
     const height = this.scale.height;
+    const background = this.parallaxBackgroundLayers?.sky ?? this.battleBackground;
+    if (!background) return;
+    const source = background.texture.getSourceImage() as HTMLImageElement;
     const scale = Math.max(width / source.width, height / source.height);
-    this.battleBackground.setPosition(width / 2, height / 2).setScale(scale);
+    if (this.parallaxBackgroundLayers) {
+      const { sky, mid, fx, ground } = this.parallaxBackgroundLayers;
+      sky.setPosition(width / 2 - 2, height / 2).setScale(scale);
+      mid.setPosition(width / 2 + 3, height / 2).setScale(scale);
+      fx.setPosition(width / 2 + 5, height / 2).setScale(scale);
+      ground.setPosition(width / 2, height / 2 + 34).setScale(scale);
+    } else {
+      this.battleBackground?.setPosition(width / 2, height / 2).setScale(scale);
+    }
     this.battleBackgroundOverlay.setPosition(width / 2, height / 2).setSize(width, height);
+    this.startParallaxMotion();
+  }
+
+  private startParallaxMotion(): void {
+    const layers = this.parallaxBackgroundLayers;
+    if (!layers) return;
+    this.tweens.killTweensOf([layers.sky, layers.mid, layers.fx]);
+    this.tweens.add({
+      targets: layers.sky,
+      x: { from: layers.sky.x - 8, to: layers.sky.x + 8 },
+      y: { from: layers.sky.y - 2, to: layers.sky.y + 2 },
+      yoyo: true,
+      repeat: -1,
+      duration: 9000,
+      ease: 'Sine.InOut',
+    });
+    this.tweens.add({
+      targets: layers.mid,
+      x: { from: layers.mid.x - 14, to: layers.mid.x + 14 },
+      y: { from: layers.mid.y - 2, to: layers.mid.y + 2 },
+      yoyo: true,
+      repeat: -1,
+      duration: 6000,
+      ease: 'Sine.InOut',
+    });
+    this.tweens.add({
+      targets: layers.fx,
+      x: { from: layers.fx.x - 20, to: layers.fx.x + 20 },
+      alpha: { from: 0.42, to: 0.84 },
+      yoyo: true,
+      repeat: -1,
+      duration: 2600,
+      ease: 'Sine.InOut',
+    });
   }
 
   async play(events: readonly GameEvent[]): Promise<void> {
@@ -300,7 +388,7 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
 
   private createHud(): void {
     this.turnLabel = this.add
-      .text(180, 16, 'Lượt 0 / 20', { color: '#fff8e8', fontFamily: 'sans-serif', fontSize: '14px' })
+      .text(180, 16, 'Lượt 0 / 24', { color: '#fff8e8', fontFamily: 'sans-serif', fontSize: '14px' })
       .setOrigin(0.5, 0.5);
     this.countdownLabel = this.add
       .text(180, 35, '', { color: '#f3c64f', fontFamily: 'sans-serif', fontSize: '14px', fontStyle: 'bold' })
@@ -339,6 +427,7 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
       const sprite = this.add.sprite(0, 0, 'mist-dust-idle')
         .setOrigin(0.5, 0.88)
         .setDisplaySize(84, 84)
+        .setFlipX(true)
         .play('mist-dust-idle');
       this.monsterArt = sprite;
       this.monsterSprite = sprite;
@@ -349,7 +438,8 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
     if (this.controller.currentState.monster.id === 'mist_blob' && this.textures.exists('monster-mist-blob')) {
       this.monsterArt = this.add.image(0, 0, 'monster-mist-blob')
         .setOrigin(0.5, 0.88)
-        .setDisplaySize(84, 84);
+        .setDisplaySize(84, 84)
+        .setFlipX(true);
       monster.add(this.monsterArt);
       this.monsterVisual = monster;
       return;
@@ -364,8 +454,14 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
     this.monsterBody = body;
   }
 
-  private createProtectionVisuals(): void {
-    this.heroShieldVisual = this.add.container(72, 530).setDepth(7).setVisible(false);
+  private createShieldVisual(
+    x: number,
+    y: number,
+    color: number,
+    edgeColor: number,
+    scale = 1,
+  ): Phaser.GameObjects.Container {
+    const visual = this.add.container(x, y).setDepth(7).setScale(scale).setVisible(false);
     const shield = this.add.graphics().setBlendMode(Phaser.BlendModes.ADD);
     const shieldPoints = [
       new Phaser.Math.Vector2(0, -40),
@@ -375,12 +471,13 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
       new Phaser.Math.Vector2(-25, 10),
       new Phaser.Math.Vector2(-29, -27),
     ];
-    shield.fillStyle(0x6cbcff, 0.11);
-    shield.lineStyle(2, 0x9dceff, 0.9);
+    shield.fillStyle(color, 0.12);
+    shield.lineStyle(2, edgeColor, 0.92);
     shield.fillPoints(shieldPoints, true);
     shield.strokePoints(shieldPoints, true);
+
     const shieldCore = this.add.graphics().setBlendMode(Phaser.BlendModes.ADD);
-    shieldCore.lineStyle(1, 0xbfe4ff, 0.7);
+    shieldCore.lineStyle(1, edgeColor, 0.7);
     shieldCore.strokePoints([
       new Phaser.Math.Vector2(0, -29),
       new Phaser.Math.Vector2(20, -20),
@@ -389,8 +486,26 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
       new Phaser.Math.Vector2(-17, 6),
       new Phaser.Math.Vector2(-20, -20),
     ], true);
-    this.heroShieldVisual.add([shield, shieldCore]);
 
+    const crest = this.add
+      .triangle(0, -1, 0, -8, 7, 5, -7, 5, edgeColor, 0.68)
+      .setBlendMode(Phaser.BlendModes.ADD);
+    visual.add([shield, shieldCore, crest]);
+    this.tweens.add({
+      targets: visual,
+      alpha: { from: 0.55, to: 0.95 },
+      scaleX: { from: scale * 0.96, to: scale * 1.03 },
+      scaleY: { from: scale * 0.98, to: scale * 1.04 },
+      yoyo: true,
+      repeat: -1,
+      duration: 700,
+      ease: 'Sine.InOut',
+    });
+    return visual;
+  }
+
+  private createProtectionVisuals(): void {
+    this.heroShieldVisual = this.createShieldVisual(72, 530, 0x6cbcff, 0xbfe4ff);
     this.heroEnergyVisual = this.add.container(72, 530).setDepth(7).setVisible(false);
     const energyCore = this.add
       .ellipse(0, 0, 70, 82, 0xffc84d, 0.08)
@@ -419,32 +534,7 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
       this.add.circle(25, 15, 3.5, 0xe0b8ff, 0.62),
     ];
     this.heroPoisonVisual.add([poisonAura, ...poisonWisps]);
-    this.monsterGuardVisual = this.add
-      .ellipse(294, 145, 102, 106, 0xa889ff, 0.1)
-      .setStrokeStyle(2, 0xd8c2ff, 0.82)
-      .setBlendMode(Phaser.BlendModes.ADD)
-      .setDepth(5)
-      .setVisible(false);
-    this.tweens.add({
-      targets: this.heroShieldVisual,
-      alpha: { from: 0.22, to: 0.52 },
-      scaleX: { from: 1, to: 1.05 },
-      scaleY: { from: 1, to: 1.04 },
-      yoyo: true,
-      repeat: -1,
-      duration: 760,
-      ease: 'Sine.InOut',
-    });
-    this.tweens.add({
-      targets: this.monsterGuardVisual,
-      alpha: { from: 0.2, to: 0.56 },
-      scaleX: { from: 1, to: 1.06 },
-      scaleY: { from: 1, to: 1.04 },
-      yoyo: true,
-      repeat: -1,
-      duration: 680,
-      ease: 'Sine.InOut',
-    });
+    this.monsterGuardVisual = this.createShieldVisual(294, 145, 0xa889ff, 0xd8c2ff, 1.06);
     this.tweens.add({
       targets: this.heroEnergyVisual,
       alpha: { from: 0.16, to: 0.5 },
@@ -691,11 +781,25 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
       .setOrigin(0.5);
     this.skillButton.on('pointerdown', () => void this.dispatchSkill());
 
-    this.abandonButton = this.add
-      .text(12, 608, 'Bỏ trận', { color: '#eaa1ad', fontSize: '13px' })
+    this.abandonButtonBackground = this.add
+      .rectangle(12, this.scale.height - 12, 98, 36, 0x30263f, 0.96)
       .setOrigin(0, 1)
+      .setStrokeStyle(2, 0xa87391, 0.85)
+      .setDepth(1);
+    this.abandonButton = this.add
+      .text(26, this.scale.height - 30, 'Rời trận', { color: '#f0b4c2', fontSize: '13px', fontStyle: 'bold' })
+      .setOrigin(0, 0.5)
+      .setDepth(2)
       .setInteractive({ useHandCursor: true });
     this.abandonButton.on('pointerdown', () => void this.dispatchAbandon());
+    this.positionAbandonButton();
+    this.scale.on('resize', this.positionAbandonButton, this);
+  }
+
+  private positionAbandonButton(): void {
+    const bottom = this.scale.height - 12;
+    this.abandonButtonBackground?.setPosition(12, bottom);
+    this.abandonButton?.setPosition(26, bottom - 18);
   }
 
   private renderState(state: BattleState): void {
@@ -942,6 +1046,7 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
 
   private onPointerDown(pointer: Phaser.Input.Pointer): void {
     if (this.controller.isLocked || this.controller.currentState.phase !== 'PLAYER_READY') return;
+    this.stopMoveHint();
     this.pointerStart = this.cellFromPoint(pointer.worldX, pointer.worldY);
   }
 
@@ -1045,9 +1150,15 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
         this.animateGemsCleared(clearedCoords);
         this.spawnMatchBurst(clearedCoords);
         if (typeof counts === 'object' && counts !== null) {
-          const [gem, count] = Object.entries(counts as Record<string, unknown>)[0] ?? [];
+          const gemCounts = counts as Record<string, unknown>;
+          const [gem, count] = Object.entries(gemCounts)[0] ?? [];
           const actor = event.payload['actor'] === 'monster' ? 'Quái ghép' : 'Bạn ghép';
           this.statusLabel?.setText(`${actor} ${this.gemName(String(gem))} × ${String(count ?? 0)}`);
+          if (event.payload['actor'] === 'monster') {
+            if (this.safeNumber(Number(gemCounts['heal'] ?? 0)) > 0) this.playHealEffect('monster');
+            if (this.safeNumber(Number(gemCounts['shield'] ?? 0)) > 0) this.playShieldGainEffect('monster');
+            if (this.safeNumber(Number(gemCounts['energy'] ?? 0)) > 0) this.playEnergyGainEffect('monster');
+          }
         }
         break;
       }
@@ -1103,30 +1214,48 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
         this.refreshDisplayedBars();
         break;
       case 'HEAL_APPLIED':
-        this.displayedPlayerHp = Math.min(
-          this.controller.currentState.player.stats.maxHp,
-          (this.displayedPlayerHp ?? this.controller.currentState.player.currentHp) + amount,
-        );
-        if (amount > 0) {
-          this.statusLabel?.setText(`+${amount} HP`);
-          this.floatNumber(`+${amount} HP`, 80, 59, '#8ff0ad');
-          this.playHealEffect();
+        const healTarget = event.payload['target'] === 'monster' ? 'monster' : 'player';
+        if (healTarget === 'monster') {
+          this.displayedMonsterHp = Math.min(
+            this.controller.currentState.monster.maxHp,
+            (this.displayedMonsterHp ?? this.controller.currentState.monster.currentHp) + amount,
+          );
         } else {
-          this.statusLabel?.setText('HP đã đầy');
+          this.displayedPlayerHp = Math.min(
+            this.controller.currentState.player.stats.maxHp,
+            (this.displayedPlayerHp ?? this.controller.currentState.player.currentHp) + amount,
+          );
+        }
+        if (amount > 0) {
+          const point = this.combatPoint(healTarget);
+          this.statusLabel?.setText(healTarget === 'monster' ? `Quái hồi ${amount} HP` : `+${amount} HP`);
+          this.floatNumber(`+${amount} HP`, point.x, point.y - 50, '#8ff0ad');
+          this.playHealEffect(healTarget);
+        } else {
+          this.statusLabel?.setText(healTarget === 'monster' ? 'HP quái đã đầy' : 'HP đã đầy');
         }
         this.refreshDisplayedBars();
         break;
       case 'SHIELD_GAINED':
-        this.displayedShield = Math.max(0, (this.displayedShield ?? this.controller.currentState.player.shield) + amount);
-        this.statusLabel?.setText(`+${amount} khiên`);
-        this.floatNumber(`+${amount}`, 125, 59, '#9dceff');
-        if (amount > 0) this.playShieldGainEffect();
+        const shieldTarget = event.payload['target'] === 'monster' ? 'monster' : 'player';
+        if (shieldTarget === 'player') {
+          this.displayedShield = Math.max(0, (this.displayedShield ?? this.controller.currentState.player.shield) + amount);
+        }
+        const shieldPoint = this.combatPoint(shieldTarget);
+        this.statusLabel?.setText(shieldTarget === 'monster' ? `Quái nhận ${amount} khiên` : `+${amount} khiên`);
+        this.floatNumber(`+${amount}`, shieldPoint.x, shieldPoint.y - 50, '#9dceff');
+        if (amount > 0) this.playShieldGainEffect(shieldTarget);
         this.refreshDisplayedBars();
         break;
       case 'ENERGY_GAINED':
-        this.displayedEnergy = Math.min(100, (this.displayedEnergy ?? this.controller.currentState.player.energy) + amount);
-        this.statusLabel?.setText(`+${amount} năng lượng`);
-        this.floatNumber(`+${amount}`, 83, 112, '#ffe28c');
+        const energyTarget = event.payload['target'] === 'monster' ? 'monster' : 'player';
+        if (energyTarget === 'player') {
+          this.displayedEnergy = Math.min(100, (this.displayedEnergy ?? this.controller.currentState.player.energy) + amount);
+        }
+        const energyPoint = this.combatPoint(energyTarget);
+        this.statusLabel?.setText(energyTarget === 'monster' ? `Quái tích ${amount} năng lượng` : `+${amount} năng lượng`);
+        this.floatNumber(`+${amount}`, energyPoint.x, energyPoint.y - 50, '#ffe28c');
+        if (amount > 0) this.playEnergyGainEffect(energyTarget);
         this.refreshDisplayedBars();
         break;
       case 'POISON_APPLIED':
@@ -1438,9 +1567,22 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
     this.spawnGemParticles(x, y, color);
   }
 
-  private playHealEffect(): void {
-    const x = this.heroVisual?.x ?? 72;
-    const y = (this.heroVisual?.y ?? 570) - 40;
+  private combatPoint(target: 'player' | 'monster'): { readonly x: number; readonly y: number } {
+    return target === 'monster'
+      ? { x: this.monsterVisual?.x ?? 294, y: this.monsterVisual?.y ?? 145 }
+      : { x: this.heroVisual?.x ?? 72, y: (this.heroVisual?.y ?? 570) - 40 };
+  }
+
+  private flashCombatant(target: 'player' | 'monster', color: number): void {
+    if (target === 'monster') {
+      this.flashMonster(color);
+    } else {
+      this.flashHero(color);
+    }
+  }
+
+  private playHealEffect(target: 'player' | 'monster' = 'player'): void {
+    const { x, y } = this.combatPoint(target);
     const ring = this.add
       .circle(x, y, 18, 0x8ff0ad, 0.12)
       .setStrokeStyle(3, 0x8ff0ad, 0.9)
@@ -1456,29 +1598,37 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
       onComplete: () => this.destroyTransientEffect(ring),
     });
     this.spawnGemParticles(x, y, 0x8ff0ad);
-    this.flashHero(0x8ff0ad);
+    this.flashCombatant(target, 0x8ff0ad);
   }
 
   private playEnergyThresholdEffect(): void {
-    const x = this.heroVisual?.x ?? 72;
-    const y = (this.heroVisual?.y ?? 570) - 40;
-    this.spawnCombatImpact(x, y, 0xffd45e, 72);
-    this.flashHero(0xffd45e);
     this.statusLabel?.setText('Năng lượng vượt 50 · Sức mạnh bộc phát');
   }
 
-  private playShieldGainEffect(): void {
-    const x = this.heroVisual?.x ?? 72;
-    const y = (this.heroVisual?.y ?? 570) - 40;
-    this.heroShieldVisual?.setPosition(x, y).setVisible(true).setAlpha(0.5);
-    this.spawnCombatImpact(x, y, 0x9dceff, 58);
-    this.flashHero(0x9dceff);
+  private playEnergyGainEffect(target: 'player' | 'monster'): void {
+    const { x, y } = this.combatPoint(target);
+    this.spawnCombatImpact(x, y, 0xffd45e, target === 'monster' ? 62 : 72);
+    this.flashCombatant(target, 0xffd45e);
   }
 
-  private playShieldBreakEffect(): void {
-    const x = this.heroVisual?.x ?? 72;
-    const y = (this.heroVisual?.y ?? 570) - 40;
-    this.heroShieldVisual?.setVisible(false);
+  private playShieldGainEffect(target: 'player' | 'monster' = 'player'): void {
+    const { x, y } = this.combatPoint(target);
+    if (target === 'monster') {
+      this.monsterGuardVisual?.setPosition(x, y).setVisible(true).setAlpha(0.72);
+    } else {
+      this.heroShieldVisual?.setPosition(x, y).setVisible(true).setAlpha(0.72);
+    }
+    this.spawnCombatImpact(x, y, 0x9dceff, 58);
+    this.flashCombatant(target, 0x9dceff);
+  }
+
+  private playShieldBreakEffect(target: 'player' | 'monster' = 'player'): void {
+    const { x, y } = this.combatPoint(target);
+    if (target === 'monster') {
+      this.monsterGuardVisual?.setVisible(false);
+    } else {
+      this.heroShieldVisual?.setVisible(false);
+    }
     this.spawnCombatImpact(x, y, 0x9dceff, 64);
   }
 
@@ -1510,8 +1660,8 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
   private showMonsterGuardEffect(): void {
     const x = this.monsterVisual?.x ?? 294;
     const y = this.monsterVisual?.y ?? 145;
-    this.monsterGuardVisual?.setPosition(x, y).setVisible(true).setAlpha(0.54);
-    this.spawnCombatImpact(x, y, 0xa889ff, 58);
+    this.playShieldGainEffect('monster');
+    this.monsterGuardVisual?.setPosition(x, y).setVisible(true).setAlpha(0.72);
   }
 
   private hideMonsterGuardEffect(): void {
@@ -1557,6 +1707,7 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
     }
     this.stopMonsterCountdown();
     this.stopTurnTimer();
+    this.stopMoveHint();
     this.remainingSeconds = DEFAULT_BATTLE_CONFIG.playerTurnSeconds;
     this.updateCountdownLabel();
     this.setPlayerControlsEnabled(true);
@@ -1567,6 +1718,7 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
         if (!this.canPlayerAct()) return;
         this.remainingSeconds -= 1;
         this.updateCountdownLabel();
+        if (this.remainingSeconds <= 5) this.showMoveHint();
         if (this.remainingSeconds <= 0) void this.dispatchTimeout();
       },
     });
@@ -1575,6 +1727,36 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
   private stopTurnTimer(): void {
     this.turnTimer?.remove(false);
     this.turnTimer = undefined;
+    this.stopMoveHint();
+  }
+
+  private showMoveHint(): void {
+    if (this.hintActive || !this.canPlayerAct() || this.selectedCell) return;
+    const move = findLegalMoves(this.controller.currentState.board, DEFAULT_BATTLE_CONFIG.match3)[0];
+    if (!move) return;
+
+    this.positionMarker(this.hintMoveFrom, move.from);
+    this.positionMarker(this.hintMoveTo, move.to);
+    this.hintActive = true;
+    this.statusLabel?.setText('Gợi ý: đổi hai ngọc đang nhấp nháy');
+    this.tweens.add({
+      targets: [this.hintMoveFrom, this.hintMoveTo],
+      alpha: { from: 0.25, to: 1 },
+      scaleX: { from: 0.92, to: 1.08 },
+      scaleY: { from: 0.92, to: 1.08 },
+      yoyo: true,
+      repeat: -1,
+      duration: 360,
+      ease: 'Sine.InOut',
+    });
+  }
+
+  private stopMoveHint(): void {
+    if (!this.hintActive && !this.hintMoveFrom?.visible && !this.hintMoveTo?.visible) return;
+    this.tweens.killTweensOf([this.hintMoveFrom, this.hintMoveTo]);
+    this.hintMoveFrom?.setVisible(false).setAlpha(1).setScale(1);
+    this.hintMoveTo?.setVisible(false).setAlpha(1).setScale(1);
+    this.hintActive = false;
   }
 
   private startMonsterCountdown(seconds: number): void {
@@ -1780,6 +1962,7 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
 
   private cleanup(): void {
     this.scale.off('resize', this.resizeBattleBackground, this);
+    this.scale.off('resize', this.positionAbandonButton, this);
     this.input.off('pointerdown', this.onPointerDown, this);
     this.input.off('pointerup', this.onPointerUp, this);
     this.unsubscribe?.();

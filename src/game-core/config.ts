@@ -14,7 +14,7 @@ export const DEFAULT_MATCH3_CONFIG: Match3Config = {
 
 export const DEFAULT_BATTLE_CONFIG: BattleConfig = {
   match3: DEFAULT_MATCH3_CONFIG,
-  maxTurns: 20,
+  maxTurns: 24,
   energyCap: 100,
   shieldCapMaxHpRatio: 0.5,
   comboMultipliers: [1, 1.2, 1.4, 1.6],

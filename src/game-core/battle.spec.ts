@@ -286,7 +286,7 @@ describe('M1 battle core', () => {
 
   it('defeats the player when the turn limit is reached', () => {
     const result = resolveGemMatch('shield', {
-      turn: 19,
+      turn: DEFAULT_BATTLE_CONFIG.maxTurns - 1,
       player: { ...createBattleState(99).player, currentHp: 300 },
     });
 
