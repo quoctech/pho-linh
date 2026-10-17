@@ -1,3 +1,4 @@
 .shell { max-width: 560px; margin: auto; padding: 28px 20px; }
+.hero-card { display: flex; align-items: end; gap: 16px; min-height: 150px; margin-bottom: 8px; }.hero-card img { width: 112px; height: 150px; object-fit: contain; object-position: bottom; filter: drop-shadow(0 8px 12px rgba(67, 42, 105, .28)); }.hero-card h1 { margin: 0 0 4px; }
 .eyebrow { color: var(--ion-color-primary); font-size: 12px; font-weight: 700; letter-spacing: .12em; }
 h1 { margin-bottom: 4px; }.exp { height: 10px; border-radius: 6px; background: #d9d3e5; overflow: hidden; }.exp span { display: block; height: 100%; background: #f3c64f; }.power { margin: 24px 0; padding: 16px; border-radius: 14px; background: #28213d; color: #b8b0cf; }.power strong { float: right; color: #fff8e8; }.preview { padding: 12px; background: #f5f2fb; border-radius: 10px; }

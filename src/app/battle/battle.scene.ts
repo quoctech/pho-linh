@@ -18,6 +18,13 @@ const BOARD_TOP = 192;
 const BOARD_WIDTH = BOARD_SIZE * CELL_SIZE;
 const GEM_FALL_DURATION = 200;
 const GEM_REFILL_DURATION = 160;
+const HERO_SPRITE_KEYS = {
+  idle: 'hero-swordmaster-idle',
+  attack: 'hero-swordmaster-attack',
+  hit: 'hero-swordmaster-hit',
+  death: 'hero-swordmaster-death',
+  projectile: 'hero-swordmaster-projectile',
+} as const;
 const GEM_ATLAS_KEY = 'pho-linh-gems';
 const GEM_ATLAS_FRAMES: Partial<Record<GemType, number>> = {
   attack: 0,
@@ -53,6 +60,8 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
   private monsterBody?: Phaser.GameObjects.Arc;
   private monsterArt?: Phaser.GameObjects.Image | Phaser.GameObjects.Sprite;
   private monsterSprite?: Phaser.GameObjects.Sprite;
+  private heroVisual?: Phaser.GameObjects.Container;
+  private heroSprite?: Phaser.GameObjects.Sprite;
   private playerBar?: Phaser.GameObjects.Graphics;
   private monsterBar?: Phaser.GameObjects.Graphics;
   private playerHpLabel?: Phaser.GameObjects.Text;
@@ -93,6 +102,23 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
     this.load.image('gem-poison-pure', 'assets/gems/pho-linh/gem-p-pure.png');
     this.load.image('gem-shield', 'assets/gems/shield.webp');
     this.load.image('gem-energy', 'assets/gems/energy.webp');
+    this.load.spritesheet(HERO_SPRITE_KEYS.idle, 'assets/hero-swordmaster/idle/hero-swordmaster-idle-sheet.png', {
+      frameWidth: 512,
+      frameHeight: 512,
+    });
+    this.load.spritesheet(HERO_SPRITE_KEYS.attack, 'assets/hero-swordmaster/attack/hero-swordmaster-attack-sheet.png', {
+      frameWidth: 512,
+      frameHeight: 512,
+    });
+    this.load.spritesheet(HERO_SPRITE_KEYS.hit, 'assets/hero-swordmaster/hit/hero-swordmaster-hit-sheet.png', {
+      frameWidth: 512,
+      frameHeight: 512,
+    });
+    this.load.spritesheet(HERO_SPRITE_KEYS.death, 'assets/hero-swordmaster/death/hero-swordmaster-death-sheet.png', {
+      frameWidth: 512,
+      frameHeight: 512,
+    });
+    this.load.image(HERO_SPRITE_KEYS.projectile, 'assets/hero-swordmaster/attack/hero-swordmaster-flying-sword-projectile.png');
     this.load.spritesheet(VFX_SHEET_KEYS.selectRing, 'assets/vfx/fx-select-ring/fx-select-ring-sheet.png', {
       frameWidth: 256,
       frameHeight: 256,
@@ -145,6 +171,8 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
 
     this.cameras.main.setBackgroundColor('#171426');
     this.ensureMatch3VfxAnimations();
+    this.ensureHeroAnimations();
+    this.createHeroVisual();
     this.createHud();
     this.createMonsterVisual();
     this.createBoardFrame();
@@ -290,6 +318,25 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
       frameRate,
       repeat,
     });
+  }
+
+  private ensureHeroAnimations(): void {
+    this.createMonsterAnimation(HERO_SPRITE_KEYS.idle, HERO_SPRITE_KEYS.idle, 8, -1);
+    this.createMonsterAnimation(HERO_SPRITE_KEYS.attack, HERO_SPRITE_KEYS.attack, 10, 0);
+    this.createMonsterAnimation(HERO_SPRITE_KEYS.hit, HERO_SPRITE_KEYS.hit, 9, 0);
+    this.createMonsterAnimation(HERO_SPRITE_KEYS.death, HERO_SPRITE_KEYS.death, 8, 0);
+  }
+
+  private createHeroVisual(): void {
+    if (!this.textures.exists(HERO_SPRITE_KEYS.idle)) return;
+    const hero = this.add.container(72, 570);
+    const sprite = this.add.sprite(0, 0, HERO_SPRITE_KEYS.idle)
+      .setOrigin(0.5, 0.92)
+      .setDisplaySize(84, 84)
+      .play(HERO_SPRITE_KEYS.idle);
+    this.heroSprite = sprite;
+    this.heroVisual = hero;
+    hero.add(sprite);
   }
 
   private ensureMatch3VfxAnimations(): void {
@@ -825,6 +872,8 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
           this.floatNumber(`-${amount} HP`, 80, 59, '#ff9aa4');
           this.shakePlayerBar();
         } else if (event.payload['target'] === 'monster') {
+          this.playHeroAnimation('attack');
+          this.spawnHeroProjectile();
           this.displayedMonsterHp = Math.max(0, (this.displayedMonsterHp ?? this.controller.currentState.monster.currentHp) - amount);
           this.statusLabel?.setText(`-${amount} HP quái`);
           this.floatNumber(`-${amount} HP`, 294, 104, '#ff9aa4');
@@ -895,6 +944,8 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
           hpDamage > 0 ? '#ff9aa4' : '#9dceff',
         );
         this.playMonsterAnimation('mist-dust-attack');
+        this.playHeroAnimation('hit');
+        this.flashHero(0xff7a80);
         this.flashMonster(0xff7a80);
         this.shakePlayerBar();
         this.refreshDisplayedBars();
@@ -922,6 +973,7 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
       case 'BATTLE_LOST':
         this.statusLabel?.setText('Bạn đã bị đánh bại');
         this.setPlayerControlsEnabled(false);
+        this.playHeroAnimation('death');
         break;
       case 'BATTLE_ABANDONED':
         this.statusLabel?.setText('Đã bỏ trận');
@@ -976,6 +1028,50 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
         sprite.play('mist-dust-idle');
       }
     });
+  }
+
+  private playHeroAnimation(key: 'attack' | 'hit' | 'death'): void {
+    const sprite = this.heroSprite;
+    const animationKey = HERO_SPRITE_KEYS[key];
+    if (!sprite || !this.anims.exists(animationKey)) return;
+
+    sprite.stop();
+    sprite.play(animationKey);
+    if (key === 'death') return;
+
+    sprite.once(`animationcomplete-${animationKey}`, () => {
+      if (this.heroSprite === sprite && this.anims.exists(HERO_SPRITE_KEYS.idle)) {
+        sprite.play(HERO_SPRITE_KEYS.idle);
+      }
+    });
+  }
+
+  private spawnHeroProjectile(): void {
+    if (!this.heroVisual || !this.monsterVisual || !this.textures.exists(HERO_SPRITE_KEYS.projectile)) return;
+    const projectile = this.add
+      .image(this.heroVisual.x + 32, this.heroVisual.y - 24, HERO_SPRITE_KEYS.projectile)
+      .setDisplaySize(42, 42)
+      .setRotation(-0.2)
+      .setBlendMode(Phaser.BlendModes.ADD)
+      .setDepth(13);
+    this.transientEffects.add(projectile);
+    this.tweens.add({
+      targets: projectile,
+      x: this.monsterVisual.x - 20,
+      y: this.monsterVisual.y - 24,
+      scale: 0.55,
+      alpha: 0.15,
+      rotation: 0.35,
+      duration: 280,
+      ease: 'Cubic.Out',
+      onComplete: () => this.destroyTransientEffect(projectile),
+    });
+  }
+
+  private flashHero(color: number): void {
+    if (!this.heroSprite) return;
+    this.heroSprite.setTint(color);
+    this.time.delayedCall(180, () => this.heroSprite?.clearTint());
   }
 
   private monsterActionText(action: string): string {

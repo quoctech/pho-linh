@@ -2,7 +2,7 @@
 
 > **Tài liệu:** `ROADMAP.md`  
 > **Phiên bản:** 1.0 · 17/10/2026  
-> **Trạng thái:** Kế hoạch, **không phải tiến độ đã hoàn thành**  
+> **Trạng thái:** Kế hoạch và tiến độ hiện tại; mục có nhãn **(Đã làm)** đã được kiểm chứng trong codebase.
 > **Nguồn gameplay:** [`GAMEPLAY.md`](./GAMEPLAY.md) · **Kiến trúc:** [`ARCHITECTURE.md`](./ARCHITECTURE.md) · **Giao diện:** [`GAME_DESIGN.md`](./GAME_DESIGN.md)  
 > **Bối cảnh:** một developer chính, Android trước, iOS sau; giai đoạn M0–M3 **offline tuyệt đối**.
 
@@ -98,15 +98,16 @@ Một tính năng chỉ vào milestone hiện tại nếu **(a)** chứng minh v
 
 ### 4.1. Hạng mục implementation
 
-- [ ] Khởi tạo Ionic 9 + Angular **Standalone**, routing lazy page, Capacitor 8, Phaser 4 theo phiên bản đã khóa.
-- [ ] Mount Phaser đúng lifecycle khi vào/ra trang; tránh trùng canvas/listener.
-- [ ] `game-core` thuần TypeScript, gồm seeded RNG và board 6×6 có năm loại ngọc.
-- [ ] Tạo board **không có match sẵn** và **có ít nhất một legal move**.
-- [ ] Tap hoặc drag swap hai ô kề trực giao; đổi sai hoàn tác, không tính lượt.
-- [ ] Match ngang/dọc, giao nhau không double-count; gravity, refill, cascade tối đa 12 bước.
-- [ ] Reshuffle deterministic nếu dead board; state/action log có thể replay.
-- [ ] Visual ngọc có hình/icon riêng; tween swap, nổ, rơi ngọc rõ ràng.
-- [ ] Unit tests logic; test touch trên màn hình hẹp; `npm run build` hoàn tất.
+- [x] Khởi tạo Ionic 9 + Angular **Standalone**, routing lazy page, Capacitor 8, Phaser 4 theo phiên bản đã khóa. (Đã làm)
+- [x] Mount Phaser đúng lifecycle khi vào/ra trang; tránh trùng canvas/listener. (Đã làm)
+- [x] `game-core` thuần TypeScript, gồm seeded RNG và board 6×6 có năm loại ngọc. (Đã làm)
+- [x] Tạo board **không có match sẵn** và **có ít nhất một legal move**. (Đã làm)
+- [x] Tap hoặc drag swap hai ô kề trực giao; đổi sai hoàn tác, không tính lượt. (Đã làm)
+- [x] Match ngang/dọc, giao nhau không double-count; gravity, refill, cascade tối đa 12 bước. (Đã làm)
+- [x] Reshuffle deterministic nếu dead board; state/action log có thể replay. (Đã làm)
+- [x] Visual ngọc có hình/icon riêng; tween swap, nổ, rơi ngọc rõ ràng. (Đã làm)
+- [x] Unit tests logic và `npm run build` hoàn tất. (Đã làm)
+- [ ] Kiểm thử touch trên màn hình hẹp bằng thiết bị thật.
 
 ### 4.2. Deliverables
 
@@ -122,15 +123,15 @@ Một tính năng chỉ vào milestone hiện tại nếu **(a)** chứng minh v
 
 ### 5.1. Hạng mục implementation
 
-- [x] Tạo nhân vật level 1, STR/VIT/AGI/INT = 5, derived stats theo `GAMEPLAY.md` §10.
-- [x] Tích hợp ngọc đỏ/green/blue/yellow/purple vào damage/heal/shield/energy/poison.
-- [x] State machine battle; một swap hợp lệ = một lượt; quái phản công sau cascade.
-- [x] Hành vi quái `basic`, telegraph ở UI, boss/heavy sau; combat math config-driven.
-- [x] Kỹ năng **Đèn Phá Mây**, energy ≥100, người chơi bấm chủ động ở đầu lượt.
-- [x] Trạng thái `VICTORY`, `DEFEAT`, `ABANDON` có kết quả rõ ràng.
-- [x] Floating numbers, flash trúng đòn, thanh HP, cảnh báo chiêu, button săn tiếp.
-- [x] Pause/resume ở ranh giới lượt bằng checkpoint offline; reward vẫn để M2.
-- [x] Test damage/heal/shield/poison, skill, victory priority, defeat, turn limit.
+- [x] Tạo nhân vật level 1, STR/VIT/AGI/INT = 5, derived stats theo `GAMEPLAY.md` §10. (Đã làm)
+- [x] Tích hợp ngọc đỏ/green/blue/yellow/purple vào damage/heal/shield/energy/poison. (Đã làm)
+- [x] State machine battle; một swap hợp lệ = một lượt; quái phản công sau cascade. (Đã làm)
+- [x] Hành vi quái `basic`, telegraph ở UI, boss/heavy sau; combat math config-driven. (Đã làm)
+- [x] Kỹ năng **Đèn Phá Mây**, energy ≥100, người chơi bấm chủ động ở đầu lượt. (Đã làm)
+- [x] Trạng thái `VICTORY`, `DEFEAT`, `ABANDON` có kết quả rõ ràng. (Đã làm)
+- [x] Floating numbers, flash trúng đòn, thanh HP, cảnh báo chiêu, button săn tiếp. (Đã làm)
+- [x] Pause/resume ở ranh giới lượt bằng checkpoint offline; reward vẫn để M2. (Đã làm)
+- [x] Test damage/heal/shield/poison, skill, victory priority, defeat, turn limit. (Đã làm)
 
 ### 5.2. Deliverables
 
@@ -150,15 +151,16 @@ Người test trả lời được "Vì sao tôi thắng/thua?", hành động t
 
 ### 6.1. Nội dung gameplay khóa phạm vi
 
-- [ ] **Ba quái thường:** Bụi Sương, Miêu Đèn, Bọ Lá Tre.
-- [ ] **Một boss:** Cáo Mây (hai phase có báo đòn rõ ràng).
-- [ ] Luật mở khóa quái theo `GAMEPLAY.md` §15.
-- [ ] EXP tích lũy, level up, nhận **+3 điểm** mỗi cấp; màn preview rồi commit STR/VIT/AGI/INT.
-- [ ] Item common/rare, ba slot `weapon/armor/charm`, 6–10 item từ dataset gameplay §19.
-- [ ] Túi 60 ô, trang bị thay đổi chỉ số thực tế; túi đầy → pending reward, không mất item.
-- [ ] Vàng có ít nhất một công dụng hợp lý **hoặc tạm ẩn** khỏi game loop.
-- [ ] Lưu offline với schema `saveVersion`, migration, validation và reward journal/idempotency.
-- [ ] Onboarding theo ngữ cảnh; SFX tối thiểu, tắt âm/reduced motion, nút bỏ trận.
+- [x] **Ba quái thường:** Bụi Sương, Miêu Đèn, Bọ Lá Tre. (Đã làm)
+- [x] **Một boss:** Cáo Mây (hai phase có báo đòn rõ ràng). (Đã làm)
+- [x] Luật mở khóa quái theo `GAMEPLAY.md` §15. (Đã làm)
+- [x] EXP tích lũy, level up, nhận **+3 điểm** mỗi cấp; màn preview rồi commit STR/VIT/AGI/INT. (Đã làm)
+- [x] Item common/rare, ba slot `weapon/armor/charm`, 6–10 item từ dataset gameplay §19. (Đã làm)
+- [x] Túi 60 ô, trang bị thay đổi chỉ số thực tế; túi đầy → pending reward, không mất item. (Đã làm)
+- [x] Vàng có công dụng qua cửa hàng NPC tối thiểu. (Đã làm)
+- [x] Lưu offline với schema `saveVersion`, migration, validation và reward journal/idempotency. (Đã làm)
+- [x] SFX adapter fallback, cài đặt nhạc/SFX/reduced motion và nút bỏ trận. (Đã làm)
+- [ ] Onboarding theo ngữ cảnh.
 - [ ] Thu thập số liệu playtest trên thiết bị, không phụ thuộc dịch vụ bên ngoài.
 
 ### 6.2. Deliverables

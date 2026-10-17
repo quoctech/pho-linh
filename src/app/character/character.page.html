@@ -2,7 +2,7 @@
 <ion-content>
   @if (save; as current) {
     <main class="shell">
-      <p class="eyebrow">PHIẾU NHÂN VẬT</p><h1>Cấp {{ current.profile.level }}</h1>
+      <div class="hero-card"><img src="assets/hero-swordmaster/portrait/hero-swordmaster-portrait-512x768.png" alt="Kiếm chủ" /><div><p class="eyebrow">PHIẾU NHÂN VẬT</p><h1>Cấp {{ current.profile.level }}</h1></div></div>
       <p>EXP {{ current.profile.exp }} / {{ expRequired }} · Điểm chưa dùng <strong>{{ current.profile.unspentPoints }}</strong></p>
       <div class="exp"><span [style.width.%]="current.profile.exp / expRequired * 100"></span></div>
       <div class="power">POWER <strong>{{ stats?.power }}</strong></div>
