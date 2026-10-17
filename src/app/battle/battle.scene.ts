@@ -16,18 +16,34 @@ const CELL_SIZE = 48;
 const BOARD_LEFT = 36;
 const BOARD_TOP = 184;
 const BOARD_WIDTH = BOARD_SIZE * CELL_SIZE;
+const GEM_ATLAS_KEY = 'pho-linh-gems';
+const GEM_ATLAS_FRAMES: Partial<Record<GemType, number>> = {
+  attack: 0,
+  shield: 1,
+  heal: 2,
+  energy: 3,
+};
 const GEM_TEXTURE_KEYS: Partial<Record<GemType, string>> = {
   attack: 'gem-attack',
   heal: 'gem-heal',
-  poison: 'gem-poison',
+  poison: 'gem-poison-pure',
   shield: 'gem-shield',
   energy: 'gem-energy',
 };
+const VFX_SHEET_KEYS = {
+  selectRing: 'fx-select-ring',
+  match3: 'fx-match3-burst',
+  match4: 'fx-match4-burst',
+  match5: 'fx-match5-burst',
+  impact: 'fx-gem-impact',
+} as const;
 
 export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
   private controller!: BattleController;
   private readonly gemSprites = new Map<string, Phaser.GameObjects.Container>();
+  private readonly vfxSprites = new Set<Phaser.GameObjects.Sprite>();
   private selection?: Phaser.GameObjects.Rectangle;
+  private selectionRing?: Phaser.GameObjects.Sprite;
   private selectedCell?: Coord;
   private pointerStart?: Coord;
   private monsterVisual?: Phaser.GameObjects.Container;
@@ -56,17 +72,42 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
   private displayedMonsterHp?: number;
   private displayedShield?: number;
   private displayedEnergy?: number;
+  private lastBoard?: Board;
 
   constructor() {
     super({ key: 'BattleScene' });
   }
 
   preload(): void {
+    this.load.spritesheet(GEM_ATLAS_KEY, 'assets/gems/pho-linh/pho-linh-gems-sheet.png', {
+      frameWidth: 256,
+      frameHeight: 256,
+    });
     this.load.image('gem-attack', 'assets/gems/attack.webp');
     this.load.image('gem-heal', 'assets/gems/heal.webp');
-    this.load.image('gem-poison', 'assets/gems/poison.webp');
+    this.load.image('gem-poison-pure', 'assets/gems/pho-linh/gem-p-pure.png');
     this.load.image('gem-shield', 'assets/gems/shield.webp');
     this.load.image('gem-energy', 'assets/gems/energy.webp');
+    this.load.spritesheet(VFX_SHEET_KEYS.selectRing, 'assets/vfx/fx-select-ring/fx-select-ring-sheet.png', {
+      frameWidth: 256,
+      frameHeight: 256,
+    });
+    this.load.spritesheet(VFX_SHEET_KEYS.match3, 'assets/vfx/fx-match3-burst/fx-match3-burst-sheet.png', {
+      frameWidth: 256,
+      frameHeight: 256,
+    });
+    this.load.spritesheet(VFX_SHEET_KEYS.match4, 'assets/vfx/fx-match4-burst/fx-match4-burst-sheet.png', {
+      frameWidth: 256,
+      frameHeight: 256,
+    });
+    this.load.spritesheet(VFX_SHEET_KEYS.match5, 'assets/vfx/fx-match5-burst/fx-match5-burst-sheet.png', {
+      frameWidth: 256,
+      frameHeight: 256,
+    });
+    this.load.spritesheet(VFX_SHEET_KEYS.impact, 'assets/vfx/fx-gem-impact/fx-gem-impact-sheet.png', {
+      frameWidth: 256,
+      frameHeight: 256,
+    });
     this.load.image('monster-mist-blob', 'assets/monsters/mist_blob.webp');
     const controller = this.registry.get('battleController') as BattleController | undefined;
     if (!controller || controller.currentState.monster.id === 'mist_blob') {
@@ -98,6 +139,7 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
     }
 
     this.cameras.main.setBackgroundColor('#171426');
+    this.ensureMatch3VfxAnimations();
     this.createHud();
     this.createMonsterVisual();
     this.createBoardFrame();
@@ -109,6 +151,16 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
       .setFillStyle(0xffffff, 0)
       .setDepth(10)
       .setVisible(false);
+    if (this.textures.exists(VFX_SHEET_KEYS.selectRing) && this.anims.exists(VFX_SHEET_KEYS.selectRing)) {
+      this.selectionRing = this.add
+        .sprite(0, 0, VFX_SHEET_KEYS.selectRing)
+        .setOrigin(0.5)
+        .setDisplaySize(46, 46)
+        .setBlendMode(Phaser.BlendModes.ADD)
+        .setDepth(11)
+        .setVisible(false)
+        .play(VFX_SHEET_KEYS.selectRing);
+    }
     this.monsterMoveFrom = this.add.rectangle(0, 0, CELL_SIZE - 8, CELL_SIZE - 8)
       .setStrokeStyle(3, 0x8fd3ff).setFillStyle(0x8fd3ff, 0.12).setDepth(10).setVisible(false);
     this.monsterMoveTo = this.add.rectangle(0, 0, CELL_SIZE - 8, CELL_SIZE - 8)
@@ -125,7 +177,11 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
     for (const event of events) {
       const board = event.payload['board'];
       if (this.isBoard(board)) {
+        const previousBoard = this.lastBoard;
         this.renderBoard(board);
+        if (event.type === 'GEMS_REFILLED' && previousBoard) {
+          this.spawnRefillImpacts(previousBoard, board);
+        }
       }
 
       this.playEventFeedback(event);
@@ -228,6 +284,46 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
       frames: this.anims.generateFrameNumbers(textureKey, { start: 0, end: 7 }),
       frameRate,
       repeat,
+    });
+  }
+
+  private ensureMatch3VfxAnimations(): void {
+    this.createVfxAnimation(VFX_SHEET_KEYS.selectRing, VFX_SHEET_KEYS.selectRing, -1);
+    this.createVfxAnimation(VFX_SHEET_KEYS.match3, VFX_SHEET_KEYS.match3, 0);
+    this.createVfxAnimation(VFX_SHEET_KEYS.match4, VFX_SHEET_KEYS.match4, 0);
+    this.createVfxAnimation(VFX_SHEET_KEYS.match5, VFX_SHEET_KEYS.match5, 0);
+    this.createVfxAnimation(VFX_SHEET_KEYS.impact, VFX_SHEET_KEYS.impact, 0);
+  }
+
+  private createVfxAnimation(key: string, textureKey: string, repeat: number): void {
+    if (this.anims.exists(key) || !this.textures.exists(textureKey)) return;
+    this.anims.create({
+      key,
+      frames: this.anims.generateFrameNumbers(textureKey, { start: 0, end: 7 }),
+      frameRate: 12,
+      repeat,
+    });
+  }
+
+  private spawnVfx(
+    key: string,
+    x: number,
+    y: number,
+    displaySize: number,
+    depth = 12,
+  ): void {
+    if (!this.textures.exists(key) || !this.anims.exists(key)) return;
+    const fx = this.add
+      .sprite(x, y, key)
+      .setOrigin(0.5)
+      .setDisplaySize(displaySize, displaySize)
+      .setBlendMode(Phaser.BlendModes.ADD)
+      .setDepth(depth)
+      .play(key);
+    this.vfxSprites.add(fx);
+    fx.once(Phaser.Animations.Events.ANIMATION_COMPLETE, () => {
+      this.vfxSprites.delete(fx);
+      fx.destroy();
     });
   }
 
@@ -343,6 +439,7 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
         }
       }
     }
+    this.lastBoard = board.map((row) => [...row]) as Board;
     this.renderSelection();
   }
 
@@ -351,8 +448,12 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
     const container = this.add.container(x, y);
     const circle = this.add.circle(0, 0, 19, visual.color, 1);
     circle.setStrokeStyle(2, 0xfff8e8, 0.55).setAlpha(0.3);
+    const atlasFrame = GEM_ATLAS_FRAMES[gem];
     const textureKey = GEM_TEXTURE_KEYS[gem];
-    if (textureKey && this.textures.exists(textureKey)) {
+    if (atlasFrame !== undefined && this.textures.exists(GEM_ATLAS_KEY)) {
+      const icon = this.add.image(0, 0, GEM_ATLAS_KEY, atlasFrame).setDisplaySize(40, 40);
+      container.add([circle, icon]);
+    } else if (textureKey && this.textures.exists(textureKey)) {
       const icon = this.add.image(0, 0, textureKey).setDisplaySize(40, 40);
       container.add([circle, icon]);
     } else {
@@ -468,6 +569,7 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
         break;
       case 'GEMS_CLEARED': {
         const counts = event.payload['gemCounts'];
+        this.spawnMatchBurst(this.coordsFromPayload(event.payload['coordinates']));
         if (typeof counts === 'object' && counts !== null) {
           const [gem, count] = Object.entries(counts as Record<string, unknown>)[0] ?? [];
           const actor = event.payload['actor'] === 'monster' ? 'Quái ghép' : 'Bạn ghép';
@@ -760,28 +862,80 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
   }
 
   private renderSelection(): void {
-    if (!this.selection) return;
     if (!this.selectedCell) {
-      this.selection.setVisible(false);
+      this.selection?.setVisible(false);
+      this.selectionRing?.setVisible(false);
       return;
     }
-    this.selection
-      .setPosition(
-        BOARD_LEFT + this.selectedCell.col * CELL_SIZE + CELL_SIZE / 2,
-        BOARD_TOP + this.selectedCell.row * CELL_SIZE + CELL_SIZE / 2,
-      )
-      .setVisible(true);
+    const x = BOARD_LEFT + this.selectedCell.col * CELL_SIZE + CELL_SIZE / 2;
+    const y = BOARD_TOP + this.selectedCell.row * CELL_SIZE + CELL_SIZE / 2;
+    this.selection?.setPosition(x, y).setVisible(!this.selectionRing);
+    this.selectionRing?.setPosition(x, y).setVisible(true);
+  }
+
+  private spawnMatchBurst(coords: readonly Coord[]): void {
+    if (coords.length < 3) return;
+    const key = coords.length >= 5
+      ? VFX_SHEET_KEYS.match5
+      : coords.length === 4
+        ? VFX_SHEET_KEYS.match4
+        : VFX_SHEET_KEYS.match3;
+    if (coords.length >= 5) {
+      const center = coords.reduce(
+        (result, coord) => ({ row: result.row + coord.row, col: result.col + coord.col }),
+        { row: 0, col: 0 },
+      );
+      this.spawnVfx(
+        key,
+        BOARD_LEFT + (center.col / coords.length + 0.5) * CELL_SIZE,
+        BOARD_TOP + (center.row / coords.length + 0.5) * CELL_SIZE,
+        84,
+      );
+      return;
+    }
+    for (const coord of coords) {
+      this.spawnVfx(
+        key,
+        BOARD_LEFT + coord.col * CELL_SIZE + CELL_SIZE / 2,
+        BOARD_TOP + coord.row * CELL_SIZE + CELL_SIZE / 2,
+        62,
+      );
+    }
+  }
+
+  private spawnRefillImpacts(previous: Board, next: Board): void {
+    let spawned = 0;
+    for (let row = 0; row < BOARD_SIZE && spawned < 12; row += 1) {
+      for (let col = 0; col < BOARD_SIZE && spawned < 12; col += 1) {
+        if (previous[row][col] === next[row][col]) continue;
+        this.spawnVfx(
+          VFX_SHEET_KEYS.impact,
+          BOARD_LEFT + col * CELL_SIZE + CELL_SIZE / 2,
+          BOARD_TOP + row * CELL_SIZE + CELL_SIZE / 2,
+          50,
+          13,
+        );
+        spawned += 1;
+      }
+    }
+  }
+
+  private coordsFromPayload(value: unknown): Coord[] {
+    if (!Array.isArray(value)) return [];
+    return value
+      .map((entry) => this.coordFromPayload(entry))
+      .filter((coord): coord is Coord => coord !== undefined);
   }
 
   private durationForEvent(event: GameEvent): number {
     switch (event.type) {
       case 'SWAP_STARTED': return 160;
       case 'MATCH_FOUND': return 180;
-      case 'GEMS_CLEARED': return 240;
+      case 'GEMS_CLEARED': return 520;
       case 'DAMAGE_APPLIED':
       case 'HEAL_APPLIED': return 360;
       case 'GEMS_FALLING': return 220;
-      case 'GEMS_REFILLED': return 100;
+      case 'GEMS_REFILLED': return 140;
       case 'MONSTER_ATTACKED': return 1000;
       case 'MONSTER_GUARDED': return 260;
       case 'MONSTER_THINKING': return Number(event.payload['seconds'] ?? 1) * 1000;
@@ -816,6 +970,10 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
     this.controller?.attachEventPlayer(undefined);
     this.stopTurnTimer();
     this.hideMonsterMove();
+    this.selectionRing?.destroy();
+    this.selectionRing = undefined;
+    for (const fx of this.vfxSprites) fx.destroy();
+    this.vfxSprites.clear();
     this.gemSprites.clear();
   }
 }

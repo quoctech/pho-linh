@@ -1,0 +1,110 @@
+{
+  "frames": {
+    "gem-sword": {
+      "frame": {
+        "x": 0,
+        "y": 0,
+        "w": 256,
+        "h": 256
+      },
+      "sourceSize": {
+        "w": 256,
+        "h": 256
+      },
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 256,
+        "h": 256
+      },
+      "label": "Kiếm",
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    "gem-shield": {
+      "frame": {
+        "x": 256,
+        "y": 0,
+        "w": 256,
+        "h": 256
+      },
+      "sourceSize": {
+        "w": 256,
+        "h": 256
+      },
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 256,
+        "h": 256
+      },
+      "label": "Khiên",
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    "gem-hp-green": {
+      "frame": {
+        "x": 0,
+        "y": 256,
+        "w": 256,
+        "h": 256
+      },
+      "sourceSize": {
+        "w": 256,
+        "h": 256
+      },
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 256,
+        "h": 256
+      },
+      "label": "HP xanh lá",
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    "gem-energy-yellow": {
+      "frame": {
+        "x": 256,
+        "y": 256,
+        "w": 256,
+        "h": 256
+      },
+      "sourceSize": {
+        "w": 256,
+        "h": 256
+      },
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 256,
+        "h": 256
+      },
+      "label": "Năng lượng vàng",
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    }
+  },
+  "meta": {
+    "image": "pho-linh-gems-sheet.png",
+    "size": {
+      "w": 512,
+      "h": 512
+    },
+    "frameSize": {
+      "w": 256,
+      "h": 256
+    },
+    "rows": 2,
+    "cols": 2,
+    "atlas": "pho-linh-gems"
+  }
+}
