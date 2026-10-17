@@ -1,5 +1,6 @@
 #container {
   text-align: center;
+  padding: 24px;
 
   position: absolute;
   left: 0;
@@ -8,20 +9,35 @@
   transform: translateY(-50%);
 }
 
-#container strong {
-  font-size: 20px;
-  line-height: 26px;
+#container .eyebrow {
+  color: var(--ion-color-primary);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+}
+
+#container h1 {
+  margin: 12px 0;
+  font-size: 30px;
+  line-height: 36px;
 }
 
 #container p {
+  max-width: 320px;
+  margin: 0 auto 24px;
+  color: var(--ion-color-medium);
   font-size: 16px;
-  line-height: 22px;
-
-  color: #8c8c8c;
-
-  margin: 0;
+  line-height: 24px;
 }
 
 #container a {
   text-decoration: none;
+}
+
+#container ion-button {
+  min-height: 48px;
+}
+
+#container strong {
+  color: #8c8c8c;
 }
