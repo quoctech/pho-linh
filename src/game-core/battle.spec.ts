@@ -124,6 +124,7 @@ describe('M1 battle core', () => {
 
     expect(result.accepted).toBe(true);
     expect(result.events.some((event) => event.type === 'MONSTER_ATTACKED')).toBe(true);
+    expect(result.events.find((event) => event.type === 'ENERGY_GAINED' && event.payload['target'] === 'monster')?.payload['amount']).toBe(15);
     expect(result.nextState.player.shield).toBeGreaterThanOrEqual(0);
     expect(result.nextState.player.currentHp).toBeLessThanOrEqual(state.player.currentHp);
     expect(result.nextState.phase).toBe('PLAYER_READY');
@@ -177,7 +178,7 @@ describe('M1 battle core', () => {
     expect(result.nextState.monster.currentHp).toBe(999 - playerDamage - poisonDamage);
   });
 
-  it('lets the monster choose a deterministic legal adjacent swap before attacking', () => {
+  it('lets the monster choose a deterministic legal adjacent swap and only attacks with attack gems', () => {
     const state = createBattleState(120);
     const result = resolveBattleAction(state, {
       kind: 'timeout',
@@ -196,9 +197,16 @@ describe('M1 battle core', () => {
     expect(areAdjacent(from, to)).toBe(true);
     expect(result.events.some((event) => event.type === 'MONSTER_SWAP_STARTED')).toBe(true);
     expect(result.events.some((event) => event.type === 'MONSTER_SWAP_RESOLVED')).toBe(true);
-    expect(result.events.some((event) => event.type === 'MONSTER_ATTACKED')).toBe(true);
+    const resolved = result.events.find((event) => event.type === 'MONSTER_SWAP_RESOLVED');
+    const gemCounts = resolved?.payload['gemCounts'] as Record<string, number> | undefined;
+    const hasAttackGem = (gemCounts?.['attack'] ?? 0) > 0;
+    expect(result.events.some((event) => event.type === 'MONSTER_ATTACKED')).toBe(hasAttackGem);
+    expect(result.events.some((event) => event.type === 'MONSTER_ACTION_SKIPPED')).toBe(!hasAttackGem);
     expect(selected?.payload['actor']).toBe('monster');
-    expect(result.events.find((event) => event.type === 'MONSTER_ATTACKED')?.payload['actor']).toBe('monster');
+    if (hasAttackGem) {
+      expect(result.events.find((event) => event.type === 'MONSTER_ATTACKED')?.payload['actor']).toBe('monster');
+      expect(result.events.find((event) => event.type === 'ENERGY_GAINED' && event.payload['target'] === 'monster')?.payload['amount']).toBe(15);
+    }
     expect(result.events.find((event) => event.type === 'GEMS_CLEARED')?.payload['actor']).toBe('monster');
   });
 

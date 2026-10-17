@@ -145,6 +145,8 @@ export interface MonsterTactics {
 export interface MonsterBattleState extends MonsterDefinition {
   readonly baseDefense: number;
   readonly currentHp: number;
+  readonly energy: number;
+  readonly shield: number;
   readonly poisonPotency: number;
   readonly poisonTurns: number;
   readonly nextAction: 'basic' | 'guard' | 'heavy' | 'poison';
@@ -240,6 +242,7 @@ export interface GameEvent {
     | 'HEAL_APPLIED'
     | 'SHIELD_GAINED'
     | 'ENERGY_GAINED'
+    | 'MONSTER_ACTION_SKIPPED'
     | 'POISON_APPLIED'
     | 'POISON_TICKED'
     | 'MONSTER_TELEGRAPH'

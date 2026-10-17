@@ -127,6 +127,7 @@ Một tính năng chỉ vào milestone hiện tại nếu **(a)** chứng minh v
 - [x] Tích hợp ngọc đỏ/green/blue/yellow/purple vào damage/heal/shield/energy/poison. (Đã làm)
 - [x] State machine battle; một swap hợp lệ = một lượt; quái phản công sau cascade. (Đã làm)
 - [x] Hành vi quái `basic`, telegraph ở UI, boss/heavy sau; combat math config-driven. (Đã làm)
+- [x] Quái chỉ gây sát thương khi nước đi tạo ngọc tấn công; quái có HP hồi, khiên riêng và nhận +15 năng lượng sau đòn đánh. (Đã làm)
 - [x] Kỹ năng **Đèn Phá Mây**, energy ≥100, người chơi bấm chủ động ở đầu lượt. (Đã làm)
 - [x] Tích hợp icon và bộ VFX WebP của Đèn Phá Mây: triệu hồi, tích năng lượng, projectile, tách mây, impact và flash kết thúc. (Đã làm)
 - [x] Trạng thái `VICTORY`, `DEFEAT`, `ABANDON` có kết quả rõ ràng. (Đã làm)

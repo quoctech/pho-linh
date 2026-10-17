@@ -91,12 +91,25 @@ function comboMultiplier(cascade: number, config: BattleConfig): number {
   return config.comboMultipliers[Math.min(cascade - 1, config.comboMultipliers.length - 1)] ?? 1;
 }
 
+function matchDamageMultiplier(matchCount: number): number {
+  if (matchCount >= 6) return 1.6;
+  if (matchCount === 5) return 1.4;
+  if (matchCount === 4) return 1.2;
+  return 1;
+}
+
 function resolveMonsterMove(
   state: BattleState,
   actionId: string,
   startSequence: number,
   config: BattleConfig,
-): { readonly state: BattleState; readonly events: GameEvent[]; readonly nextSequence: number } {
+): {
+  readonly state: BattleState;
+  readonly events: GameEvent[];
+  readonly nextSequence: number;
+  readonly attackGemCount: number;
+  readonly gemEvents: readonly GameEvent[];
+} {
   let workingState = state;
   let legalMoves = findLegalMoves(workingState.board, config.match3);
   const events: GameEvent[] = [];
@@ -113,7 +126,7 @@ function resolveMonsterMove(
     sequence += 1;
   }
   if (legalMoves.length === 0) {
-    return { state: workingState, events, nextSequence: sequence };
+    return { state: workingState, events, nextSequence: sequence, attackGemCount: 0, gemEvents: [] };
   }
 
   const scoredMoves = legalMoves.map((candidate) => {
@@ -169,12 +182,23 @@ function resolveMonsterMove(
       ? { ...monsterEvent, type: 'MONSTER_SWAP_STARTED' as const, payload: { ...monsterEvent.payload, actor: 'monster' } }
       : { ...monsterEvent, payload: { ...monsterEvent.payload, actor: 'monster' } },
   );
+  const gemEvents = resolved.events.filter((monsterEvent) => monsterEvent.type === 'GEMS_CLEARED');
+  const gemCounts = gemEvents.reduce<Record<string, number>>((counts, monsterEvent) => {
+    const sourceCounts = value<Readonly<Record<string, number>>>(monsterEvent.payload, 'gemCounts', {});
+    for (const [gem, count] of Object.entries(sourceCounts)) counts[gem] = (counts[gem] ?? 0) + count;
+    return counts;
+  }, {});
+  const attackGemCount = gemEvents.reduce((total, monsterEvent) => {
+    const sourceCounts = value<Readonly<Record<string, number>>>(monsterEvent.payload, 'gemCounts', {});
+    return total + (sourceCounts['attack'] ?? 0);
+  }, 0);
   events.push(...monsterEvents);
   events.push(event(state, actionId, sequence + monsterEvents.length, 'MONSTER_SWAP_RESOLVED', {
     actor: 'monster',
     from: move.from,
     to: move.to,
     matchCount: resolved.events.filter((monsterEvent) => monsterEvent.type === 'MATCH_FOUND').length,
+    gemCounts,
     board: resolved.nextState.board,
   }));
 
@@ -182,7 +206,77 @@ function resolveMonsterMove(
     state: { ...workingState, board: resolved.nextState.board, rngState: resolved.nextState.rngState },
     events,
     nextSequence: sequence + monsterEvents.length + 1,
+    attackGemCount,
+    gemEvents,
   };
+}
+
+function applyMonsterGemEffects(
+  state: BattleState,
+  baseEvents: readonly GameEvent[],
+  actionId: string,
+  startSequence: number,
+  config: BattleConfig,
+): { readonly state: BattleState; readonly events: GameEvent[]; readonly nextSequence: number } {
+  let monster = state.monster;
+  const events: GameEvent[] = [];
+  let sequence = startSequence;
+
+  for (const source of baseEvents) {
+    if (source.type !== 'GEMS_CLEARED') continue;
+    const counts = value<Readonly<Record<string, number>>>(source.payload, 'gemCounts', {});
+    const cascade = value(source.payload, 'cascade', 1);
+    const longMatchBonus = value(source.payload, 'longMatchBonus', 0);
+    const multiplier = comboMultiplier(cascade, config);
+
+    const healCount = counts['heal'] ?? 0;
+    if (healCount > 0) {
+      const requested = Math.round(healCount * (8 + monster.level * 2) * multiplier);
+      const amount = Math.min(monster.maxHp - monster.currentHp, requested);
+      monster = { ...monster, currentHp: Math.min(monster.maxHp, monster.currentHp + requested) };
+      events.push(event(state, actionId, sequence, 'HEAL_APPLIED', {
+        actor: 'monster',
+        amount,
+        requested,
+        capped: amount < requested,
+        target: 'monster',
+      }));
+      sequence += 1;
+    }
+
+    const shieldCount = counts['shield'] ?? 0;
+    if (shieldCount > 0) {
+      const requested = Math.round(shieldCount * (8 + monster.defense * 0.5) * multiplier);
+      const cap = Math.round(monster.maxHp * config.shieldCapMaxHpRatio);
+      const amount = Math.max(0, Math.min(cap - monster.shield, requested));
+      monster = { ...monster, shield: Math.min(cap, monster.shield + requested) };
+      events.push(event(state, actionId, sequence, 'SHIELD_GAINED', {
+        actor: 'monster',
+        amount,
+        requested,
+        cap,
+        target: 'monster',
+      }));
+      sequence += 1;
+    }
+
+    const energyCount = counts['energy'] ?? 0;
+    if (energyCount > 0) {
+      const requested = energyCount * 8 + longMatchBonus;
+      const amount = Math.max(0, Math.min(100 - monster.energy, requested));
+      monster = { ...monster, energy: Math.min(100, monster.energy + requested) };
+      events.push(event(state, actionId, sequence, 'ENERGY_GAINED', {
+        actor: 'monster',
+        amount,
+        requested,
+        target: 'monster',
+        source: 'monster_energy_gems',
+      }));
+      sequence += 1;
+    }
+  }
+
+  return { state: { ...state, monster }, events, nextSequence: sequence };
 }
 
 function resolveMonsterSequence(
@@ -203,13 +297,24 @@ function resolveMonsterSequence(
     label: `${state.monster.name} đang chuẩn bị... ${thinkingSeconds.toFixed(1)} giây`,
   });
   const move = resolveMonsterMove(thinkingState, actionId, startSequence + 1, config);
-  const turn = resolveMonsterTurn(
-    { ...move.state, phase: 'MONSTER_TURN' },
+  const gemEffects = applyMonsterGemEffects(
+    move.state,
+    move.gemEvents,
     actionId,
     move.nextSequence,
     config,
   );
-  return { state: turn.state, events: [thinkingEvent, ...move.events, ...turn.events] };
+  const turn = resolveMonsterTurn(
+    { ...gemEffects.state, phase: 'MONSTER_TURN' },
+    actionId,
+    gemEffects.nextSequence,
+    move.attackGemCount,
+    config,
+  );
+  return {
+    state: turn.state,
+    events: [thinkingEvent, ...move.events, ...gemEffects.events, ...turn.events],
+  };
 }
 
 function appendOutcome(
@@ -254,6 +359,24 @@ function applyMonsterAttackDamage(
   };
 }
 
+function applyDamageToMonster(
+  monster: BattleState['monster'],
+  amount: number,
+): { readonly monster: BattleState['monster']; readonly absorbed: number; readonly hpDamage: number } {
+  const incoming = Number.isFinite(amount) ? Math.max(1, amount) : 1;
+  const absorbed = Math.min(monster.shield, incoming);
+  const hpDamage = incoming - absorbed;
+  return {
+    absorbed,
+    hpDamage,
+    monster: {
+      ...monster,
+      shield: monster.shield - absorbed,
+      currentHp: Math.max(0, monster.currentHp - hpDamage),
+    },
+  };
+}
+
 function applyGemEffects(
   state: BattleState,
   baseEvents: readonly GameEvent[],
@@ -292,14 +415,23 @@ function applyGemEffects(
 
       if (gem === 'attack') {
         const agiMultiplier = cascade >= 2 ? 1 + player.stats.agiBonus : 1;
-        const raw = count * (player.stats.atk / 3);
-        const damage = Math.max(1, Math.round(raw * multiplier * agiMultiplier) - monster.defense);
-        monster = { ...monster, currentHp: Math.max(0, monster.currentHp - damage) };
+        const matchMultiplier = matchDamageMultiplier(count);
+        const raw = count * (player.stats.atk / 3) * matchMultiplier;
+        const requested = Math.max(1, Math.round(raw * multiplier * agiMultiplier) - monster.defense);
+        const damage = applyDamageToMonster(monster, requested);
+        monster = damage.monster;
         events.push(
           event(state, actionId, sequence, 'DAMAGE_APPLIED', {
             actor: 'player',
             source: 'attack_gems',
-            amount: damage,
+            amount: damage.hpDamage,
+            requested,
+            shieldAbsorbed: damage.absorbed,
+            shieldRemaining: monster.shield,
+            shieldBroken: damage.absorbed > 0 && monster.shield === 0,
+            matchCount: count,
+            matchDamageMultiplier: matchMultiplier,
+            comboMultiplier: multiplier,
             cascade,
             target: 'monster',
           }),
@@ -400,6 +532,7 @@ function resolveMonsterTurn(
   state: BattleState,
   actionId: string,
   startSequence: number,
+  attackGemCount: number,
   config: BattleConfig,
 ): { readonly state: BattleState; readonly events: GameEvent[] } {
   let player = clampPlayerState(state.player);
@@ -489,30 +622,59 @@ function resolveMonsterTurn(
       label: `${monster.name} dựng thế phòng thủ`,
     }));
     sequence += 1;
-  } else {
-    const multiplier = action === 'heavy' ? 1.7 : 1;
-    const incoming = Math.max(1, Math.round(monster.attack * multiplier) - Math.floor(player.stats.defense * 0.6));
-    const damage = applyMonsterAttackDamage(player, incoming);
-    player = damage.player;
-    events.push(
-      event(state, actionId, sequence, 'MONSTER_ATTACKED', {
-        actor: 'monster',
-        actionId: `${actionId}:monster:${monster.actionCount}`,
-        action,
-        label: action === 'heavy'
-          ? `${monster.name} tung đòn nặng`
-          : action === 'poison'
-            ? `${monster.name} gieo độc`
-            : `${monster.name} tấn công`,
-        amount: incoming,
-        hpDamage: Math.max(0, incoming - damage.absorbed),
-        shieldAbsorbed: damage.absorbed,
-        shieldRemaining: player.shield,
-        shieldBroken: damage.absorbed > 0 && player.shield === 0,
-        target: 'player',
-      }),
-    );
+  } else if (attackGemCount <= 0 && action !== 'poison') {
+    events.push(event(state, actionId, sequence, 'MONSTER_ACTION_SKIPPED', {
+      actor: 'monster',
+      actionId: `${actionId}:monster:${monster.actionCount}`,
+      action,
+      reason: 'no-attack-gem',
+      label: `${monster.name} không có ngọc tấn công nên không gây sát thương`,
+      target: 'player',
+    }));
     sequence += 1;
+  } else {
+    if (attackGemCount > 0) {
+      const actionMultiplier = action === 'heavy' ? 1.7 : 1;
+      const matchMultiplier = matchDamageMultiplier(attackGemCount);
+      const incoming = Math.max(
+        1,
+        Math.round(monster.attack * actionMultiplier * matchMultiplier) - Math.floor(player.stats.defense * 0.6),
+      );
+      const damage = applyMonsterAttackDamage(player, incoming);
+      player = damage.player;
+      events.push(
+        event(state, actionId, sequence, 'MONSTER_ATTACKED', {
+          actor: 'monster',
+          actionId: `${actionId}:monster:${monster.actionCount}`,
+          action,
+          label: action === 'heavy'
+            ? `${monster.name} tung đòn nặng`
+            : action === 'poison'
+              ? `${monster.name} gieo độc`
+              : `${monster.name} tấn công`,
+          amount: incoming,
+          hpDamage: Math.max(0, incoming - damage.absorbed),
+          shieldAbsorbed: damage.absorbed,
+          shieldRemaining: player.shield,
+          shieldBroken: damage.absorbed > 0 && player.shield === 0,
+          matchCount: attackGemCount,
+          matchDamageMultiplier: matchMultiplier,
+          target: 'player',
+        }),
+      );
+      sequence += 1;
+
+      const energyGained = Math.min(100 - monster.energy, 15);
+      monster = { ...monster, energy: monster.energy + energyGained };
+      events.push(event(state, actionId, sequence, 'ENERGY_GAINED', {
+        actor: 'monster',
+        amount: energyGained,
+        requested: 15,
+        target: 'monster',
+        source: 'monster_attack',
+      }));
+      sequence += 1;
+    }
 
     if (action === 'poison' && monster.tactics.poison > 0) {
       const requested = Math.max(1, Math.round(monster.tactics.poison * 1.5));
@@ -638,10 +800,11 @@ function resolveSkill(
     return reject(state, action, 'not-enough-energy');
   }
 
-  const damage = Math.max(
+  const requestedDamage = Math.max(
     1,
     Math.round(50 + playerState.stats.skillPower * 4) - Math.floor(state.monster.defense * 0.5),
   );
+  const damage = applyDamageToMonster(state.monster, requestedDamage);
   const events: GameEvent[] = [
     event(state, action.actionId, 0, 'SKILL_USED', {
       skillId: action.skillId,
@@ -650,14 +813,15 @@ function resolveSkill(
     event(state, action.actionId, 1, 'DAMAGE_APPLIED', {
       actor: 'player',
       source: action.skillId,
-      amount: damage,
+      amount: damage.hpDamage,
+      requested: requestedDamage,
+      shieldAbsorbed: damage.absorbed,
+      shieldRemaining: damage.monster.shield,
+      shieldBroken: damage.absorbed > 0 && damage.monster.shield === 0,
       target: 'monster',
     }),
   ];
-  const monster = {
-    ...state.monster,
-    currentHp: Math.max(0, state.monster.currentHp - damage),
-  };
+  const monster = damage.monster;
   const player = { ...playerState, energy: 0 };
   if (monster.currentHp <= 0) {
     return {
@@ -705,6 +869,20 @@ export function resolveBattleAction(
   action: BattleAction,
   config: BattleConfig = DEFAULT_BATTLE_CONFIG,
 ): BattleResolveResult {
+  // Older active-battle snapshots do not have monster shield/energy yet.
+  // Normalize them at the action boundary so migration data cannot produce
+  // NaN or make a shield effect disappear unexpectedly.
+  const monsterShield = Number.isFinite(state.monster.shield)
+    ? Math.max(0, Math.min(Math.round(state.monster.maxHp * config.shieldCapMaxHpRatio), state.monster.shield))
+    : 0;
+  const monsterEnergy = Number.isFinite(state.monster.energy)
+    ? Math.max(0, Math.min(100, state.monster.energy))
+    : 0;
+  state = {
+    ...state,
+    monster: { ...state.monster, shield: monsterShield, energy: monsterEnergy },
+  };
+
   if (action.kind === 'abandon') {
     if (state.phase !== 'PLAYER_READY') {
       return reject(state, action, 'phase-locked');

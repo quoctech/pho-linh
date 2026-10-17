@@ -19,6 +19,7 @@ const BOARD_TOP = 192;
 const BOARD_WIDTH = BOARD_SIZE * CELL_SIZE;
 const GEM_FALL_DURATION = 200;
 const GEM_REFILL_DURATION = 160;
+const MONSTER_COMBAT_Y_OFFSET = -32;
 type HeroGender = 'male' | 'female';
 interface HeroSpriteKeys {
   readonly idle: string;
@@ -106,6 +107,7 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
   private heroPoisonVisual?: Phaser.GameObjects.Container;
   private energyAuraActive = false;
   private monsterGuardVisual?: Phaser.GameObjects.Container;
+  private monsterGuardActive = false;
   private battleBackground?: Phaser.GameObjects.Image;
   private parallaxBackgroundLayers?: {
     readonly sky: Phaser.GameObjects.Image;
@@ -141,6 +143,7 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
   private hintActive = false;
   private displayedPlayerHp?: number;
   private displayedMonsterHp?: number;
+  private displayedMonsterShield?: number;
   private displayedShield?: number;
   private displayedEnergy?: number;
   private displayedPlayerPoisonPotency?: number;
@@ -311,7 +314,8 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
     // prevents a tweened shield/aura from remaining visible after its value
     // has already reached zero.
     const shield = this.safeNumber(this.displayedShield ?? this.controller.currentState.player.shield);
-    this.syncProtectionVisuals(shield > 0);
+    const monsterShield = this.safeNumber(this.displayedMonsterShield ?? this.controller.currentState.monster.shield);
+    this.syncProtectionVisuals(shield > 0, monsterShield > 0);
     this.syncEnergyAura(this.safeNumber(this.displayedEnergy ?? this.controller.currentState.player.energy));
   }
 
@@ -592,7 +596,7 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
       this.add.circle(25, 15, 3.5, 0xe0b8ff, 0.62),
     ];
     this.heroPoisonVisual.add([poisonAura, ...poisonWisps]);
-    this.monsterGuardVisual = this.createShieldVisual(294, 145, 0xa889ff, 0xd8c2ff, 1.06);
+    this.monsterGuardVisual = this.createShieldVisual(294, 145 + MONSTER_COMBAT_Y_OFFSET, 0xa889ff, 0xd8c2ff, 1.06);
     this.tweens.add({
       targets: this.heroEnergyVisual,
       alpha: { from: 0.16, to: 0.5 },
@@ -883,6 +887,7 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
   private renderState(state: BattleState): void {
     this.displayedPlayerHp = state.player.currentHp;
     this.displayedMonsterHp = state.monster.currentHp;
+    this.displayedMonsterShield = state.monster.shield;
     this.displayedShield = state.player.shield;
     this.displayedEnergy = state.player.energy;
     this.displayedPlayerPoisonPotency = state.player.poisonPotency;
@@ -901,6 +906,7 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
     const monsterMaxHp = this.safeNumber(state.monster.maxHp, 1);
     const playerHp = this.clampDisplay(this.displayedPlayerHp ?? state.player.currentHp, 0, playerMaxHp);
     const monsterHp = this.clampDisplay(this.displayedMonsterHp ?? state.monster.currentHp, 0, monsterMaxHp);
+    const monsterShield = this.safeNumber(this.displayedMonsterShield ?? state.monster.shield);
     const shield = this.safeNumber(this.displayedShield ?? state.player.shield);
     const energy = this.clampDisplay(this.displayedEnergy ?? state.player.energy, 0, DEFAULT_BATTLE_CONFIG.energyCap);
     const poisonTurns = Math.max(0, this.displayedPlayerPoisonTurns ?? state.player.poisonTurns);
@@ -908,9 +914,9 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
     this.drawBar(this.monsterBar, 202, 64, 150, monsterHp / monsterMaxHp, 0xe75b62);
     this.drawBar(this.energyBar, 8, 112, 150, energy / DEFAULT_BATTLE_CONFIG.energyCap, 0xf3c64f);
     this.playerHpLabel?.setText(`HP ${playerHp} / ${playerMaxHp}  ·  Khiên ${shield}`);
-    this.monsterHpLabel?.setText(`HP ${monsterHp} / ${monsterMaxHp}`);
+    this.monsterHpLabel?.setText(`HP ${monsterHp} / ${monsterMaxHp}  ·  Khiên ${monsterShield}`);
     this.energyLabel?.setText(`Năng lượng ${energy} / 100`);
-    this.syncProtectionVisuals(shield > 0);
+    this.syncProtectionVisuals(shield > 0, monsterShield > 0);
     this.syncEnergyAura(energy);
     this.syncPoisonVisual(poisonTurns > 0);
   }
@@ -919,7 +925,7 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
     this.renderBars(this.controller.currentState);
   }
 
-  private syncProtectionVisuals(hasPlayerShield: boolean): void {
+  private syncProtectionVisuals(hasPlayerShield: boolean, hasMonsterShield: boolean): void {
     if (this.heroShieldVisual) {
       this.heroShieldVisual.setPosition(this.heroVisual?.x ?? 72, (this.heroVisual?.y ?? 570) - 40);
       if (hasPlayerShield) {
@@ -929,7 +935,15 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
       }
     }
     if (this.monsterGuardVisual) {
-      this.monsterGuardVisual.setPosition(this.monsterVisual?.x ?? 294, this.monsterVisual?.y ?? 145);
+      this.monsterGuardVisual.setPosition(
+        this.monsterVisual?.x ?? 294,
+        (this.monsterVisual?.y ?? 145) + MONSTER_COMBAT_Y_OFFSET,
+      );
+      if (hasMonsterShield || this.monsterGuardActive) {
+        this.monsterGuardVisual.setAlpha(0.72).setVisible(true);
+      } else {
+        this.monsterGuardVisual.setAlpha(0).setVisible(false);
+      }
     }
   }
 
@@ -1239,11 +1253,6 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
           const [gem, count] = Object.entries(gemCounts)[0] ?? [];
           const actor = event.payload['actor'] === 'monster' ? 'Quái ghép' : 'Bạn ghép';
           this.statusLabel?.setText(`${actor} ${this.gemName(String(gem))} × ${String(count ?? 0)}`);
-          if (event.payload['actor'] === 'monster') {
-            if (this.safeNumber(Number(gemCounts['heal'] ?? 0)) > 0) this.playHealEffect('monster');
-            if (this.safeNumber(Number(gemCounts['shield'] ?? 0)) > 0) this.playShieldGainEffect('monster');
-            if (this.safeNumber(Number(gemCounts['energy'] ?? 0)) > 0) this.playEnergyGainEffect('monster');
-          }
         }
         break;
       }
@@ -1283,6 +1292,11 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
           this.floatNumber(`-${amount} HP`, 80, 59, '#ff9aa4');
           this.shakePlayerBar();
         } else if (event.payload['target'] === 'monster') {
+          const monsterShieldAbsorbed = this.safeNumber(Number(event.payload['shieldAbsorbed'] ?? 0));
+          const monsterShieldBroken = Boolean(event.payload['shieldBroken'])
+            || (monsterShieldAbsorbed > 0 && this.safeNumber(Number(event.payload['shieldRemaining'] ?? 0)) === 0);
+          const matchCount = this.safeNumber(Number(event.payload['matchCount'] ?? 0));
+          const matchLabel = matchCount >= 3 ? `X${matchCount} · ` : '';
           this.playHeroAnimation('attack');
           // Let the sword swing read before launching the projectile.
           this.time.delayedCall(180, () => {
@@ -1292,9 +1306,23 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
               this.shakeMonster();
             });
           });
+          this.displayedMonsterShield = Math.max(
+            0,
+            (this.displayedMonsterShield ?? this.controller.currentState.monster.shield) - monsterShieldAbsorbed,
+          );
           this.displayedMonsterHp = Math.max(0, (this.displayedMonsterHp ?? this.controller.currentState.monster.currentHp) - amount);
-          this.statusLabel?.setText(`Bạn tấn công quái · -${amount} HP`);
-          this.floatNumber(`-${amount} HP`, 294, 104, '#ff9aa4');
+          this.statusLabel?.setText(
+            amount > 0
+              ? `${matchLabel}Bạn tấn công quái · -${amount} HP${monsterShieldAbsorbed > 0 ? ` · khiên -${monsterShieldAbsorbed}` : ''}`
+              : `${matchLabel}Đòn đánh bị khiên quái hấp thụ -${monsterShieldAbsorbed}`,
+          );
+          this.floatNumber(
+            amount > 0 ? `${matchLabel}-${amount} HP` : `${matchLabel}-${monsterShieldAbsorbed} khiên`,
+            294,
+            104,
+            amount > 0 ? '#ff9aa4' : '#9dceff',
+          );
+          if (monsterShieldBroken) this.playShieldBreakEffect('monster');
         }
         this.refreshDisplayedBars();
         break;
@@ -1325,6 +1353,11 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
         const shieldTarget = event.payload['target'] === 'monster' ? 'monster' : 'player';
         if (shieldTarget === 'player') {
           this.displayedShield = Math.max(0, (this.displayedShield ?? this.controller.currentState.player.shield) + amount);
+        } else {
+          this.displayedMonsterShield = Math.max(
+            0,
+            (this.displayedMonsterShield ?? this.controller.currentState.monster.shield) + amount,
+          );
         }
         const shieldPoint = this.combatPoint(shieldTarget);
         this.statusLabel?.setText(shieldTarget === 'monster' ? `Quái nhận ${amount} khiên` : `+${amount} khiên`);
@@ -1342,6 +1375,9 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
         this.floatNumber(`+${amount}`, energyPoint.x, energyPoint.y - 50, '#ffe28c');
         if (amount > 0) this.playEnergyGainEffect(energyTarget);
         this.refreshDisplayedBars();
+        break;
+      case 'MONSTER_ACTION_SKIPPED':
+        this.statusLabel?.setText(String(event.payload['label'] ?? 'Quái không có ngọc tấn công — không gây sát thương'));
         break;
       case 'POISON_APPLIED':
         if (event.payload['target'] === 'player') {
@@ -1386,6 +1422,8 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
         const shieldAbsorbed = this.safeNumber(Number(event.payload['shieldAbsorbed'] ?? 0));
         const shieldBroken = Boolean(event.payload['shieldBroken'])
           || (shieldAbsorbed > 0 && this.safeNumber(Number(event.payload['shieldRemaining'] ?? 0)) === 0);
+        const attackMatchCount = this.safeNumber(Number(event.payload['matchCount'] ?? 0));
+        const attackMatchLabel = attackMatchCount >= 3 ? `X${attackMatchCount} · ` : '';
         const hpDamage = this.safeNumber(Number(event.payload['hpDamage'] ?? Math.max(0, amount - shieldAbsorbed)));
         this.displayedShield = Math.max(
           0,
@@ -1399,11 +1437,11 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
         this.countdownLabel?.setColor('#ff7a80').setText('Quái đang tấn công...');
         this.statusLabel?.setText(
           hpDamage > 0
-            ? `${this.controller.currentState.monster.name} gây ${hpDamage} sát thương${shieldAbsorbed > 0 ? ` · khiên -${shieldAbsorbed}` : ''}`
-            : `${this.controller.currentState.monster.name} đánh vào khiên -${shieldAbsorbed}`,
+            ? `${attackMatchLabel}${this.controller.currentState.monster.name} gây ${hpDamage} sát thương${shieldAbsorbed > 0 ? ` · khiên -${shieldAbsorbed}` : ''}`
+            : `${attackMatchLabel}${this.controller.currentState.monster.name} đánh vào khiên -${shieldAbsorbed}`,
         );
         this.floatNumber(
-          hpDamage > 0 ? `-${hpDamage} HP` : `-${shieldAbsorbed} khiên`,
+          hpDamage > 0 ? `${attackMatchLabel}-${hpDamage} HP` : `${attackMatchLabel}-${shieldAbsorbed} khiên`,
           80,
           59,
           hpDamage > 0 ? '#ff9aa4' : '#9dceff',
@@ -1657,7 +1695,7 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
 
   private combatPoint(target: 'player' | 'monster'): { readonly x: number; readonly y: number } {
     return target === 'monster'
-      ? { x: this.monsterVisual?.x ?? 294, y: this.monsterVisual?.y ?? 145 }
+      ? { x: this.monsterVisual?.x ?? 294, y: (this.monsterVisual?.y ?? 145) + MONSTER_COMBAT_Y_OFFSET }
       : { x: this.heroVisual?.x ?? 72, y: (this.heroVisual?.y ?? 570) - 40 };
   }
 
@@ -1756,6 +1794,7 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
   private playShieldBreakEffect(target: 'player' | 'monster' = 'player'): void {
     const { x, y } = this.combatPoint(target);
     if (target === 'monster') {
+      this.monsterGuardActive = false;
       this.monsterGuardVisual?.setVisible(false).setAlpha(0);
     } else {
       this.heroShieldVisual?.setVisible(false).setAlpha(0);
@@ -1803,7 +1842,11 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
     }
 
     this.spawnCombatImpact(x, y, color, 64);
-    this.shakePlayerBar();
+    if (target === 'monster') {
+      this.shakeMonster();
+    } else {
+      this.shakePlayerBar();
+    }
   }
 
   private playPoisonEffect(): void {
@@ -1832,13 +1875,14 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
   }
 
   private showMonsterGuardEffect(): void {
-    const x = this.monsterVisual?.x ?? 294;
-    const y = this.monsterVisual?.y ?? 145;
+    const { x, y } = this.combatPoint('monster');
+    this.monsterGuardActive = true;
     this.playShieldGainEffect('monster');
     this.monsterGuardVisual?.setPosition(x, y).setVisible(true).setAlpha(0.72);
   }
 
   private hideMonsterGuardEffect(): void {
+    this.monsterGuardActive = false;
     this.monsterGuardVisual?.setVisible(false).setAlpha(0);
   }
 
@@ -2101,6 +2145,7 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
       case 'GEMS_FALLING': return GEM_FALL_DURATION;
       case 'GEMS_REFILLED': return GEM_REFILL_DURATION;
       case 'MONSTER_ATTACKED': return 1000;
+      case 'MONSTER_ACTION_SKIPPED': return 260;
       case 'MONSTER_GUARDED': return 260;
       case 'MONSTER_THINKING': return Number(event.payload['seconds'] ?? 1.2) * 1000;
       case 'MONSTER_MOVE_SELECTED': return 500;

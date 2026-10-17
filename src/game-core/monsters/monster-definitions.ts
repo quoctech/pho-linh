@@ -48,6 +48,8 @@ export function createMonsterBattleState(monsterId: string): MonsterBattleState 
     ...definition,
     baseDefense: definition.defense,
     currentHp: definition.maxHp,
+    energy: 0,
+    shield: 0,
     poisonPotency: 0,
     poisonTurns: 0,
     nextAction: definition.behaviors[0] ?? 'basic',
