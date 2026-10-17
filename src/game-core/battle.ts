@@ -507,6 +507,8 @@ function resolveMonsterTurn(
         amount: incoming,
         hpDamage: Math.max(0, incoming - damage.absorbed),
         shieldAbsorbed: damage.absorbed,
+        shieldRemaining: player.shield,
+        shieldBroken: damage.absorbed > 0 && player.shield === 0,
         target: 'player',
       }),
     );

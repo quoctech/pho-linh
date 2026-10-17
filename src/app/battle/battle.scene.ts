@@ -273,6 +273,16 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
     battleReady?.();
   }
 
+  override update(): void {
+    if (!this.controller) return;
+    // Keep persistent VFX synchronized even while the player is idle. This
+    // prevents a tweened shield/aura from remaining visible after its value
+    // has already reached zero.
+    const shield = this.safeNumber(this.displayedShield ?? this.controller.currentState.player.shield);
+    this.syncProtectionVisuals(shield > 0);
+    this.syncEnergyAura(this.safeNumber(this.displayedEnergy ?? this.controller.currentState.player.energy));
+  }
+
   private createBattleBackground(): void {
     if (!this.textures.exists(BATTLE_BACKGROUND_KEY)) return;
     const hasParallaxLayers = [
@@ -394,11 +404,27 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
       .text(180, 35, '', { color: '#f3c64f', fontFamily: 'sans-serif', fontSize: '14px', fontStyle: 'bold' })
       .setOrigin(0.5, 0.5);
 
-    this.add.text(8, 54, 'Nhân vật', { color: '#b8b0cf', fontSize: '12px' });
+    this.add
+      .rectangle(8, 54, 92, 22, 0x211a34, 0.9)
+      .setOrigin(0, 0.5)
+      .setStrokeStyle(1, 0x66567f, 0.9)
+      .setDepth(8);
+    this.add
+      .text(15, 54, 'Nhân vật', { color: '#eee5ff', fontSize: '12px', fontStyle: 'bold' })
+      .setOrigin(0, 0.5)
+      .setDepth(9);
     this.playerBar = this.add.graphics();
     this.playerHpLabel = this.add.text(8, 78, '', { color: '#fff8e8', fontSize: '11px' });
 
-    this.add.text(352, 54, this.controller.currentState.monster.name, { color: '#b8b0cf', fontSize: '12px' }).setOrigin(1, 0.5);
+    this.add
+      .rectangle(258, 54, 94, 22, 0x211a34, 0.9)
+      .setOrigin(0, 0.5)
+      .setStrokeStyle(1, 0x66567f, 0.9)
+      .setDepth(8);
+    this.add
+      .text(345, 54, this.controller.currentState.monster.name, { color: '#eee5ff', fontSize: '12px', fontStyle: 'bold' })
+      .setOrigin(1, 0.5)
+      .setDepth(9);
     this.monsterBar = this.add.graphics();
     this.monsterHpLabel = this.add.text(352, 78, '', { color: '#fff8e8', fontSize: '12px' }).setOrigin(1, 0.5);
 
@@ -843,9 +869,12 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
 
   private syncProtectionVisuals(hasPlayerShield: boolean): void {
     if (this.heroShieldVisual) {
-      this.heroShieldVisual
-        .setPosition(this.heroVisual?.x ?? 72, (this.heroVisual?.y ?? 570) - 40)
-        .setVisible(hasPlayerShield);
+      this.heroShieldVisual.setPosition(this.heroVisual?.x ?? 72, (this.heroVisual?.y ?? 570) - 40);
+      if (hasPlayerShield) {
+        this.heroShieldVisual.setAlpha(0.72).setVisible(true);
+      } else {
+        this.heroShieldVisual.setAlpha(0).setVisible(false);
+      }
     }
     if (this.monsterGuardVisual) {
       this.monsterGuardVisual.setPosition(this.monsterVisual?.x ?? 294, this.monsterVisual?.y ?? 145);
@@ -855,9 +884,12 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
   private syncEnergyAura(energy: number): void {
     const charged = energy > 50;
     if (this.heroEnergyVisual) {
-      this.heroEnergyVisual
-        .setPosition(this.heroVisual?.x ?? 72, (this.heroVisual?.y ?? 570) - 40)
-        .setVisible(charged);
+      this.heroEnergyVisual.setPosition(this.heroVisual?.x ?? 72, (this.heroVisual?.y ?? 570) - 40);
+      if (charged) {
+        this.heroEnergyVisual.setAlpha(0.5).setVisible(true);
+      } else {
+        this.heroEnergyVisual.setAlpha(0).setVisible(false);
+      }
     }
     if (charged && !this.energyAuraActive) {
       this.energyAuraActive = true;
@@ -1299,6 +1331,8 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
         if (event.payload['target'] !== 'player') return;
         this.hideMonsterGuardEffect();
         const shieldAbsorbed = this.safeNumber(Number(event.payload['shieldAbsorbed'] ?? 0));
+        const shieldBroken = Boolean(event.payload['shieldBroken'])
+          || (shieldAbsorbed > 0 && this.safeNumber(Number(event.payload['shieldRemaining'] ?? 0)) === 0);
         const hpDamage = this.safeNumber(Number(event.payload['hpDamage'] ?? Math.max(0, amount - shieldAbsorbed)));
         this.displayedShield = Math.max(
           0,
@@ -1321,7 +1355,7 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
           59,
           hpDamage > 0 ? '#ff9aa4' : '#9dceff',
         );
-        if (shieldAbsorbed > 0) this.playShieldBreakEffect();
+        if (shieldBroken) this.playShieldBreakEffect();
         this.playMonsterAnimation('mist-dust-attack');
         // Let the attack pose read first; the projectile launches from the
         // monster's extended strike instead of appearing at the same moment.
@@ -1625,11 +1659,54 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
   private playShieldBreakEffect(target: 'player' | 'monster' = 'player'): void {
     const { x, y } = this.combatPoint(target);
     if (target === 'monster') {
-      this.monsterGuardVisual?.setVisible(false);
+      this.monsterGuardVisual?.setVisible(false).setAlpha(0);
     } else {
-      this.heroShieldVisual?.setVisible(false);
+      this.heroShieldVisual?.setVisible(false).setAlpha(0);
     }
-    this.spawnCombatImpact(x, y, 0x9dceff, 64);
+
+    // The persistent shield is removed first, then a short shatter effect
+    // makes it clear that the hit broke the shield rather than dealing HP
+    // damage silently.
+    const color = target === 'monster' ? 0xd8c2ff : 0x9dceff;
+    const ring = this.add
+      .circle(x, y, 22, color, 0.08)
+      .setStrokeStyle(3, color, 0.95)
+      .setBlendMode(Phaser.BlendModes.ADD)
+      .setDepth(16);
+    this.transientEffects.add(ring);
+    this.tweens.add({
+      targets: ring,
+      scale: 1.65,
+      alpha: 0,
+      duration: 260,
+      ease: 'Cubic.Out',
+      onComplete: () => this.destroyTransientEffect(ring),
+    });
+
+    for (let index = 0; index < 8; index += 1) {
+      const angle = (Math.PI * 2 * index) / 8 + Phaser.Math.FloatBetween(-0.12, 0.12);
+      const shard = this.add
+        .rectangle(x, y, 3, 12, color, 0.95)
+        .setRotation(angle)
+        .setBlendMode(Phaser.BlendModes.ADD)
+        .setDepth(16);
+      this.transientEffects.add(shard);
+      const distance = Phaser.Math.Between(32, 48);
+      this.tweens.add({
+        targets: shard,
+        x: x + Math.cos(angle) * distance,
+        y: y + Math.sin(angle) * distance,
+        rotation: angle + Phaser.Math.FloatBetween(-0.8, 0.8),
+        scale: 0.25,
+        alpha: 0,
+        duration: Phaser.Math.Between(260, 360),
+        ease: 'Cubic.Out',
+        onComplete: () => this.destroyTransientEffect(shard),
+      });
+    }
+
+    this.spawnCombatImpact(x, y, color, 64);
+    this.shakePlayerBar();
   }
 
   private playPoisonEffect(): void {
@@ -1665,7 +1742,7 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
   }
 
   private hideMonsterGuardEffect(): void {
-    this.monsterGuardVisual?.setVisible(false);
+    this.monsterGuardVisual?.setVisible(false).setAlpha(0);
   }
 
   private flashHero(color: number): void {
