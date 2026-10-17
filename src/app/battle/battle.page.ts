@@ -102,7 +102,7 @@ export class BattlePage implements AfterViewInit, OnDestroy {
     );
     this.controller = new BattleController(initial);
     this.unsubscribe = this.controller.subscribe((state) => this.onBattleStateChanged(state));
-    await this.queueSave(this.controller.currentState);
+    void this.queueSave(this.controller.currentState);
   }
 
   private async startGame(): Promise<void> {

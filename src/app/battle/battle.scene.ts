@@ -16,6 +16,13 @@ const CELL_SIZE = 48;
 const BOARD_LEFT = 36;
 const BOARD_TOP = 190;
 const BOARD_WIDTH = BOARD_SIZE * CELL_SIZE;
+const GEM_TEXTURE_KEYS: Partial<Record<GemType, string>> = {
+  attack: 'gem-attack',
+  heal: 'gem-heal',
+  poison: 'gem-poison',
+  shield: 'gem-shield',
+  energy: 'gem-energy',
+};
 
 export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
   private controller!: BattleController;
@@ -25,6 +32,7 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
   private pointerStart?: Coord;
   private monsterVisual?: Phaser.GameObjects.Container;
   private monsterBody?: Phaser.GameObjects.Arc;
+  private monsterArt?: Phaser.GameObjects.Image;
   private playerBar?: Phaser.GameObjects.Graphics;
   private monsterBar?: Phaser.GameObjects.Graphics;
   private playerHpLabel?: Phaser.GameObjects.Text;
@@ -50,6 +58,15 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
 
   constructor() {
     super({ key: 'BattleScene' });
+  }
+
+  preload(): void {
+    this.load.image('gem-attack', 'assets/gems/attack.webp');
+    this.load.image('gem-heal', 'assets/gems/heal.webp');
+    this.load.image('gem-poison', 'assets/gems/poison.webp');
+    this.load.image('gem-shield', 'assets/gems/shield.webp');
+    this.load.image('gem-energy', 'assets/gems/energy.webp');
+    this.load.image('monster-mist-blob', 'assets/monsters/mist_blob.webp');
   }
 
   create(): void {
@@ -108,19 +125,11 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
   }
 
   private createHud(): void {
-    this.add
-      .text(24, 22, 'PHỐ LINH', {
-        color: '#ffe7a6',
-        fontFamily: 'sans-serif',
-        fontSize: '22px',
-        fontStyle: 'bold',
-      })
-      .setOrigin(0, 0.5);
     this.turnLabel = this.add
-      .text(336, 26, 'Lượt 0 / 20', { color: '#fff8e8', fontFamily: 'sans-serif', fontSize: '14px' })
+      .text(336, 22, 'Lượt 0 / 20', { color: '#fff8e8', fontFamily: 'sans-serif', fontSize: '14px' })
       .setOrigin(1, 0.5);
     this.countdownLabel = this.add
-      .text(336, 52, '', { color: '#f3c64f', fontFamily: 'sans-serif', fontSize: '14px', fontStyle: 'bold' })
+      .text(336, 46, '', { color: '#f3c64f', fontFamily: 'sans-serif', fontSize: '14px', fontStyle: 'bold' })
       .setOrigin(1, 0.5);
 
     this.add.text(24, 48, 'Nhân vật', { color: '#b8b0cf', fontSize: '12px' });
@@ -150,6 +159,12 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
 
   private createMonsterVisual(): void {
     const monster = this.add.container(286, 108);
+    if (this.controller.currentState.monster.id === 'mist_blob' && this.textures.exists('monster-mist-blob')) {
+      this.monsterArt = this.add.image(0, 0, 'monster-mist-blob').setDisplaySize(72, 72);
+      monster.add(this.monsterArt);
+      this.monsterVisual = monster;
+      return;
+    }
     const body = this.add.circle(0, 0, 24, 0x8b9bc7, 1);
     body.setStrokeStyle(2, 0xe9efff, 0.9);
     const leftEye = this.add.circle(-8, -3, 3.5, 0x26203d, 1);
@@ -279,11 +294,17 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
     const visual = this.gemVisual(gem);
     const container = this.add.container(x, y);
     const circle = this.add.circle(0, 0, 19, visual.color, 1);
-    circle.setStrokeStyle(2, 0xfff8e8, 0.85);
-    const label = this.add
-      .text(0, 1, visual.symbol, { color: '#fff8e8', fontSize: '18px', fontStyle: 'bold' })
-      .setOrigin(0.5);
-    container.add([circle, label]);
+    circle.setStrokeStyle(2, 0xfff8e8, 0.55).setAlpha(0.3);
+    const textureKey = GEM_TEXTURE_KEYS[gem];
+    if (textureKey && this.textures.exists(textureKey)) {
+      const icon = this.add.image(0, 0, textureKey).setDisplaySize(40, 40);
+      container.add([circle, icon]);
+    } else {
+      const label = this.add
+        .text(0, 1, visual.symbol, { color: '#fff8e8', fontSize: '18px', fontStyle: 'bold' })
+        .setOrigin(0.5);
+      container.add([circle, label]);
+    }
     container.setData('gemType', gem);
     return container;
   }
@@ -538,6 +559,11 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
   }
 
   private flashMonster(color: number): void {
+    if (this.monsterArt) {
+      this.monsterArt.setTint(color);
+      this.time.delayedCall(180, () => this.monsterArt?.clearTint());
+      return;
+    }
     if (!this.monsterBody) return;
     this.monsterBody.setFillStyle(color, 1);
     this.time.delayedCall(180, () => this.monsterBody?.setFillStyle(0x8b9bc7, 1));
