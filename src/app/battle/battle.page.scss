@@ -25,24 +25,49 @@ ion-content {
   align-items: center;
   justify-content: center;
   padding: 24px;
-  background: #171426;
+  background: linear-gradient(rgba(10, 8, 28, .72), rgba(10, 8, 28, .9)), url('/assets/pho-linh-pk-background.webp') center / cover no-repeat;
   color: #fff8e8;
   text-align: center;
 }
 
-.battle-loading ion-spinner {
+.loading-card {
+  width: min(320px, 100%);
+  padding: 28px 24px 22px;
+  border: 1px solid rgba(236, 220, 255, .32);
+  border-radius: 20px;
+  background: rgba(23, 20, 38, .78);
+  box-shadow: 0 18px 45px rgba(7, 4, 24, .4);
+  backdrop-filter: blur(7px);
+}
+
+.loading-card ion-spinner {
   width: 44px;
   height: 44px;
   margin-bottom: 20px;
   --color: #f3c64f;
 }
 
-.battle-loading h1 {
+.loading-card h1 {
   margin: 0 0 8px;
   font-size: 24px;
 }
 
-.battle-loading p {
-  margin: 0;
+.loading-card p {
+  margin: 0 0 18px;
   color: #b8b0cf;
+}
+
+.loading-card ion-progress-bar {
+  --background: rgba(255, 255, 255, .16);
+  --progress-background: #f3c64f;
+  height: 8px;
+  border-radius: 8px;
+}
+
+.loading-percent {
+  display: block;
+  margin-top: 10px;
+  color: #f3c64f;
+  font-size: 12px;
+  font-weight: 700;
 }

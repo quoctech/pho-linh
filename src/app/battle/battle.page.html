@@ -2,9 +2,13 @@
   <div #gameHost class="game-host" aria-label="Bàn chơi Match-3 Phố Linh"></div>
   @if (isLoading) {
     <div class="battle-loading" role="status" aria-live="polite">
-      <ion-spinner name="crescent"></ion-spinner>
-      <h1>Đang mở bàn ngọc...</h1>
-      <p>Đang chuẩn bị trận đấu và tải khu săn.</p>
+      <div class="loading-card">
+        <ion-spinner name="crescent"></ion-spinner>
+        <h1>Đang mở bàn ngọc...</h1>
+        <p>{{ loadingMessage }}</p>
+        <ion-progress-bar [value]="loadingProgress"></ion-progress-bar>
+        <span class="loading-percent">{{ loadingPercent }}%</span>
+      </div>
     </div>
   }
 </ion-content>

@@ -10,7 +10,7 @@ import {
   inject,
 } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { IonContent, IonSpinner } from '@ionic/angular';
+import { IonContent, IonProgressBar, IonSpinner } from '@ionic/angular';
 import type Phaser from 'phaser';
 import { applyBattleReward, createBattleState, createPlayerBattleState, equipmentBonuses, type BattleState, type LocalSaveV1 } from '../../game-core';
 import { BattleController } from './battle.controller';
@@ -20,7 +20,7 @@ import { GameStorage } from '../state/game-storage.service';
   selector: 'app-battle',
   templateUrl: './battle.page.html',
   styleUrls: ['./battle.page.scss'],
-  imports: [IonContent, IonSpinner],
+  imports: [IonContent, IonProgressBar, IonSpinner],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class BattlePage implements AfterViewInit, OnDestroy {
@@ -42,6 +42,10 @@ export class BattlePage implements AfterViewInit, OnDestroy {
   private saveSnapshot?: LocalSaveV1;
   private rewardApplied = false;
   isLoading = true;
+  loadingProgress = 0.05;
+  loadingMessage = 'Đang đọc dữ liệu trận đấu...';
+
+  get loadingPercent(): number { return Math.round(this.loadingProgress * 100); }
 
   ngAfterViewInit(): void {
     this.viewReady = true;
@@ -50,6 +54,8 @@ export class BattlePage implements AfterViewInit, OnDestroy {
   ionViewDidEnter(): void {
     this.visible = true;
     this.isLoading = true;
+    this.loadingProgress = 0.05;
+    this.loadingMessage = 'Đang đọc dữ liệu trận đấu...';
     this.cdr.markForCheck();
     void this.enterBattle();
   }
@@ -68,13 +74,17 @@ export class BattlePage implements AfterViewInit, OnDestroy {
 
   private async enterBattle(): Promise<void> {
     try {
+      this.updateLoading(0.18, 'Đang chuẩn bị khu săn...');
       await this.prepareBattle();
       if (this.visible) {
+        this.updateLoading(0.42, 'Đang tải nhân vật và hiệu ứng...');
         await this.startGame();
       }
     } finally {
-      this.isLoading = false;
-      this.cdr.markForCheck();
+      if (!this.game || !this.visible) {
+        this.isLoading = false;
+        this.cdr.markForCheck();
+      }
     }
   }
 
@@ -121,6 +131,8 @@ export class BattlePage implements AfterViewInit, OnDestroy {
         return;
       }
 
+      this.updateLoading(0.62, 'Đang dựng bàn ngọc...');
+
       const viewportWidth = Math.max(1, this.gameHost.nativeElement.clientWidth);
       const viewportHeight = Math.max(1, this.gameHost.nativeElement.clientHeight);
       // Keep the battle's 360px logical width so the board stays centered.
@@ -143,14 +155,30 @@ export class BattlePage implements AfterViewInit, OnDestroy {
             preBoot: (game) => {
               game.registry.set('battleController', this.controller);
               game.registry.set('heroGender', this.saveSnapshot?.settings.gender ?? 'male');
+              game.registry.set('battleReady', () => {
+                this.zone.run(() => {
+                  if (!this.visible) return;
+                  this.loadingProgress = 1;
+                  this.loadingMessage = 'Sẵn sàng chiến đấu!';
+                  this.isLoading = false;
+                  this.cdr.markForCheck();
+                });
+              });
             },
           },
           scene: [BattleScene],
         });
       });
+      this.updateLoading(0.78, 'Đang hoàn thiện hiệu ứng...');
     } catch (error: unknown) {
       console.error('Không thể khởi tạo màn Match-3', error);
     }
+  }
+
+  private updateLoading(progress: number, message: string): void {
+    this.loadingProgress = progress;
+    this.loadingMessage = message;
+    this.cdr.markForCheck();
   }
 
   private stopGame(): void {

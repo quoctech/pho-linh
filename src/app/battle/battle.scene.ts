@@ -231,6 +231,8 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
     this.input.on('pointerdown', this.onPointerDown, this);
     this.input.on('pointerup', this.onPointerUp, this);
     this.events.once('shutdown', this.cleanup, this);
+    const battleReady = this.registry.get('battleReady') as (() => void) | undefined;
+    battleReady?.();
   }
 
   private createBattleBackground(): void {
