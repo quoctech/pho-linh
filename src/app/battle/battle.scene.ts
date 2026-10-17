@@ -18,14 +18,32 @@ const BOARD_TOP = 192;
 const BOARD_WIDTH = BOARD_SIZE * CELL_SIZE;
 const GEM_FALL_DURATION = 200;
 const GEM_REFILL_DURATION = 160;
-const HERO_SPRITE_KEYS = {
-  idle: 'hero-swordmaster-idle',
-  attack: 'hero-swordmaster-attack',
-  hit: 'hero-swordmaster-hit',
-  death: 'hero-swordmaster-death',
-  projectile: 'hero-swordmaster-projectile',
-} as const;
+type HeroGender = 'male' | 'female';
+interface HeroSpriteKeys {
+  readonly idle: string;
+  readonly attack: string;
+  readonly hit: string;
+  readonly death: string;
+  readonly projectile: string;
+}
+const HERO_SPRITE_KEYS: Record<HeroGender, HeroSpriteKeys> = {
+  male: {
+    idle: 'hero-swordmaster-idle',
+    attack: 'hero-swordmaster-attack',
+    hit: 'hero-swordmaster-hit',
+    death: 'hero-swordmaster-death',
+    projectile: 'hero-swordmaster-projectile',
+  },
+  female: {
+    idle: 'hero-swordmistress-idle',
+    attack: 'hero-swordmistress-attack',
+    hit: 'hero-swordmistress-hit',
+    death: 'hero-swordmistress-death',
+    projectile: 'hero-swordmistress-projectile',
+  },
+};
 const GEM_ATLAS_KEY = 'pho-linh-gems';
+const BATTLE_BACKGROUND_KEY = 'pho-linh-pk-background';
 const GEM_ATLAS_FRAMES: Partial<Record<GemType, number>> = {
   attack: 0,
   shield: 1,
@@ -62,6 +80,10 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
   private monsterSprite?: Phaser.GameObjects.Sprite;
   private heroVisual?: Phaser.GameObjects.Container;
   private heroSprite?: Phaser.GameObjects.Sprite;
+  private heroSpriteKeys: HeroSpriteKeys = HERO_SPRITE_KEYS.male;
+  private heroAssetName: 'hero-swordmaster' | 'hero-swordmistress' = 'hero-swordmaster';
+  private battleBackground?: Phaser.GameObjects.Image;
+  private battleBackgroundOverlay?: Phaser.GameObjects.Rectangle;
   private playerBar?: Phaser.GameObjects.Graphics;
   private monsterBar?: Phaser.GameObjects.Graphics;
   private playerHpLabel?: Phaser.GameObjects.Text;
@@ -93,6 +115,10 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
   }
 
   preload(): void {
+    this.load.image(BATTLE_BACKGROUND_KEY, 'assets/pho-linh-pk-background.webp');
+    const heroGender = this.getHeroGender();
+    this.heroSpriteKeys = HERO_SPRITE_KEYS[heroGender];
+    this.heroAssetName = heroGender === 'female' ? 'hero-swordmistress' : 'hero-swordmaster';
     this.load.spritesheet(GEM_ATLAS_KEY, 'assets/gems/pho-linh/pho-linh-gems-sheet.png', {
       frameWidth: 256,
       frameHeight: 256,
@@ -102,23 +128,23 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
     this.load.image('gem-poison-pure', 'assets/gems/pho-linh/gem-p-pure.png');
     this.load.image('gem-shield', 'assets/gems/shield.webp');
     this.load.image('gem-energy', 'assets/gems/energy.webp');
-    this.load.spritesheet(HERO_SPRITE_KEYS.idle, 'assets/hero-swordmaster/idle/hero-swordmaster-idle-sheet.png', {
+    this.load.spritesheet(this.heroSpriteKeys.idle, `assets/${this.heroAssetName}/idle/${this.heroAssetName}-idle-sheet.png`, {
       frameWidth: 512,
       frameHeight: 512,
     });
-    this.load.spritesheet(HERO_SPRITE_KEYS.attack, 'assets/hero-swordmaster/attack/hero-swordmaster-attack-sheet.png', {
+    this.load.spritesheet(this.heroSpriteKeys.attack, `assets/${this.heroAssetName}/attack/${this.heroAssetName}-attack-sheet.png`, {
       frameWidth: 512,
       frameHeight: 512,
     });
-    this.load.spritesheet(HERO_SPRITE_KEYS.hit, 'assets/hero-swordmaster/hit/hero-swordmaster-hit-sheet.png', {
+    this.load.spritesheet(this.heroSpriteKeys.hit, `assets/${this.heroAssetName}/hit/${this.heroAssetName}-hit-sheet.png`, {
       frameWidth: 512,
       frameHeight: 512,
     });
-    this.load.spritesheet(HERO_SPRITE_KEYS.death, 'assets/hero-swordmaster/death/hero-swordmaster-death-sheet.png', {
+    this.load.spritesheet(this.heroSpriteKeys.death, `assets/${this.heroAssetName}/death/${this.heroAssetName}-death-sheet.png`, {
       frameWidth: 512,
       frameHeight: 512,
     });
-    this.load.image(HERO_SPRITE_KEYS.projectile, 'assets/hero-swordmaster/attack/hero-swordmaster-flying-sword-projectile.png');
+    this.load.image(this.heroSpriteKeys.projectile, `assets/${this.heroAssetName}/attack/${this.heroAssetName}-flying-sword-projectile.png`);
     this.load.spritesheet(VFX_SHEET_KEYS.selectRing, 'assets/vfx/fx-select-ring/fx-select-ring-sheet.png', {
       frameWidth: 256,
       frameHeight: 256,
@@ -170,6 +196,7 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
     }
 
     this.cameras.main.setBackgroundColor('#171426');
+    this.createBattleBackground();
     this.ensureMatch3VfxAnimations();
     this.ensureHeroAnimations();
     this.createHeroVisual();
@@ -204,6 +231,30 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
     this.input.on('pointerdown', this.onPointerDown, this);
     this.input.on('pointerup', this.onPointerUp, this);
     this.events.once('shutdown', this.cleanup, this);
+  }
+
+  private createBattleBackground(): void {
+    if (!this.textures.exists(BATTLE_BACKGROUND_KEY)) return;
+    this.battleBackground = this.add
+      .image(this.scale.width / 2, this.scale.height / 2, BATTLE_BACKGROUND_KEY)
+      .setOrigin(0.5)
+      .setAlpha(0.9)
+      .setDepth(-100);
+    this.battleBackgroundOverlay = this.add
+      .rectangle(this.scale.width / 2, this.scale.height / 2, this.scale.width, this.scale.height, 0x090817, 0.16)
+      .setDepth(-99);
+    this.resizeBattleBackground();
+    this.scale.on('resize', this.resizeBattleBackground, this);
+  }
+
+  private resizeBattleBackground(): void {
+    if (!this.battleBackground || !this.battleBackgroundOverlay) return;
+    const source = this.textures.get(BATTLE_BACKGROUND_KEY).getSourceImage() as HTMLImageElement;
+    const width = this.scale.width;
+    const height = this.scale.height;
+    const scale = Math.max(width / source.width, height / source.height);
+    this.battleBackground.setPosition(width / 2, height / 2).setScale(scale);
+    this.battleBackgroundOverlay.setPosition(width / 2, height / 2).setSize(width, height);
   }
 
   async play(events: readonly GameEvent[]): Promise<void> {
@@ -305,6 +356,10 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
     this.createMonsterAnimation('mist-dust-death', 'mist-dust-death', 8, 0);
   }
 
+  private getHeroGender(): HeroGender {
+    return this.registry.get('heroGender') === 'female' ? 'female' : 'male';
+  }
+
   private createMonsterAnimation(
     key: string,
     textureKey: string,
@@ -321,19 +376,19 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
   }
 
   private ensureHeroAnimations(): void {
-    this.createMonsterAnimation(HERO_SPRITE_KEYS.idle, HERO_SPRITE_KEYS.idle, 8, -1);
-    this.createMonsterAnimation(HERO_SPRITE_KEYS.attack, HERO_SPRITE_KEYS.attack, 10, 0);
-    this.createMonsterAnimation(HERO_SPRITE_KEYS.hit, HERO_SPRITE_KEYS.hit, 9, 0);
-    this.createMonsterAnimation(HERO_SPRITE_KEYS.death, HERO_SPRITE_KEYS.death, 8, 0);
+    this.createMonsterAnimation(this.heroSpriteKeys.idle, this.heroSpriteKeys.idle, 8, -1);
+    this.createMonsterAnimation(this.heroSpriteKeys.attack, this.heroSpriteKeys.attack, 10, 0);
+    this.createMonsterAnimation(this.heroSpriteKeys.hit, this.heroSpriteKeys.hit, 9, 0);
+    this.createMonsterAnimation(this.heroSpriteKeys.death, this.heroSpriteKeys.death, 8, 0);
   }
 
   private createHeroVisual(): void {
-    if (!this.textures.exists(HERO_SPRITE_KEYS.idle)) return;
+    if (!this.textures.exists(this.heroSpriteKeys.idle)) return;
     const hero = this.add.container(72, 570);
-    const sprite = this.add.sprite(0, 0, HERO_SPRITE_KEYS.idle)
+    const sprite = this.add.sprite(0, 0, this.heroSpriteKeys.idle)
       .setOrigin(0.5, 0.92)
       .setDisplaySize(84, 84)
-      .play(HERO_SPRITE_KEYS.idle);
+      .play(this.heroSpriteKeys.idle);
     this.heroSprite = sprite;
     this.heroVisual = hero;
     hero.add(sprite);
@@ -1032,7 +1087,7 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
 
   private playHeroAnimation(key: 'attack' | 'hit' | 'death'): void {
     const sprite = this.heroSprite;
-    const animationKey = HERO_SPRITE_KEYS[key];
+    const animationKey = this.heroSpriteKeys[key];
     if (!sprite || !this.anims.exists(animationKey)) return;
 
     sprite.stop();
@@ -1040,16 +1095,16 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
     if (key === 'death') return;
 
     sprite.once(`animationcomplete-${animationKey}`, () => {
-      if (this.heroSprite === sprite && this.anims.exists(HERO_SPRITE_KEYS.idle)) {
-        sprite.play(HERO_SPRITE_KEYS.idle);
+      if (this.heroSprite === sprite && this.anims.exists(this.heroSpriteKeys.idle)) {
+        sprite.play(this.heroSpriteKeys.idle);
       }
     });
   }
 
   private spawnHeroProjectile(): void {
-    if (!this.heroVisual || !this.monsterVisual || !this.textures.exists(HERO_SPRITE_KEYS.projectile)) return;
+    if (!this.heroVisual || !this.monsterVisual || !this.textures.exists(this.heroSpriteKeys.projectile)) return;
     const projectile = this.add
-      .image(this.heroVisual.x + 32, this.heroVisual.y - 24, HERO_SPRITE_KEYS.projectile)
+      .image(this.heroVisual.x + 32, this.heroVisual.y - 24, this.heroSpriteKeys.projectile)
       .setDisplaySize(42, 42)
       .setRotation(-0.2)
       .setBlendMode(Phaser.BlendModes.ADD)
@@ -1325,6 +1380,7 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
   }
 
   private cleanup(): void {
+    this.scale.off('resize', this.resizeBattleBackground, this);
     this.input.off('pointerdown', this.onPointerDown, this);
     this.input.off('pointerup', this.onPointerUp, this);
     this.unsubscribe?.();

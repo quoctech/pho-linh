@@ -15,6 +15,12 @@ export class CharacterPage implements OnInit {
   readonly attributeKeys: readonly (keyof Attributes)[] = ['str', 'vit', 'agi', 'int'];
   draft: Attributes = { str: 0, vit: 0, agi: 0, int: 0 };
 
+  get heroPortrait(): string {
+    return this.save?.settings.gender === 'female'
+      ? 'assets/hero-swordmistress/portrait/hero-swordmistress-portrait-512x768.png'
+      : 'assets/hero-swordmaster/portrait/hero-swordmaster-portrait-512x768.png';
+  }
+
   async ngOnInit(): Promise<void> { this.save = await this.storage.load(); this.cdr.markForCheck(); }
   get preview(): PlayerProfile | undefined { return this.save ? previewAttributeAllocation(this.save.profile, this.draft) : undefined; }
   get stats() { return this.save ? computeProfileStats(this.save) : undefined; }

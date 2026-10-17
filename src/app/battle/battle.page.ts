@@ -121,22 +121,29 @@ export class BattlePage implements AfterViewInit, OnDestroy {
         return;
       }
 
+      const viewportWidth = Math.max(1, this.gameHost.nativeElement.clientWidth);
+      const viewportHeight = Math.max(1, this.gameHost.nativeElement.clientHeight);
+      // Keep the battle's 360px logical width so the board stays centered.
+      // Extend only the logical height to fill tall phone screens.
+      const logicalHeight = Math.max(620, (360 * viewportHeight) / viewportWidth);
+
       this.zone.runOutsideAngular(() => {
         this.game = new PhaserRuntime.Game({
           type: PhaserRuntime.AUTO,
           parent: this.gameHost.nativeElement,
           width: 360,
-          height: 620,
+          height: logicalHeight,
           backgroundColor: '#171426',
           scale: {
+            // Preserve one uniform scale so the board and HUD never stretch.
             mode: PhaserRuntime.Scale.FIT,
-            // Keep the fixed 360x620 battle canvas at the top of the phone.
-            // Centering vertically created a large empty band above the HUD;
-            // the board itself keeps its existing centered layout inside the canvas.
-            autoCenter: PhaserRuntime.Scale.CENTER_HORIZONTALLY,
+            autoCenter: PhaserRuntime.Scale.CENTER_BOTH,
           },
           callbacks: {
-            preBoot: (game) => game.registry.set('battleController', this.controller),
+            preBoot: (game) => {
+              game.registry.set('battleController', this.controller);
+              game.registry.set('heroGender', this.saveSnapshot?.settings.gender ?? 'male');
+            },
           },
           scene: [BattleScene],
         });

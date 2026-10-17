@@ -25,6 +25,13 @@ describe('M2 progression and save', () => {
     expect(migrateSave({ schemaVersion: 1 }, battle).activeBattle?.battleId).toBe(battle.battleId);
   });
 
+  it('keeps old settings valid and defaults the new gender choice to male', () => {
+    const save = createDefaultSave();
+    const oldSave = { ...save, settings: { music: true, sfx: false, reducedMotion: false } };
+    expect(migrateSave(oldSave).settings.gender).toBe('male');
+    expect(migrateSave({ ...oldSave, settings: { ...oldSave.settings, gender: 'female' } }).settings.gender).toBe('female');
+  });
+
   it('allocates only available points', () => {
     const save = createDefaultSave();
     const profile = { ...save.profile, unspentPoints: 3 };

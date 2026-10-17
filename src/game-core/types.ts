@@ -287,6 +287,7 @@ export interface GameSettings {
   readonly music: boolean;
   readonly sfx: boolean;
   readonly reducedMotion: boolean;
+  readonly gender: 'male' | 'female';
 }
 
 export interface LocalSaveV1 {
