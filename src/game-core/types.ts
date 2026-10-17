@@ -119,9 +119,23 @@ export interface MonsterDefinition {
   readonly defense: number;
   readonly behaviorId: 'basic' | 'guard' | 'heavy' | 'boss';
   readonly behaviors: readonly ('basic' | 'guard' | 'heavy')[];
+  readonly tactics: MonsterTactics;
   readonly unlockRequirement?: { readonly monsterId: string; readonly wins: number };
   readonly expReward: number;
   readonly goldReward: number;
+}
+
+export interface MonsterTactics {
+  /** Weight for attack gems and direct damage decisions. */
+  readonly attack: number;
+  /** Weight for guard/defensive decisions. */
+  readonly defense: number;
+  /** Reserved weight for future monster healing actions. */
+  readonly heal: number;
+  /** Weight for shield gems and future shield actions. */
+  readonly shield: number;
+  /** Reserved weight for future poison actions. */
+  readonly poison: number;
 }
 
 export interface MonsterBattleState extends MonsterDefinition {

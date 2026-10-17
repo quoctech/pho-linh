@@ -124,7 +124,13 @@ function resolveMonsterMove(
       result[gem] = (result[gem] ?? 0) + 1;
       return result;
     }, {});
-    const priority = (counts['attack'] ?? 0) * 4 + (counts['shield'] ?? 0) * 3 + matched.length;
+    const tactics = workingState.monster.tactics;
+    const priority = matched.length
+      + (counts['attack'] ?? 0) * tactics.attack
+      + (counts['shield'] ?? 0) * tactics.shield
+      + (counts['heal'] ?? 0) * tactics.heal
+      + (counts['poison'] ?? 0) * tactics.poison
+      + (counts['energy'] ?? 0) * tactics.defense;
     return { candidate, priority };
   });
   const highestPriority = Math.max(...scoredMoves.map((move) => move.priority));
@@ -415,6 +421,8 @@ function resolveMonsterTurn(
         actor: 'monster',
         amount: poisonDamage,
         remainingTurns: monster.poisonTurns,
+        source: 'player_poison',
+        target: 'monster',
       }),
     );
     sequence += 1;
@@ -456,6 +464,7 @@ function resolveMonsterTurn(
         action,
         label: action === 'heavy' ? `${monster.name} tung đòn nặng` : `${monster.name} tấn công`,
         amount: incoming,
+        hpDamage: Math.max(0, incoming - damage.absorbed),
         shieldAbsorbed: damage.absorbed,
         target: 'player',
       }),
@@ -493,7 +502,7 @@ function resolveMonsterTurn(
 
   const nextCount = monster.actionCount + 1;
   const nextPhase = monster.currentHp <= monster.maxHp * 0.5 ? 2 : 1;
-  const nextAction = chooseMonsterAction(monster.id, nextPhase, nextCount);
+  const nextAction = chooseMonsterAction(monster, nextPhase, nextCount);
   monster = { ...monster, actionCount: nextCount, phase: nextPhase, nextAction };
   events.push(
     event(state, actionId, sequence, 'MONSTER_TELEGRAPH', {
@@ -515,12 +524,20 @@ function resolveMonsterTurn(
   };
 }
 
-function chooseMonsterAction(monsterId: string, phase: 1 | 2, actionCount: number): 'basic' | 'guard' | 'heavy' {
-  const definition = MONSTER_DEFINITIONS[monsterId];
+function chooseMonsterAction(monster: BattleState['monster'], phase: 1 | 2, actionCount: number): 'basic' | 'guard' | 'heavy' {
+  const definition = MONSTER_DEFINITIONS[monster.id];
   if (!definition) return 'basic';
-  if (monsterId === 'cloud_fox_boss' && phase === 2) return actionCount % 2 === 0 ? 'heavy' : 'basic';
-  if (definition.behaviors.includes('guard') && actionCount % 3 === 1) return 'guard';
-  if (definition.behaviors.includes('heavy') && actionCount % 3 === 2) return 'heavy';
+  if (monster.id === 'cloud_fox_boss' && phase === 2) return actionCount % 2 === 0 ? 'heavy' : 'basic';
+  if (
+    definition.behaviors.includes('guard') &&
+    actionCount % 3 === 1 &&
+    monster.tactics.defense >= monster.tactics.attack * 0.5
+  ) return 'guard';
+  if (
+    definition.behaviors.includes('heavy') &&
+    actionCount % 3 === 2 &&
+    monster.tactics.attack >= monster.tactics.defense
+  ) return 'heavy';
   return 'basic';
 }
 

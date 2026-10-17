@@ -128,6 +128,26 @@ describe('M1 battle core', () => {
     expect(result.nextState.phase).toBe('PLAYER_READY');
   });
 
+  it('subtracts monster attack damage from player HP, not monster HP', () => {
+    const initial = createBattleState(122);
+    const state: BattleState = {
+      ...initial,
+      player: { ...initial.player, shield: 0, currentHp: 300 },
+      monster: { ...initial.monster, currentHp: 999 },
+    };
+    const result = resolveBattleAction(state, {
+      kind: 'timeout',
+      actionId: 'monster-damage-target',
+    });
+    const attack = result.events.find((event) => event.type === 'MONSTER_ATTACKED');
+    const amount = Number(attack?.payload['amount']);
+
+    expect(attack?.payload['target']).toBe('player');
+    expect(attack?.payload['hpDamage']).toBe(amount);
+    expect(result.nextState.player.currentHp).toBe(300 - amount);
+    expect(result.nextState.monster.currentHp).toBe(999);
+  });
+
   it('lets the monster choose a deterministic legal adjacent swap before attacking', () => {
     const state = createBattleState(120);
     const result = resolveBattleAction(state, {
@@ -184,6 +204,7 @@ describe('M1 battle core', () => {
     const poison = resolveGemMatch('poison');
     expect(poison.events.some((event) => event.type === 'POISON_APPLIED')).toBe(true);
     expect(poison.events.some((event) => event.type === 'POISON_TICKED')).toBe(true);
+    expect(poison.events.find((event) => event.type === 'POISON_TICKED')?.payload['target']).toBe('monster');
   });
 
   it('defeats the player when the monster attack reaches zero HP', () => {

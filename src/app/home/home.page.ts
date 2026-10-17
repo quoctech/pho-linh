@@ -14,4 +14,13 @@ export class HomePage implements OnInit {
   private readonly storage = inject(GameStorage);
   save?: LocalSaveV1;
   async ngOnInit(): Promise<void> { this.save = await this.storage.load(); }
+
+  ionViewWillLeave(): void {
+    this.blurFocusedElement();
+  }
+
+  private blurFocusedElement(): void {
+    const active = document.activeElement;
+    if (active instanceof HTMLElement) active.blur();
+  }
 }

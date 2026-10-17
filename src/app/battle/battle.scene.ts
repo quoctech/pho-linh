@@ -14,7 +14,7 @@ const GEM_TYPES: readonly GemType[] = ['attack', 'heal', 'shield', 'energy', 'po
 const BOARD_SIZE = 6;
 const CELL_SIZE = 48;
 const BOARD_LEFT = 36;
-const BOARD_TOP = 190;
+const BOARD_TOP = 184;
 const BOARD_WIDTH = BOARD_SIZE * CELL_SIZE;
 const GEM_TEXTURE_KEYS: Partial<Record<GemType, string>> = {
   attack: 'gem-attack',
@@ -32,7 +32,7 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
   private pointerStart?: Coord;
   private monsterVisual?: Phaser.GameObjects.Container;
   private monsterBody?: Phaser.GameObjects.Arc;
-  private monsterArt?: Phaser.GameObjects.Image;
+  private monsterArt?: Phaser.GameObjects.Image | Phaser.GameObjects.Sprite;
   private playerBar?: Phaser.GameObjects.Graphics;
   private monsterBar?: Phaser.GameObjects.Graphics;
   private playerHpLabel?: Phaser.GameObjects.Text;
@@ -67,6 +67,13 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
     this.load.image('gem-shield', 'assets/gems/shield.webp');
     this.load.image('gem-energy', 'assets/gems/energy.webp');
     this.load.image('monster-mist-blob', 'assets/monsters/mist_blob.webp');
+    const controller = this.registry.get('battleController') as BattleController | undefined;
+    if (!controller || controller.currentState.monster.id === 'mist_blob') {
+      this.load.spritesheet('mist-dust-idle', 'assets/monsters/mist-dust/mist-dust-idle-sheet.png', {
+        frameWidth: 512,
+        frameHeight: 512,
+      });
+    }
   }
 
   create(): void {
@@ -126,22 +133,22 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
 
   private createHud(): void {
     this.turnLabel = this.add
-      .text(336, 22, 'Lượt 0 / 20', { color: '#fff8e8', fontFamily: 'sans-serif', fontSize: '14px' })
+      .text(336, 20, 'Lượt 0 / 20', { color: '#fff8e8', fontFamily: 'sans-serif', fontSize: '14px' })
       .setOrigin(1, 0.5);
     this.countdownLabel = this.add
-      .text(336, 46, '', { color: '#f3c64f', fontFamily: 'sans-serif', fontSize: '14px', fontStyle: 'bold' })
+      .text(336, 42, '', { color: '#f3c64f', fontFamily: 'sans-serif', fontSize: '14px', fontStyle: 'bold' })
       .setOrigin(1, 0.5);
 
-    this.add.text(24, 48, 'Nhân vật', { color: '#b8b0cf', fontSize: '12px' });
+    this.add.text(24, 45, 'Nhân vật', { color: '#b8b0cf', fontSize: '12px' });
     this.playerBar = this.add.graphics();
-    this.playerHpLabel = this.add.text(24, 76, '', { color: '#fff8e8', fontSize: '12px' });
+    this.playerHpLabel = this.add.text(24, 72, '', { color: '#fff8e8', fontSize: '12px' });
 
-    this.add.text(24, 91, this.controller.currentState.monster.name, { color: '#b8b0cf', fontSize: '12px' });
+    this.add.text(24, 88, this.controller.currentState.monster.name, { color: '#b8b0cf', fontSize: '12px' });
     this.monsterBar = this.add.graphics();
-    this.monsterHpLabel = this.add.text(24, 119, '', { color: '#fff8e8', fontSize: '12px' });
+    this.monsterHpLabel = this.add.text(24, 115, '', { color: '#fff8e8', fontSize: '12px' });
 
     this.telegraphLabel = this.add
-      .text(180, 150, '', {
+      .text(180, 140, '', {
         color: '#f3c64f',
         fontFamily: 'sans-serif',
         fontSize: '12px',
@@ -149,7 +156,7 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
       })
       .setOrigin(0.5);
     this.statusLabel = this.add
-      .text(180, 176, 'Chọn hai viên ngọc kề nhau', {
+      .text(180, 158, 'Chọn hai viên ngọc kề nhau', {
         color: '#fff8e8',
         fontFamily: 'sans-serif',
         fontSize: '12px',
@@ -158,9 +165,29 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
   }
 
   private createMonsterVisual(): void {
-    const monster = this.add.container(286, 108);
+    const monster = this.add.container(294, 104);
+    if (this.controller.currentState.monster.id === 'mist_blob' && this.textures.exists('mist-dust-idle')) {
+      if (!this.anims.exists('mist-dust-idle')) {
+        this.anims.create({
+          key: 'mist-dust-idle',
+          frames: this.anims.generateFrameNumbers('mist-dust-idle', { start: 0, end: 7 }),
+          frameRate: 8,
+          repeat: -1,
+        });
+      }
+      const sprite = this.add.sprite(0, 0, 'mist-dust-idle')
+        .setOrigin(0.5, 0.88)
+        .setDisplaySize(80, 80)
+        .play('mist-dust-idle');
+      this.monsterArt = sprite;
+      monster.add(sprite);
+      this.monsterVisual = monster;
+      return;
+    }
     if (this.controller.currentState.monster.id === 'mist_blob' && this.textures.exists('monster-mist-blob')) {
-      this.monsterArt = this.add.image(0, 0, 'monster-mist-blob').setDisplaySize(72, 72);
+      this.monsterArt = this.add.image(0, 0, 'monster-mist-blob')
+        .setOrigin(0.5, 0.88)
+        .setDisplaySize(80, 80);
       monster.add(this.monsterArt);
       this.monsterVisual = monster;
       return;
@@ -184,7 +211,7 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
   }
 
   private createControls(): void {
-    this.energyLabel = this.add.text(24, 505, 'Energy 0 / 100', {
+    this.energyLabel = this.add.text(24, 495, 'Energy 0 / 100', {
       color: '#f3c64f',
       fontSize: '14px',
       fontStyle: 'bold',
@@ -192,16 +219,16 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
     this.energyBar = this.add.graphics();
 
     this.skillButton = this.add
-      .rectangle(276, 550, 132, 40, 0x6b4fa3, 1)
+      .rectangle(274, 524, 128, 38, 0x6b4fa3, 1)
       .setStrokeStyle(2, 0xd8c2ff, 0.7)
       .setInteractive({ useHandCursor: true });
     this.skillButtonText = this.add
-      .text(276, 550, 'Đèn Phá Mây', { color: '#fff8e8', fontSize: '12px', fontStyle: 'bold' })
+      .text(274, 524, 'Đèn Phá Mây', { color: '#fff8e8', fontSize: '12px', fontStyle: 'bold' })
       .setOrigin(0.5);
     this.skillButton.on('pointerdown', () => void this.dispatchSkill());
 
     this.abandonButton = this.add
-      .text(24, 570, 'Bỏ trận', { color: '#eaa1ad', fontSize: '13px' })
+      .text(24, 580, 'Bỏ trận', { color: '#eaa1ad', fontSize: '13px' })
       .setInteractive({ useHandCursor: true });
     this.abandonButton.on('pointerdown', () => void this.dispatchAbandon());
   }
@@ -227,9 +254,9 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
     const monsterHp = this.clampDisplay(this.displayedMonsterHp ?? state.monster.currentHp, 0, monsterMaxHp);
     const shield = this.safeNumber(this.displayedShield ?? state.player.shield);
     const energy = this.clampDisplay(this.displayedEnergy ?? state.player.energy, 0, DEFAULT_BATTLE_CONFIG.energyCap);
-    this.drawBar(this.playerBar, 24, 64, 210, playerHp / playerMaxHp, 0x57c982);
-    this.drawBar(this.monsterBar, 24, 107, 210, monsterHp / monsterMaxHp, 0xe75b62);
-    this.drawBar(this.energyBar, 24, 522, 210, energy / DEFAULT_BATTLE_CONFIG.energyCap, 0xf3c64f);
+    this.drawBar(this.playerBar, 24, 58, 210, playerHp / playerMaxHp, 0x57c982);
+    this.drawBar(this.monsterBar, 24, 101, 210, monsterHp / monsterMaxHp, 0xe75b62);
+    this.drawBar(this.energyBar, 24, 512, 210, energy / DEFAULT_BATTLE_CONFIG.energyCap, 0xf3c64f);
     this.playerHpLabel?.setText(`HP ${playerHp} / ${playerMaxHp}  ·  Khiên ${shield}`);
     this.monsterHpLabel?.setText(`HP ${monsterHp} / ${monsterMaxHp}`);
     this.energyLabel?.setText(`Energy ${energy} / 100`);
@@ -442,12 +469,12 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
         if (event.payload['target'] === 'player') {
           this.displayedPlayerHp = Math.max(0, (this.displayedPlayerHp ?? this.controller.currentState.player.currentHp) - amount);
           this.statusLabel?.setText(`-${amount} HP`);
-          this.floatNumber(`-${amount} HP`, 80, 65, '#ff9aa4');
+          this.floatNumber(`-${amount} HP`, 80, 59, '#ff9aa4');
           this.shakePlayerBar();
         } else {
           this.displayedMonsterHp = Math.max(0, (this.displayedMonsterHp ?? this.controller.currentState.monster.currentHp) - amount);
           this.statusLabel?.setText(`-${amount} HP quái`);
-          this.floatNumber(`-${amount} HP`, 286, 108, '#ff9aa4');
+          this.floatNumber(`-${amount} HP`, 294, 104, '#ff9aa4');
           this.shakeMonster();
         }
         this.refreshDisplayedBars();
@@ -459,7 +486,7 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
         );
         if (amount > 0) {
           this.statusLabel?.setText(`+${amount} HP`);
-          this.floatNumber(`+${amount} HP`, 80, 65, '#8ff0ad');
+          this.floatNumber(`+${amount} HP`, 80, 59, '#8ff0ad');
         } else {
           this.statusLabel?.setText('HP đã đầy');
         }
@@ -468,41 +495,40 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
       case 'SHIELD_GAINED':
         this.displayedShield = Math.max(0, (this.displayedShield ?? this.controller.currentState.player.shield) + amount);
         this.statusLabel?.setText(`+${amount} khiên`);
-        this.floatNumber(`+${amount}`, 125, 65, '#9dceff');
+        this.floatNumber(`+${amount}`, 125, 59, '#9dceff');
         this.refreshDisplayedBars();
         break;
       case 'ENERGY_GAINED':
         this.displayedEnergy = Math.min(100, (this.displayedEnergy ?? this.controller.currentState.player.energy) + amount);
         this.statusLabel?.setText(`+${amount} energy`);
-        this.floatNumber(`+${amount}`, 235, 535, '#ffe28c');
+        this.floatNumber(`+${amount}`, 235, 515, '#ffe28c');
         this.refreshDisplayedBars();
         break;
       case 'POISON_APPLIED':
         this.statusLabel?.setText(`Độc +${amount}`);
-        this.floatNumber(`Độc +${amount}`, 286, 108, '#d5aaff');
+        this.floatNumber(`Độc +${amount}`, 294, 104, '#d5aaff');
         break;
       case 'POISON_TICKED':
         this.displayedMonsterHp = Math.max(0, (this.displayedMonsterHp ?? this.controller.currentState.monster.currentHp) - amount);
-        this.statusLabel?.setText(`Độc gây ${amount} damage`);
-        this.floatNumber(`-${amount} độc`, 286, 108, '#d5aaff');
+        this.statusLabel?.setText(`Độc gây ${amount} damage lên quái`);
+        this.floatNumber(`-${amount} độc`, 294, 104, '#d5aaff');
         this.shakeMonster();
         this.refreshDisplayedBars();
         break;
       case 'MONSTER_ATTACKED':
+        const shieldAbsorbed = this.safeNumber(Number(event.payload['shieldAbsorbed'] ?? 0));
+        const hpDamage = this.safeNumber(Number(event.payload['hpDamage'] ?? Math.max(0, amount - shieldAbsorbed)));
         this.displayedShield = Math.max(
           0,
-          (this.displayedShield ?? this.controller.currentState.player.shield) - Number(event.payload['shieldAbsorbed'] ?? 0),
+          (this.displayedShield ?? this.controller.currentState.player.shield) - shieldAbsorbed,
         );
         this.displayedPlayerHp = Math.max(
           0,
-          (this.displayedPlayerHp ?? this.controller.currentState.player.currentHp) - Math.max(
-            0,
-            amount - Number(event.payload['shieldAbsorbed'] ?? 0),
-          ),
+          (this.displayedPlayerHp ?? this.controller.currentState.player.currentHp) - hpDamage,
         );
         this.telegraphLabel?.setText(`⚔ ${this.monsterActionText(String(event.payload['action'] ?? 'basic'))}`);
         this.statusLabel?.setText(`${this.controller.currentState.monster.name} gây ${amount} damage`);
-        this.floatNumber(`-${amount}`, 80, 65, '#ff9aa4');
+        this.floatNumber(`-${amount}`, 80, 59, '#ff9aa4');
         this.flashMonster(0xff7a80);
         this.shakePlayerBar();
         this.refreshDisplayedBars();
@@ -543,7 +569,7 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
 
   private shakeMonster(): void {
     if (!this.monsterVisual) return;
-    this.tweens.add({ targets: this.monsterVisual, x: 188, yoyo: true, repeat: 2, duration: 45 });
+    this.tweens.add({ targets: this.monsterVisual, x: this.monsterVisual.x + 4, yoyo: true, repeat: 2, duration: 45 });
     this.cameras.main.shake(80, 0.002);
   }
 

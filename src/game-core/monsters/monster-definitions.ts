@@ -9,6 +9,7 @@ export const MIST_BLOB: MonsterDefinition = {
   defense: 2,
   behaviorId: 'basic',
   behaviors: ['basic'],
+  tactics: { attack: 8, defense: 1, heal: 0, shield: 2, poison: 1 },
   expReward: 35,
   goldReward: 12,
 };
@@ -16,18 +17,21 @@ export const MIST_BLOB: MonsterDefinition = {
 export const LANTERN_CAT: MonsterDefinition = {
   id: 'lantern_cat', name: 'Miêu Đèn', level: 2, maxHp: 260, attack: 28, defense: 6,
   behaviorId: 'guard', behaviors: ['basic', 'guard'], expReward: 65, goldReward: 24,
+  tactics: { attack: 5, defense: 8, heal: 2, shield: 7, poison: 1 },
   unlockRequirement: { monsterId: 'mist_blob', wins: 2 },
 };
 
 export const BAMBOO_MANTIS: MonsterDefinition = {
   id: 'bamboo_mantis', name: 'Bọ Lá Tre', level: 3, maxHp: 360, attack: 38, defense: 10,
   behaviorId: 'heavy', behaviors: ['basic', 'heavy'], expReward: 105, goldReward: 42,
+  tactics: { attack: 8, defense: 2, heal: 1, shield: 3, poison: 4 },
   unlockRequirement: { monsterId: 'lantern_cat', wins: 1 },
 };
 
 export const CLOUD_FOX_BOSS: MonsterDefinition = {
   id: 'cloud_fox_boss', name: 'Cáo Mây', level: 5, maxHp: 620, attack: 52, defense: 14,
   behaviorId: 'boss', behaviors: ['basic', 'guard', 'heavy'], expReward: 240, goldReward: 100,
+  tactics: { attack: 8, defense: 7, heal: 3, shield: 6, poison: 5 },
   unlockRequirement: { monsterId: 'bamboo_mantis', wins: 1 },
 };
 
