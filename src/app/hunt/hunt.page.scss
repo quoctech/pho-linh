@@ -1,0 +1,62 @@
+.hunt-content {
+  --background: #171426;
+}
+
+.hunt-shell {
+  max-width: 560px;
+  margin: 0 auto;
+  padding: 32px 20px;
+}
+
+.eyebrow {
+  margin: 0 0 8px;
+  color: #f3c64f;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+}
+
+h1 {
+  margin: 0 0 8px;
+  color: #fff8e8;
+}
+
+.intro,
+.monster-card p {
+  color: #b8b0cf;
+  line-height: 1.5;
+}
+
+.monster-card {
+  margin: 28px 0 0;
+  overflow: hidden;
+  --background: #28213d;
+  color: #fff8e8;
+}
+
+.monster-icon {
+  display: grid;
+  width: 88px;
+  height: 88px;
+  margin-bottom: 16px;
+  border-radius: 50%;
+  place-items: center;
+  background: #8b9bc7;
+  color: #f4f7ff;
+  font-size: 48px;
+  box-shadow: 0 10px 24px rgb(0 0 0 / 25%);
+}
+
+.stats {
+  display: flex;
+  gap: 8px;
+  margin: 20px 0;
+}
+.loading-state { min-height: 55vh; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; color: #fff8e8; }
+.loading-state ion-spinner { width: 42px; height: 42px; margin-bottom: 20px; --color: #f3c64f; }
+.loading-state h1 { margin: 0 0 8px; font-size: 24px; }
+.loading-state p { margin: 0; color: #b8b0cf; line-height: 1.5; }
+.monster-list { display:grid; gap:16px; }
+.reward { color:#f3c64f !important; }
+.locked { opacity:.65; }
+.locked-text { color:#b56b78 !important; font-weight:600; }

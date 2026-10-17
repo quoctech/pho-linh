@@ -30,6 +30,7 @@ function createInitialEvent(
 ): GameEvent {
   return {
     eventId: `${actionId}:${sequence}`,
+    actionId,
     battleId: state.battleId,
     turn,
     type,
@@ -39,6 +40,41 @@ function createInitialEvent(
 
 function boardPayload(board: Board): Readonly<Record<string, unknown>> {
   return { board: cloneBoard(board) };
+}
+
+function matchMetadata(
+  board: Board,
+  coordinates: readonly { readonly row: number; readonly col: number }[],
+): { readonly gemCounts: Readonly<Record<string, number>>; readonly longMatchBonus: number } {
+  const gemCounts: Record<string, number> = {};
+  let longestLine = 0;
+
+  for (const coord of coordinates) {
+    const gem = board[coord.row][coord.col];
+    gemCounts[gem] = (gemCounts[gem] ?? 0) + 1;
+
+    let horizontal = 1;
+    for (let col = coord.col - 1; col >= 0 && board[coord.row][col] === gem; col -= 1) {
+      horizontal += 1;
+    }
+    for (let col = coord.col + 1; col < board[coord.row].length && board[coord.row][col] === gem; col += 1) {
+      horizontal += 1;
+    }
+
+    let vertical = 1;
+    for (let row = coord.row - 1; row >= 0 && board[row][coord.col] === gem; row -= 1) {
+      vertical += 1;
+    }
+    for (let row = coord.row + 1; row < board.length && board[row][coord.col] === gem; row += 1) {
+      vertical += 1;
+    }
+    longestLine = Math.max(longestLine, horizontal, vertical);
+  }
+
+  return {
+    gemCounts,
+    longMatchBonus: longestLine >= 5 ? 20 : longestLine >= 4 ? 10 : 0,
+  };
 }
 
 export function createInitialState(
@@ -155,6 +191,7 @@ export function resolveSwap(
     sequence += 1;
 
     const cleared = new Set(matches.map((coord) => `${coord.row}:${coord.col}`));
+    const metadata = matchMetadata(nextBoard, matches);
     const clearedBoard = nextBoard.map((row, rowIndex) =>
       row.map((gem, colIndex) =>
         cleared.has(`${rowIndex}:${colIndex}`) ? undefined : gem,
@@ -164,6 +201,7 @@ export function resolveSwap(
       createInitialEvent(state, action.actionId, sequence, 'GEMS_CLEARED', {
         cascade,
         coordinates: matches,
+        ...metadata,
         ...boardPayload(clearedBoard as Board),
       }),
     );

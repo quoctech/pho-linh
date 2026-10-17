@@ -12,9 +12,11 @@
   </ion-header>
 
   <div id="container">
-    <span class="eyebrow">M0 · MATCH-3 PROTOTYPE</span>
+    <span class="eyebrow">OFFLINE RPG · M2</span>
     <h1>Săn ngọc giữa Phố Linh</h1>
-    <p>Đổi hai viên ngọc kề nhau, tạo nhóm 3 và giữ chuỗi cascade tiếp diễn.</p>
-    <ion-button routerLink="/battle" routerDirection="forward">Chơi thử Match-3</ion-button>
+    @if (save; as current) {<div class="profile"><strong>Cấp {{ current.profile.level }}</strong><span>EXP {{ current.profile.exp }}</span><span>Gold {{ current.profile.gold }}</span>@if (current.profile.unspentPoints) {<span>+{{ current.profile.unspentPoints }} điểm</span>}</div>}
+    <p>Đổi hai viên ngọc kề nhau, đọc telegraph và mở khóa thêm quái.</p>
+    <ion-button routerLink="/hunt" routerDirection="forward">Bắt đầu săn quái</ion-button>
+    <div class="links"><ion-button fill="outline" routerLink="/character">Nhân vật</ion-button><ion-button fill="outline" routerLink="/inventory">Túi đồ</ion-button><ion-button fill="outline" routerLink="/shop">Shop</ion-button><ion-button fill="clear" routerLink="/settings">Cài đặt</ion-button></div>
   </div>
 </ion-content>

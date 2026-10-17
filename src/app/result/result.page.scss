@@ -1,0 +1,60 @@
+.result-content {
+  --background: #171426;
+}
+
+.result-shell {
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 64px 24px;
+  text-align: center;
+  color: #fff8e8;
+}
+
+.result-mark {
+  display: grid;
+  width: 96px;
+  height: 96px;
+  margin: 0 auto 24px;
+  border: 2px solid #e75b62;
+  border-radius: 50%;
+  place-items: center;
+  color: #e75b62;
+  font-size: 48px;
+}
+
+.victory .result-mark {
+  border-color: #f3c64f;
+  color: #f3c64f;
+}
+
+.eyebrow {
+  color: #a9a2c5;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+}
+
+h1 {
+  margin: 8px 0;
+  font-size: 32px;
+}
+
+.description {
+  color: #b8b0cf;
+  line-height: 1.5;
+}
+
+.summary {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 12px 24px;
+  margin: 32px 0;
+  padding: 20px;
+  border-radius: 16px;
+  background: #28213d;
+  text-align: left;
+}
+
+.summary span {
+  color: #b8b0cf;
+}

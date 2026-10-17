@@ -6,9 +6,21 @@ export const routes: Routes = [
     loadComponent: () => import('./home/home.page').then((m) => m.HomePage),
   },
   {
-    path: 'battle',
+    path: 'hunt',
+    loadComponent: () => import('./hunt/hunt.page').then((m) => m.HuntPage),
+  },
+  {
+    path: 'battle/:monsterId',
     loadComponent: () => import('./battle/battle.page').then((m) => m.BattlePage),
   },
+  {
+    path: 'result/:battleId',
+    loadComponent: () => import('./result/result.page').then((m) => m.ResultPage),
+  },
+  { path: 'character', loadComponent: () => import('./character/character.page').then((m) => m.CharacterPage) },
+  { path: 'inventory', loadComponent: () => import('./inventory/inventory.page').then((m) => m.InventoryPage) },
+  { path: 'shop', loadComponent: () => import('./shop/shop.page').then((m) => m.ShopPage) },
+  { path: 'settings', loadComponent: () => import('./settings/settings.page').then((m) => m.SettingsPage) },
   {
     path: '',
     redirectTo: 'home',

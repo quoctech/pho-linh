@@ -1,0 +1,230 @@
+import {
+  computeDerivedStats,
+  createBattleState,
+  areAdjacent,
+  clampPlayerState,
+  findLegalMoves,
+  resolveBattleAction,
+  type GemType,
+  type BattleState,
+} from './index';
+
+const MATCH_ROWS: readonly (readonly GemType[])[] = [
+  ['attack', 'heal', 'attack', 'attack', 'shield', 'energy'],
+  ['heal', 'shield', 'energy', 'poison', 'heal', 'shield'],
+  ['energy', 'poison', 'heal', 'shield', 'energy', 'poison'],
+  ['shield', 'energy', 'poison', 'heal', 'shield', 'energy'],
+  ['poison', 'heal', 'shield', 'energy', 'poison', 'heal'],
+  ['heal', 'attack', 'energy', 'poison', 'shield', 'attack'],
+];
+
+function stateWithMatch(gem: GemType, overrides: Partial<BattleState> = {}): BattleState {
+  const board: GemType[][] = MATCH_ROWS.map((row) => [...row]);
+  board[0] = [gem, gem === 'attack' ? 'heal' : 'attack', gem, gem, 'shield', 'energy'];
+  return {
+    ...createBattleState(99),
+    ...overrides,
+    board,
+    monster: { ...createBattleState(99).monster, currentHp: 999, ...overrides.monster },
+    player: { ...createBattleState(99).player, ...overrides.player },
+  };
+}
+
+function resolveGemMatch(gem: GemType, overrides: Partial<BattleState> = {}) {
+  const state = stateWithMatch(gem, overrides);
+  return resolveBattleAction(state, {
+    kind: 'swap',
+    from: { row: 0, col: 0 },
+    to: { row: 0, col: 1 },
+    actionId: `match-${gem}`,
+  });
+}
+
+describe('M1 battle core', () => {
+  it('computes the level-one baseline stats', () => {
+    const stats = computeDerivedStats({ str: 5, vit: 5, agi: 5, int: 5 });
+
+    expect(stats.maxHp).toBe(300);
+    expect(stats.atk).toBe(25);
+    expect(stats.defense).toBe(10);
+    expect(stats.skillPower).toBe(20);
+    expect(stats.agiBonus).toBe(0.025);
+  });
+
+  it('requires full energy before using Đèn Phá Mây', () => {
+    const state = createBattleState(10);
+    const result = resolveBattleAction(state, {
+      kind: 'skill',
+      skillId: 'cloud_break_lantern',
+      actionId: 'skill-without-energy',
+    });
+
+    expect(result.accepted).toBe(false);
+    expect(result.nextState).toEqual(state);
+  });
+
+  it('clamps invalid HP and energy values instead of propagating NaN', () => {
+    const player = createBattleState(112).player;
+    const safe = clampPlayerState({ ...player, currentHp: Number.NaN, energy: Number.NaN });
+
+    expect(safe.currentHp).toBe(0);
+    expect(safe.energy).toBe(0);
+    expect(Number.isFinite(safe.stats.maxHp)).toBe(true);
+  });
+
+  it('can win immediately when the skill defeats the monster', () => {
+    const state: BattleState = {
+      ...createBattleState(11),
+      player: { ...createBattleState(11).player, energy: 100 },
+      monster: { ...createBattleState(11).monster, currentHp: 100 },
+    };
+    const result = resolveBattleAction(state, {
+      kind: 'skill',
+      skillId: 'cloud_break_lantern',
+      actionId: 'skill-finish',
+    });
+
+    expect(result.accepted).toBe(true);
+    expect(result.nextState.phase).toBe('VICTORY');
+    expect(result.events.some((event) => event.type === 'BATTLE_WON')).toBe(true);
+    expect(result.events.some((event) => event.type === 'MONSTER_ATTACKED')).toBe(false);
+  });
+
+  it('allows the skill at exactly 100 energy and spends the energy', () => {
+    const state: BattleState = {
+      ...createBattleState(111),
+      player: { ...createBattleState(111).player, energy: 100 },
+      monster: { ...createBattleState(111).monster, currentHp: 999 },
+    };
+    const result = resolveBattleAction(state, {
+      kind: 'skill',
+      skillId: 'cloud_break_lantern',
+      actionId: 'skill-full-energy',
+    });
+
+    expect(result.accepted).toBe(true);
+    expect(result.events.some((event) => event.type === 'SKILL_USED')).toBe(true);
+    expect(result.nextState.player.energy).toBe(0);
+  });
+
+  it('runs a monster turn after a valid swap and consumes shield before HP', () => {
+    const initial = createBattleState(12);
+    const move = findLegalMoves(initial.board)[0];
+    const state: BattleState = {
+      ...initial,
+      player: { ...initial.player, shield: 20 },
+      monster: { ...initial.monster, currentHp: 999 },
+    };
+    const result = resolveBattleAction(state, {
+      kind: 'swap',
+      ...move,
+      actionId: 'swap-with-shield',
+    });
+
+    expect(result.accepted).toBe(true);
+    expect(result.events.some((event) => event.type === 'MONSTER_ATTACKED')).toBe(true);
+    expect(result.nextState.player.shield).toBeGreaterThanOrEqual(0);
+    expect(result.nextState.player.currentHp).toBeLessThanOrEqual(state.player.currentHp);
+    expect(result.nextState.phase).toBe('PLAYER_READY');
+  });
+
+  it('lets the monster choose a deterministic legal adjacent swap before attacking', () => {
+    const state = createBattleState(120);
+    const result = resolveBattleAction(state, {
+      kind: 'timeout',
+      actionId: 'timeout-monster-move',
+    });
+    const selected = result.events.find((event) => event.type === 'MONSTER_MOVE_SELECTED');
+    const from = selected?.payload['from'] as { row: number; col: number };
+    const to = selected?.payload['to'] as { row: number; col: number };
+
+    expect(result.accepted).toBe(true);
+    const thinking = result.events.find((event) => event.type === 'MONSTER_THINKING');
+    const thinkingSeconds = Number(thinking?.payload['seconds']);
+    expect(thinkingSeconds).toBeGreaterThanOrEqual(1);
+    expect(thinkingSeconds).toBeLessThanOrEqual(10);
+    expect(selected).toBeDefined();
+    expect(areAdjacent(from, to)).toBe(true);
+    expect(result.events.some((event) => event.type === 'MONSTER_SWAP_STARTED')).toBe(true);
+    expect(result.events.some((event) => event.type === 'MONSTER_SWAP_RESOLVED')).toBe(true);
+    expect(result.events.some((event) => event.type === 'MONSTER_ATTACKED')).toBe(true);
+    expect(selected?.payload['actor']).toBe('monster');
+    expect(result.events.find((event) => event.type === 'MONSTER_ATTACKED')?.payload['actor']).toBe('monster');
+    expect(result.events.find((event) => event.type === 'GEMS_CLEARED')?.payload['actor']).toBe('monster');
+  });
+
+  it('turns timeout into a lost turn and restarts player-ready state after monster action', () => {
+    const state = createBattleState(121);
+    const result = resolveBattleAction(state, { kind: 'timeout', actionId: 'timeout-1' });
+
+    expect(result.nextState.turn).toBe(state.turn + 1);
+    expect(result.events[0].type).toBe('TURN_TIMED_OUT');
+    expect(result.nextState.phase).toBe('PLAYER_READY');
+  });
+
+  it('applies attack, heal, shield and poison gem effects', () => {
+    const attack = resolveGemMatch('attack');
+    expect(attack.events.find((event) => event.type === 'DAMAGE_APPLIED')?.payload['actor']).toBe('player');
+
+    const heal = resolveGemMatch('heal', {
+      player: { ...createBattleState(99).player, currentHp: 250 },
+    });
+    expect(heal.events.some((event) => event.type === 'HEAL_APPLIED')).toBe(true);
+    expect(heal.nextState.player.currentHp).toBeGreaterThan(250);
+
+    const fullHeal = resolveGemMatch('heal');
+    const healEvent = fullHeal.events.find((event) => event.type === 'HEAL_APPLIED');
+    expect(healEvent?.payload['amount']).toBe(0);
+    expect(healEvent?.payload['capped']).toBe(true);
+
+    const shield = resolveGemMatch('shield');
+    expect(shield.events.some((event) => event.type === 'SHIELD_GAINED')).toBe(true);
+    expect(shield.nextState.player.shield).toBeGreaterThan(0);
+
+    const poison = resolveGemMatch('poison');
+    expect(poison.events.some((event) => event.type === 'POISON_APPLIED')).toBe(true);
+    expect(poison.events.some((event) => event.type === 'POISON_TICKED')).toBe(true);
+  });
+
+  it('defeats the player when the monster attack reaches zero HP', () => {
+    const initial = createBattleState(13);
+    const move = findLegalMoves(initial.board)[0];
+    const state: BattleState = {
+      ...initial,
+      player: { ...initial.player, currentHp: 1 },
+      monster: { ...initial.monster, currentHp: 999 },
+    };
+    const result = resolveBattleAction(state, {
+      kind: 'swap',
+      ...move,
+      actionId: 'swap-defeat',
+    });
+
+    expect(result.nextState.phase).toBe('DEFEAT');
+    expect(result.nextState.terminalReason).toBe('player_hp_zero');
+    expect(result.nextState.player.currentHp).toBe(0);
+    expect(Number.isFinite(result.nextState.player.currentHp)).toBe(true);
+  });
+
+  it('defeats the player when the turn limit is reached', () => {
+    const result = resolveGemMatch('shield', {
+      turn: 19,
+      player: { ...createBattleState(99).player, currentHp: 300 },
+    });
+
+    expect(result.nextState.phase).toBe('DEFEAT');
+    expect(result.nextState.terminalReason).toBe('turn_limit');
+  });
+
+  it('abandons a ready battle without accepting more actions', () => {
+    const state = createBattleState(14);
+    const result = resolveBattleAction(state, {
+      kind: 'abandon',
+      actionId: 'abandon-1',
+    });
+
+    expect(result.accepted).toBe(true);
+    expect(result.nextState.phase).toBe('ABANDON');
+    expect(result.events[0].type).toBe('BATTLE_ABANDONED');
+  });
+});

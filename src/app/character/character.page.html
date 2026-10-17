@@ -1,0 +1,24 @@
+<ion-header><ion-toolbar><ion-title>Nhân vật</ion-title></ion-toolbar></ion-header>
+<ion-content>
+  @if (save; as current) {
+    <main class="shell">
+      <p class="eyebrow">PHIẾU NHÂN VẬT</p><h1>Cấp {{ current.profile.level }}</h1>
+      <p>EXP {{ current.profile.exp }} / {{ expRequired }} · Điểm chưa dùng <strong>{{ current.profile.unspentPoints }}</strong></p>
+      <div class="exp"><span [style.width.%]="current.profile.exp / expRequired * 100"></span></div>
+      <div class="power">POWER <strong>{{ stats?.power }}</strong></div>
+      <ion-list>
+        @for (key of attributeKeys; track key) {
+          <ion-item>
+            <ion-label><strong>{{ key.toUpperCase() }}</strong><br><small>{{ current.profile.attributes[key] }} → {{ preview?.attributes?.[key] }}</small></ion-label>
+            <ion-button fill="clear" (click)="change(key, -1)" [disabled]="!draft[key]">−</ion-button>
+            <span>{{ draft[key] }}</span><ion-button fill="clear" (click)="change(key, 1)" [disabled]="current.profile.unspentPoints <= (preview?.unspentPoints ?? 0)">+</ion-button>
+          </ion-item>
+        }
+      </ion-list>
+      <p class="preview">Preview: HP {{ previewStats?.maxHp ?? stats?.maxHp }} · ATK {{ previewStats?.atk ?? stats?.atk }} · DEF {{ previewStats?.defense ?? stats?.defense }} · SKILL {{ previewStats?.skillPower ?? stats?.skillPower }}</p>
+      <ion-button expand="block" (click)="commit()" [disabled]="!preview || preview.unspentPoints === current.profile.unspentPoints">Xác nhận điểm</ion-button>
+      <ion-button expand="block" fill="outline" (click)="cancel()">Hủy draft</ion-button>
+      <ion-button expand="block" fill="clear" routerLink="/home">Về nhà</ion-button>
+    </main>
+  }
+</ion-content>

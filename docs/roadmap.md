@@ -122,21 +122,25 @@ Một tính năng chỉ vào milestone hiện tại nếu **(a)** chứng minh v
 
 ### 5.1. Hạng mục implementation
 
-- [ ] Tạo nhân vật level 1, STR/VIT/AGI/INT = 5, derived stats theo `GAMEPLAY.md` §10.
-- [ ] Tích hợp ngọc đỏ/green/blue/yellow/purple vào damage/heal/shield/energy/poison.
-- [ ] State machine battle; một swap hợp lệ = một lượt; quái phản công sau cascade.
-- [ ] Hành vi quái `basic`, telegraph ở UI, boss/heavy sau; combat math config-driven.
-- [ ] Kỹ năng **Đèn Phá Mây**, energy ≥100, người chơi bấm chủ động ở đầu lượt.
-- [ ] Trạng thái `VICTORY`, `DEFEAT`, `ABANDON` có kết quả rõ ràng.
-- [ ] Floating numbers, flash trúng đòn, thanh HP, cảnh báo chiêu, button săn tiếp.
-- [ ] Pause/resume ở ranh giới lượt, không nhận thưởng hai lần.
-- [ ] Test damage/heal/shield/poison, skill, victory priority, defeat, turn limit.
+- [x] Tạo nhân vật level 1, STR/VIT/AGI/INT = 5, derived stats theo `GAMEPLAY.md` §10.
+- [x] Tích hợp ngọc đỏ/green/blue/yellow/purple vào damage/heal/shield/energy/poison.
+- [x] State machine battle; một swap hợp lệ = một lượt; quái phản công sau cascade.
+- [x] Hành vi quái `basic`, telegraph ở UI, boss/heavy sau; combat math config-driven.
+- [x] Kỹ năng **Đèn Phá Mây**, energy ≥100, người chơi bấm chủ động ở đầu lượt.
+- [x] Trạng thái `VICTORY`, `DEFEAT`, `ABANDON` có kết quả rõ ràng.
+- [x] Floating numbers, flash trúng đòn, thanh HP, cảnh báo chiêu, button săn tiếp.
+- [x] Pause/resume ở ranh giới lượt bằng checkpoint offline; reward vẫn để M2.
+- [x] Test damage/heal/shield/poison, skill, victory priority, defeat, turn limit.
 
 ### 5.2. Deliverables
 
 Một trận có đủ vòng lặp; nhân vật/quái bằng asset gốc hoặc placeholder có nhãn; cấu hình quái trong `monster-definitions` và test combat.
 
-### 5.3. Gate M1 → M2
+### 5.3. Trạng thái triển khai
+
+Code path M1 và automated quality gates đã hoàn tất. Manual browser/Android playtest vẫn cần xác nhận trước khi đóng gate M1 → M2; xem [`M1_TEST_LOG.md`](./m1-test-log.md).
+
+### 5.4. Gate M1 → M2
 
 Người test trả lời được "Vì sao tôi thắng/thua?", hành động trên bàn có tác động thật; mất/khôi phục ứng dụng không làm sai state; trận không bị kẹt không kết thúc.
 

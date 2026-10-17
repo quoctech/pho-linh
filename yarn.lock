@@ -488,6 +488,11 @@
   resolved "https://registry.npmjs.org/@capacitor/keyboard/-/keyboard-8.0.6.tgz"
   integrity sha512-Bbe+9V0qaT6dzEFJEK7BUWR01l2+vZE8FM5ITF/WgKtx+G6eGZ6d5+YiSMRJBAK0VGjdO59v8yiQ10Doa5KyvQ==
 
+"@capacitor/preferences@8.0.0":
+  version "8.0.0"
+  resolved "https://registry.npmjs.org/@capacitor/preferences/-/preferences-8.0.0.tgz"
+  integrity sha512-NsE7Srk9Zr0SxiVelHGiAJR7M238eyCD6dI/sDhu3ckKwFrXn8/GRyGr+SZcnGLlQKy948li8Pfcfr0dqxNf1g==
+
 "@capacitor/status-bar@8.0.4":
   version "8.0.4"
   resolved "https://registry.npmjs.org/@capacitor/status-bar/-/status-bar-8.0.4.tgz"

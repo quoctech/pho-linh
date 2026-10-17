@@ -1,0 +1,9 @@
+<ion-header><ion-toolbar><ion-title>Săn quái</ion-title></ion-toolbar></ion-header>
+<ion-content class="hunt-content"><div class="hunt-shell">
+  @if (isLoading) {
+    <div class="loading-state" role="status" aria-live="polite"><ion-spinner name="crescent"></ion-spinner><h1>Đang chuẩn bị khu săn...</h1><p>Đang tải tiến trình và trạng thái mở khóa.</p></div>
+  } @else {
+    <p class="eyebrow">NGÕ ĐÈN · M2</p><h1>Chọn mục tiêu</h1><p class="intro">Mở khóa theo chiến thắng. Mỗi quái có nhịp basic, guard hoặc heavy riêng.</p>
+    <div class="monster-list">@for (monster of monsters; track monster.id) {<ion-card class="monster-card" [class.locked]="!isUnlocked(monster)"><ion-card-header><div class="monster-icon" aria-hidden="true">{{ monster.id === 'cloud_fox_boss' ? '☁' : monster.id === 'lantern_cat' ? '◉' : monster.id === 'bamboo_mantis' ? '✦' : '○' }}</div><ion-card-subtitle>Cấp {{ monster.level }} · {{ monster.id === 'cloud_fox_boss' ? 'BOSS' : monster.behaviors.join(' / ') }}</ion-card-subtitle><ion-card-title>{{ monster.name }}</ion-card-title></ion-card-header><ion-card-content><p>HP {{ monster.maxHp }} · ATK {{ monster.attack }} · DEF {{ monster.defense }}</p><p class="reward">Thưởng: {{ monster.expReward }} EXP · {{ monster.goldReward }} gold</p>@if (!isUnlocked(monster)) {<p class="locked-text">🔒 {{ unlockText(monster) }}</p>}<ion-button expand="block" (click)="hunt(monster)" [disabled]="!isUnlocked(monster)">{{ isUnlocked(monster) ? 'Săn quái' : 'Chưa mở khóa' }}</ion-button></ion-card-content></ion-card>}</div>
+  }
+</div></ion-content>

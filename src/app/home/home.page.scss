@@ -38,6 +38,10 @@
   min-height: 48px;
 }
 
+.profile { display:flex; flex-wrap:wrap; justify-content:center; gap:8px; max-width:360px; margin:0 auto 20px; }
+.profile span, .profile strong { padding:7px 10px; border-radius:9px; background:#28213d; color:#fff8e8; font-size:12px; }
+.links { display:flex; flex-wrap:wrap; justify-content:center; gap:2px; margin-top:10px; }
+
 #container strong {
   color: #8c8c8c;
 }

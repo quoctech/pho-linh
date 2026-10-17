@@ -1,0 +1,11 @@
+<ion-header><ion-toolbar><ion-title>Túi đồ</ion-title></ion-toolbar></ion-header>
+<ion-content>
+  @if (save; as current) {
+    <main class="shell"><div class="heading"><div><p class="eyebrow">KHO VẬT PHẨM</p><h1>{{ current.inventory.length }} / 60 ô</h1></div>@if (current.pendingRewards.length) {<ion-badge color="warning">{{ current.pendingRewards.length }} chờ nhận</ion-badge>}</div>
+      <ion-select label="Lọc" label-placement="stacked" [(ngModel)]="filter"><ion-select-option value="all">Tất cả</ion-select-option><ion-select-option value="weapon">Vũ khí</ion-select-option><ion-select-option value="armor">Giáp</ion-select-option><ion-select-option value="charm">Bùa</ion-select-option><ion-select-option value="common">Common</ion-select-option><ion-select-option value="rare">Rare</ion-select-option></ion-select>
+      @if (current.pendingRewards.length) {<section class="pending"><h2>Reward chờ nhận</h2>@for (pending of current.pendingRewards; track pending.claimId) {<ion-item><ion-label>{{ template(pending.item).name }}<br><small>Túi đầy lúc nhận thưởng</small></ion-label><ion-button (click)="claim(pending.claimId)" [disabled]="current.inventory.length >= 60">Nhận</ion-button></ion-item>}</section>}
+      <div class="grid">@for (item of items; track item.instanceId) {<article class="item"><div class="icon">{{ template(item).slot === 'weapon' ? '⚔' : template(item).slot === 'armor' ? '◆' : '✦' }}</div><strong>{{ template(item).name }}</strong><small>{{ template(item).description }}</small><ion-chip [color]="template(item).rarity === 'rare' ? 'tertiary' : 'medium'">{{ template(item).rarity }}</ion-chip><ion-button size="small" fill="outline" (click)="equip(item)" [disabled]="equipped(item)">{{ equipped(item) ? 'Đang dùng' : 'Trang bị' }}</ion-button></article>} @empty {<p>Chưa có vật phẩm. Hãy đi săn hoặc ghé shop.</p>}</div>
+      <section class="equipped"><h2>Đang trang bị</h2>@for (slot of slots; track slot) {<ion-item><ion-label>{{ slot }}<br><small>{{ current.equipment[slot] ? 'Đã trang bị' : 'Trống' }}</small></ion-label>@if (current.equipment[slot]) {<ion-button fill="clear" (click)="unequip(slot)">Tháo</ion-button>}</ion-item>}</section>
+    </main>
+  }
+</ion-content>

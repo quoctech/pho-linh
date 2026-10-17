@@ -1,7 +1,7 @@
 import {
   findLegalMoves,
+  type BattleState,
   type GameEvent,
-  type Match3State,
   type SwapAction,
 } from '../../game-core';
 import { BattleController, type BattleEventPlayer } from './battle.controller';
@@ -18,7 +18,7 @@ describe('BattleController', () => {
   it('plays engine events and publishes the new state after the sequence', async () => {
     const player = new RecordingEventPlayer();
     const controller = new BattleController(101, player);
-    const states: Match3State[] = [];
+    const states: BattleState[] = [];
     controller.subscribe((state) => states.push(state));
     const move = findLegalMoves(controller.currentState.board)[0];
     const action: SwapAction = {
