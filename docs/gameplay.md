@@ -364,7 +364,7 @@ Người chơi có thể xem chi tiết trước trận: HP, ATK, DEF, cơ chế
 
 | ID | Quái | Cấp gợi ý | HP | ATK | DEF | Hành vi | EXP | Vàng |
 |---|---|---:|---:|---:|---:|---|---:|---:|
-| `mist_blob` | Bụi Sương | 1 | 180 | 20 | 2 | basic | 35 | 12 |
+| `mist_blob` | Bụi Sương | 1 | 250 | 20 | 2 | basic | 35 | 12 |
 | `lantern_cat` | Miêu Đèn | 2 | 280 | 26 | 5 | basic, guard | 55 | 20 |
 | `bamboo_mantis` | Bọ Lá Tre | 3 | 400 | 32 | 8 | basic, heavy | 75 | 28 |
 | `cloud_fox_boss` | Cáo Mây | 4 (boss) | 760 | 36 | 10 | basic, guard, heavy | 160 | 65 |
@@ -933,7 +933,7 @@ Không đổi balance giữa một trận đang diễn ra; `balanceVersion` đư
 ## Phụ lục — Mẫu một trận đầu tiên
 
 **Người chơi:** Level 1, STR/VIT/AGI/INT = 5/5/5/5, MAX_HP = 300, ATK = 25, DEF = 10, SKILL_POWER = 20.  
-**Quái:** Bụi Sương, HP=180, ATK=20, DEF=2.
+**Quái:** Bụi Sương, HP=250, ATK=20, DEF=2.
 
 1. Lượt 1: match 3 đỏ → `round(3×25/3)−2 = 23 damage`; quái còn 157 HP, phản công `20−floor(10×0.6)=14`, người chơi còn 286 HP.
 2. Lượt 2: match 3 xanh dương → khiên `round(3×(8+5×0.5))=32`; quái đánh 14, khiên còn 18, HP không giảm.

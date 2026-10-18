@@ -48,6 +48,12 @@ const HERO_SPRITE_KEYS: Record<HeroGender, HeroSpriteKeys> = {
 };
 const GEM_ATLAS_KEY = 'pho-linh-gems';
 const BATTLE_BACKGROUND_KEY = 'pho-linh-pk-background';
+const PARALLAX_BACKGROUND_KEYS = {
+  sky: 'pk-layer-sky-moon',
+  mid: 'pk-layer-mid-city',
+  fx: 'pk-layer-fx-mist-petals',
+  ground: 'pk-layer-ground-path',
+} as const;
 const GEM_ATLAS_FRAMES: Partial<Record<GemType, number>> = {
   attack: 0,
   shield: 1,
@@ -61,13 +67,6 @@ const GEM_TEXTURE_KEYS: Partial<Record<GemType, string>> = {
   shield: 'gem-shield',
   energy: 'gem-energy',
 };
-const PARALLAX_BACKGROUND_KEYS = {
-  full: 'pk-full-background',
-  sky: 'pk-layer-sky-moon',
-  mid: 'pk-layer-mid-city',
-  fx: 'pk-layer-fx-mist-petals',
-  ground: 'pk-layer-ground-path',
-} as const;
 const VFX_SHEET_KEYS = {
   selectRing: 'fx-select-ring',
   match3: 'fx-match3-burst',
@@ -128,6 +127,7 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
     readonly fx: Phaser.GameObjects.Image;
     readonly ground: Phaser.GameObjects.Image;
   };
+  private parallaxStarted = false;
   private battleBackgroundOverlay?: Phaser.GameObjects.Rectangle;
   private playerBar?: Phaser.GameObjects.Graphics;
   private monsterBar?: Phaser.GameObjects.Graphics;
@@ -379,28 +379,22 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
 
   private createBattleBackground(): void {
     if (!this.textures.exists(BATTLE_BACKGROUND_KEY)) return;
-    const hasParallaxLayers = [
-      PARALLAX_BACKGROUND_KEYS.sky,
-      PARALLAX_BACKGROUND_KEYS.mid,
-      PARALLAX_BACKGROUND_KEYS.fx,
-      PARALLAX_BACKGROUND_KEYS.ground,
-    ].every((key) => this.textures.exists(key));
-
+    this.battleBackground = this.add
+      .image(this.logicalWidth / 2, this.logicalHeight / 2, BATTLE_BACKGROUND_KEY)
+      .setOrigin(0.5)
+      .setAlpha(0.96)
+      .setDepth(-100);
+    const hasParallaxLayers = Object.values(PARALLAX_BACKGROUND_KEYS)
+      .every((key) => this.textures.exists(key));
     if (hasParallaxLayers) {
       const centerX = this.logicalWidth / 2;
       const centerY = this.logicalHeight / 2;
       this.parallaxBackgroundLayers = {
-        sky: this.add.image(centerX, centerY, PARALLAX_BACKGROUND_KEYS.sky).setDepth(-100),
+        sky: this.add.image(centerX, centerY, PARALLAX_BACKGROUND_KEYS.sky).setDepth(-95),
         mid: this.add.image(centerX, centerY, PARALLAX_BACKGROUND_KEYS.mid).setDepth(-90),
-        fx: this.add.image(centerX, centerY, PARALLAX_BACKGROUND_KEYS.fx).setDepth(-70).setAlpha(0.72),
+        fx: this.add.image(centerX, centerY, PARALLAX_BACKGROUND_KEYS.fx).setDepth(-70).setAlpha(0.68),
         ground: this.add.image(centerX, centerY + 34, PARALLAX_BACKGROUND_KEYS.ground).setDepth(-80),
       };
-    } else {
-      this.battleBackground = this.add
-        .image(this.logicalWidth / 2, this.logicalHeight / 2, BATTLE_BACKGROUND_KEY)
-        .setOrigin(0.5)
-        .setAlpha(0.9)
-        .setDepth(-100);
     }
     this.battleBackgroundOverlay = this.add
       .rectangle(this.logicalWidth / 2, this.logicalHeight / 2, this.logicalWidth, this.logicalHeight, 0x090817, 0.16)
@@ -413,52 +407,51 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
     if (!this.battleBackgroundOverlay) return;
     const width = this.logicalWidth;
     const height = this.logicalHeight;
-    const background = this.parallaxBackgroundLayers?.sky ?? this.battleBackground;
+    const background = this.battleBackground;
     if (!background) return;
     const source = background.texture.getSourceImage() as HTMLImageElement;
     const scale = Math.max(width / source.width, height / source.height);
-    if (this.parallaxBackgroundLayers) {
-      const { sky, mid, fx, ground } = this.parallaxBackgroundLayers;
-      sky.setPosition(width / 2 - 2, height / 2).setScale(scale);
-      mid.setPosition(width / 2 + 3, height / 2).setScale(scale);
-      fx.setPosition(width / 2 + 5, height / 2).setScale(scale);
-      ground.setPosition(width / 2, height / 2 + 34).setScale(scale);
-    } else {
-      this.battleBackground?.setPosition(width / 2, height / 2).setScale(scale);
+    background.setPosition(width / 2, height / 2).setScale(scale);
+    const layers = this.parallaxBackgroundLayers;
+    if (layers) {
+      layers.sky.setPosition(width / 2, height / 2).setScale(scale);
+      layers.mid.setPosition(width / 2, height / 2).setScale(scale);
+      layers.fx.setPosition(width / 2, height / 2).setScale(scale);
+      layers.ground.setPosition(width / 2, height / 2 + 34).setScale(scale);
+      this.startParallaxMotion();
     }
     this.battleBackgroundOverlay.setPosition(width / 2, height / 2).setSize(width, height);
-    this.startParallaxMotion();
   }
 
   private startParallaxMotion(): void {
     const layers = this.parallaxBackgroundLayers;
-    if (!layers) return;
-    this.tweens.killTweensOf([layers.sky, layers.mid, layers.fx]);
+    if (!layers || this.parallaxStarted) return;
+    this.parallaxStarted = true;
     this.tweens.add({
       targets: layers.sky,
-      x: { from: layers.sky.x - 8, to: layers.sky.x + 8 },
-      y: { from: layers.sky.y - 2, to: layers.sky.y + 2 },
+      x: { from: layers.sky.x - 2, to: layers.sky.x + 2 },
+      y: { from: layers.sky.y - 1, to: layers.sky.y + 1 },
       yoyo: true,
       repeat: -1,
-      duration: 9000,
+      duration: 12000,
       ease: 'Sine.InOut',
     });
     this.tweens.add({
       targets: layers.mid,
-      x: { from: layers.mid.x - 14, to: layers.mid.x + 14 },
-      y: { from: layers.mid.y - 2, to: layers.mid.y + 2 },
+      x: { from: layers.mid.x - 5, to: layers.mid.x + 5 },
+      y: { from: layers.mid.y - 1, to: layers.mid.y + 1 },
       yoyo: true,
       repeat: -1,
-      duration: 6000,
+      duration: 8500,
       ease: 'Sine.InOut',
     });
     this.tweens.add({
       targets: layers.fx,
-      x: { from: layers.fx.x - 20, to: layers.fx.x + 20 },
-      alpha: { from: 0.42, to: 0.84 },
+      x: { from: layers.fx.x - 8, to: layers.fx.x + 8 },
+      alpha: { from: 0.52, to: 0.78 },
       yoyo: true,
       repeat: -1,
-      duration: 2600,
+      duration: 4200,
       ease: 'Sine.InOut',
     });
   }
@@ -653,8 +646,8 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
   }
 
   private createProtectionVisuals(): void {
-    this.heroShieldVisual = this.createShieldVisual(72, 530, 0x6cbcff, 0xbfe4ff);
-    this.heroEnergyVisual = this.add.container(72, 530).setDepth(7).setVisible(false);
+    this.heroShieldVisual = this.createShieldVisual(72, 538, 0x6cbcff, 0xbfe4ff);
+    this.heroEnergyVisual = this.add.container(72, 538).setDepth(7).setVisible(false);
     const energyCore = this.add
       .ellipse(0, 0, 70, 82, 0xffc84d, 0.08)
       .setStrokeStyle(2, 0xffe58a, 0.9)
@@ -671,7 +664,7 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
       );
     }
     this.heroEnergyVisual.add([energyCore, energyBurst]);
-    this.heroPoisonVisual = this.createPoisonVisual(72, 530, 1);
+    this.heroPoisonVisual = this.createPoisonVisual(72, 538, 1);
     this.monsterPoisonVisual = this.createPoisonVisual(294, 145 + MONSTER_COMBAT_Y_OFFSET, 0.72);
     this.monsterGuardVisual = this.createShieldVisual(294, 145 + MONSTER_COMBAT_Y_OFFSET, 0xa889ff, 0xd8c2ff, 1.06);
     this.tweens.add({
@@ -756,7 +749,7 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
 
   private createHeroVisual(): void {
     if (!this.textures.exists(this.heroSpriteKeys.idle)) return;
-    const hero = this.add.container(72, 570).setDepth(6);
+    const hero = this.add.container(72, 578).setDepth(6);
     const sprite = this.add.sprite(0, 0, this.heroSpriteKeys.idle)
       .setOrigin(0.5, 0.92)
       .setDisplaySize(84, 84)
@@ -1032,7 +1025,7 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
 
   private syncProtectionVisuals(hasPlayerShield: boolean, hasMonsterShield: boolean): void {
     if (this.heroShieldVisual) {
-      this.heroShieldVisual.setPosition(this.heroVisual?.x ?? 72, (this.heroVisual?.y ?? 570) - 40);
+      this.heroShieldVisual.setPosition(this.heroVisual?.x ?? 72, (this.heroVisual?.y ?? 578) - 40);
       if (hasPlayerShield) {
         this.heroShieldVisual.setAlpha(0.72).setVisible(true);
       } else {
@@ -1055,7 +1048,7 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
   private syncEnergyAura(energy: number): void {
     const charged = energy > 50;
     if (this.heroEnergyVisual) {
-      this.heroEnergyVisual.setPosition(this.heroVisual?.x ?? 72, (this.heroVisual?.y ?? 570) - 40);
+      this.heroEnergyVisual.setPosition(this.heroVisual?.x ?? 72, (this.heroVisual?.y ?? 578) - 40);
       if (charged) {
         this.heroEnergyVisual.setAlpha(0.5).setVisible(true);
       } else {
@@ -1072,7 +1065,7 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
 
   private syncPoisonVisual(playerActive: boolean, monsterActive: boolean): void {
     this.heroPoisonVisual
-      ?.setPosition(this.heroVisual?.x ?? 72, (this.heroVisual?.y ?? 570) - 40)
+      ?.setPosition(this.heroVisual?.x ?? 72, (this.heroVisual?.y ?? 578) - 40)
       .setVisible(playerActive);
     this.monsterPoisonVisual
       ?.setPosition(this.monsterVisual?.x ?? 294, (this.monsterVisual?.y ?? 145) + MONSTER_COMBAT_Y_OFFSET)
@@ -1724,7 +1717,7 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
   private spawnHeroProjectile(onImpact?: () => void): void {
     const start = {
       x: (this.heroVisual?.x ?? 72) + 28,
-      y: (this.heroVisual?.y ?? 570) - 42,
+      y: (this.heroVisual?.y ?? 578) - 42,
     };
     const target = {
       x: (this.monsterVisual?.x ?? 294) - 20,
@@ -1767,7 +1760,7 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
     };
     const target = {
       x: this.heroVisual?.x ?? 72,
-      y: (this.heroVisual?.y ?? 570) - 40,
+      y: (this.heroVisual?.y ?? 578) - 40,
     };
     const textureKey = 'mist-dust-hit-impact';
     if (!this.textures.exists(textureKey)) {
@@ -1849,7 +1842,7 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
   private combatPoint(target: 'player' | 'monster'): { readonly x: number; readonly y: number } {
     return target === 'monster'
       ? { x: this.monsterVisual?.x ?? 294, y: (this.monsterVisual?.y ?? 145) + MONSTER_COMBAT_Y_OFFSET }
-      : { x: this.heroVisual?.x ?? 72, y: (this.heroVisual?.y ?? 570) - 40 };
+      : { x: this.heroVisual?.x ?? 72, y: (this.heroVisual?.y ?? 578) - 40 };
   }
 
   private flashCombatant(target: 'player' | 'monster', color: number): void {
@@ -2006,7 +1999,7 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
 
   private playPoisonEffect(): void {
     const x = this.heroVisual?.x ?? 72;
-    const y = (this.heroVisual?.y ?? 570) - 40;
+    const y = (this.heroVisual?.y ?? 578) - 40;
     this.heroPoisonVisual?.setPosition(x, y).setVisible(true).setAlpha(0.8);
     this.spawnCombatImpact(x, y, 0xd5aaff, 54);
     this.flashHero(0xd5aaff);
