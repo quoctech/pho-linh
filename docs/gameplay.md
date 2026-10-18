@@ -381,12 +381,13 @@ Người chơi có thể xem chi tiết trước trận: HP, ATK, DEF, cơ chế
 
 | ID | Quái | Cấp gợi ý | HP | ATK | DEF | Hành vi | EXP | Vàng |
 |---|---|---:|---:|---:|---:|---|---:|---:|
-| `mist_blob` | Bụi Sương | 1 | 250 | 20 | 2 | basic | 35 | 12 |
+| `mist_blob` | Bụi Sương | 1 | 270 | 55 | 0 | basic | 35 | 12 |
 | `lantern_cat` | Miêu Đèn | 2 | 280 | 26 | 5 | basic, guard | 55 | 20 |
 | `bamboo_mantis` | Bọ Lá Tre | 3 | 400 | 32 | 8 | basic, heavy | 75 | 28 |
 | `cloud_fox_boss` | Cáo Mây | 4 (boss) | 760 | 36 | 10 | basic, guard, heavy | 160 | 65 |
 
 - Người chơi bắt đầu với Bụi Sương; thắng 2 lần mở Miêu Đèn; thắng Miêu Đèn mở Bọ Lá Tre; thắng Bọ Lá Tre mở boss.
+- Bụi Sương có khiên tối đa 50 và 25% tỷ lệ né đòn đánh thường từ ngọc công; skill không bị né.
 - Thua trận không mất EXP/vàng/túi đồ. Cho nút **Thử lại** và gợi ý ("Cộng VIT để sống lâu hơn", "Dùng ngọc xanh trước đòn mạnh").
 - Boss đầu có 2 trạng thái: trên 50% HP (basic/guard); ≤50% HP (heavy 2 lượt một lần). Trạng thái được hiển thị rõ.
 
@@ -952,11 +953,11 @@ Không đổi balance giữa một trận đang diễn ra; `balanceVersion` đư
 ## Phụ lục — Mẫu một trận đầu tiên
 
 **Người chơi:** Level 1, STR/VIT/AGI/INT = 5/5/5/5, MAX_HP = 300, ATK = 25, DEF = 10, SKILL_POWER = 20.  
-**Quái:** Bụi Sương, HP=250, ATK=20, DEF=2.
+**Quái:** Bụi Sương, HP=270, ATK=55, DEF=0, khiên tối đa 50, né 25% đòn đánh thường.
 
-1. Lượt 1: match 3 đỏ → `round(3×25/3)−2 = 23 damage`; quái còn 157 HP, phản công `20−floor(10×0.6)=14`, người chơi còn 286 HP.
-2. Lượt 2: match 3 xanh dương → khiên `round(3×(8+5×0.5))=32`; quái đánh 14, khiên còn 18, HP không giảm.
-3. Lượt 3: match 3 vàng → +24 energy; quái đánh 14, khiên còn 4.
+1. Lượt 1: match 3 đỏ → nếu không né, `round(3×25/3)−0 = 25 damage`; nếu né thì không mất HP/khiên. Khi quái phản công, sát thương là `55−floor(10×0.6)=49`.
+2. Lượt 2: match 3 xanh dương → khiên `round(3×(8+5×0.5))=32`; quái đánh 49, khiên hấp thụ tối đa 32 rồi phần còn lại trừ HP.
+3. Lượt 3: match 3 vàng → +24 energy; quái tiếp tục gây 49 damage nếu không né/không có khiên.
 4. Các lượt sau: người chơi tìm combo đỏ/vàng, dùng heal/shield đúng lúc và tích skill. Kết quả tùy lựa chọn, board seed và cascade — **không bảo đảm chiến thắng bằng kịch bản cố định**.
 
 **Quan trọng:** ví dụ trên chứng minh công thức tương tác, chưa chứng minh cân bằng hoặc thời lượng trận 2–5 phút. Phải chạy mô phỏng nhiều seed và playtest người thật trước khi chốt chỉ số quái.

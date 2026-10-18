@@ -121,6 +121,8 @@ export interface MonsterDefinition {
   readonly maxHp: number;
   readonly attack: number;
   readonly defense: number;
+  /** Optional absolute shield cap; otherwise the battle config ratio is used. */
+  readonly shieldCap?: number;
   readonly behaviorId: 'basic' | 'guard' | 'heavy' | 'boss';
   readonly behaviors: readonly ('basic' | 'guard' | 'heavy' | 'energy' | 'poison')[];
   readonly tactics: MonsterTactics;
@@ -242,6 +244,7 @@ export interface GameEvent {
     | 'BOARD_FORCED_STABILIZE'
     | 'GEMS_EFFECT_APPLIED'
     | 'DAMAGE_APPLIED'
+    | 'MONSTER_DODGED'
     | 'HEAL_APPLIED'
     | 'SHIELD_GAINED'
     | 'ENERGY_GAINED'

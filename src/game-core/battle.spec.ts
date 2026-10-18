@@ -19,20 +19,21 @@ const MATCH_ROWS: readonly (readonly GemType[])[] = [
   ['heal', 'attack', 'energy', 'poison', 'shield', 'attack'],
 ];
 
-function stateWithMatch(gem: GemType, overrides: Partial<BattleState> = {}): BattleState {
+function stateWithMatch(gem: GemType, overrides: Partial<BattleState> = {}, seed = 99): BattleState {
+  const initial = createBattleState(seed);
   const board: GemType[][] = MATCH_ROWS.map((row) => [...row]);
   board[0] = [gem, gem === 'attack' ? 'heal' : 'attack', gem, gem, 'shield', 'energy'];
   return {
-    ...createBattleState(99),
+    ...initial,
     ...overrides,
     board,
-    monster: { ...createBattleState(99).monster, currentHp: 999, ...overrides.monster },
-    player: { ...createBattleState(99).player, ...overrides.player },
+    monster: { ...initial.monster, currentHp: 999, ...overrides.monster },
+    player: { ...initial.player, ...overrides.player },
   };
 }
 
-function resolveGemMatch(gem: GemType, overrides: Partial<BattleState> = {}) {
-  const state = stateWithMatch(gem, overrides);
+function resolveGemMatch(gem: GemType, overrides: Partial<BattleState> = {}, seed = 99) {
+  const state = stateWithMatch(gem, overrides, seed);
   return resolveBattleAction(state, {
     kind: 'swap',
     from: { row: 0, col: 0 },
@@ -50,6 +51,15 @@ describe('M1 battle core', () => {
     expect(stats.defense).toBe(10);
     expect(stats.skillPower).toBe(20);
     expect(stats.agiBonus).toBe(0.025);
+  });
+
+  it('uses the balanced Bụi Sương combat stats', () => {
+    const monster = createBattleState(100).monster;
+
+    expect(monster.maxHp).toBe(270);
+    expect(monster.attack).toBe(55);
+    expect(monster.defense).toBe(0);
+    expect(monster.shieldCap).toBe(50);
   });
 
   it('requires full energy before using Đèn Phá Mây', () => {
@@ -201,8 +211,8 @@ describe('M1 battle core', () => {
     expect(result.events.some((event) => event.type === 'MONSTER_ACTION_SKIPPED')).toBe(false);
     expect(selected?.payload['actor']).toBe('monster');
     expect(result.events.find((event) => event.type === 'MONSTER_ATTACKED')?.payload['actor']).toBe('monster');
-    expect(result.events.find((event) => event.type === 'MONSTER_ATTACKED')?.payload['baseDamage']).toBe(70);
-    expect(result.events.find((event) => event.type === 'MONSTER_ATTACKED')?.payload['amount']).toBe(64);
+    expect(result.events.find((event) => event.type === 'MONSTER_ATTACKED')?.payload['baseDamage']).toBe(55);
+    expect(result.events.find((event) => event.type === 'MONSTER_ATTACKED')?.payload['amount']).toBe(49);
     expect(result.events.find((event) => event.type === 'ENERGY_GAINED' && event.payload['target'] === 'player')?.payload['amount']).toBe(10);
     expect(result.events.find((event) => event.type === 'ENERGY_GAINED' && event.payload['target'] === 'monster')?.payload['amount']).toBe(15);
     expect(result.events.find((event) => event.type === 'GEMS_CLEARED')?.payload['actor']).toBe('monster');
@@ -227,6 +237,18 @@ describe('M1 battle core', () => {
     expect(results[1].nextState.monster.nextAction).toBe('basic');
     expect(results[2].events.find((event) => event.type === 'MONSTER_ATTACKED')?.payload['action']).toBe('basic');
     expect(results[2].nextState.monster.nextAction).toBe('poison');
+  });
+
+  it('lets Bụi Sương deterministically dodge some normal attack matches', () => {
+    const outcomes = Array.from({ length: 100 }, (_, index) => resolveGemMatch('attack', {}, index + 1));
+    const dodged = outcomes.filter((result) => result.events.some((event) => event.type === 'MONSTER_DODGED'));
+    const hit = outcomes.filter((result) => result.events.some((event) =>
+      event.type === 'DAMAGE_APPLIED' && event.payload['target'] === 'monster',
+    ));
+
+    expect(dodged.length).toBeGreaterThan(0);
+    expect(hit.length).toBeGreaterThan(0);
+    expect(dodged.every((result) => result.events.some((event) => event.type === 'MONSTER_DODGED'))).toBe(true);
   });
 
   it('turns timeout into a lost turn and restarts player-ready state after monster action', () => {

@@ -6,6 +6,8 @@ import { applyMonsterAttackDamage, matchDamageMultiplier } from './monsters/mons
 import { clampPlayerState, createPlayerBattleState } from './player';
 import { createInitialState, resolveSwap } from './resolve';
 import { nextInt } from './rng';
+
+const MIST_DODGE_CHANCE = 0.25;
 import {
   GEM_TYPES,
   type BattleAction,
@@ -15,6 +17,7 @@ import {
   type BattleState,
   type GameEvent,
   type Match3State,
+  type MonsterBattleState,
   type PlayerBattleState,
   type SkillAction,
   type SwapAction,
@@ -40,6 +43,12 @@ function event(
 
 function value<T>(payload: Readonly<Record<string, unknown>>, key: string, fallback: T): T {
   return (payload[key] as T | undefined) ?? fallback;
+}
+
+function monsterShieldCap(monster: Pick<MonsterBattleState, 'maxHp' | 'shieldCap'>, config: BattleConfig): number {
+  return typeof monster.shieldCap === 'number'
+    ? Math.max(0, monster.shieldCap)
+    : Math.round(monster.maxHp * config.shieldCapMaxHpRatio);
 }
 
 function toMatch3State(state: BattleState, config: BattleConfig): Match3State {
@@ -255,7 +264,7 @@ function applyMonsterGemEffects(
     const shieldCount = counts['shield'] ?? 0;
     if (shieldCount > 0) {
       const requested = Math.round(shieldCount * (8 + monster.defense * 0.5) * multiplier);
-      const cap = Math.round(monster.maxHp * config.shieldCapMaxHpRatio);
+      const cap = monsterShieldCap(monster, config);
       const amount = Math.max(0, Math.min(cap - monster.shield, requested));
       monster = { ...monster, shield: Math.min(cap, monster.shield + requested) };
       events.push(event(state, actionId, sequence, 'SHIELD_GAINED', {
@@ -412,6 +421,7 @@ function applyGemEffects(
 ): { readonly state: BattleState; readonly events: GameEvent[]; readonly nextSequence: number } {
   let player = clampPlayerState(state.player);
   let monster = state.monster;
+  let rngState = state.rngState;
   const events: GameEvent[] = [];
   let sequence = startSequence;
 
@@ -440,6 +450,25 @@ function applyGemEffects(
       }
 
       if (gem === 'attack') {
+        if (monster.id === 'mist_blob') {
+          const dodgeRoll = nextInt(rngState, 100);
+          rngState = dodgeRoll.state;
+          if (dodgeRoll.value < MIST_DODGE_CHANCE * 100) {
+            events.push(
+              event(state, actionId, sequence, 'MONSTER_DODGED', {
+                actor: 'monster',
+                source: 'mist_dust_normal_attack_dodge',
+                chance: MIST_DODGE_CHANCE,
+                roll: dodgeRoll.value,
+                matchCount: count,
+                target: 'monster',
+                label: `${monster.name} né đòn đánh thường`,
+              }),
+            );
+            sequence += 1;
+            continue;
+          }
+        }
         const agiMultiplier = cascade >= 2 ? 1 + player.stats.agiBonus : 1;
         const matchMultiplier = matchDamageMultiplier(count);
         const raw = count * (player.stats.atk / 3) * matchMultiplier;
@@ -536,7 +565,7 @@ function applyGemEffects(
 
     if (monster.currentHp <= 0) {
       const next = appendOutcome(
-        { ...state, player: clampPlayerState(player), monster },
+        { ...state, player: clampPlayerState(player), monster, rngState },
         events,
         actionId,
         sequence,
@@ -548,7 +577,7 @@ function applyGemEffects(
   }
 
   return {
-    state: { ...state, player: clampPlayerState(player), monster },
+    state: { ...state, player: clampPlayerState(player), monster, rngState },
     events,
     nextSequence: sequence,
   };
@@ -682,7 +711,7 @@ function resolveMonsterTurn(
   } else if (action === 'guard') {
     if (monster.id === 'mist_blob') {
       const requested = 20;
-      const cap = Math.round(monster.maxHp * config.shieldCapMaxHpRatio);
+      const cap = monsterShieldCap(monster, config);
       const amount = Math.max(0, Math.min(cap - monster.shield, requested));
       monster = { ...monster, shield: Math.min(cap, monster.shield + requested) };
       events.push(event(state, actionId, sequence, 'SHIELD_GAINED', {
@@ -733,7 +762,7 @@ function resolveMonsterTurn(
       const actionMultiplier = attackAction === 'heavy' ? 1.7 : 1;
       const matchMultiplier = isMistBlob ? 1 : matchDamageMultiplier(attackGemCount);
       const baseDamage = isMistBlob
-        ? attackAction === 'heavy' ? 110 : 70
+        ? attackAction === 'heavy' ? monster.attack * 1.7 : monster.attack
         : monster.attack * actionMultiplier * matchMultiplier;
       const incoming = Math.max(
         1,
@@ -997,7 +1026,7 @@ export function resolveBattleAction(
   // Normalize them at the action boundary so migration data cannot produce
   // NaN or make a shield effect disappear unexpectedly.
   const monsterShield = Number.isFinite(state.monster.shield)
-    ? Math.max(0, Math.min(Math.round(state.monster.maxHp * config.shieldCapMaxHpRatio), state.monster.shield))
+    ? Math.max(0, Math.min(monsterShieldCap(state.monster, config), state.monster.shield))
     : 0;
   const monsterEnergy = Number.isFinite(state.monster.energy)
     ? Math.max(0, Math.min(100, state.monster.energy))

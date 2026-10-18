@@ -87,7 +87,7 @@ interface MonsterSpriteKeys {
 const HERO_SPRITE_KEYS: Record<HeroGender, HeroSpriteKeys> = {
   male: {
     idle: 'hero-male-idle',
-    attack: 'hero-male-dodge',
+    attack: 'hero-male-normal-attack',
     hit: 'hero-male-hit',
     death: 'hero-male-death',
     highHp: 'hero-male-high-hp',
@@ -105,7 +105,9 @@ const HERO_SPRITE_KEYS: Record<HeroGender, HeroSpriteKeys> = {
   },
   female: {
     idle: 'hero-female-idle',
-    attack: 'hero-female-dodge',
+    // Reuse the supplied male normal-attack animation until a dedicated
+    // female normal-attack sheet is available.
+    attack: 'hero-male-normal-attack',
     hit: 'hero-female-hit',
     death: 'hero-female-death',
     highHp: 'hero-female-high-hp',
@@ -124,6 +126,7 @@ const HERO_SPRITE_KEYS: Record<HeroGender, HeroSpriteKeys> = {
 };
 const HERO_MALE_SHEETS = {
   idle: 'hero-male-idle-sheet.webp',
+  attack: 'hero-male-normal-attack-sheet.webp',
   highHp: 'hero-male-high_hp-sheet.webp',
   energy: 'hero-male-energy-sheet.webp',
   lowHp: 'hero-male-low_hp-sheet.webp',
@@ -134,6 +137,7 @@ const HERO_MALE_SHEETS = {
   death: 'hero-male-death-sheet.webp',
   dodge: 'hero-male-dodge-sheet.webp',
 } as const;
+const HERO_MALE_ATTACK_FX_KEY = 'hero-male-normal-attack-fx';
 const HERO_FEMALE_SHEETS = {
   idle: 'hero-female-idle-sheet.webp',
   highHp: 'hero-female-high_hp-sheet.webp',
@@ -191,6 +195,7 @@ const SKILL_VFX_KEYS = {
 } as const;
 const SFX_KEYS = {
   heroMaleAttack: 'sfx-hero-male-attack',
+  heroMaleProjectile: 'sfx-hero-male-projectile',
   heroMaleHit: 'sfx-hero-male-hit',
   heroMaleDeath: 'sfx-hero-male-death',
   heroMaleDodge: 'sfx-hero-male-dodge',
@@ -276,6 +281,8 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
   private skillIcon?: Phaser.GameObjects.Image;
   private skillTooltip?: Phaser.GameObjects.Container;
   private skillTooltipLabel?: Phaser.GameObjects.Text;
+  private skillLongPressTimer?: Phaser.Time.TimerEvent;
+  private skillLongPressTriggered = false;
   private skillTooltipHideTimer?: Phaser.Time.TimerEvent;
   private abandonButtonBackground?: Phaser.GameObjects.Rectangle;
   private abandonButton?: Phaser.GameObjects.Text;
@@ -340,14 +347,28 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
     this.load.image('gem-energy', 'assets/gems/energy.webp');
     const heroSheets = heroGender === 'male' ? HERO_MALE_SHEETS : HERO_FEMALE_SHEETS;
     const heroSheetsPath = `assets/${this.heroAssetName}/sheets-webp`;
-    for (const state of Object.keys(heroSheets) as Array<keyof typeof HERO_MALE_SHEETS>) {
-      const file = heroSheets[state];
-      const key = this.heroSpriteKeys[state];
+    for (const [state, file] of Object.entries(heroSheets)) {
+      const key = this.heroSpriteKeys[state as keyof HeroSpriteKeys];
       if (typeof key !== 'string') continue;
       this.load.spritesheet(key, `${heroSheetsPath}/${file}`, {
-        frameWidth: this.heroSpriteKeys.frameWidth,
-        frameHeight: this.heroSpriteKeys.frameHeight,
+        frameWidth: heroGender === 'male' && state === 'attack' ? 460 : this.heroSpriteKeys.frameWidth,
+        frameHeight: heroGender === 'male' && state === 'attack' ? 460 : this.heroSpriteKeys.frameHeight,
       });
+    }
+    if (heroGender === 'female') {
+      this.load.spritesheet(
+        HERO_SPRITE_KEYS.female.attack,
+        'assets/hero-swordmaster/sheets-webp/hero-male-normal-attack-sheet.webp',
+        { frameWidth: 460, frameHeight: 460 },
+      );
+    }
+    // The normal-attack projectile is shared by both hero genders.
+    {
+      this.load.spritesheet(
+        HERO_MALE_ATTACK_FX_KEY,
+        'assets/hero-swordmaster/sheets-webp/hero-male-normal-attack-fx-sheet.webp',
+        { frameWidth: 460, frameHeight: 436 },
+      );
     }
     this.load.spritesheet(VFX_SHEET_KEYS.selectRing, 'assets/vfx/fx-select-ring/fx-select-ring-sheet.png', {
       frameWidth: 256,
@@ -408,7 +429,8 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
     {
       const heroSfxPath = `assets/${this.heroAssetName}/sfx/mp3`;
       const heroSfxFiles: Readonly<Record<string, string>> = heroGender === 'male' ? {
-        [SFX_KEYS.heroMaleAttack]: 'hero-male-attack-sword.mp3',
+        [SFX_KEYS.heroMaleAttack]: 'hero-normal-attack.mp3',
+        [SFX_KEYS.heroMaleProjectile]: 'hero-normal-projectile.mp3',
         [SFX_KEYS.heroMaleHit]: 'hero-male-hit.mp3',
         [SFX_KEYS.heroMaleDeath]: 'hero-male-death.mp3',
         [SFX_KEYS.heroMaleDodge]: 'hero-male-dodge.mp3',
@@ -762,6 +784,7 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
       const sprite = this.add.sprite(0, 0, spriteKeys.idle)
         .setOrigin(0.5, spriteKeys.originY)
         .setDisplaySize(spriteKeys.displayWidth, spriteKeys.displayHeight)
+        .setAlpha(1)
         .setFlipX(true)
         .play(spriteKeys.idle);
       this.monsterArt = sprite;
@@ -829,6 +852,7 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
     this.createMonsterAnimation(this.heroSpriteKeys.death, this.heroSpriteKeys.death, 8, 0);
     if (this.heroSpriteKeys.stunned) this.createMonsterAnimation(this.heroSpriteKeys.stunned, this.heroSpriteKeys.stunned, 8, 0);
     if (this.heroSpriteKeys.dodge) this.createMonsterAnimation(this.heroSpriteKeys.dodge, this.heroSpriteKeys.dodge, 12, 0);
+    this.createMonsterAnimation(HERO_MALE_ATTACK_FX_KEY, HERO_MALE_ATTACK_FX_KEY, 12, 0);
   }
 
   private createHeroVisual(): void {
@@ -1058,10 +1082,10 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
       .setResolution(this.renderQuality)
       .setOrigin(0, 0);
     this.skillTooltip.add([tooltipBackground, this.skillTooltipLabel]);
-    this.skillButton.on('pointerdown', () => {
-      this.showSkillTooltip();
-      void this.dispatchSkill();
-    });
+    this.skillButton.on('pointerdown', this.onSkillPointerDown, this);
+    this.skillButton.on('pointerup', this.onSkillPointerUp, this);
+    this.skillButton.on('pointerout', this.onSkillPointerCancel, this);
+    this.skillButton.on('pointerupoutside', this.onSkillPointerCancel, this);
 
     this.abandonButtonBackground = this.add
       .rectangle(12, this.logicalHeight - 12, 98, 36, 0x30263f, 0.96)
@@ -1267,8 +1291,11 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
     if (!animationKey || !this.anims.exists(animationKey)) return;
     if (this.monsterCurrentAnimationKey === animationKey && sprite.anims.isPlaying) return;
     sprite.stop();
-    sprite.setDisplaySize(keys.displayWidth, keys.displayHeight);
+    sprite.setScale(1).setAlpha(1);
     sprite.play(animationKey);
+    // Apply the size after switching sheets: Mist Dust's status sheets have
+    // different native frame dimensions.
+    sprite.setDisplaySize(keys.displayWidth, keys.displayHeight);
     this.monsterCurrentAnimationKey = animationKey;
   }
 
@@ -1309,6 +1336,29 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
       this.skillTooltip?.setVisible(false);
       this.skillTooltipHideTimer = undefined;
     });
+  }
+
+  private onSkillPointerDown(): void {
+    this.skillLongPressTriggered = false;
+    this.skillLongPressTimer?.remove(false);
+    this.skillLongPressTimer = this.time.delayedCall(450, () => {
+      this.skillLongPressTriggered = true;
+      this.showSkillTooltip();
+      this.skillLongPressTimer = undefined;
+    });
+  }
+
+  private onSkillPointerUp(): void {
+    this.skillLongPressTimer?.remove(false);
+    this.skillLongPressTimer = undefined;
+    if (!this.skillLongPressTriggered) void this.dispatchSkill();
+    this.skillLongPressTriggered = false;
+  }
+
+  private onSkillPointerCancel(): void {
+    this.skillLongPressTimer?.remove(false);
+    this.skillLongPressTimer = undefined;
+    this.skillLongPressTriggered = false;
   }
 
   private renderBoard(board: Board): void {
@@ -1639,6 +1689,18 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
         }
         this.refreshDisplayedBars();
         break;
+      case 'MONSTER_DODGED': {
+        const matchCount = this.safeNumber(Number(event.payload['matchCount'] ?? 0));
+        const matchLabel = matchCount >= 3 ? `X${matchCount} · ` : '';
+        this.playHeroAnimation('attack');
+        this.playHeroAttackSfx();
+        this.spawnHeroSwordProjectile(() => {
+          this.playMonsterEffectAnimation('dodge', 0.5);
+        });
+        this.statusLabel?.setText(`${matchLabel}Bụi Sương né đòn`);
+        this.floatNumber(`${matchLabel}NÉ!`, this.monsterPosition.x, 104, '#d8f4ff');
+        break;
+      }
       case 'HEAL_APPLIED':
         const healTarget = event.payload['target'] === 'monster' ? 'monster' : 'player';
         if (healTarget === 'monster') {
@@ -1961,6 +2023,14 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
 
   private tweenMonsterTelegraph(): void {
     if (!this.monsterVisual) return;
+    if (this.controller.currentState.monster.id === 'mist_blob') {
+      // Mist Dust's supplied sheets already contain their own telegraph
+      // treatment. Scaling the whole sprite makes the cloud jump in size.
+      this.monsterVisual.setScale(1);
+      this.monsterArt?.setAlpha(1);
+      this.flashMonster(0xf3c64f);
+      return;
+    }
     this.tweens.add({ targets: this.monsterVisual, scale: 1.12, yoyo: true, duration: 180 });
   }
 
@@ -1986,25 +2056,26 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
       this.monsterCurrentAnimationKey = animationKey;
     }
     sprite.stop();
-    if (action === 'attack') {
+    sprite.setScale(1).setAlpha(1);
+    sprite.play(animationKey);
+    sprite.setDisplaySize(keys?.displayWidth ?? 84, keys?.displayHeight ?? 84);
+    if (action === 'attack' && this.controller.currentState.monster.id !== 'mist_blob') {
       sprite.setDisplaySize(
         (keys?.displayWidth ?? 84) * 1.12,
         (keys?.displayHeight ?? 84) * 1.12,
       );
     }
-    sprite.play(animationKey);
     if (action === 'death') return;
 
     sprite.once(`animationcomplete-${animationKey}`, () => {
-      if (action === 'attack') {
-        sprite.setDisplaySize(keys?.displayWidth ?? 84, keys?.displayHeight ?? 84);
-      }
       if (this.monsterSprite !== sprite) return;
       if (this.controller.currentState.monster.id === 'mist_blob') {
         this.monsterTransientAnimation = undefined;
         this.playMonsterPersistentAnimation(this.monsterPersistentStatus);
       } else if (keys && this.anims.exists(keys.idle)) {
+        sprite.setScale(1);
         sprite.play(keys.idle);
+        sprite.setDisplaySize(keys.displayWidth, keys.displayHeight);
       }
     });
   }
@@ -2021,7 +2092,10 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
     this.monsterTransientAnimation = action;
     this.monsterCurrentAnimationKey = animationKey;
     this.playSfx(volume > 0 ? this.monsterEffectSfxKey(action) : '', volume);
-    sprite.stop().play(animationKey);
+    sprite.stop();
+    sprite.setScale(1).setAlpha(1);
+    sprite.play(animationKey);
+    sprite.setDisplaySize(keys.displayWidth, keys.displayHeight);
     sprite.once(`animationcomplete-${animationKey}`, () => {
       if (this.monsterSprite !== sprite) return;
       this.monsterTransientAnimation = undefined;
@@ -2065,6 +2139,36 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
     const impact = { x: target.x - 18, y: target.y - 8 };
     const angle = Phaser.Math.Angle.Between(launch.x, launch.y, impact.x, impact.y);
     const duration = this.reducedMotion ? 190 : 340;
+
+    if (this.textures.exists(HERO_MALE_ATTACK_FX_KEY)
+      && this.anims.exists(HERO_MALE_ATTACK_FX_KEY)) {
+      const projectile = this.add
+        .sprite(launch.x, launch.y, HERO_MALE_ATTACK_FX_KEY, 0)
+        .setOrigin(0.5)
+        .setDisplaySize(112, 106)
+        .setRotation(angle)
+        .setBlendMode(Phaser.BlendModes.ADD)
+        .setDepth(16)
+        .play(HERO_MALE_ATTACK_FX_KEY);
+      this.transientEffects.add(projectile);
+      if (this.heroGender === 'male') {
+        this.playSfx(SFX_KEYS.heroMaleProjectile, 0.46);
+      }
+      this.spawnTravelTrail(launch, impact, 0x9ed8ff, duration);
+      this.tweens.add({
+        targets: projectile,
+        x: impact.x,
+        y: impact.y,
+        scale: 1.08,
+        duration,
+        ease: 'Cubic.In',
+        onComplete: () => {
+          this.destroyTransientEffect(projectile);
+          onImpact?.();
+        },
+      });
+      return;
+    }
 
     const sword = this.add
       .container(launch.x, launch.y)
@@ -2689,6 +2793,7 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
       case 'GEMS_CLEARED': return 520;
       case 'DAMAGE_APPLIED':
         return event.payload['target'] === 'monster' ? 560 : 360;
+      case 'MONSTER_DODGED': return 560;
       case 'HEAL_APPLIED': return 360;
       case 'POISON_APPLIED': return event.payload['target'] === 'monster' ? 720 : 420;
       case 'POISON_TICKED': return 520;
@@ -2739,6 +2844,10 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
     this.unsubscribe?.();
     this.unsubscribe = undefined;
     this.controller?.attachEventPlayer(undefined);
+    this.skillLongPressTimer?.remove(false);
+    this.skillLongPressTimer = undefined;
+    this.skillTooltipHideTimer?.remove(false);
+    this.skillTooltipHideTimer = undefined;
     this.stopTurnTimer();
     this.stopMonsterCountdown();
     this.statusUi?.destroy();

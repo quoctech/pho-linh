@@ -1,7 +1,7 @@
 # PHỐ LINH — ROADMAP PHÁT TRIỂN
 
 > **Tài liệu:** `ROADMAP.md`  
-> **Phiên bản:** 1.0 · 17/10/2026  
+> **Phiên bản:** 1.1 · 18/10/2026
 > **Trạng thái:** Kế hoạch và tiến độ hiện tại; mục có nhãn **(Đã làm)** đã được kiểm chứng trong codebase.
 > **Nguồn gameplay:** [`GAMEPLAY.md`](./GAMEPLAY.md) · **Kiến trúc:** [`ARCHITECTURE.md`](./ARCHITECTURE.md) · **Giao diện:** [`GAME_DESIGN.md`](./GAME_DESIGN.md)  
 > **Bối cảnh:** một developer chính, Android trước, iOS sau; giai đoạn M0–M3 **offline tuyệt đối**.
@@ -128,13 +128,16 @@ Một tính năng chỉ vào milestone hiện tại nếu **(a)** chứng minh v
 - [x] State machine battle; một swap hợp lệ = một lượt; quái phản công sau cascade. (Đã làm)
 - [x] Hành vi quái `basic`, `poison`, telegraph ở UI, boss/heavy sau; combat math config-driven. (Đã làm)
 - [x] Quái có HP hồi, khiên riêng và nhận +15 năng lượng sau đòn đánh; sát thương phản công không còn phụ thuộc riêng vào ngọc tấn công. (Đã làm)
-- [x] Bụi Sương Balance v1.1: 250 HP, đòn thường 70, gieo độc theo chu kỳ xen kẽ, nhân vật nhận +10 năng lượng khi quái đánh, giới hạn 24 lượt. (Đã làm)
+- [x] Bụi Sương Balance v1.2: 270 HP, công 55, thủ 0, khiên tối đa 50, né 25% đòn đánh thường, gieo độc theo chu kỳ xen kẽ, nhân vật nhận +10 năng lượng khi quái đánh, giới hạn 24 lượt. (Đã làm)
 - [x] Kỹ năng **Đèn Phá Mây**, energy ≥100, người chơi bấm chủ động ở đầu lượt. (Đã làm)
 - [x] Tích hợp icon và bộ VFX WebP của Đèn Phá Mây: triệu hồi, tích năng lượng, projectile, tách mây, impact và flash kết thúc. (Đã làm)
+- [x] Bổ sung asset WebP Full-HD/SFX cho hero nam, hero nữ và Bụi Sương; hero nữ dùng chung animation/kiếm bay đánh thường của hero nam. (Đã làm)
+- [x] HUD battle responsive: status gọn căn trái, năng lượng hiển thị bằng thanh vàng, skill chỉ hiện tooltip khi nhấn giữ biểu tượng. (Đã làm)
+- [x] Ổn định visual Bụi Sương: alpha rõ, kích thước cố định giữa các sheet trạng thái, không scale phồng/thu khi telegraph/attack. (Đã làm)
 - [x] Trạng thái `VICTORY`, `DEFEAT`, `ABANDON` có kết quả rõ ràng. (Đã làm)
 - [x] Floating numbers, flash trúng đòn, thanh HP, cảnh báo chiêu, button săn tiếp. (Đã làm)
 - [x] Pause/resume ở ranh giới lượt bằng checkpoint offline; reward vẫn để M2. (Đã làm)
-- [x] Test damage/heal/shield/poison, skill, victory priority, defeat, turn limit. (Đã làm)
+- [x] Test damage/heal/shield/poison, skill, né đòn 25%, victory priority, defeat, turn limit. (Đã làm)
 
 ### 5.2. Deliverables
 

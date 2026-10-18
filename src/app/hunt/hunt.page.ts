@@ -58,7 +58,7 @@ export class HuntPage implements OnInit {
   monsterIcon(monster: MonsterDefinition): string {
     return monster.id === 'cloud_fox_boss' ? '☁' : monster.id === 'lantern_cat' ? '◉' : monster.id === 'bamboo_mantis' ? '✦' : '○';
   }
-  shieldCap(monster: MonsterDefinition): number { return Math.round(monster.maxHp * 0.5); }
+  shieldCap(monster: MonsterDefinition): number { return monster.shieldCap ?? Math.round(monster.maxHp * 0.5); }
   tacticText(monster: MonsterDefinition): string {
     const { attack, defense, heal, shield, poison } = monster.tactics;
     return `Ưu tiên · Công ${attack} · Thủ ${defense} · Hồi ${heal} · Khiên ${shield} · Độc ${poison}`;
