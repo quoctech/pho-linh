@@ -158,7 +158,7 @@ Người test trả lời được "Vì sao tôi thắng/thua?", hành động t
 ### 6.1. Nội dung gameplay khóa phạm vi
 
 - [x] **Ba quái thường:** Bụi Sương, Miêu Đèn, Bọ Lá Tre. (Đã làm)
-- [x] **Miêu Đèn:** asset WebP mobile full pack tích hợp; animation idle/attack/guard/độc/hit/death và logic hành động tách riêng trong `game-core/monsters/lantern-cat.ts`. (Đã làm)
+- [x] **Miêu Đèn:** pack clean FullHD WebP + SFX tích hợp; 15 sheet trạng thái/đòn/FX (HP cao-thấp, năng lượng, khiên, độc, hồi phục, né, choáng, đánh thường, niệm độc, chết) dùng trực tiếp trong battle; logic hành động vẫn tách riêng trong `game-core/monsters/lantern-cat.ts`. (Đã làm)
 - [x] **Long Miêu Liên Kích:** skill tự kích hoạt khi Miêu Đèn đủ 100 năng lượng; xuyên khiên, hút năng lượng nhân vật, làm mất lượt và có bộ VFX WebP HD riêng. (Đã làm)
 - [x] **Một boss:** Cáo Mây (hai phase có báo đòn rõ ràng). (Đã làm)
 - [x] Luật mở khóa quái theo `GAMEPLAY.md` §15. (Đã làm)

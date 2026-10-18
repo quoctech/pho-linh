@@ -11,9 +11,12 @@ import {
 } from '../../game-core';
 import { BattleController, type BattleEventPlayer } from './battle.controller';
 import {
+  LANTERN_CAT_ATTACK_FX_KEY,
+  LANTERN_CAT_CAST_FX_KEY,
   LANTERN_CAT_SPRITE_KEYS,
   LANTERN_SFX_KEYS,
   LANTERN_SKILL_VFX_KEYS,
+  ensureLanternCatAnimations,
   ensureLanternCatSkillAnimations,
   preloadLanternCatAssets,
   preloadLanternCatSprites,
@@ -413,7 +416,9 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
     // Keep the shared bars, but do not load the legacy monster aura overlays
     // when Mist Dust is using its inline status sheets.
     const battleController = this.registry.get('battleController') as BattleController | undefined;
-    const preloadMonsterStatusOverlays = battleController?.currentState.monster.id !== 'mist_blob';
+    const preloadMonsterStatusOverlays = !['mist_blob', 'lantern_cat'].includes(
+      battleController?.currentState.monster.id ?? 'mist_blob',
+    );
     preloadStatusUiAssets(this, false, preloadMonsterStatusOverlays);
     preloadLanternCatAssets(this);
     preloadMistDustAssets(this);
@@ -492,6 +497,7 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
     this.ensureMatch3VfxAnimations();
     this.ensureSkillVfxAnimations();
     ensureStatusUiAnimations(this);
+    ensureLanternCatAnimations(this);
     ensureLanternCatSkillAnimations(this);
     ensureMistDustAnimations(this);
     this.ensureHeroAnimations();
@@ -513,7 +519,7 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
       statusBarY: this.layout.statusBarY,
       energyBarY: this.layout.energyBarY,
       heroUsesInlineStatus: true,
-      monsterUsesInlineStatus: this.controller.currentState.monster.id === 'mist_blob',
+      monsterUsesInlineStatus: ['mist_blob', 'lantern_cat'].includes(this.controller.currentState.monster.id),
       renderQuality: this.renderQuality,
     });
     this.createBoardFrame();
@@ -805,6 +811,10 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
 
   private monsterSpriteKeys(): MonsterSpriteKeys | undefined {
     return MONSTER_SPRITE_KEYS[this.controller.currentState.monster.id];
+  }
+
+  private usesMonsterStatusSheets(): boolean {
+    return ['mist_blob', 'lantern_cat'].includes(this.controller.currentState.monster.id);
   }
 
   private ensureMonsterAnimations(keys: MonsterSpriteKeys): void {
@@ -1172,7 +1182,7 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
       poisonTurns: playerPoisonTurns,
       energy,
     });
-    if (state.monster.id === 'mist_blob') {
+    if (this.usesMonsterStatusSheets()) {
       this.syncMonsterPersistentVisual({
         currentHp: monsterHp,
         maxHp: monsterMaxHp,
@@ -1260,11 +1270,21 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
   }
 
   private syncMonsterPersistentVisual(snapshot: HeroStatusSnapshot): void {
-    if (this.controller.currentState.monster.id !== 'mist_blob') return;
+    if (!this.usesMonsterStatusSheets()) return;
     const hpBand = getHeroHpBand(snapshot.currentHp, snapshot.maxHp);
     if (this.monsterHpBand && hpBand !== this.monsterHpBand) {
-      if (hpBand === 'low') this.playSfx(SFX_KEYS.mistLowHp, 0.45);
-      if (hpBand === 'high') this.playSfx(SFX_KEYS.mistHighHp, 0.45);
+      if (hpBand === 'low') {
+        this.playSfx(
+          this.controller.currentState.monster.id === 'lantern_cat' ? SFX_KEYS.lanternLowHp : SFX_KEYS.mistLowHp,
+          0.45,
+        );
+      }
+      if (hpBand === 'high') {
+        this.playSfx(
+          this.controller.currentState.monster.id === 'lantern_cat' ? SFX_KEYS.lanternHighHp : SFX_KEYS.mistHighHp,
+          0.45,
+        );
+      }
     }
     this.monsterHpBand = hpBand;
     const nextStatus = getHeroPersistentStatus(snapshot);
@@ -1276,7 +1296,7 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
   private playMonsterPersistentAnimation(status: HeroPersistentStatus): void {
     const sprite = this.monsterSprite;
     const keys = this.monsterSpriteKeys();
-    if (!sprite || !keys || this.controller.currentState.monster.id !== 'mist_blob') return;
+    if (!sprite || !keys || !this.usesMonsterStatusSheets()) return;
     const animationKey = status === 'highHp'
       ? keys.highHp
       : status === 'energy'
@@ -1740,8 +1760,13 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
         this.floatNumber(`+${amount}`, shieldPoint.x, shieldPoint.y - 50, '#9dceff');
         if (amount > 0) {
           this.playShieldGainEffect(shieldTarget);
-          if (shieldTarget === 'monster' && this.controller.currentState.monster.id === 'mist_blob') {
-            this.playSfx(SFX_KEYS.mistShield, 0.5);
+          if (shieldTarget === 'monster' && this.usesMonsterStatusSheets()) {
+            this.playSfx(
+              this.controller.currentState.monster.id === 'lantern_cat'
+                ? SFX_KEYS.lanternDefend
+                : SFX_KEYS.mistShield,
+              0.5,
+            );
             this.playMonsterAnimation('defend');
           }
         }
@@ -1762,8 +1787,13 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
         this.floatNumber(`+${amount}`, energyPoint.x, energyPoint.y - 50, '#ffe28c');
         if (amount > 0) {
           this.playEnergyGainEffect(energyTarget);
-          if (energyTarget === 'monster' && this.controller.currentState.monster.id === 'mist_blob') {
-            this.playSfx(SFX_KEYS.mistEnergy, 0.5);
+          if (energyTarget === 'monster' && this.usesMonsterStatusSheets()) {
+            this.playSfx(
+              this.controller.currentState.monster.id === 'lantern_cat'
+                ? SFX_KEYS.lanternEnergy
+                : SFX_KEYS.mistEnergy,
+              0.5,
+            );
           }
         }
         this.refreshDisplayedBars();
@@ -1856,9 +1886,14 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
             (this.displayedMonsterPoisonPotency ?? this.controller.currentState.monster.poisonPotency) + amount,
           );
           this.displayedMonsterPoisonTurns = turns;
-          this.statusLabel?.setText(`NHIỄM ĐỘC! Bụi Sương · ${turns} lượt`);
-          if (this.controller.currentState.monster.id === 'mist_blob') {
-            this.playSfx(SFX_KEYS.mistPoison, 0.52);
+          this.statusLabel?.setText(`NHIỄM ĐỘC! ${this.controller.currentState.monster.name} · ${turns} lượt`);
+          if (this.usesMonsterStatusSheets()) {
+            this.playSfx(
+              this.controller.currentState.monster.id === 'lantern_cat'
+                ? SFX_KEYS.lanternPoisonCast
+                : SFX_KEYS.mistPoison,
+              0.52,
+            );
           }
           this.playPoisonProjectile();
           this.refreshDisplayedBars();
@@ -2023,7 +2058,7 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
 
   private tweenMonsterTelegraph(): void {
     if (!this.monsterVisual) return;
-    if (this.controller.currentState.monster.id === 'mist_blob') {
+    if (this.usesMonsterStatusSheets()) {
       // Mist Dust's supplied sheets already contain their own telegraph
       // treatment. Scaling the whole sprite makes the cloud jump in size.
       this.monsterVisual.setScale(1);
@@ -2051,7 +2086,7 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
     const animationKey = keys?.[action];
     if (!sprite || !animationKey || !this.anims.exists(animationKey)) return;
 
-    if (this.controller.currentState.monster.id === 'mist_blob') {
+    if (this.usesMonsterStatusSheets()) {
       this.monsterTransientAnimation = action;
       this.monsterCurrentAnimationKey = animationKey;
     }
@@ -2059,7 +2094,7 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
     sprite.setScale(1).setAlpha(1);
     sprite.play(animationKey);
     sprite.setDisplaySize(keys?.displayWidth ?? 84, keys?.displayHeight ?? 84);
-    if (action === 'attack' && this.controller.currentState.monster.id !== 'mist_blob') {
+    if (action === 'attack' && !this.usesMonsterStatusSheets()) {
       sprite.setDisplaySize(
         (keys?.displayWidth ?? 84) * 1.12,
         (keys?.displayHeight ?? 84) * 1.12,
@@ -2069,7 +2104,7 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
 
     sprite.once(`animationcomplete-${animationKey}`, () => {
       if (this.monsterSprite !== sprite) return;
-      if (this.controller.currentState.monster.id === 'mist_blob') {
+      if (this.usesMonsterStatusSheets()) {
         this.monsterTransientAnimation = undefined;
         this.playMonsterPersistentAnimation(this.monsterPersistentStatus);
       } else if (keys && this.anims.exists(keys.idle)) {
@@ -2084,7 +2119,7 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
     action: 'heal' | 'antiHeal' | 'dodge' | 'stunned',
     volume: number,
   ): void {
-    if (this.controller.currentState.monster.id !== 'mist_blob') return;
+    if (!this.usesMonsterStatusSheets()) return;
     const sprite = this.monsterSprite;
     const keys = this.monsterSpriteKeys();
     const animationKey = keys?.[action];
@@ -2104,6 +2139,12 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
   }
 
   private monsterEffectSfxKey(action: 'heal' | 'antiHeal' | 'dodge' | 'stunned'): string {
+    if (this.controller.currentState.monster.id === 'lantern_cat') {
+      if (action === 'heal') return SFX_KEYS.lanternHeal;
+      if (action === 'antiHeal') return SFX_KEYS.lanternAntiHeal;
+      if (action === 'dodge') return SFX_KEYS.lanternDodge;
+      return SFX_KEYS.lanternStun;
+    }
     if (action === 'heal') return SFX_KEYS.mistHeal;
     if (action === 'antiHeal') return MIST_DUST_SFX_KEYS.antiHeal;
     if (action === 'dodge') return MIST_DUST_SFX_KEYS.dodge;
@@ -2215,9 +2256,14 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
       y: (this.heroVisual?.y ?? this.heroPosition.y) + this.layout.heroCombatY,
     };
     const color = poison ? 0xd5aaff : this.controller.currentState.monster.id === 'lantern_cat' ? 0xffd45e : 0x8ff3ff;
-    const textureKey = !poison && this.controller.currentState.monster.id === 'mist_blob' && this.textures.exists('mist-dust-hit-impact')
-      ? 'mist-dust-hit-impact'
-      : undefined;
+    const monsterId = this.controller.currentState.monster.id;
+    const textureKey = poison && monsterId === 'lantern_cat' && this.textures.exists(LANTERN_CAT_CAST_FX_KEY)
+      ? LANTERN_CAT_CAST_FX_KEY
+      : !poison && monsterId === 'lantern_cat' && this.textures.exists(LANTERN_CAT_ATTACK_FX_KEY)
+        ? LANTERN_CAT_ATTACK_FX_KEY
+        : !poison && monsterId === 'mist_blob' && this.textures.exists('mist-dust-hit-impact')
+          ? 'mist-dust-hit-impact'
+          : undefined;
     this.spawnTravelTrail(start, target, color, poison ? 360 : 420);
     const projectile = textureKey
       ? this.add
@@ -2227,6 +2273,7 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
         .setBlendMode(Phaser.BlendModes.ADD)
         .setDepth(14)
         .setRotation(Phaser.Math.Angle.Between(start.x, start.y, target.x, target.y))
+        .play(textureKey)
       : this.add
         .circle(start.x, start.y, poison ? 7 : 6, color, 0.84)
         .setStrokeStyle(2, 0xfff0ad, 0.8)
