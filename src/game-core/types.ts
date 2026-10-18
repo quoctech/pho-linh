@@ -149,7 +149,7 @@ export interface MonsterBattleState extends MonsterDefinition {
   readonly shield: number;
   readonly poisonPotency: number;
   readonly poisonTurns: number;
-  readonly nextAction: 'basic' | 'guard' | 'heavy' | 'poison';
+  readonly nextAction: 'basic' | 'guard' | 'heavy' | 'poison' | 'telegraph';
   readonly phase: 1 | 2;
   readonly actionCount: number;
 }

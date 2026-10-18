@@ -612,17 +612,58 @@ function resolveMonsterTurn(
   }
 
   const action = monster.nextAction;
-  if (action === 'guard') {
-    monster = { ...monster, defense: monster.baseDefense + 12 };
-    events.push(event(state, actionId, sequence, 'MONSTER_GUARDED', {
-      actor: 'monster',
-      actionId: `${actionId}:monster:${monster.actionCount}`,
-      action: 'guard',
-      defenseBonus: 12,
-      label: `${monster.name} dựng thế phòng thủ`,
-    }));
+  const mistMatchedAttack = monster.id === 'mist_blob' && attackGemCount > 0;
+  let attackAction: 'basic' | 'heavy' | 'poison' | undefined;
+  if (action === 'telegraph') {
+    if (mistMatchedAttack) {
+      attackAction = 'basic';
+    } else {
+      events.push(event(state, actionId, sequence, 'MONSTER_ACTION_SKIPPED', {
+        actor: 'monster',
+        actionId: `${actionId}:monster:${monster.actionCount}`,
+        action: 'heavy',
+        reason: 'telegraph',
+        label: `${monster.name} báo đòn mạnh`,
+        target: 'player',
+      }));
+      sequence += 1;
+    }
+  } else if (action === 'guard') {
+    if (monster.id === 'mist_blob') {
+      const requested = 20;
+      const cap = Math.round(monster.maxHp * config.shieldCapMaxHpRatio);
+      const amount = Math.max(0, Math.min(cap - monster.shield, requested));
+      monster = { ...monster, shield: Math.min(cap, monster.shield + requested) };
+      events.push(event(state, actionId, sequence, 'SHIELD_GAINED', {
+        actor: 'monster',
+        amount,
+        requested,
+        cap,
+        target: 'monster',
+        source: 'monster_guard_action',
+      }));
+      sequence += 1;
+      events.push(event(state, actionId, sequence, 'MONSTER_GUARDED', {
+        actor: 'monster',
+        actionId: `${actionId}:monster:${monster.actionCount}`,
+        action: 'guard',
+        defenseBonus: 0,
+        shieldGained: amount,
+        label: `${monster.name} tạo khiên ${amount}`,
+      }));
+    } else {
+      monster = { ...monster, defense: monster.baseDefense + 12 };
+      events.push(event(state, actionId, sequence, 'MONSTER_GUARDED', {
+        actor: 'monster',
+        actionId: `${actionId}:monster:${monster.actionCount}`,
+        action: 'guard',
+        defenseBonus: 12,
+        label: `${monster.name} dựng thế phòng thủ`,
+      }));
+    }
     sequence += 1;
-  } else if (attackGemCount <= 0 && action !== 'poison') {
+    if (mistMatchedAttack) attackAction = 'basic';
+  } else if (attackGemCount <= 0 && action !== 'poison' && monster.id !== 'mist_blob') {
     events.push(event(state, actionId, sequence, 'MONSTER_ACTION_SKIPPED', {
       actor: 'monster',
       actionId: `${actionId}:monster:${monster.actionCount}`,
@@ -633,12 +674,19 @@ function resolveMonsterTurn(
     }));
     sequence += 1;
   } else {
-    if (attackGemCount > 0) {
-      const actionMultiplier = action === 'heavy' ? 1.7 : 1;
-      const matchMultiplier = matchDamageMultiplier(attackGemCount);
+    attackAction = action;
+  }
+
+  if (attackAction && (attackGemCount > 0 || monster.id === 'mist_blob')) {
+      const isMistBlob = monster.id === 'mist_blob';
+      const actionMultiplier = attackAction === 'heavy' ? 1.7 : 1;
+      const matchMultiplier = isMistBlob ? 1 : matchDamageMultiplier(attackGemCount);
+      const baseDamage = isMistBlob
+        ? attackAction === 'heavy' ? 110 : 70
+        : monster.attack * actionMultiplier * matchMultiplier;
       const incoming = Math.max(
         1,
-        Math.round(monster.attack * actionMultiplier * matchMultiplier) - Math.floor(player.stats.defense * 0.6),
+        Math.round(baseDamage) - Math.floor(player.stats.defense * 0.6),
       );
       const damage = applyMonsterAttackDamage(player, incoming);
       player = damage.player;
@@ -646,22 +694,35 @@ function resolveMonsterTurn(
         event(state, actionId, sequence, 'MONSTER_ATTACKED', {
           actor: 'monster',
           actionId: `${actionId}:monster:${monster.actionCount}`,
-          action,
-          label: action === 'heavy'
+          action: attackAction,
+          label: attackAction === 'heavy'
             ? `${monster.name} tung đòn nặng`
-            : action === 'poison'
+            : attackAction === 'poison'
               ? `${monster.name} gieo độc`
               : `${monster.name} tấn công`,
           amount: incoming,
+          baseDamage,
           hpDamage: Math.max(0, incoming - damage.absorbed),
           shieldAbsorbed: damage.absorbed,
           shieldRemaining: player.shield,
           shieldBroken: damage.absorbed > 0 && player.shield === 0,
           matchCount: attackGemCount,
           matchDamageMultiplier: matchMultiplier,
+          lethal: player.currentHp <= 0,
           target: 'player',
         }),
       );
+      sequence += 1;
+
+      const playerEnergyGained = Math.min(100 - player.energy, 10);
+      player = clampPlayerState({ ...player, energy: player.energy + playerEnergyGained });
+      events.push(event(state, actionId, sequence, 'ENERGY_GAINED', {
+        actor: 'monster',
+        amount: playerEnergyGained,
+        requested: 10,
+        target: 'player',
+        source: 'monster_attack',
+      }));
       sequence += 1;
 
       const energyGained = Math.min(100 - monster.energy, 15);
@@ -674,9 +735,9 @@ function resolveMonsterTurn(
         source: 'monster_attack',
       }));
       sequence += 1;
-    }
+  }
 
-    if (action === 'poison' && monster.tactics.poison > 0) {
+  if (action === 'poison' && monster.tactics.poison > 0) {
       const requested = Math.max(1, Math.round(monster.tactics.poison * 1.5));
       const cap = Math.max(1, Math.round(player.stats.maxHp * 0.2));
       const applied = Math.max(0, Math.min(cap - player.poisonPotency, requested));
@@ -696,7 +757,6 @@ function resolveMonsterTurn(
         }),
       );
       sequence += 1;
-    }
   }
 
   if (player.currentHp <= 0) {
@@ -736,6 +796,8 @@ function resolveMonsterTurn(
       ? 'phòng thủ'
       : nextAction === 'poison'
         ? 'gieo độc'
+        : nextAction === 'telegraph'
+          ? 'báo đòn mạnh'
       : 'đánh thường';
   monster = { ...monster, actionCount: nextCount, phase: nextPhase, nextAction };
   events.push(
@@ -762,9 +824,14 @@ function chooseMonsterAction(
   monster: BattleState['monster'],
   phase: 1 | 2,
   actionCount: number,
-): 'basic' | 'guard' | 'heavy' | 'poison' {
+): 'basic' | 'guard' | 'heavy' | 'poison' | 'telegraph' {
   const definition = MONSTER_DEFINITIONS[monster.id];
   if (!definition) return 'basic';
+  if (monster.id === 'mist_blob') {
+    // Bụi Sương is intentionally simple for the early game: alternate a
+    // readable normal attack with a poison cast. It has no heavy/guard turn.
+    return actionCount % 2 === 1 ? 'poison' : 'basic';
+  }
   if (monster.id === 'cloud_fox_boss' && phase === 2) return actionCount % 2 === 0 ? 'heavy' : 'basic';
   if (
     definition.behaviors.includes('poison') &&

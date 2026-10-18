@@ -68,7 +68,7 @@ export class BattleController {
 
     this.locked = true;
     try {
-      const result = resolveBattleAction(this.state, action, this.config);
+      const result = this.guardTerminalInvariant(resolveBattleAction(this.state, action, this.config));
       if (this.eventPlayer) {
         await this.eventPlayer.play(result.events);
       }
@@ -82,6 +82,30 @@ export class BattleController {
         resolve();
       }
     }
+  }
+
+  private guardTerminalInvariant(result: BattleResolveResult): BattleResolveResult {
+    const state = result.nextState;
+    const victoryIsValid = state.phase === 'VICTORY' && state.monster.currentHp <= 0;
+    const defeatIsValid = state.phase === 'DEFEAT' && (
+      state.player.currentHp <= 0 ||
+      (state.terminalReason === 'turn_limit' && state.turn >= state.maxTurns)
+    );
+    const terminalIsInvalid = state.phase === 'VICTORY'
+      ? !victoryIsValid
+      : state.phase === 'DEFEAT' && !defeatIsValid;
+    if (!terminalIsInvalid) return result;
+
+    const terminalEvent = state.phase === 'VICTORY' ? 'BATTLE_WON' : 'BATTLE_LOST';
+    return {
+      ...result,
+      events: result.events.filter((event) => event.type !== terminalEvent),
+      nextState: {
+        ...state,
+        phase: 'PLAYER_READY',
+        terminalReason: undefined,
+      },
+    };
   }
 
   private notify(): void {

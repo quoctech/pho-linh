@@ -51,7 +51,12 @@ export class ResultPage implements OnInit {
 
   get description(): string {
     if (this.state?.phase === 'VICTORY') return 'Bạn đã đọc đúng nhịp tấn công và làm chủ bàn ngọc.';
-    if (this.state?.phase === 'DEFEAT') return 'Hãy thử dùng khiên trước đòn đánh và tích đủ energy cho tuyệt kỹ.';
+    if (this.state?.phase === 'DEFEAT') {
+      if (this.state.terminalReason === 'turn_limit') {
+        return `Hết ${this.state.maxTurns} lượt. Quái còn ${this.state.monster.currentHp}/${this.state.monster.maxHp} HP.`;
+      }
+      return `Nhân vật hết HP ở lượt ${this.state.turn}. Quái còn ${this.state.monster.currentHp}/${this.state.monster.maxHp} HP.`;
+    }
     return 'Trận này chưa được tính là thắng hoặc thua.';
   }
 

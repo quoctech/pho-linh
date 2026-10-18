@@ -105,7 +105,7 @@ describe('M1 battle core', () => {
 
     expect(result.accepted).toBe(true);
     expect(result.events.some((event) => event.type === 'SKILL_USED')).toBe(true);
-    expect(result.nextState.player.energy).toBe(0);
+    expect(result.nextState.player.energy).toBe(10);
   });
 
   it('runs a monster turn after a valid swap and consumes shield before HP', () => {
@@ -178,7 +178,7 @@ describe('M1 battle core', () => {
     expect(result.nextState.monster.currentHp).toBe(999 - playerDamage - poisonDamage);
   });
 
-  it('lets the monster choose a deterministic legal adjacent swap and only attacks with attack gems', () => {
+  it('lets Bụi Sương choose a deterministic legal swap and attacks by action, not by attack gems', () => {
     const state = createBattleState(120);
     const result = resolveBattleAction(state, {
       kind: 'timeout',
@@ -197,17 +197,36 @@ describe('M1 battle core', () => {
     expect(areAdjacent(from, to)).toBe(true);
     expect(result.events.some((event) => event.type === 'MONSTER_SWAP_STARTED')).toBe(true);
     expect(result.events.some((event) => event.type === 'MONSTER_SWAP_RESOLVED')).toBe(true);
-    const resolved = result.events.find((event) => event.type === 'MONSTER_SWAP_RESOLVED');
-    const gemCounts = resolved?.payload['gemCounts'] as Record<string, number> | undefined;
-    const hasAttackGem = (gemCounts?.['attack'] ?? 0) > 0;
-    expect(result.events.some((event) => event.type === 'MONSTER_ATTACKED')).toBe(hasAttackGem);
-    expect(result.events.some((event) => event.type === 'MONSTER_ACTION_SKIPPED')).toBe(!hasAttackGem);
+    expect(result.events.some((event) => event.type === 'MONSTER_ATTACKED')).toBe(true);
+    expect(result.events.some((event) => event.type === 'MONSTER_ACTION_SKIPPED')).toBe(false);
     expect(selected?.payload['actor']).toBe('monster');
-    if (hasAttackGem) {
-      expect(result.events.find((event) => event.type === 'MONSTER_ATTACKED')?.payload['actor']).toBe('monster');
-      expect(result.events.find((event) => event.type === 'ENERGY_GAINED' && event.payload['target'] === 'monster')?.payload['amount']).toBe(15);
-    }
+    expect(result.events.find((event) => event.type === 'MONSTER_ATTACKED')?.payload['actor']).toBe('monster');
+    expect(result.events.find((event) => event.type === 'MONSTER_ATTACKED')?.payload['baseDamage']).toBe(70);
+    expect(result.events.find((event) => event.type === 'MONSTER_ATTACKED')?.payload['amount']).toBe(64);
+    expect(result.events.find((event) => event.type === 'ENERGY_GAINED' && event.payload['target'] === 'player')?.payload['amount']).toBe(10);
+    expect(result.events.find((event) => event.type === 'ENERGY_GAINED' && event.payload['target'] === 'monster')?.payload['amount']).toBe(15);
     expect(result.events.find((event) => event.type === 'GEMS_CLEARED')?.payload['actor']).toBe('monster');
+  });
+
+  it('uses Bụi Sương basic and poison action cycle', () => {
+    let state = createBattleState(120);
+    const results = [0, 1, 2].map((index) => {
+      const result = resolveBattleAction(state, {
+        kind: 'timeout',
+        actionId: `mist-cycle-${index}`,
+      });
+      state = result.nextState;
+      return result;
+    });
+
+    expect(results[0].events.find((event) => event.type === 'MONSTER_ATTACKED')?.payload['action']).toBe('basic');
+    expect(results[0].nextState.monster.nextAction).toBe('poison');
+    expect(results[1].events.find((event) =>
+      event.type === 'POISON_APPLIED' && event.payload['target'] === 'player',
+    )?.payload['source']).toBe('monster_poison_action');
+    expect(results[1].nextState.monster.nextAction).toBe('basic');
+    expect(results[2].events.find((event) => event.type === 'MONSTER_ATTACKED')?.payload['action']).toBe('basic');
+    expect(results[2].nextState.monster.nextAction).toBe('poison');
   });
 
   it('turns timeout into a lost turn and restarts player-ready state after monster action', () => {
@@ -225,6 +244,7 @@ describe('M1 battle core', () => {
 
     const heal = resolveGemMatch('heal', {
       player: { ...createBattleState(99).player, currentHp: 250 },
+      monster: { ...createBattleState(99).monster, nextAction: 'guard' },
     });
     expect(heal.events.some((event) => event.type === 'HEAL_APPLIED')).toBe(true);
     expect(heal.nextState.player.currentHp).toBeGreaterThan(250);
@@ -234,7 +254,9 @@ describe('M1 battle core', () => {
     expect(healEvent?.payload['amount']).toBe(0);
     expect(healEvent?.payload['capped']).toBe(true);
 
-    const shield = resolveGemMatch('shield');
+    const shield = resolveGemMatch('shield', {
+      monster: { ...createBattleState(99).monster, nextAction: 'guard' },
+    });
     expect(shield.events.some((event) => event.type === 'SHIELD_GAINED')).toBe(true);
     expect(shield.nextState.player.shield).toBeGreaterThan(0);
 
@@ -250,7 +272,7 @@ describe('M1 battle core', () => {
       {
         ...initial,
         player: { ...initial.player, currentHp: 250 },
-        monster: { ...initial.monster, nextAction: 'poison', currentHp: 999 },
+        monster: { ...initial.monster, nextAction: 'poison', actionCount: 1, currentHp: 999 },
       },
       { kind: 'timeout', actionId: 'monster-poison-1' },
     );
@@ -290,6 +312,7 @@ describe('M1 battle core', () => {
     expect(result.nextState.terminalReason).toBe('player_hp_zero');
     expect(result.nextState.player.currentHp).toBe(0);
     expect(Number.isFinite(result.nextState.player.currentHp)).toBe(true);
+    expect(result.events.find((event) => event.type === 'MONSTER_ATTACKED')?.payload['lethal']).toBe(true);
   });
 
   it('defeats the player when the turn limit is reached', () => {

@@ -117,6 +117,7 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
   private heroShieldVisual?: Phaser.GameObjects.Container;
   private heroEnergyVisual?: Phaser.GameObjects.Container;
   private heroPoisonVisual?: Phaser.GameObjects.Container;
+  private monsterPoisonVisual?: Phaser.GameObjects.Container;
   private energyAuraActive = false;
   private monsterGuardVisual?: Phaser.GameObjects.Container;
   private monsterGuardActive = false;
@@ -132,6 +133,8 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
   private monsterBar?: Phaser.GameObjects.Graphics;
   private playerHpLabel?: Phaser.GameObjects.Text;
   private monsterHpLabel?: Phaser.GameObjects.Text;
+  private playerPoisonStatus?: Phaser.GameObjects.Text;
+  private monsterPoisonStatus?: Phaser.GameObjects.Text;
   private energyLabel?: Phaser.GameObjects.Text;
   private energyBar?: Phaser.GameObjects.Graphics;
   private turnLabel?: Phaser.GameObjects.Text;
@@ -161,6 +164,8 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
   private displayedEnergy?: number;
   private displayedPlayerPoisonPotency?: number;
   private displayedPlayerPoisonTurns?: number;
+  private displayedMonsterPoisonPotency?: number;
+  private displayedMonsterPoisonTurns?: number;
   private fpsDebugElapsed = 0;
   private lastBoard?: Board;
   private sfxEnabled = true;
@@ -355,6 +360,10 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
     const monsterShield = this.safeNumber(this.displayedMonsterShield ?? this.controller.currentState.monster.shield);
     this.syncProtectionVisuals(shield > 0, monsterShield > 0);
     this.syncEnergyAura(this.safeNumber(this.displayedEnergy ?? this.controller.currentState.player.energy));
+    this.syncPoisonVisual(
+      this.safeNumber(this.displayedPlayerPoisonTurns ?? this.controller.currentState.player.poisonTurns) > 0,
+      this.safeNumber(this.displayedMonsterPoisonTurns ?? this.controller.currentState.monster.poisonTurns) > 0,
+    );
   }
 
   private updateFpsDebug(delta: number): void {
@@ -528,6 +537,16 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
     this.monsterHpLabel = this.add.text(352, 78, '', { color: '#fff8e8', fontSize: '12px' })
       .setResolution(this.renderQuality)
       .setOrigin(1, 0.5);
+    this.playerPoisonStatus = this.add.text(8, 91, '', {
+      color: '#d5aaff',
+      fontSize: '10px',
+      fontStyle: 'bold',
+    }).setResolution(this.renderQuality).setDepth(9);
+    this.monsterPoisonStatus = this.add.text(352, 91, '', {
+      color: '#d5aaff',
+      fontSize: '10px',
+      fontStyle: 'bold',
+    }).setResolution(this.renderQuality).setOrigin(1, 0).setDepth(9);
 
     this.telegraphLabel = this.add
       .text(180, 148, '', {
@@ -652,17 +671,8 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
       );
     }
     this.heroEnergyVisual.add([energyCore, energyBurst]);
-    this.heroPoisonVisual = this.add.container(72, 530).setDepth(7).setVisible(false);
-    const poisonAura = this.add
-      .ellipse(0, 0, 82, 108, 0xa85ee8, 0.1)
-      .setStrokeStyle(2, 0xd5aaff, 0.78)
-      .setBlendMode(Phaser.BlendModes.ADD);
-    const poisonWisps = [
-      this.add.circle(-24, 22, 4, 0xd5aaff, 0.64),
-      this.add.circle(0, -16, 3, 0xb96ff2, 0.72),
-      this.add.circle(25, 15, 3.5, 0xe0b8ff, 0.62),
-    ];
-    this.heroPoisonVisual.add([poisonAura, ...poisonWisps]);
+    this.heroPoisonVisual = this.createPoisonVisual(72, 530, 1);
+    this.monsterPoisonVisual = this.createPoisonVisual(294, 145 + MONSTER_COMBAT_Y_OFFSET, 0.72);
     this.monsterGuardVisual = this.createShieldVisual(294, 145 + MONSTER_COMBAT_Y_OFFSET, 0xa889ff, 0xd8c2ff, 1.06);
     this.tweens.add({
       targets: this.heroEnergyVisual,
@@ -675,17 +685,39 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
       duration: 420,
       ease: 'Sine.InOut',
     });
+  }
+
+  private createPoisonVisual(
+    x: number,
+    y: number,
+    scale: number,
+  ): Phaser.GameObjects.Container {
+    const visual = this.add.container(x, y)
+      .setDepth(7)
+      .setScale(scale)
+      .setVisible(false);
+    const poisonAura = this.add
+      .ellipse(0, 0, 82, 108, 0xa85ee8, 0.1)
+      .setStrokeStyle(2, 0xd5aaff, 0.78)
+      .setBlendMode(Phaser.BlendModes.ADD);
+    const poisonWisps = [
+      this.add.circle(-24, 22, 4, 0xd5aaff, 0.64),
+      this.add.circle(0, -16, 3, 0xb96ff2, 0.72),
+      this.add.circle(25, 15, 3.5, 0xe0b8ff, 0.62),
+    ];
+    visual.add([poisonAura, ...poisonWisps]);
     this.tweens.add({
-      targets: this.heroPoisonVisual,
+      targets: visual,
       alpha: { from: 0.36, to: 0.78 },
       angle: { from: -2, to: 2 },
-      scaleX: { from: 0.98, to: 1.04 },
-      scaleY: { from: 1, to: 1.06 },
+      scaleX: { from: scale * 0.98, to: scale * 1.04 },
+      scaleY: { from: scale, to: scale * 1.06 },
       yoyo: true,
       repeat: -1,
       duration: 620,
       ease: 'Sine.InOut',
     });
+    return visual;
   }
 
   private ensureMistDustAnimations(): void {
@@ -909,7 +941,7 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
   }
 
   private createControls(): void {
-    this.energyLabel = this.add.text(8, 96, 'Năng lượng 0 / 100', {
+    this.energyLabel = this.add.text(8, 110, 'Năng lượng 0 / 100', {
       color: '#f3c64f',
       fontSize: '14px',
       fontStyle: 'bold',
@@ -961,6 +993,8 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
     this.displayedEnergy = state.player.energy;
     this.displayedPlayerPoisonPotency = state.player.poisonPotency;
     this.displayedPlayerPoisonTurns = state.player.poisonTurns;
+    this.displayedMonsterPoisonPotency = state.monster.poisonPotency;
+    this.displayedMonsterPoisonTurns = state.monster.poisonTurns;
     this.renderBoard(state.board);
     this.renderBars(state);
     this.telegraphLabel?.setText(state.telegraph);
@@ -978,16 +1012,18 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
     const monsterShield = this.safeNumber(this.displayedMonsterShield ?? state.monster.shield);
     const shield = this.safeNumber(this.displayedShield ?? state.player.shield);
     const energy = this.clampDisplay(this.displayedEnergy ?? state.player.energy, 0, DEFAULT_BATTLE_CONFIG.energyCap);
-    const poisonTurns = Math.max(0, this.displayedPlayerPoisonTurns ?? state.player.poisonTurns);
+    const playerPoisonTurns = Math.max(0, this.displayedPlayerPoisonTurns ?? state.player.poisonTurns);
+    const monsterPoisonTurns = Math.max(0, this.displayedMonsterPoisonTurns ?? state.monster.poisonTurns);
     this.drawBar(this.playerBar, 8, 64, 150, playerHp / playerMaxHp, 0x57c982);
     this.drawBar(this.monsterBar, 202, 64, 150, monsterHp / monsterMaxHp, 0xe75b62);
-    this.drawBar(this.energyBar, 8, 112, 150, energy / DEFAULT_BATTLE_CONFIG.energyCap, 0xf3c64f);
+    this.drawBar(this.energyBar, 8, 126, 150, energy / DEFAULT_BATTLE_CONFIG.energyCap, 0xf3c64f);
     this.playerHpLabel?.setText(`HP ${playerHp} / ${playerMaxHp}  ·  Khiên ${shield}`);
     this.monsterHpLabel?.setText(`HP ${monsterHp} / ${monsterMaxHp}  ·  Khiên ${monsterShield}`);
     this.energyLabel?.setText(`Năng lượng ${energy} / 100`);
     this.syncProtectionVisuals(shield > 0, monsterShield > 0);
     this.syncEnergyAura(energy);
-    this.syncPoisonVisual(poisonTurns > 0);
+    this.syncPoisonVisual(playerPoisonTurns > 0, monsterPoisonTurns > 0);
+    this.refreshPoisonStatus();
   }
 
   private refreshDisplayedBars(): void {
@@ -1034,10 +1070,26 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
     }
   }
 
-  private syncPoisonVisual(active: boolean): void {
+  private syncPoisonVisual(playerActive: boolean, monsterActive: boolean): void {
     this.heroPoisonVisual
       ?.setPosition(this.heroVisual?.x ?? 72, (this.heroVisual?.y ?? 570) - 40)
-      .setVisible(active);
+      .setVisible(playerActive);
+    this.monsterPoisonVisual
+      ?.setPosition(this.monsterVisual?.x ?? 294, (this.monsterVisual?.y ?? 145) + MONSTER_COMBAT_Y_OFFSET)
+      .setVisible(monsterActive);
+  }
+
+  private refreshPoisonStatus(): void {
+    const playerTurns = Math.max(0, this.displayedPlayerPoisonTurns ?? this.controller.currentState.player.poisonTurns);
+    const monsterTurns = Math.max(0, this.displayedMonsterPoisonTurns ?? this.controller.currentState.monster.poisonTurns);
+    const playerPotency = Math.max(0, this.displayedPlayerPoisonPotency ?? this.controller.currentState.player.poisonPotency);
+    const monsterPotency = Math.max(0, this.displayedMonsterPoisonPotency ?? this.controller.currentState.monster.poisonPotency);
+    this.playerPoisonStatus?.setText(
+      playerTurns > 0 ? `☠ Độc · ${playerTurns} lượt · ${playerPotency}/lượt` : '',
+    );
+    this.monsterPoisonStatus?.setText(
+      monsterTurns > 0 ? `☠ Độc · ${monsterTurns} lượt · ${monsterPotency}/lượt` : '',
+    );
   }
 
   private drawBar(
@@ -1458,7 +1510,14 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
         this.refreshDisplayedBars();
         break;
       case 'MONSTER_ACTION_SKIPPED':
-        this.statusLabel?.setText(String(event.payload['label'] ?? 'Quái không có ngọc tấn công — không gây sát thương'));
+        if (event.payload['reason'] === 'telegraph') {
+          this.countdownLabel?.setColor('#ff7a80').setText('Quái báo đòn mạnh...');
+          this.telegraphLabel?.setText(`⚠ ${this.monsterActionText('heavy')}`);
+          this.statusLabel?.setText(String(event.payload['label'] ?? 'Quái báo đòn mạnh'));
+          this.tweenMonsterTelegraph();
+        } else {
+          this.statusLabel?.setText(String(event.payload['label'] ?? 'Quái không có ngọc tấn công — không gây sát thương'));
+        }
         break;
       case 'POISON_APPLIED':
         if (event.payload['target'] === 'player') {
@@ -1468,13 +1527,20 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
             (this.displayedPlayerPoisonPotency ?? this.controller.currentState.player.poisonPotency) + amount,
           );
           this.displayedPlayerPoisonTurns = turns;
-          this.statusLabel?.setText('Nhân vật bị dính độc');
-          this.floatNumber(`Độc -${amount}/lượt`, 80, 104, '#d5aaff');
+          this.statusLabel?.setText(`NHIỄM ĐỘC! Nhân vật · ${turns} lượt`);
+          this.floatNumber(`☠ NHIỄM ĐỘC!`, 80, 104, '#d5aaff', 700);
           this.playPoisonEffect();
           this.refreshDisplayedBars();
         } else {
-          this.statusLabel?.setText(`Quái dính độc +${amount}`);
-          this.floatNumber(`Độc +${amount}`, 294, 104, '#d5aaff');
+          const turns = Math.max(0, this.safeNumber(Number(event.payload['turns'] ?? 0)));
+          this.displayedMonsterPoisonPotency = Math.max(
+            0,
+            (this.displayedMonsterPoisonPotency ?? this.controller.currentState.monster.poisonPotency) + amount,
+          );
+          this.displayedMonsterPoisonTurns = turns;
+          this.statusLabel?.setText(`NHIỄM ĐỘC! Bụi Sương · ${turns} lượt`);
+          this.playPoisonProjectile();
+          this.refreshDisplayedBars();
         }
         break;
       case 'POISON_TICKED':
@@ -1484,16 +1550,17 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
             (this.displayedPlayerHp ?? this.controller.currentState.player.currentHp) - amount,
           );
           this.displayedPlayerPoisonTurns = Math.max(0, this.safeNumber(Number(event.payload['remainingTurns'] ?? 0)));
-          this.statusLabel?.setText(`Độc gây ${amount} sát thương lên nhân vật`);
-          this.floatNumber(`-${amount} độc`, 80, 104, '#d5aaff');
-          this.playPoisonEffect();
+          this.statusLabel?.setText(`☠ Độc gây ${amount} sát thương lên nhân vật`);
+          this.floatNumber(`☠ -${amount}`, 80, 104, '#d5aaff');
+          this.playPoisonTickEffect('player');
           this.shakeHero();
           this.shakePlayerBar();
         } else {
           this.displayedMonsterHp = Math.max(0, (this.displayedMonsterHp ?? this.controller.currentState.monster.currentHp) - amount);
-          this.statusLabel?.setText(`Độc gây ${amount} sát thương lên quái`);
-          this.floatNumber(`-${amount} độc`, 294, 104, '#d5aaff');
-          this.shakeMonster();
+          this.displayedMonsterPoisonTurns = Math.max(0, this.safeNumber(Number(event.payload['remainingTurns'] ?? 0)));
+          this.statusLabel?.setText(`☠ Độc gây ${amount} sát thương lên quái`);
+          this.floatNumber(`☠ -${amount}`, 294, 104, '#d5aaff');
+          this.playPoisonTickEffect('monster');
         }
         this.refreshDisplayedBars();
         break;
@@ -1545,9 +1612,10 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
         this.refreshDisplayedBars();
         break;
       case 'MONSTER_GUARDED':
-        this.countdownLabel?.setColor('#f3c64f').setText('Quái đang phòng thủ...');
+        const shieldGained = this.safeNumber(Number(event.payload['shieldGained'] ?? 0));
+        this.countdownLabel?.setColor('#f3c64f').setText(shieldGained > 0 ? 'Quái đang tạo khiên...' : 'Quái đang phòng thủ...');
         this.telegraphLabel?.setText(`◈ ${this.monsterActionText('guard')}`);
-        this.statusLabel?.setText('Quái tăng phòng thủ trong 1 lượt');
+        this.statusLabel?.setText(shieldGained > 0 ? `Quái tạo khiên ${shieldGained}` : 'Quái tăng phòng thủ trong 1 lượt');
         this.showMonsterGuardEffect();
         this.tweenMonsterTelegraph();
         break;
@@ -1942,6 +2010,56 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
     this.heroPoisonVisual?.setPosition(x, y).setVisible(true).setAlpha(0.8);
     this.spawnCombatImpact(x, y, 0xd5aaff, 54);
     this.flashHero(0xd5aaff);
+    this.spawnPoisonSmoke(x, y);
+  }
+
+  private playPoisonProjectile(): void {
+    const start = {
+      x: BOARD_LEFT + BOARD_WIDTH / 2,
+      y: BOARD_TOP + BOARD_WIDTH / 2,
+    };
+    const target = this.combatPoint('monster');
+    const direction = Phaser.Math.Angle.Between(start.x, start.y, target.x, target.y);
+    this.spawnTravelTrail(start, target, 0xd5aaff, 360);
+    const projectile = this.add
+      .circle(start.x, start.y, 7, 0xd5aaff, 0.86)
+      .setStrokeStyle(2, 0xf0d7ff, 0.9)
+      .setRotation(direction)
+      .setBlendMode(Phaser.BlendModes.ADD)
+      .setDepth(15);
+    this.transientEffects.add(projectile);
+    this.tweens.add({
+      targets: projectile,
+      x: target.x,
+      y: target.y,
+      scale: 0.65,
+      alpha: 0.2,
+      duration: 360,
+      ease: 'Cubic.In',
+      onComplete: () => {
+        this.destroyTransientEffect(projectile);
+        this.spawnCombatImpact(target.x, target.y, 0xd5aaff, 58);
+        this.flashMonster(0xd5aaff);
+        this.monsterPoisonVisual?.setPosition(target.x, target.y).setVisible(true).setAlpha(0.82);
+        this.floatNumber(`☠ NHIỄM ĐỘC!`, target.x, target.y - 48, '#d5aaff', 700);
+        this.spawnPoisonSmoke(target.x, target.y);
+      },
+    });
+  }
+
+  private playPoisonTickEffect(target: 'player' | 'monster'): void {
+    const point = this.combatPoint(target);
+    if (target === 'player') {
+      this.heroPoisonVisual?.setPosition(point.x, point.y).setVisible(true).setAlpha(0.86);
+    } else {
+      this.monsterPoisonVisual?.setPosition(point.x, point.y).setVisible(true).setAlpha(0.86);
+    }
+    this.spawnCombatImpact(point.x, point.y, 0xd5aaff, target === 'monster' ? 54 : 48);
+    this.flashCombatant(target, 0xd5aaff);
+    this.spawnPoisonSmoke(point.x, point.y);
+  }
+
+  private spawnPoisonSmoke(x: number, y: number): void {
     for (let index = 0; index < 2; index += 1) {
       const wisp = this.add
         .circle(x + Phaser.Math.Between(-24, 24), y + Phaser.Math.Between(-18, 24), Phaser.Math.Between(2, 4), 0xd5aaff, 0.76)
@@ -1985,6 +2103,7 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
       guard: 'Phòng thủ',
       heavy: 'Đòn nặng',
       poison: 'Gieo độc',
+      telegraph: 'Báo đòn mạnh',
     };
     return `${this.controller.currentState.monster.name} · ${labels[action] ?? 'Hành động'}`;
   }
@@ -2149,12 +2268,12 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
     }
   }
 
-  private floatNumber(text: string, x: number, y: number, color: string): void {
+  private floatNumber(text: string, x: number, y: number, color: string, duration = 550): void {
     const popup = this.add
       .text(x, y, text, { color, fontSize: '16px', fontStyle: 'bold' })
       .setResolution(this.renderQuality)
       .setOrigin(0.5);
-    this.tweens.add({ targets: popup, y: y - 30, alpha: 0, duration: 550, onComplete: () => popup.destroy() });
+    this.tweens.add({ targets: popup, y: y - 30, alpha: 0, duration, onComplete: () => popup.destroy() });
   }
 
   private cellFromPoint(x: number, y: number): Coord | undefined {
@@ -2228,11 +2347,11 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
       case 'DAMAGE_APPLIED':
         return event.payload['target'] === 'monster' ? 560 : 360;
       case 'HEAL_APPLIED': return 360;
-      case 'POISON_APPLIED': return 280;
-      case 'POISON_TICKED': return 360;
+      case 'POISON_APPLIED': return event.payload['target'] === 'monster' ? 720 : 420;
+      case 'POISON_TICKED': return 520;
       case 'GEMS_FALLING': return GEM_FALL_DURATION;
       case 'GEMS_REFILLED': return GEM_REFILL_DURATION;
-      case 'MONSTER_ATTACKED': return 1000;
+      case 'MONSTER_ATTACKED': return event.payload['lethal'] === true ? 1400 : 1000;
       case 'MONSTER_ACTION_SKIPPED': return 260;
       case 'MONSTER_GUARDED': return 260;
       case 'MONSTER_THINKING': return Number(event.payload['seconds'] ?? 1.2) * 1000;
@@ -2240,9 +2359,9 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
       case 'MONSTER_SWAP_STARTED': return 220;
       case 'MONSTER_SWAP_RESOLVED': return 100;
       case 'TURN_TIMED_OUT': return 500;
-      case 'BATTLE_WON':
-      case 'BATTLE_LOST':
-      case 'BATTLE_ABANDONED': return event.type === 'BATTLE_WON' ? 1000 : 500;
+      case 'BATTLE_WON': return 1000;
+      case 'BATTLE_LOST': return 1300;
+      case 'BATTLE_ABANDONED': return 500;
       default: return 80;
     }
   }
