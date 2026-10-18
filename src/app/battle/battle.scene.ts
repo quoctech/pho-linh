@@ -20,6 +20,8 @@ const BOARD_WIDTH = BOARD_SIZE * CELL_SIZE;
 const GEM_FALL_DURATION = 200;
 const GEM_REFILL_DURATION = 160;
 const MONSTER_COMBAT_Y_OFFSET = -32;
+const LOGICAL_GAME_WIDTH = 360;
+const DEFAULT_LOGICAL_GAME_HEIGHT = 620;
 type HeroGender = 'male' | 'female';
 interface HeroSpriteKeys {
   readonly idle: string;
@@ -160,6 +162,9 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
   private displayedPlayerPoisonTurns?: number;
   private lastBoard?: Board;
   private sfxEnabled = true;
+  private renderQuality = 1;
+  private logicalWidth = LOGICAL_GAME_WIDTH;
+  private logicalHeight = DEFAULT_LOGICAL_GAME_HEIGHT;
 
   constructor() {
     super({ key: 'BattleScene' });
@@ -282,6 +287,10 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
   create(): void {
     this.controller = this.registry.get('battleController') as BattleController;
     this.sfxEnabled = this.registry.get('sfxEnabled') !== false;
+    this.renderQuality = this.safeNumber(Number(this.registry.get('renderQuality')), 1);
+    this.logicalWidth = this.safeNumber(Number(this.registry.get('logicalWidth')), LOGICAL_GAME_WIDTH);
+    this.logicalHeight = this.safeNumber(Number(this.registry.get('logicalHeight')), DEFAULT_LOGICAL_GAME_HEIGHT);
+    this.cameras.main.setOrigin(0, 0).setScroll(0, 0).setZoom(this.renderQuality);
     if (!this.controller) {
       this.controller = new BattleController(0x50484f, this);
     } else {
@@ -355,8 +364,8 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
     ].every((key) => this.textures.exists(key));
 
     if (hasParallaxLayers) {
-      const centerX = this.scale.width / 2;
-      const centerY = this.scale.height / 2;
+      const centerX = this.logicalWidth / 2;
+      const centerY = this.logicalHeight / 2;
       this.parallaxBackgroundLayers = {
         sky: this.add.image(centerX, centerY, PARALLAX_BACKGROUND_KEYS.sky).setDepth(-100),
         mid: this.add.image(centerX, centerY, PARALLAX_BACKGROUND_KEYS.mid).setDepth(-90),
@@ -365,13 +374,13 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
       };
     } else {
       this.battleBackground = this.add
-        .image(this.scale.width / 2, this.scale.height / 2, BATTLE_BACKGROUND_KEY)
+        .image(this.logicalWidth / 2, this.logicalHeight / 2, BATTLE_BACKGROUND_KEY)
         .setOrigin(0.5)
         .setAlpha(0.9)
         .setDepth(-100);
     }
     this.battleBackgroundOverlay = this.add
-      .rectangle(this.scale.width / 2, this.scale.height / 2, this.scale.width, this.scale.height, 0x090817, 0.16)
+      .rectangle(this.logicalWidth / 2, this.logicalHeight / 2, this.logicalWidth, this.logicalHeight, 0x090817, 0.16)
       .setDepth(-60);
     this.resizeBattleBackground();
     this.scale.on('resize', this.resizeBattleBackground, this);
@@ -379,8 +388,8 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
 
   private resizeBattleBackground(): void {
     if (!this.battleBackgroundOverlay) return;
-    const width = this.scale.width;
-    const height = this.scale.height;
+    const width = this.logicalWidth;
+    const height = this.logicalHeight;
     const background = this.parallaxBackgroundLayers?.sky ?? this.battleBackground;
     if (!background) return;
     const source = background.texture.getSourceImage() as HTMLImageElement;
@@ -461,9 +470,11 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
   private createHud(): void {
     this.turnLabel = this.add
       .text(180, 16, 'Lượt 0 / 24', { color: '#fff8e8', fontFamily: 'sans-serif', fontSize: '14px' })
+      .setResolution(this.renderQuality)
       .setOrigin(0.5, 0.5);
     this.countdownLabel = this.add
       .text(180, 35, '', { color: '#f3c64f', fontFamily: 'sans-serif', fontSize: '14px', fontStyle: 'bold' })
+      .setResolution(this.renderQuality)
       .setOrigin(0.5, 0.5);
 
     this.add
@@ -473,10 +484,11 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
       .setDepth(8);
     this.add
       .text(15, 54, 'Nhân vật', { color: '#eee5ff', fontSize: '12px', fontStyle: 'bold' })
+      .setResolution(this.renderQuality)
       .setOrigin(0, 0.5)
       .setDepth(9);
     this.playerBar = this.add.graphics();
-    this.playerHpLabel = this.add.text(8, 78, '', { color: '#fff8e8', fontSize: '11px' });
+    this.playerHpLabel = this.add.text(8, 78, '', { color: '#fff8e8', fontSize: '11px' }).setResolution(this.renderQuality);
 
     this.add
       .rectangle(258, 54, 94, 22, 0x211a34, 0.9)
@@ -485,10 +497,13 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
       .setDepth(8);
     this.add
       .text(345, 54, this.controller.currentState.monster.name, { color: '#eee5ff', fontSize: '12px', fontStyle: 'bold' })
+      .setResolution(this.renderQuality)
       .setOrigin(1, 0.5)
       .setDepth(9);
     this.monsterBar = this.add.graphics();
-    this.monsterHpLabel = this.add.text(352, 78, '', { color: '#fff8e8', fontSize: '12px' }).setOrigin(1, 0.5);
+    this.monsterHpLabel = this.add.text(352, 78, '', { color: '#fff8e8', fontSize: '12px' })
+      .setResolution(this.renderQuality)
+      .setOrigin(1, 0.5);
 
     this.telegraphLabel = this.add
       .text(180, 148, '', {
@@ -497,6 +512,7 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
         fontSize: '12px',
         fontStyle: 'bold',
       })
+      .setResolution(this.renderQuality)
       .setOrigin(0.5);
     this.statusLabel = this.add
       .text(180, 166, 'Chọn hai viên ngọc kề nhau', {
@@ -504,6 +520,7 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
         fontFamily: 'sans-serif',
         fontSize: '12px',
       })
+      .setResolution(this.renderQuality)
       .setOrigin(0.5);
   }
 
@@ -872,7 +889,7 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
       color: '#f3c64f',
       fontSize: '14px',
       fontStyle: 'bold',
-    });
+    }).setResolution(this.renderQuality);
     this.energyBar = this.add.graphics();
 
     this.skillButton = this.add
@@ -886,16 +903,18 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
       .setBlendMode(Phaser.BlendModes.ADD);
     this.skillButtonText = this.add
       .text(286, 548, 'Đèn Phá Mây', { color: '#fff8e8', fontSize: '12px', fontStyle: 'bold' })
+      .setResolution(this.renderQuality)
       .setOrigin(0.5);
     this.skillButton.on('pointerdown', () => void this.dispatchSkill());
 
     this.abandonButtonBackground = this.add
-      .rectangle(12, this.scale.height - 12, 98, 36, 0x30263f, 0.96)
+      .rectangle(12, this.logicalHeight - 12, 98, 36, 0x30263f, 0.96)
       .setOrigin(0, 1)
       .setStrokeStyle(2, 0xa87391, 0.85)
       .setDepth(1);
     this.abandonButton = this.add
-      .text(26, this.scale.height - 30, 'Rời trận', { color: '#f0b4c2', fontSize: '13px', fontStyle: 'bold' })
+      .text(26, this.logicalHeight - 30, 'Rời trận', { color: '#f0b4c2', fontSize: '13px', fontStyle: 'bold' })
+      .setResolution(this.renderQuality)
       .setOrigin(0, 0.5)
       .setDepth(2)
       .setInteractive({ useHandCursor: true });
@@ -905,7 +924,7 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
   }
 
   private positionAbandonButton(): void {
-    const bottom = this.scale.height - 12;
+    const bottom = this.logicalHeight - 12;
     this.abandonButtonBackground?.setPosition(12, bottom);
     this.abandonButton?.setPosition(26, bottom - 18);
   }
@@ -2108,6 +2127,7 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
   private floatNumber(text: string, x: number, y: number, color: string): void {
     const popup = this.add
       .text(x, y, text, { color, fontSize: '16px', fontStyle: 'bold' })
+      .setResolution(this.renderQuality)
       .setOrigin(0.5);
     this.tweens.add({ targets: popup, y: y - 30, alpha: 0, duration: 550, onComplete: () => popup.destroy() });
   }

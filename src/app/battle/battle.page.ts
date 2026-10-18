@@ -17,6 +17,8 @@ import { applyBattleReward, createBattleState, createPlayerBattleState, equipmen
 import { BattleController } from './battle.controller';
 import { GameStorage } from '../state/game-storage.service';
 
+const GAME_WIDTH = 360;
+
 @Component({
   selector: 'app-battle',
   templateUrl: './battle.page.html',
@@ -140,17 +142,32 @@ export class BattlePage implements AfterViewInit, OnDestroy {
       const viewportHeight = Math.max(1, this.gameHost.nativeElement.clientHeight);
       // Keep the battle's 360px logical width so the board stays centered.
       // Extend only the logical height to fill tall phone screens.
-      const logicalHeight = Math.max(620, (360 * viewportHeight) / viewportWidth);
+      const logicalHeight = Math.max(620, (GAME_WIDTH * viewportHeight) / viewportWidth);
+      const renderQuality = Math.min(
+        typeof window === 'undefined' ? 1 : window.devicePixelRatio || 1,
+        2,
+      );
 
       this.zone.runOutsideAngular(() => {
         this.game = new PhaserRuntime.Game({
           type: PhaserRuntime.AUTO,
           parent: this.gameHost.nativeElement,
-          width: 360,
-          height: logicalHeight,
+          width: Math.round(GAME_WIDTH * renderQuality),
+          height: Math.round(logicalHeight * renderQuality),
           backgroundColor: '#171426',
+          antialias: true,
+          antialiasGL: true,
+          pixelArt: false,
+          roundPixels: false,
+          render: {
+            antialias: true,
+            antialiasGL: true,
+            pixelArt: false,
+            roundPixels: false,
+          },
           scale: {
-            // Preserve one uniform scale so the board and HUD never stretch.
+            // The scene uses logical coordinates and the camera zoom restores
+            // the original 360px gameplay viewport after the high-res render.
             mode: PhaserRuntime.Scale.FIT,
             autoCenter: PhaserRuntime.Scale.CENTER_BOTH,
           },
@@ -159,6 +176,9 @@ export class BattlePage implements AfterViewInit, OnDestroy {
               game.registry.set('battleController', this.controller);
               game.registry.set('heroGender', this.saveSnapshot?.settings.gender ?? 'male');
               game.registry.set('sfxEnabled', this.saveSnapshot?.settings.sfx ?? true);
+              game.registry.set('renderQuality', renderQuality);
+              game.registry.set('logicalWidth', GAME_WIDTH);
+              game.registry.set('logicalHeight', logicalHeight);
               game.registry.set('battleReady', () => {
                 this.zone.run(() => {
                   if (!this.visible) return;

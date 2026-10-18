@@ -16,6 +16,10 @@ ion-content {
   touch-action: none;
 }
 
+.game-host canvas {
+  display: block;
+}
+
 .battle-loading {
   position: absolute;
   z-index: 20;
