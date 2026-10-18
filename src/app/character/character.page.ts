@@ -17,8 +17,8 @@ export class CharacterPage implements OnInit {
 
   get heroPortrait(): string {
     return this.save?.settings.gender === 'female'
-      ? 'assets/hero-swordmistress/portrait/hero-swordmistress-portrait-512x768.png'
-      : 'assets/hero-swordmaster/portrait/hero-swordmaster-portrait-512x768.png';
+      ? 'assets/hero-swordmistress/portrait/hero-female-portrait.webp'
+      : 'assets/hero-swordmaster/portrait/hero-male-portrait.webp';
   }
 
   async ngOnInit(): Promise<void> { this.save = await this.storage.load(); this.cdr.markForCheck(); }

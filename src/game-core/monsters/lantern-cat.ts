@@ -7,7 +7,7 @@ import type {
   MonsterBattleState,
 } from '../types';
 
-export type LanternCatAction = 'basic' | 'guard' | 'poison' | 'long_mieu_lien_kich';
+export type LanternCatAction = 'basic' | 'guard' | 'energy' | 'poison' | 'heavy' | 'long_mieu_lien_kich';
 
 export interface LanternCatTurnContext {
   readonly state: BattleState;
@@ -28,7 +28,7 @@ export interface LanternCatTurnResult {
   readonly nextSequence: number;
 }
 
-/** Miêu Đèn: đánh thường → phòng thủ → đánh thường → gieo độc. */
+/** Miêu Đèn: đánh thường → tích năng lượng → tích năng lượng → gieo độc → bạo kích. */
 export function chooseLanternCatAction(actionCount: number): LanternCatAction;
 export function chooseLanternCatAction(actionCount: number, energy: number, energyCap: number): LanternCatAction;
 export function chooseLanternCatAction(
@@ -37,9 +37,11 @@ export function chooseLanternCatAction(
   energyCap = 100,
 ): LanternCatAction {
   if (energy >= energyCap) return 'long_mieu_lien_kich';
-  switch (actionCount % 4) {
-    case 1: return 'guard';
+  switch (actionCount % 5) {
+    case 1:
+    case 2: return 'energy';
     case 3: return 'poison';
+    case 4: return 'heavy';
     default: return 'basic';
   }
 }
@@ -128,7 +130,9 @@ export function resolveLanternCatTurn(context: LanternCatTurnContext): LanternCa
     }));
     sequence += 1;
   } else {
-    if (context.attackGemCount <= 0 && action === 'basic') {
+    const shouldAttack = context.attackGemCount > 0;
+    const attackAction = action === 'heavy' ? 'heavy' : 'basic';
+    if (!shouldAttack && (action === 'basic' || action === 'heavy')) {
       events.push(context.createEvent(sequence, 'MONSTER_ACTION_SKIPPED', {
         actor: 'monster',
         actionId: `${context.actionId}:monster:${monster.actionCount}`,
@@ -138,9 +142,9 @@ export function resolveLanternCatTurn(context: LanternCatTurnContext): LanternCa
         target: 'player',
       }));
       sequence += 1;
-    } else if (context.attackGemCount > 0) {
+    } else if (shouldAttack) {
       const matchMultiplier = matchDamageMultiplier(context.attackGemCount);
-      const baseDamage = monster.attack * matchMultiplier;
+      const baseDamage = monster.attack * (attackAction === 'heavy' ? 1.7 : 1) * matchMultiplier;
       const incoming = Math.max(
         1,
         Math.round(baseDamage) - Math.floor(player.stats.defense * 0.6),
@@ -150,8 +154,8 @@ export function resolveLanternCatTurn(context: LanternCatTurnContext): LanternCa
       events.push(context.createEvent(sequence, 'MONSTER_ATTACKED', {
         actor: 'monster',
         actionId: `${context.actionId}:monster:${monster.actionCount}`,
-        action,
-        label: action === 'poison' ? `${monster.name} gieo độc` : `${monster.name} tấn công`,
+        action: attackAction,
+        label: attackAction === 'heavy' ? `${monster.name} tung bạo kích` : `${monster.name} tấn công`,
         amount: incoming,
         baseDamage,
         hpDamage: Math.max(0, incoming - damage.absorbed),
@@ -220,6 +224,8 @@ export function resolveLanternCatTurn(context: LanternCatTurnContext): LanternCa
 function isLanternCatAction(action: MonsterBattleState['nextAction']): action is LanternCatAction {
   return action === 'basic'
     || action === 'guard'
+    || action === 'energy'
     || action === 'poison'
+    || action === 'heavy'
     || action === 'long_mieu_lien_kich';
 }

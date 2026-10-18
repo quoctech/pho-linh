@@ -8,13 +8,23 @@ import {
 import type { GameEvent } from '../types';
 
 describe('Miêu Đèn behavior', () => {
-  it('uses its own basic, guard, basic, poison cycle', () => {
+  it('uses the updated attack/defense stats and prioritizes recovery resources', () => {
+    const monster = createBattleState(20, 'lantern_cat').monster;
+
+    expect(monster.attack).toBe(40);
+    expect(monster.defense).toBe(10);
+    expect(monster.tactics.heal).toBe(10);
+    expect(monster.tactics.energy).toBe(10);
+    expect(monster.tactics.shield).toBe(0);
+  });
+
+  it('uses one attack, two energy, one poison and one heavy turn', () => {
     expect([0, 1, 2, 3, 4].map(chooseLanternCatAction)).toEqual([
       'basic',
-      'guard',
-      'basic',
+      'energy',
+      'energy',
       'poison',
-      'basic',
+      'heavy',
     ]);
   });
 
@@ -74,8 +84,62 @@ describe('Miêu Đèn behavior', () => {
     expect(result.state.player.poisonTurns).toBe(3);
   });
 
+  it('attacks when sword gems are available during an energy turn', () => {
+    const initial = createBattleState(25, 'lantern_cat');
+    const state = {
+      ...initial,
+      phase: 'MONSTER_TURN' as const,
+      monster: { ...initial.monster, nextAction: 'energy' as const },
+    };
+    const result = resolveLanternCatTurn({
+      state,
+      actionId: 'lantern-energy-attack',
+      startSequence: 0,
+      attackGemCount: 3,
+      config: DEFAULT_BATTLE_CONFIG,
+      createEvent: (sequence, type, payload = {}): GameEvent => ({
+        eventId: `lantern-energy-attack:${sequence}`,
+        actionId: 'lantern-energy-attack',
+        battleId: state.battleId,
+        turn: state.turn,
+        type,
+        payload,
+      }),
+    });
+
+    expect(result.events.find((event) => event.type === 'MONSTER_ATTACKED')?.payload['action']).toBe('basic');
+  });
+
+  it('uses the stronger bạo kích action on its heavy turn', () => {
+    const initial = createBattleState(26, 'lantern_cat');
+    const state = {
+      ...initial,
+      phase: 'MONSTER_TURN' as const,
+      monster: { ...initial.monster, nextAction: 'heavy' as const },
+    };
+    const result = resolveLanternCatTurn({
+      state,
+      actionId: 'lantern-heavy',
+      startSequence: 0,
+      attackGemCount: 1,
+      config: DEFAULT_BATTLE_CONFIG,
+      createEvent: (sequence, type, payload = {}): GameEvent => ({
+        eventId: `lantern-heavy:${sequence}`,
+        actionId: 'lantern-heavy',
+        battleId: state.battleId,
+        turn: state.turn,
+        type,
+        payload,
+      }),
+    });
+
+    const attack = result.events.find((event) => event.type === 'MONSTER_ATTACKED');
+    expect(attack?.payload['action']).toBe('heavy');
+    expect(attack?.payload['baseDamage']).toBe(68);
+  });
+
   it('prioritizes Long Miêu Liên Kích at full energy', () => {
-    expect(chooseLanternCatAction(2, 99, 100)).toBe('basic');
+    expect(chooseLanternCatAction(2, 99, 100)).toBe('energy');
     expect(chooseLanternCatAction(2, 100, 100)).toBe('long_mieu_lien_kich');
   });
 

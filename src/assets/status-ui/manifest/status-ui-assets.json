@@ -1,0 +1,109 @@
+{
+  "pack": "pho-linh-status-ui-fullhd-webp",
+  "assets": [
+    {
+      "source": "lá_chắn_huyền_thuật_của_nữ_kiếm_sư.png",
+      "path": "hero/hero-shield-sheet-fullhd.webp",
+      "description": "Hero with shield state sprite sheet (8 frames, 4x2).",
+      "size": [
+        1774,
+        887
+      ],
+      "estimated_grid": "4x2",
+      "transparent": true,
+      "original_bytes": 2945951,
+      "webp_bytes": 760082
+    },
+    {
+      "source": "lá_chắn_linh_quang_huyền_bí.png",
+      "path": "monster/monster-shield-sheet-fullhd.webp",
+      "description": "Monster with shield state sprite sheet (8 frames, 4x2).",
+      "size": [
+        1774,
+        887
+      ],
+      "estimated_grid": "4x2",
+      "transparent": true,
+      "original_bytes": 2756665,
+      "webp_bytes": 709072
+    },
+    {
+      "source": "bộ_khung_hào_quang_vàng_huyền_ảo.png",
+      "path": "hero/hero-energy70plus-sheet-fullhd.webp",
+      "description": "Hero energy > 70% aura sprite sheet (8 frames, 4x2).",
+      "size": [
+        1774,
+        887
+      ],
+      "estimated_grid": "4x2",
+      "transparent": true,
+      "original_bytes": 2778484,
+      "webp_bytes": 704628
+    },
+    {
+      "source": "tám_khung_tăng_cường_năng_lượng_quỷ_vương.png",
+      "path": "monster/monster-energy70plus-sheet-fullhd.webp",
+      "description": "Monster energy > 70% aura sprite sheet (8 frames, 4x2).",
+      "size": [
+        1774,
+        887
+      ],
+      "estimated_grid": "4x2",
+      "transparent": true,
+      "original_bytes": 2789959,
+      "webp_bytes": 689770
+    },
+    {
+      "source": "hoạt_ảnh_độc_khí_tím_của_kiếm_khách.png",
+      "path": "hero/hero-poisoned-sheet-fullhd.webp",
+      "description": "Hero poisoned state sprite sheet (8 frames, 4x2).",
+      "size": [
+        1774,
+        887
+      ],
+      "estimated_grid": "4x2",
+      "transparent": true,
+      "original_bytes": 2683443,
+      "webp_bytes": 693326
+    },
+    {
+      "source": "hiệu_ứng_độc_tím_của_quái_vật.png",
+      "path": "monster/monster-poisoned-sheet-fullhd.webp",
+      "description": "Monster poisoned state sprite sheet (8 frames, 4x2).",
+      "size": [
+        1774,
+        887
+      ],
+      "estimated_grid": "4x2",
+      "transparent": true,
+      "original_bytes": 2318382,
+      "webp_bytes": 607090
+    },
+    {
+      "source": "bộ_thanh_máu_fantasy_phát_sáng.png",
+      "path": "ui/ui-health-bars-sheet-fullhd.webp",
+      "description": "Fantasy HP bar variations / states sprite sheet.",
+      "size": [
+        1774,
+        887
+      ],
+      "estimated_grid": "4x2",
+      "transparent": true,
+      "original_bytes": 1793486,
+      "webp_bytes": 379172
+    },
+    {
+      "source": "bộ_thanh_năng_lượng_giả_tưởng_vàng_tím.png",
+      "path": "ui/ui-energy-bars-sheet-fullhd.webp",
+      "description": "Fantasy energy bar variations / states sprite sheet.",
+      "size": [
+        1774,
+        887
+      ],
+      "estimated_grid": "4x2",
+      "transparent": true,
+      "original_bytes": 1896232,
+      "webp_bytes": 401804
+    }
+  ]
+}

@@ -10,16 +10,37 @@ import {
   type GemType,
 } from '../../game-core';
 import { BattleController, type BattleEventPlayer } from './battle.controller';
+import {
+  LANTERN_CAT_SPRITE_KEYS,
+  LANTERN_SFX_KEYS,
+  LANTERN_SKILL_VFX_KEYS,
+  ensureLanternCatSkillAnimations,
+  preloadLanternCatAssets,
+  preloadLanternCatSprites,
+} from './monsters/lantern-cat/lantern-cat-assets';
+import { LanternCatVfx } from './monsters/lantern-cat/lantern-cat-vfx';
+import {
+  MIST_DUST_SFX_KEYS,
+  MIST_DUST_SPRITE_KEYS,
+  ensureMistDustAnimations,
+  preloadMistDustAssets,
+  preloadMistDustSprites,
+} from './monsters/mist-dust/mist-dust-assets';
+import { createBattleLayout, type BattleLayout } from './battle-layout';
+import {
+  getHeroHpBand,
+  getHeroPersistentStatus,
+  type HeroHpBand,
+  type HeroPersistentStatus,
+  type HeroStatusSnapshot,
+} from './hero-status-vfx';
+import { preloadStatusUiAssets, ensureStatusUiAnimations } from './status/status-ui-assets';
+import { StatusUiVfx } from './status/status-ui-vfx';
 
 const GEM_TYPES: readonly GemType[] = ['attack', 'heal', 'shield', 'energy', 'poison'];
 const BOARD_SIZE = 6;
-const CELL_SIZE = 48;
-const BOARD_LEFT = 36;
-const BOARD_TOP = 204;
-const BOARD_WIDTH = BOARD_SIZE * CELL_SIZE;
 const GEM_FALL_DURATION = 200;
 const GEM_REFILL_DURATION = 160;
-const MONSTER_COMBAT_Y_OFFSET = -32;
 const LOGICAL_GAME_WIDTH = 360;
 const DEFAULT_LOGICAL_GAME_HEIGHT = 620;
 type HeroGender = 'male' | 'female';
@@ -28,7 +49,18 @@ interface HeroSpriteKeys {
   readonly attack: string;
   readonly hit: string;
   readonly death: string;
-  readonly projectile: string;
+  readonly highHp?: string;
+  readonly energy?: string;
+  readonly lowHp?: string;
+  readonly poisoned?: string;
+  readonly stunned?: string;
+  readonly shield?: string;
+  readonly dodge?: string;
+  readonly frameWidth: number;
+  readonly frameHeight: number;
+  readonly displayWidth: number;
+  readonly displayHeight: number;
+  readonly originY: number;
 }
 interface MonsterSpriteKeys {
   readonly idle: string;
@@ -37,6 +69,15 @@ interface MonsterSpriteKeys {
   readonly poisonCast?: string;
   readonly hit: string;
   readonly death: string;
+  readonly highHp?: string;
+  readonly energy?: string;
+  readonly lowHp?: string;
+  readonly poisoned?: string;
+  readonly shield?: string;
+  readonly heal?: string;
+  readonly antiHeal?: string;
+  readonly dodge?: string;
+  readonly stunned?: string;
   readonly frameWidth: number;
   readonly frameHeight: number;
   readonly displayWidth: number;
@@ -45,45 +86,69 @@ interface MonsterSpriteKeys {
 }
 const HERO_SPRITE_KEYS: Record<HeroGender, HeroSpriteKeys> = {
   male: {
-    idle: 'hero-swordmaster-idle',
-    attack: 'hero-swordmaster-attack',
-    hit: 'hero-swordmaster-hit',
-    death: 'hero-swordmaster-death',
-    projectile: 'hero-swordmaster-projectile',
+    idle: 'hero-male-idle',
+    attack: 'hero-male-dodge',
+    hit: 'hero-male-hit',
+    death: 'hero-male-death',
+    highHp: 'hero-male-high-hp',
+    energy: 'hero-male-energy',
+    lowHp: 'hero-male-low-hp',
+    poisoned: 'hero-male-poisoned',
+    stunned: 'hero-male-stunned',
+    shield: 'hero-male-shield',
+    dodge: 'hero-male-dodge',
+    frameWidth: 418,
+    frameHeight: 470,
+    displayWidth: 84,
+    displayHeight: 94,
+    originY: 0.92,
   },
   female: {
-    idle: 'hero-swordmistress-idle',
-    attack: 'hero-swordmistress-attack',
-    hit: 'hero-swordmistress-hit',
-    death: 'hero-swordmistress-death',
-    projectile: 'hero-swordmistress-projectile',
-  },
-};
-const MONSTER_SPRITE_KEYS: Readonly<Record<string, MonsterSpriteKeys>> = {
-  mist_blob: {
-    idle: 'mist-dust-idle',
-    attack: 'mist-dust-attack',
-    hit: 'mist-dust-hit',
-    death: 'mist-dust-death',
-    frameWidth: 512,
-    frameHeight: 512,
+    idle: 'hero-female-idle',
+    attack: 'hero-female-dodge',
+    hit: 'hero-female-hit',
+    death: 'hero-female-death',
+    highHp: 'hero-female-high-hp',
+    energy: 'hero-female-energy',
+    lowHp: 'hero-female-low-hp',
+    poisoned: 'hero-female-poisoned',
+    stunned: 'hero-female-stunned',
+    shield: 'hero-female-shield',
+    dodge: 'hero-female-dodge',
+    frameWidth: 443,
+    frameHeight: 443,
     displayWidth: 84,
     displayHeight: 84,
-    originY: 0.88,
+    originY: 0.92,
   },
-  lantern_cat: {
-    idle: 'mieu-den-idle',
-    attack: 'mieu-den-attack',
-    defend: 'mieu-den-defend',
-    poisonCast: 'mieu-den-poison-cast',
-    hit: 'mieu-den-hit',
-    death: 'mieu-den-death',
-    frameWidth: 256,
-    frameHeight: 384,
-    displayWidth: 78,
-    displayHeight: 117,
-    originY: 0.65,
-  },
+};
+const HERO_MALE_SHEETS = {
+  idle: 'hero-male-idle-sheet.webp',
+  highHp: 'hero-male-high_hp-sheet.webp',
+  energy: 'hero-male-energy-sheet.webp',
+  lowHp: 'hero-male-low_hp-sheet.webp',
+  poisoned: 'hero-male-poisoned-sheet.webp',
+  stunned: 'hero-male-stunned-sheet.webp',
+  shield: 'hero-male-shield-sheet.webp',
+  hit: 'hero-male-hit-sheet.webp',
+  death: 'hero-male-death-sheet.webp',
+  dodge: 'hero-male-dodge-sheet.webp',
+} as const;
+const HERO_FEMALE_SHEETS = {
+  idle: 'hero-female-idle-sheet.webp',
+  highHp: 'hero-female-high_hp-sheet.webp',
+  energy: 'hero-female-energy-sheet.webp',
+  lowHp: 'hero-female-low_hp-sheet.webp',
+  poisoned: 'hero-female-poisoned-sheet.webp',
+  stunned: 'hero-female-stunned-sheet.webp',
+  shield: 'hero-female-shield-sheet.webp',
+  hit: 'hero-female-hit-sheet.webp',
+  death: 'hero-female-death-sheet.webp',
+  dodge: 'hero-female-dodge-sheet.webp',
+} as const;
+const MONSTER_SPRITE_KEYS: Readonly<Record<string, MonsterSpriteKeys>> = {
+  mist_blob: MIST_DUST_SPRITE_KEYS,
+  lantern_cat: LANTERN_CAT_SPRITE_KEYS,
 };
 const GEM_ATLAS_KEY = 'pho-linh-gems';
 const BATTLE_BACKGROUND_KEY = 'pho-linh-pk-background';
@@ -124,30 +189,39 @@ const SKILL_VFX_KEYS = {
   finishFlash: 'fx-cloudbreaker-finish-flash',
   spark: 'fx-cloudbreaker-spark',
 } as const;
-const LANTERN_SKILL_VFX_KEYS = {
-  icon: 'skill-long-mieu-lien-kich-icon',
-  stunIcon: 'skill-long-mieu-stun-icon',
-  castCircle: 'fx-long-mieu-cast-circle',
-  multiStrike: 'fx-long-mieu-multi-strike',
-  impactStun: 'fx-long-mieu-impact-stun',
-} as const;
 const SFX_KEYS = {
-  heroAttack: 'sfx-hero-attack',
-  heroHit: 'sfx-hero-hit',
-  mistAttack: 'sfx-mist-attack',
-  mistHit: 'sfx-mist-hit',
-  mistProjectile: 'sfx-mist-projectile',
-  lanternAttack: 'sfx-lantern-attack',
-  lanternAttackImpact: 'sfx-lantern-attack-impact',
-  lanternDefend: 'sfx-lantern-defend',
-  lanternHit: 'sfx-lantern-hit',
-  lanternDeath: 'sfx-lantern-death',
-  lanternPoisonCast: 'sfx-lantern-poison-cast',
-  lanternPoisonProjectile: 'sfx-lantern-poison-projectile',
-  lanternLongCharge: 'sfx-lantern-long-charge',
-  lanternLongDash: 'sfx-lantern-long-dash',
-  lanternLongImpact: 'sfx-lantern-long-impact',
-  lanternLongStun: 'sfx-lantern-long-stun',
+  heroMaleAttack: 'sfx-hero-male-attack',
+  heroMaleHit: 'sfx-hero-male-hit',
+  heroMaleDeath: 'sfx-hero-male-death',
+  heroMaleDodge: 'sfx-hero-male-dodge',
+  heroMaleEnergy: 'sfx-hero-male-energy',
+  heroMaleHighHp: 'sfx-hero-male-high-hp',
+  heroMaleLowHp: 'sfx-hero-male-low-hp',
+  heroMalePoisoned: 'sfx-hero-male-poisoned',
+  heroMaleShield: 'sfx-hero-male-shield',
+  heroMaleStunned: 'sfx-hero-male-stunned',
+  heroFemaleAttack: 'sfx-hero-female-attack',
+  heroFemaleHit: 'sfx-hero-female-hit',
+  heroFemaleDeath: 'sfx-hero-female-death',
+  heroFemaleDodge: 'sfx-hero-female-dodge',
+  heroFemaleEnergy: 'sfx-hero-female-energy',
+  heroFemaleHighHp: 'sfx-hero-female-high-hp',
+  heroFemaleLowHp: 'sfx-hero-female-low-hp',
+  heroFemalePoisoned: 'sfx-hero-female-poisoned',
+  heroFemaleShield: 'sfx-hero-female-shield',
+  heroFemaleStunned: 'sfx-hero-female-stunned',
+  mistAttack: MIST_DUST_SFX_KEYS.attack,
+  mistHit: MIST_DUST_SFX_KEYS.hit,
+  mistProjectile: MIST_DUST_SFX_KEYS.projectile,
+  mistCast: MIST_DUST_SFX_KEYS.cast,
+  mistDeath: MIST_DUST_SFX_KEYS.death,
+  mistEnergy: MIST_DUST_SFX_KEYS.energy,
+  mistHeal: MIST_DUST_SFX_KEYS.heal,
+  mistHighHp: MIST_DUST_SFX_KEYS.highHp,
+  mistLowHp: MIST_DUST_SFX_KEYS.lowHp,
+  mistShield: MIST_DUST_SFX_KEYS.shield,
+  mistPoison: MIST_DUST_SFX_KEYS.poison,
+  ...LANTERN_SFX_KEYS,
   skillCast: 'sfx-cloudbreaker-cast',
   skillRelease: 'sfx-cloudbreaker-release',
   skillImpact: 'sfx-cloudbreaker-impact',
@@ -158,7 +232,6 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
   private readonly gemSprites = new Map<string, Phaser.GameObjects.Container>();
   private readonly vfxSprites = new Set<Phaser.GameObjects.Sprite>();
   private readonly transientEffects = new Set<Phaser.GameObjects.GameObject>();
-  private readonly longMieuTimers = new Set<Phaser.Time.TimerEvent>();
   private selection?: Phaser.GameObjects.Rectangle;
   private selectionRing?: Phaser.GameObjects.Sprite;
   private selectedCell?: Coord;
@@ -167,19 +240,23 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
   private monsterBody?: Phaser.GameObjects.Arc;
   private monsterArt?: Phaser.GameObjects.Image | Phaser.GameObjects.Sprite;
   private monsterSprite?: Phaser.GameObjects.Sprite;
+  private lanternCatVfx?: LanternCatVfx;
   private lastMonsterActionVisualId?: string;
   private lastLongMieuVisualId?: string;
   private heroVisual?: Phaser.GameObjects.Container;
   private heroSprite?: Phaser.GameObjects.Sprite;
   private heroSpriteKeys: HeroSpriteKeys = HERO_SPRITE_KEYS.male;
+  private heroGender: HeroGender = 'male';
   private heroAssetName: 'hero-swordmaster' | 'hero-swordmistress' = 'hero-swordmaster';
-  private heroShieldVisual?: Phaser.GameObjects.Container;
-  private heroEnergyVisual?: Phaser.GameObjects.Container;
-  private heroPoisonVisual?: Phaser.GameObjects.Container;
-  private monsterPoisonVisual?: Phaser.GameObjects.Container;
-  private energyAuraActive = false;
-  private monsterGuardVisual?: Phaser.GameObjects.Container;
-  private monsterGuardActive = false;
+  private heroTransientAnimation?: 'attack' | 'hit' | 'death' | 'stunned';
+  private heroPersistentStatus: HeroPersistentStatus = 'idle';
+  private heroHpBand?: HeroHpBand;
+  private heroCurrentAnimationKey?: string;
+  private monsterTransientAnimation?: 'attack' | 'defend' | 'poisonCast' | 'hit' | 'death' | 'heal' | 'antiHeal' | 'dodge' | 'stunned';
+  private monsterPersistentStatus: HeroPersistentStatus = 'idle';
+  private monsterHpBand?: HeroHpBand;
+  private monsterCurrentAnimationKey?: string;
+  private statusUi?: StatusUiVfx;
   private battleBackground?: Phaser.GameObjects.Image;
   private parallaxBackgroundLayers?: {
     readonly sky: Phaser.GameObjects.Image;
@@ -189,16 +266,6 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
   };
   private parallaxStarted = false;
   private battleBackgroundOverlay?: Phaser.GameObjects.Rectangle;
-  private playerBar?: Phaser.GameObjects.Graphics;
-  private monsterBar?: Phaser.GameObjects.Graphics;
-  private playerHpLabel?: Phaser.GameObjects.Text;
-  private monsterHpLabel?: Phaser.GameObjects.Text;
-  private monsterEnergyLabel?: Phaser.GameObjects.Text;
-  private playerPoisonStatus?: Phaser.GameObjects.Text;
-  private monsterPoisonStatus?: Phaser.GameObjects.Text;
-  private energyLabel?: Phaser.GameObjects.Text;
-  private energyBar?: Phaser.GameObjects.Graphics;
-  private monsterEnergyBar?: Phaser.GameObjects.Graphics;
   private playerStunIcon?: Phaser.GameObjects.Image;
   private turnLabel?: Phaser.GameObjects.Text;
   private countdownLabel?: Phaser.GameObjects.Text;
@@ -207,7 +274,9 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
   private statusLabel?: Phaser.GameObjects.Text;
   private skillButton?: Phaser.GameObjects.Rectangle;
   private skillIcon?: Phaser.GameObjects.Image;
-  private skillButtonText?: Phaser.GameObjects.Text;
+  private skillTooltip?: Phaser.GameObjects.Container;
+  private skillTooltipLabel?: Phaser.GameObjects.Text;
+  private skillTooltipHideTimer?: Phaser.Time.TimerEvent;
   private abandonButtonBackground?: Phaser.GameObjects.Rectangle;
   private abandonButton?: Phaser.GameObjects.Text;
   private unsubscribe?: () => void;
@@ -237,10 +306,18 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
   private renderQuality = 1;
   private logicalWidth = LOGICAL_GAME_WIDTH;
   private logicalHeight = DEFAULT_LOGICAL_GAME_HEIGHT;
+  private layout!: BattleLayout;
 
   constructor() {
     super({ key: 'BattleScene' });
   }
+
+  private get boardLeft(): number { return this.layout.boardLeft; }
+  private get boardTop(): number { return this.layout.boardTop; }
+  private get boardWidth(): number { return this.layout.boardWidth; }
+  private get cellSize(): number { return this.layout.cellSize; }
+  private get heroPosition(): { readonly x: number; readonly y: number } { return this.layout.hero; }
+  private get monsterPosition(): { readonly x: number; readonly y: number } { return this.layout.monster; }
 
   preload(): void {
     this.load.image(BATTLE_BACKGROUND_KEY, 'assets/pk-background-parallax/full-background.webp');
@@ -249,6 +326,7 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
     this.load.image(PARALLAX_BACKGROUND_KEYS.fx, 'assets/pk-background-parallax/layer-fx-mist-petals.webp');
     this.load.image(PARALLAX_BACKGROUND_KEYS.ground, 'assets/pk-background-parallax/layer-ground-path.webp');
     const heroGender = this.getHeroGender();
+    this.heroGender = heroGender;
     this.heroSpriteKeys = HERO_SPRITE_KEYS[heroGender];
     this.heroAssetName = heroGender === 'female' ? 'hero-swordmistress' : 'hero-swordmaster';
     this.load.spritesheet(GEM_ATLAS_KEY, 'assets/gems/pho-linh/pho-linh-gems-sheet.png', {
@@ -260,23 +338,17 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
     this.load.image('gem-poison-pure', 'assets/gems/pho-linh/gem-p-pure.png');
     this.load.image('gem-shield', 'assets/gems/shield.webp');
     this.load.image('gem-energy', 'assets/gems/energy.webp');
-    this.load.spritesheet(this.heroSpriteKeys.idle, `assets/${this.heroAssetName}/idle/${this.heroAssetName}-idle-sheet.png`, {
-      frameWidth: 512,
-      frameHeight: 512,
-    });
-    this.load.spritesheet(this.heroSpriteKeys.attack, `assets/${this.heroAssetName}/attack/${this.heroAssetName}-attack-sheet.png`, {
-      frameWidth: 512,
-      frameHeight: 512,
-    });
-    this.load.spritesheet(this.heroSpriteKeys.hit, `assets/${this.heroAssetName}/hit/${this.heroAssetName}-hit-sheet.png`, {
-      frameWidth: 512,
-      frameHeight: 512,
-    });
-    this.load.spritesheet(this.heroSpriteKeys.death, `assets/${this.heroAssetName}/death/${this.heroAssetName}-death-sheet.png`, {
-      frameWidth: 512,
-      frameHeight: 512,
-    });
-    this.load.image(this.heroSpriteKeys.projectile, `assets/${this.heroAssetName}/attack/${this.heroAssetName}-flying-sword-projectile.png`);
+    const heroSheets = heroGender === 'male' ? HERO_MALE_SHEETS : HERO_FEMALE_SHEETS;
+    const heroSheetsPath = `assets/${this.heroAssetName}/sheets-webp`;
+    for (const state of Object.keys(heroSheets) as Array<keyof typeof HERO_MALE_SHEETS>) {
+      const file = heroSheets[state];
+      const key = this.heroSpriteKeys[state];
+      if (typeof key !== 'string') continue;
+      this.load.spritesheet(key, `${heroSheetsPath}/${file}`, {
+        frameWidth: this.heroSpriteKeys.frameWidth,
+        frameHeight: this.heroSpriteKeys.frameHeight,
+      });
+    }
     this.load.spritesheet(VFX_SHEET_KEYS.selectRing, 'assets/vfx/fx-select-ring/fx-select-ring-sheet.png', {
       frameWidth: 256,
       frameHeight: 256,
@@ -316,43 +388,16 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
         frameHeight: 443,
       });
     }
-    this.load.image(
-      LANTERN_SKILL_VFX_KEYS.icon,
-      'assets/skills/long-mieu-lien-kich/icon/skill-long-mieu-lien-kich-icon.webp',
-    );
-    this.load.image(
-      LANTERN_SKILL_VFX_KEYS.stunIcon,
-      'assets/skills/long-mieu-lien-kich/icon/skill-long-mieu-stun-icon.webp',
-    );
-    const lanternSkillPath = 'assets/skills/long-mieu-lien-kich/fx';
-    for (const key of [
-      LANTERN_SKILL_VFX_KEYS.castCircle,
-      LANTERN_SKILL_VFX_KEYS.multiStrike,
-      LANTERN_SKILL_VFX_KEYS.impactStun,
-    ] as const) {
-      this.load.spritesheet(key, `${lanternSkillPath}/${key}-sheet.webp`, {
-        frameWidth: 362,
-        frameHeight: 543,
-      });
-    }
+    // Both hero packs and the Mist Dust pack contain their own status treatment.
+    // Keep the shared bars, but do not load the legacy monster aura overlays
+    // when Mist Dust is using its inline status sheets.
+    const battleController = this.registry.get('battleController') as BattleController | undefined;
+    const preloadMonsterStatusOverlays = battleController?.currentState.monster.id !== 'mist_blob';
+    preloadStatusUiAssets(this, false, preloadMonsterStatusOverlays);
+    preloadLanternCatAssets(this);
+    preloadMistDustAssets(this);
     const sfxPath = 'assets/audio/combat';
     const sfxFiles: Readonly<Record<string, string>> = {
-      [SFX_KEYS.heroAttack]: 'hero-attack-sword.mp3',
-      [SFX_KEYS.heroHit]: 'hero-hit.mp3',
-      [SFX_KEYS.mistAttack]: 'mist-dust-attack.mp3',
-      [SFX_KEYS.mistHit]: 'mist-dust-hit.mp3',
-      [SFX_KEYS.mistProjectile]: 'mist-dust-projectile.mp3',
-      [SFX_KEYS.lanternAttack]: 'lantern-cat/mieu-den-attack.mp3',
-      [SFX_KEYS.lanternAttackImpact]: 'lantern-cat/mieu-den-attack-claw-hit.mp3',
-      [SFX_KEYS.lanternDefend]: 'lantern-cat/mieu-den-defend.mp3',
-      [SFX_KEYS.lanternHit]: 'lantern-cat/mieu-den-hit.mp3',
-      [SFX_KEYS.lanternDeath]: 'lantern-cat/mieu-den-death.mp3',
-      [SFX_KEYS.lanternPoisonCast]: 'lantern-cat/mieu-den-poison-cast.mp3',
-      [SFX_KEYS.lanternPoisonProjectile]: 'lantern-cat/mieu-den-poison-projectile.mp3',
-      [SFX_KEYS.lanternLongCharge]: 'lantern-cat/long-mieu-lien-kich-charge.mp3',
-      [SFX_KEYS.lanternLongDash]: 'lantern-cat/long-mieu-lien-kich-dash.mp3',
-      [SFX_KEYS.lanternLongImpact]: 'lantern-cat/long-mieu-lien-kich-impact.mp3',
-      [SFX_KEYS.lanternLongStun]: 'lantern-cat/long-mieu-lien-kich-stun.mp3',
       [SFX_KEYS.skillCast]: 'cloudbreaker-cast.mp3',
       [SFX_KEYS.skillRelease]: 'cloudbreaker-release.mp3',
       [SFX_KEYS.skillImpact]: 'cloudbreaker-impact.mp3',
@@ -360,42 +405,42 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
     for (const [key, file] of Object.entries(sfxFiles)) {
       this.load.audio(key, `${sfxPath}/${file}`);
     }
-    const controller = this.registry.get('battleController') as BattleController | undefined;
+    {
+      const heroSfxPath = `assets/${this.heroAssetName}/sfx/mp3`;
+      const heroSfxFiles: Readonly<Record<string, string>> = heroGender === 'male' ? {
+        [SFX_KEYS.heroMaleAttack]: 'hero-male-attack-sword.mp3',
+        [SFX_KEYS.heroMaleHit]: 'hero-male-hit.mp3',
+        [SFX_KEYS.heroMaleDeath]: 'hero-male-death.mp3',
+        [SFX_KEYS.heroMaleDodge]: 'hero-male-dodge.mp3',
+        [SFX_KEYS.heroMaleEnergy]: 'hero-male-energy-charge.mp3',
+        [SFX_KEYS.heroMaleHighHp]: 'hero-male-high-hp-glow.mp3',
+        [SFX_KEYS.heroMaleLowHp]: 'hero-male-low-hp-warning.mp3',
+        [SFX_KEYS.heroMalePoisoned]: 'hero-male-poisoned.mp3',
+        [SFX_KEYS.heroMaleShield]: 'hero-male-shield-on.mp3',
+        [SFX_KEYS.heroMaleStunned]: 'hero-male-stunned.mp3',
+      } : {
+        [SFX_KEYS.heroFemaleAttack]: 'hero-female-attack-sword.mp3',
+        [SFX_KEYS.heroFemaleHit]: 'hero-female-hit.mp3',
+        [SFX_KEYS.heroFemaleDeath]: 'hero-female-death.mp3',
+        [SFX_KEYS.heroFemaleDodge]: 'hero-female-dodge.mp3',
+        [SFX_KEYS.heroFemaleEnergy]: 'hero-female-energy-charge.mp3',
+        [SFX_KEYS.heroFemaleHighHp]: 'hero-female-high-hp-glow.mp3',
+        [SFX_KEYS.heroFemaleLowHp]: 'hero-female-low-hp-warning.mp3',
+        [SFX_KEYS.heroFemalePoisoned]: 'hero-female-poisoned.mp3',
+        [SFX_KEYS.heroFemaleShield]: 'hero-female-shield-on.mp3',
+        [SFX_KEYS.heroFemaleStunned]: 'hero-female-stunned.mp3',
+      };
+      for (const [key, file] of Object.entries(heroSfxFiles)) {
+        this.load.audio(key, `${heroSfxPath}/${file}`);
+      }
+    }
+    const controller = battleController;
     const monsterId = controller?.currentState.monster.id ?? 'mist_blob';
     const monsterAssets = MONSTER_SPRITE_KEYS[monsterId] ?? MONSTER_SPRITE_KEYS['mist_blob'];
     if (monsterId === 'mist_blob') {
-      this.load.spritesheet(monsterAssets.idle, 'assets/monsters/mist-dust/mist-dust-idle-sheet.png', {
-        frameWidth: monsterAssets.frameWidth,
-        frameHeight: monsterAssets.frameHeight,
-      });
-      this.load.spritesheet(monsterAssets.attack, 'assets/monsters/mist-dust/combat/attack/mist-dust-attack-sheet.png', {
-        frameWidth: monsterAssets.frameWidth,
-        frameHeight: monsterAssets.frameHeight,
-      });
-      this.load.spritesheet(monsterAssets.hit, 'assets/monsters/mist-dust/combat/hit/mist-dust-hit-sheet.png', {
-        frameWidth: monsterAssets.frameWidth,
-        frameHeight: monsterAssets.frameHeight,
-      });
-      this.load.spritesheet(monsterAssets.death, 'assets/monsters/mist-dust/combat/death/mist-dust-death-sheet.png', {
-        frameWidth: monsterAssets.frameWidth,
-        frameHeight: monsterAssets.frameHeight,
-      });
+      preloadMistDustSprites(this);
     } else if (monsterId === 'lantern_cat') {
-      const base = 'assets/monsters/mieu-den/sheets';
-      for (const key of [
-        monsterAssets.idle,
-        monsterAssets.attack,
-        monsterAssets.defend,
-        monsterAssets.poisonCast,
-        monsterAssets.hit,
-        monsterAssets.death,
-      ]) {
-        if (!key) continue;
-        this.load.spritesheet(key, `${base}/${key}-sheet.webp`, {
-          frameWidth: monsterAssets.frameWidth,
-          frameHeight: monsterAssets.frameHeight,
-        });
-      }
+      preloadLanternCatSprites(this);
     }
     if (monsterId === 'mist_blob') {
       this.load.spritesheet('mist-dust-hit-impact', 'assets/monsters/mist-dust/combat/attack-impact/mist-dust-hit-impact-sheet.png', {
@@ -412,6 +457,7 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
     this.renderQuality = this.safeNumber(Number(this.registry.get('renderQuality')), 1);
     this.logicalWidth = this.safeNumber(Number(this.registry.get('logicalWidth')), LOGICAL_GAME_WIDTH);
     this.logicalHeight = this.safeNumber(Number(this.registry.get('logicalHeight')), DEFAULT_LOGICAL_GAME_HEIGHT);
+    this.layout = createBattleLayout(this.logicalWidth, this.logicalHeight);
     this.cameras.main.setOrigin(0, 0).setScroll(0, 0).setZoom(this.renderQuality);
     if (!this.controller) {
       this.controller = new BattleController(0x50484f, this);
@@ -423,17 +469,54 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
     this.createBattleBackground();
     this.ensureMatch3VfxAnimations();
     this.ensureSkillVfxAnimations();
-    this.ensureLanternSkillVfxAnimations();
+    ensureStatusUiAnimations(this);
+    ensureLanternCatSkillAnimations(this);
+    ensureMistDustAnimations(this);
     this.ensureHeroAnimations();
     this.createHeroVisual();
     this.createHud();
     this.createMonsterVisual();
-    this.createProtectionVisuals();
+    this.statusUi = new StatusUiVfx({
+      scene: this,
+      heroPosition: {
+        x: this.heroPosition.x,
+        y: this.heroPosition.y + this.layout.heroCombatY,
+      },
+      monsterPosition: {
+        x: this.monsterPosition.x,
+        y: this.monsterPosition.y - 4,
+      },
+      playerStatusBounds: this.layout.playerStatusBounds,
+      monsterStatusBounds: this.layout.monsterStatusBounds,
+      statusBarY: this.layout.statusBarY,
+      energyBarY: this.layout.energyBarY,
+      heroUsesInlineStatus: true,
+      monsterUsesInlineStatus: this.controller.currentState.monster.id === 'mist_blob',
+      renderQuality: this.renderQuality,
+    });
     this.createBoardFrame();
     this.createControls();
+    this.lanternCatVfx = new LanternCatVfx({
+      scene: this,
+      reducedMotion: this.reducedMotion,
+      transientEffects: this.transientEffects,
+      playSfx: this.playSfx.bind(this),
+      combatPoint: this.combatPoint.bind(this),
+      getHeroPosition: () => ({
+        x: this.heroVisual?.x ?? this.heroPosition.x,
+        y: this.heroVisual?.y ?? this.heroPosition.y,
+      }),
+      getPlayerStunIcon: () => this.playerStunIcon,
+      spawnVfxSized: this.spawnVfxSized.bind(this),
+      spawnCombatImpact: this.spawnCombatImpact.bind(this),
+      flashHero: this.flashHero.bind(this),
+      playHeroAnimation: this.playHeroAnimation.bind(this),
+      shakeHero: this.shakeHero.bind(this),
+      shakePlayerBar: this.shakePlayerBar.bind(this),
+    });
 
     this.selection = this.add
-      .rectangle(0, 0, CELL_SIZE - 4, CELL_SIZE - 4)
+      .rectangle(0, 0, this.cellSize - 4, this.cellSize - 4)
       .setStrokeStyle(3, 0xffe7a6)
       .setFillStyle(0xffffff, 0)
       .setDepth(10)
@@ -448,13 +531,13 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
         .setVisible(false)
         .play(VFX_SHEET_KEYS.selectRing);
     }
-    this.monsterMoveFrom = this.add.rectangle(0, 0, CELL_SIZE - 8, CELL_SIZE - 8)
+    this.monsterMoveFrom = this.add.rectangle(0, 0, this.cellSize - 8, this.cellSize - 8)
       .setStrokeStyle(3, 0x8fd3ff).setFillStyle(0x8fd3ff, 0.12).setDepth(10).setVisible(false);
-    this.monsterMoveTo = this.add.rectangle(0, 0, CELL_SIZE - 8, CELL_SIZE - 8)
+    this.monsterMoveTo = this.add.rectangle(0, 0, this.cellSize - 8, this.cellSize - 8)
       .setStrokeStyle(3, 0xa889ff).setFillStyle(0xa889ff, 0.12).setDepth(10).setVisible(false);
-    this.hintMoveFrom = this.add.rectangle(0, 0, CELL_SIZE - 6, CELL_SIZE - 6)
+    this.hintMoveFrom = this.add.rectangle(0, 0, this.cellSize - 6, this.cellSize - 6)
       .setStrokeStyle(2, 0xffd45e, 0.95).setFillStyle(0xffd45e, 0.1).setDepth(9).setVisible(false);
-    this.hintMoveTo = this.add.rectangle(0, 0, CELL_SIZE - 6, CELL_SIZE - 6)
+    this.hintMoveTo = this.add.rectangle(0, 0, this.cellSize - 6, this.cellSize - 6)
       .setStrokeStyle(2, 0xfff0a6, 0.95).setFillStyle(0xfff0a6, 0.1).setDepth(9).setVisible(false);
 
     this.unsubscribe = this.controller.subscribe((state) => this.renderState(state));
@@ -469,17 +552,6 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
   override update(_time: number, delta: number): void {
     if (!this.controller) return;
     this.updateFpsDebug(delta);
-    // Keep persistent VFX synchronized even while the player is idle. This
-    // prevents a tweened shield/aura from remaining visible after its value
-    // has already reached zero.
-    const shield = this.safeNumber(this.displayedShield ?? this.controller.currentState.player.shield);
-    const monsterShield = this.safeNumber(this.displayedMonsterShield ?? this.controller.currentState.monster.shield);
-    this.syncProtectionVisuals(shield > 0, monsterShield > 0);
-    this.syncEnergyAura(this.safeNumber(this.displayedEnergy ?? this.controller.currentState.player.energy));
-    this.syncPoisonVisual(
-      this.safeNumber(this.displayedPlayerPoisonTurns ?? this.controller.currentState.player.poisonTurns) > 0,
-      this.safeNumber(this.displayedMonsterPoisonTurns ?? this.controller.currentState.monster.poisonTurns) > 0,
-    );
   }
 
   private updateFpsDebug(delta: number): void {
@@ -599,7 +671,7 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
     if (monsterActed && !terminal) {
       this.hideMonsterMove();
       this.playerStunIcon?.setVisible(false);
-      this.statusLabel?.setText('Tới lượt bạn · Chọn hai ngọc kề nhau');
+      this.statusLabel?.setText('Lượt bạn · Chọn 2 ô kề nhau');
     }
   }
 
@@ -624,80 +696,62 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
       .setOrigin(0.5, 0.5);
 
     this.add
-      .rectangle(8, 54, 92, 22, 0x211a34, 0.9)
+      .rectangle(this.layout.hudLeft, 48, 92, 22, 0x211a34, 0.94)
       .setOrigin(0, 0.5)
       .setStrokeStyle(1, 0x66567f, 0.9)
       .setDepth(8);
     this.add
-      .text(15, 54, 'Nhân vật', { color: '#eee5ff', fontSize: '12px', fontStyle: 'bold' })
+      .text(this.layout.hudLeft + 7, 48, 'Nhân vật', { color: '#eee5ff', fontSize: '12px', fontStyle: 'bold' })
       .setResolution(this.renderQuality)
       .setOrigin(0, 0.5)
       .setDepth(9);
-    this.playerBar = this.add.graphics();
-    this.playerHpLabel = this.add.text(8, 78, '', { color: '#fff8e8', fontSize: '11px' }).setResolution(this.renderQuality);
-
     this.add
-      .rectangle(258, 54, 94, 22, 0x211a34, 0.9)
+      .rectangle(this.layout.hudRight - 94, 48, 94, 22, 0x211a34, 0.94)
       .setOrigin(0, 0.5)
       .setStrokeStyle(1, 0x66567f, 0.9)
       .setDepth(8);
     this.add
-      .text(345, 54, this.controller.currentState.monster.name, { color: '#eee5ff', fontSize: '12px', fontStyle: 'bold' })
+      .text(this.layout.hudRight - 7, 48, this.controller.currentState.monster.name, { color: '#eee5ff', fontSize: '12px', fontStyle: 'bold' })
       .setResolution(this.renderQuality)
       .setOrigin(1, 0.5)
       .setDepth(9);
-    this.monsterBar = this.add.graphics();
-    this.monsterHpLabel = this.add.text(352, 78, '', { color: '#fff8e8', fontSize: '12px' })
-      .setResolution(this.renderQuality)
-      .setOrigin(1, 0.5);
-    this.monsterEnergyLabel = this.add.text(352, 110, '', {
-      color: '#f3c64f',
-      fontSize: '11px',
-      fontStyle: 'bold',
-    }).setResolution(this.renderQuality).setOrigin(1, 0.5);
-    if (this.controller.currentState.monster.id !== 'lantern_cat') {
-      this.monsterEnergyLabel.setVisible(false);
-    }
     if (this.textures.exists(LANTERN_SKILL_VFX_KEYS.stunIcon)) {
       this.playerStunIcon = this.add
-        .image(72, 494, LANTERN_SKILL_VFX_KEYS.stunIcon)
+        .image(this.heroPosition.x, this.heroPosition.y + this.layout.heroStunY, LANTERN_SKILL_VFX_KEYS.stunIcon)
         .setDisplaySize(28, 28)
         .setBlendMode(Phaser.BlendModes.ADD)
         .setDepth(18)
         .setVisible(false);
     }
-    this.playerPoisonStatus = this.add.text(8, 91, '', {
-      color: '#d5aaff',
-      fontSize: '10px',
-      fontStyle: 'bold',
-    }).setResolution(this.renderQuality).setDepth(9);
-    this.monsterPoisonStatus = this.add.text(352, 91, '', {
-      color: '#d5aaff',
-      fontSize: '10px',
-      fontStyle: 'bold',
-    }).setResolution(this.renderQuality).setOrigin(1, 0).setDepth(9);
-
     this.telegraphLabel = this.add
-      .text(180, 160, '', {
+      .text(this.layout.hudLeft + 4, this.layout.telegraphY, '', {
         color: '#f3c64f',
         fontFamily: 'sans-serif',
         fontSize: '12px',
         fontStyle: 'bold',
       })
       .setResolution(this.renderQuality)
-      .setOrigin(0.5);
+      .setOrigin(0, 0.5)
+      .setDepth(110);
     this.statusLabel = this.add
-      .text(180, 178, 'Chọn hai viên ngọc kề nhau', {
+      .text(this.layout.hudLeft + 4, this.layout.statusY, 'Chọn 2 ô kề nhau', {
         color: '#fff8e8',
         fontFamily: 'sans-serif',
         fontSize: '12px',
       })
       .setResolution(this.renderQuality)
-      .setOrigin(0.5);
+      .setOrigin(0, 0.5)
+      .setDepth(110);
   }
 
   private createMonsterVisual(): void {
-    const monster = this.add.container(294, 145);
+    // Mist Dust's clean sheet has transparent padding below the visible
+    // effect. Compensate for that padding so the visible feet/cloud edge
+    // sits exactly 3px above the board frame.
+    const monsterY = this.controller.currentState.monster.id === 'mist_blob'
+      ? this.monsterPosition.y + 9
+      : this.monsterPosition.y;
+    const monster = this.add.container(this.monsterPosition.x, monsterY);
     monster.setDepth(6);
     const spriteKeys = this.monsterSpriteKeys();
     if (spriteKeys && this.textures.exists(spriteKeys.idle)) {
@@ -724,124 +778,6 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
     monster.add([body, leftEye, rightEye, mouth]);
     this.monsterVisual = monster;
     this.monsterBody = body;
-  }
-
-  private createShieldVisual(
-    x: number,
-    y: number,
-    color: number,
-    edgeColor: number,
-    scale = 1,
-  ): Phaser.GameObjects.Container {
-    const visual = this.add.container(x, y).setDepth(7).setScale(scale).setVisible(false);
-    const shield = this.add.graphics().setBlendMode(Phaser.BlendModes.ADD);
-    const shieldPoints = [
-      new Phaser.Math.Vector2(0, -40),
-      new Phaser.Math.Vector2(29, -27),
-      new Phaser.Math.Vector2(25, 10),
-      new Phaser.Math.Vector2(0, 39),
-      new Phaser.Math.Vector2(-25, 10),
-      new Phaser.Math.Vector2(-29, -27),
-    ];
-    shield.fillStyle(color, 0.12);
-    shield.lineStyle(2, edgeColor, 0.92);
-    shield.fillPoints(shieldPoints, true);
-    shield.strokePoints(shieldPoints, true);
-
-    const shieldCore = this.add.graphics().setBlendMode(Phaser.BlendModes.ADD);
-    shieldCore.lineStyle(1, edgeColor, 0.7);
-    shieldCore.strokePoints([
-      new Phaser.Math.Vector2(0, -29),
-      new Phaser.Math.Vector2(20, -20),
-      new Phaser.Math.Vector2(17, 6),
-      new Phaser.Math.Vector2(0, 27),
-      new Phaser.Math.Vector2(-17, 6),
-      new Phaser.Math.Vector2(-20, -20),
-    ], true);
-
-    const crest = this.add
-      .triangle(0, -1, 0, -8, 7, 5, -7, 5, edgeColor, 0.68)
-      .setBlendMode(Phaser.BlendModes.ADD);
-    visual.add([shield, shieldCore, crest]);
-    this.tweens.add({
-      targets: visual,
-      alpha: { from: 0.55, to: 0.95 },
-      scaleX: { from: scale * 0.96, to: scale * 1.03 },
-      scaleY: { from: scale * 0.98, to: scale * 1.04 },
-      yoyo: true,
-      repeat: -1,
-      duration: 700,
-      ease: 'Sine.InOut',
-    });
-    return visual;
-  }
-
-  private createProtectionVisuals(): void {
-    this.heroShieldVisual = this.createShieldVisual(72, 538, 0x6cbcff, 0xbfe4ff);
-    this.heroEnergyVisual = this.add.container(72, 538).setDepth(7).setVisible(false);
-    const energyCore = this.add
-      .ellipse(0, 0, 70, 82, 0xffc84d, 0.08)
-      .setStrokeStyle(2, 0xffe58a, 0.9)
-      .setBlendMode(Phaser.BlendModes.ADD);
-    const energyBurst = this.add.graphics();
-    energyBurst.lineStyle(2, 0xffd45e, 0.82);
-    for (let index = 0; index < 8; index += 1) {
-      const angle = (Math.PI * 2 * index) / 8;
-      energyBurst.lineBetween(
-        Math.cos(angle) * 34,
-        Math.sin(angle) * 38,
-        Math.cos(angle) * 48,
-        Math.sin(angle) * 52,
-      );
-    }
-    this.heroEnergyVisual.add([energyCore, energyBurst]);
-    this.heroPoisonVisual = this.createPoisonVisual(72, 538, 1);
-    this.monsterPoisonVisual = this.createPoisonVisual(294, 145 + MONSTER_COMBAT_Y_OFFSET, 0.72);
-    this.monsterGuardVisual = this.createShieldVisual(294, 145 + MONSTER_COMBAT_Y_OFFSET, 0xa889ff, 0xd8c2ff, 1.06);
-    this.tweens.add({
-      targets: this.heroEnergyVisual,
-      alpha: { from: 0.16, to: 0.5 },
-      scaleX: { from: 0.92, to: 1.08 },
-      scaleY: { from: 0.92, to: 1.08 },
-      angle: { from: -3, to: 3 },
-      yoyo: true,
-      repeat: -1,
-      duration: 420,
-      ease: 'Sine.InOut',
-    });
-  }
-
-  private createPoisonVisual(
-    x: number,
-    y: number,
-    scale: number,
-  ): Phaser.GameObjects.Container {
-    const visual = this.add.container(x, y)
-      .setDepth(7)
-      .setScale(scale)
-      .setVisible(false);
-    const poisonAura = this.add
-      .ellipse(0, 0, 82, 108, 0xa85ee8, 0.1)
-      .setStrokeStyle(2, 0xd5aaff, 0.78)
-      .setBlendMode(Phaser.BlendModes.ADD);
-    const poisonWisps = [
-      this.add.circle(-24, 22, 4, 0xd5aaff, 0.64),
-      this.add.circle(0, -16, 3, 0xb96ff2, 0.72),
-      this.add.circle(25, 15, 3.5, 0xe0b8ff, 0.62),
-    ];
-    visual.add([poisonAura, ...poisonWisps]);
-    this.tweens.add({
-      targets: visual,
-      alpha: { from: 0.36, to: 0.78 },
-      angle: { from: -2, to: 2 },
-      scaleX: { from: scale * 0.98, to: scale * 1.04 },
-      scaleY: { from: scale, to: scale * 1.06 },
-      yoyo: true,
-      repeat: -1,
-      duration: 620,
-      ease: 'Sine.InOut',
-    });
-    return visual;
   }
 
   private monsterSpriteKeys(): MonsterSpriteKeys | undefined {
@@ -877,22 +813,36 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
   }
 
   private ensureHeroAnimations(): void {
-    this.createMonsterAnimation(this.heroSpriteKeys.idle, this.heroSpriteKeys.idle, 8, -1);
-    this.createMonsterAnimation(this.heroSpriteKeys.attack, this.heroSpriteKeys.attack, 10, 0);
-    this.createMonsterAnimation(this.heroSpriteKeys.hit, this.heroSpriteKeys.hit, 9, 0);
+    const loopingStates: readonly (string | undefined)[] = [
+      this.heroSpriteKeys.idle,
+      this.heroSpriteKeys.highHp,
+      this.heroSpriteKeys.energy,
+      this.heroSpriteKeys.lowHp,
+      this.heroSpriteKeys.poisoned,
+      this.heroSpriteKeys.shield,
+    ];
+    for (const key of loopingStates) {
+      if (key) this.createMonsterAnimation(key, key, 8, -1);
+    }
+    this.createMonsterAnimation(this.heroSpriteKeys.attack, this.heroSpriteKeys.attack, 12, 0);
+    this.createMonsterAnimation(this.heroSpriteKeys.hit, this.heroSpriteKeys.hit, 10, 0);
     this.createMonsterAnimation(this.heroSpriteKeys.death, this.heroSpriteKeys.death, 8, 0);
+    if (this.heroSpriteKeys.stunned) this.createMonsterAnimation(this.heroSpriteKeys.stunned, this.heroSpriteKeys.stunned, 8, 0);
+    if (this.heroSpriteKeys.dodge) this.createMonsterAnimation(this.heroSpriteKeys.dodge, this.heroSpriteKeys.dodge, 12, 0);
   }
 
   private createHeroVisual(): void {
     if (!this.textures.exists(this.heroSpriteKeys.idle)) return;
-    const hero = this.add.container(72, 578).setDepth(6);
+    const hero = this.add.container(this.heroPosition.x, this.heroPosition.y).setDepth(6);
     const sprite = this.add.sprite(0, 0, this.heroSpriteKeys.idle)
-      .setOrigin(0.5, 0.92)
-      .setDisplaySize(84, 84)
+      .setOrigin(0.5, this.heroSpriteKeys.originY)
+      .setDisplaySize(this.heroSpriteKeys.displayWidth, this.heroSpriteKeys.displayHeight)
       .play(this.heroSpriteKeys.idle);
     this.heroSprite = sprite;
     this.heroVisual = hero;
     hero.add(sprite);
+    this.heroPersistentStatus = 'idle';
+    this.heroCurrentAnimationKey = this.heroSpriteKeys.idle;
   }
 
   private ensureMatch3VfxAnimations(): void {
@@ -913,16 +863,6 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
       SKILL_VFX_KEYS.impact,
       SKILL_VFX_KEYS.finishFlash,
       SKILL_VFX_KEYS.spark,
-    ] as const) {
-      this.createVfxAnimation(key, key, 0);
-    }
-  }
-
-  private ensureLanternSkillVfxAnimations(): void {
-    for (const key of [
-      LANTERN_SKILL_VFX_KEYS.castCircle,
-      LANTERN_SKILL_VFX_KEYS.multiStrike,
-      LANTERN_SKILL_VFX_KEYS.impactStun,
     ] as const) {
       this.createVfxAnimation(key, key, 0);
     }
@@ -1085,37 +1025,43 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
   private createBoardFrame(): void {
     const frame = this.add.graphics();
     frame.fillStyle(0x28213d, 1);
-    frame.fillRoundedRect(BOARD_LEFT - 10, BOARD_TOP - 10, BOARD_WIDTH + 20, BOARD_WIDTH + 20, 16);
+    frame.fillRoundedRect(this.boardLeft - 10, this.boardTop - 10, this.boardWidth + 20, this.boardWidth + 20, 16);
     frame.lineStyle(2, 0x594b78, 1);
-    frame.strokeRoundedRect(BOARD_LEFT - 10, BOARD_TOP - 10, BOARD_WIDTH + 20, BOARD_WIDTH + 20, 16);
+    frame.strokeRoundedRect(this.boardLeft - 10, this.boardTop - 10, this.boardWidth + 20, this.boardWidth + 20, 16);
   }
 
   private createControls(): void {
-    this.energyLabel = this.add.text(8, 110, 'Năng lượng 0 / 100', {
-      color: '#f3c64f',
-      fontSize: '14px',
-      fontStyle: 'bold',
-    }).setResolution(this.renderQuality);
-    this.energyBar = this.add.graphics();
-    this.monsterEnergyBar = this.add.graphics();
-    if (this.controller.currentState.monster.id !== 'lantern_cat') {
-      this.monsterEnergyBar.setVisible(false);
-    }
-
     this.skillButton = this.add
-      .rectangle(274, 548, 128, 38, 0x6b4fa3, 1)
+      .rectangle(this.layout.skillButton.x, this.layout.skillButton.y, 56, 56, 0x6b4fa3, 1)
       .setStrokeStyle(2, 0xd8c2ff, 0.7)
       .setInteractive({ useHandCursor: true });
     this.skillIcon = this.add
-      .image(226, 548, SKILL_VFX_KEYS.icon)
-      .setDisplaySize(30, 30)
+      .image(this.layout.skillButton.x, this.layout.skillButton.y, SKILL_VFX_KEYS.icon)
+      .setDisplaySize(42, 42)
       .setDepth(2)
       .setBlendMode(Phaser.BlendModes.ADD);
-    this.skillButtonText = this.add
-      .text(286, 548, 'Đèn Phá Mây', { color: '#fff8e8', fontSize: '12px', fontStyle: 'bold' })
+    this.skillTooltip = this.add
+      .container(this.layout.skillButton.x, this.layout.skillButton.y - 58)
+      .setDepth(120)
+      .setVisible(false);
+    const tooltipBackground = this.add
+      .rectangle(0, 0, 158, 70, 0x171426, 0.98)
+      .setStrokeStyle(1, 0xd8c2ff, 0.85);
+    this.skillTooltipLabel = this.add
+      .text(-73, -28, '', {
+        color: '#fff8e8',
+        fontFamily: 'sans-serif',
+        fontSize: '9px',
+        fontStyle: 'bold',
+        lineSpacing: 2,
+      })
       .setResolution(this.renderQuality)
-      .setOrigin(0.5);
-    this.skillButton.on('pointerdown', () => void this.dispatchSkill());
+      .setOrigin(0, 0);
+    this.skillTooltip.add([tooltipBackground, this.skillTooltipLabel]);
+    this.skillButton.on('pointerdown', () => {
+      this.showSkillTooltip();
+      void this.dispatchSkill();
+    });
 
     this.abandonButtonBackground = this.add
       .rectangle(12, this.logicalHeight - 12, 98, 36, 0x30263f, 0.96)
@@ -1152,9 +1098,8 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
     this.displayedMonsterPoisonTurns = state.monster.poisonTurns;
     this.renderBoard(state.board);
     this.renderBars(state);
-    this.telegraphLabel?.setText(state.telegraph);
+    this.telegraphLabel?.setText(this.compactBattleText(state.telegraph));
     this.turnLabel?.setText(`Lượt ${state.turn} / ${state.maxTurns}`);
-    this.energyLabel?.setText(`Năng lượng ${state.player.energy} / 100`);
     this.updateSkillButton(state);
     if (state.phase !== 'PLAYER_READY') this.stopTurnTimer();
   }
@@ -1174,109 +1119,50 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
     );
     const playerPoisonTurns = Math.max(0, this.displayedPlayerPoisonTurns ?? state.player.poisonTurns);
     const monsterPoisonTurns = Math.max(0, this.displayedMonsterPoisonTurns ?? state.monster.poisonTurns);
-    this.drawBar(this.playerBar, 8, 64, 150, playerHp / playerMaxHp, 0x57c982);
-    this.drawBar(this.monsterBar, 202, 64, 150, monsterHp / monsterMaxHp, 0xe75b62);
-    this.drawBar(this.energyBar, 8, 126, 150, energy / DEFAULT_BATTLE_CONFIG.energyCap, 0xf3c64f);
-    this.drawBar(
-      this.monsterEnergyBar,
-      202,
-      126,
-      150,
-      monsterEnergy / DEFAULT_BATTLE_CONFIG.energyCap,
-      0xf3c64f,
+    this.statusUi?.setPositions(
+      { x: this.heroVisual?.x ?? this.heroPosition.x, y: (this.heroVisual?.y ?? this.heroPosition.y) + this.layout.heroCombatY },
+      { x: this.monsterVisual?.x ?? this.monsterPosition.x, y: (this.monsterVisual?.y ?? this.monsterPosition.y) - 4 },
     );
-    this.playerHpLabel?.setText(`HP ${playerHp} / ${playerMaxHp}  ·  Khiên ${shield}`);
-    this.monsterHpLabel?.setText(`HP ${monsterHp} / ${monsterMaxHp}  ·  Khiên ${monsterShield}`);
-    this.energyLabel?.setText(`Năng lượng ${energy} / 100`);
-    this.monsterEnergyLabel?.setText(`Năng lượng ${monsterEnergy} / 100`);
-    this.syncProtectionVisuals(shield > 0, monsterShield > 0);
-    this.syncEnergyAura(energy);
-    this.syncPoisonVisual(playerPoisonTurns > 0, monsterPoisonTurns > 0);
-    this.refreshPoisonStatus();
+    this.statusUi?.syncStatus(
+      {
+        currentHp: playerHp,
+        maxHp: playerMaxHp,
+        shield,
+        poisonPotency: Math.max(0, this.displayedPlayerPoisonPotency ?? state.player.poisonPotency),
+        poisonTurns: playerPoisonTurns,
+        energy,
+      },
+      {
+        currentHp: monsterHp,
+        maxHp: monsterMaxHp,
+        shield: monsterShield,
+        poisonPotency: Math.max(0, this.displayedMonsterPoisonPotency ?? state.monster.poisonPotency),
+        poisonTurns: monsterPoisonTurns,
+        energy: monsterEnergy,
+      },
+    );
+    this.syncHeroPersistentVisual({
+      currentHp: playerHp,
+      maxHp: playerMaxHp,
+      shield,
+      poisonTurns: playerPoisonTurns,
+      energy,
+    });
+    if (state.monster.id === 'mist_blob') {
+      this.syncMonsterPersistentVisual({
+        currentHp: monsterHp,
+        maxHp: monsterMaxHp,
+        shield: monsterShield,
+        poisonTurns: monsterPoisonTurns,
+        energy: monsterEnergy,
+      });
+    }
   }
 
   private refreshDisplayedBars(): void {
     this.renderBars(this.controller.currentState);
   }
 
-  private syncProtectionVisuals(hasPlayerShield: boolean, hasMonsterShield: boolean): void {
-    if (this.heroShieldVisual) {
-      this.heroShieldVisual.setPosition(this.heroVisual?.x ?? 72, (this.heroVisual?.y ?? 578) - 40);
-      if (hasPlayerShield) {
-        this.heroShieldVisual.setAlpha(0.72).setVisible(true);
-      } else {
-        this.heroShieldVisual.setAlpha(0).setVisible(false);
-      }
-    }
-    if (this.monsterGuardVisual) {
-      this.monsterGuardVisual.setPosition(
-        this.monsterVisual?.x ?? 294,
-        (this.monsterVisual?.y ?? 145) + MONSTER_COMBAT_Y_OFFSET,
-      );
-      if (hasMonsterShield || this.monsterGuardActive) {
-        this.monsterGuardVisual.setAlpha(0.72).setVisible(true);
-      } else {
-        this.monsterGuardVisual.setAlpha(0).setVisible(false);
-      }
-    }
-  }
-
-  private syncEnergyAura(energy: number): void {
-    const charged = energy > 50;
-    if (this.heroEnergyVisual) {
-      this.heroEnergyVisual.setPosition(this.heroVisual?.x ?? 72, (this.heroVisual?.y ?? 578) - 40);
-      if (charged) {
-        this.heroEnergyVisual.setAlpha(0.5).setVisible(true);
-      } else {
-        this.heroEnergyVisual.setAlpha(0).setVisible(false);
-      }
-    }
-    if (charged && !this.energyAuraActive) {
-      this.energyAuraActive = true;
-      this.playEnergyThresholdEffect();
-    } else if (!charged) {
-      this.energyAuraActive = false;
-    }
-  }
-
-  private syncPoisonVisual(playerActive: boolean, monsterActive: boolean): void {
-    this.heroPoisonVisual
-      ?.setPosition(this.heroVisual?.x ?? 72, (this.heroVisual?.y ?? 578) - 40)
-      .setVisible(playerActive);
-    this.monsterPoisonVisual
-      ?.setPosition(this.monsterVisual?.x ?? 294, (this.monsterVisual?.y ?? 145) + MONSTER_COMBAT_Y_OFFSET)
-      .setVisible(monsterActive);
-  }
-
-  private refreshPoisonStatus(): void {
-    const playerTurns = Math.max(0, this.displayedPlayerPoisonTurns ?? this.controller.currentState.player.poisonTurns);
-    const monsterTurns = Math.max(0, this.displayedMonsterPoisonTurns ?? this.controller.currentState.monster.poisonTurns);
-    const playerPotency = Math.max(0, this.displayedPlayerPoisonPotency ?? this.controller.currentState.player.poisonPotency);
-    const monsterPotency = Math.max(0, this.displayedMonsterPoisonPotency ?? this.controller.currentState.monster.poisonPotency);
-    this.playerPoisonStatus?.setText(
-      playerTurns > 0 ? `☠ Độc · ${playerTurns} lượt · ${playerPotency}/lượt` : '',
-    );
-    this.monsterPoisonStatus?.setText(
-      monsterTurns > 0 ? `☠ Độc · ${monsterTurns} lượt · ${monsterPotency}/lượt` : '',
-    );
-  }
-
-  private drawBar(
-    graphics: Phaser.GameObjects.Graphics | undefined,
-    x: number,
-    y: number,
-    width: number,
-    ratio: number,
-    color: number,
-  ): void {
-    if (!graphics) return;
-    graphics.clear();
-    graphics.fillStyle(0x3b3355, 1);
-    graphics.fillRoundedRect(x, y, width, 8, 4);
-    graphics.fillStyle(color, 1);
-    const safeRatio = Number.isFinite(ratio) ? ratio : 0;
-    graphics.fillRoundedRect(x, y, width * Math.max(0, Math.min(1, safeRatio)), 8, 4);
-  }
 
   private safeNumber(value: number | undefined, fallback = 0): number {
     return typeof value === 'number' && Number.isFinite(value) ? value : fallback;
@@ -1291,6 +1177,110 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
     }
   }
 
+  private playHeroAttackSfx(): void {
+    this.playSfx(this.heroGender === 'male' ? SFX_KEYS.heroMaleAttack : SFX_KEYS.heroFemaleAttack, 0.5);
+  }
+
+  private playHeroHitSfx(volume = 0.52): void {
+    this.playSfx(this.heroGender === 'male' ? SFX_KEYS.heroMaleHit : SFX_KEYS.heroFemaleHit, volume);
+  }
+
+  private playHeroDeathSfx(): void {
+    this.playSfx(this.heroGender === 'male' ? SFX_KEYS.heroMaleDeath : SFX_KEYS.heroFemaleDeath, 0.58);
+  }
+
+  private playHeroStatusSfx(status: 'energy' | 'highHp' | 'lowHp' | 'poisoned' | 'shield' | 'stunned'): void {
+    const keys: Readonly<Record<typeof status, string>> = this.heroGender === 'male'
+      ? {
+        energy: SFX_KEYS.heroMaleEnergy,
+        highHp: SFX_KEYS.heroMaleHighHp,
+        lowHp: SFX_KEYS.heroMaleLowHp,
+        poisoned: SFX_KEYS.heroMalePoisoned,
+        shield: SFX_KEYS.heroMaleShield,
+        stunned: SFX_KEYS.heroMaleStunned,
+      }
+      : {
+        energy: SFX_KEYS.heroFemaleEnergy,
+        highHp: SFX_KEYS.heroFemaleHighHp,
+        lowHp: SFX_KEYS.heroFemaleLowHp,
+        poisoned: SFX_KEYS.heroFemalePoisoned,
+        shield: SFX_KEYS.heroFemaleShield,
+        stunned: SFX_KEYS.heroFemaleStunned,
+      };
+    this.playSfx(keys[status], 0.5);
+  }
+
+  private syncHeroPersistentVisual(snapshot: HeroStatusSnapshot): void {
+    const hpBand = getHeroHpBand(snapshot.currentHp, snapshot.maxHp);
+    if (this.heroHpBand && hpBand !== this.heroHpBand) {
+      if (hpBand === 'low') this.playHeroStatusSfx('lowHp');
+      if (hpBand === 'high') this.playHeroStatusSfx('highHp');
+    }
+    this.heroHpBand = hpBand;
+    if (this.heroTransientAnimation) return;
+
+    const nextStatus = getHeroPersistentStatus(snapshot);
+    this.heroPersistentStatus = nextStatus;
+    this.playHeroPersistentAnimation(nextStatus);
+  }
+
+  private playHeroPersistentAnimation(status: HeroPersistentStatus): void {
+    const sprite = this.heroSprite;
+    const animationKey = this.heroPersistentAnimationKey(status);
+    if (!sprite || !animationKey || !this.anims.exists(animationKey)) return;
+    if (this.heroCurrentAnimationKey === animationKey && sprite.anims.isPlaying) return;
+    sprite.stop();
+    sprite.setDisplaySize(this.heroSpriteKeys.displayWidth, this.heroSpriteKeys.displayHeight);
+    sprite.play(animationKey);
+    this.heroCurrentAnimationKey = animationKey;
+  }
+
+  private syncMonsterPersistentVisual(snapshot: HeroStatusSnapshot): void {
+    if (this.controller.currentState.monster.id !== 'mist_blob') return;
+    const hpBand = getHeroHpBand(snapshot.currentHp, snapshot.maxHp);
+    if (this.monsterHpBand && hpBand !== this.monsterHpBand) {
+      if (hpBand === 'low') this.playSfx(SFX_KEYS.mistLowHp, 0.45);
+      if (hpBand === 'high') this.playSfx(SFX_KEYS.mistHighHp, 0.45);
+    }
+    this.monsterHpBand = hpBand;
+    const nextStatus = getHeroPersistentStatus(snapshot);
+    this.monsterPersistentStatus = nextStatus;
+    if (this.monsterTransientAnimation) return;
+    this.playMonsterPersistentAnimation(nextStatus);
+  }
+
+  private playMonsterPersistentAnimation(status: HeroPersistentStatus): void {
+    const sprite = this.monsterSprite;
+    const keys = this.monsterSpriteKeys();
+    if (!sprite || !keys || this.controller.currentState.monster.id !== 'mist_blob') return;
+    const animationKey = status === 'highHp'
+      ? keys.highHp
+      : status === 'energy'
+        ? keys.energy
+        : status === 'lowHp'
+          ? keys.lowHp
+          : status === 'poisoned'
+            ? keys.poisoned
+            : status === 'shield'
+              ? keys.shield
+              : keys.idle;
+    if (!animationKey || !this.anims.exists(animationKey)) return;
+    if (this.monsterCurrentAnimationKey === animationKey && sprite.anims.isPlaying) return;
+    sprite.stop();
+    sprite.setDisplaySize(keys.displayWidth, keys.displayHeight);
+    sprite.play(animationKey);
+    this.monsterCurrentAnimationKey = animationKey;
+  }
+
+  private heroPersistentAnimationKey(status: HeroPersistentStatus): string | undefined {
+    if (status === 'highHp') return this.heroSpriteKeys.highHp;
+    if (status === 'energy') return this.heroSpriteKeys.energy;
+    if (status === 'lowHp') return this.heroSpriteKeys.lowHp;
+    if (status === 'poisoned') return this.heroSpriteKeys.poisoned;
+    if (status === 'shield') return this.heroSpriteKeys.shield;
+    return this.heroSpriteKeys.idle;
+  }
+
   private clampDisplay(value: number | undefined, min: number, max: number): number {
     return Math.max(min, Math.min(max, this.safeNumber(value, min)));
   }
@@ -1300,16 +1290,33 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
     const skillReady = canAct && state.player.energy >= DEFAULT_BATTLE_CONFIG.energyCap;
     this.skillButton?.setFillStyle(skillReady ? 0x8c5fd1 : 0x403653, 1).setAlpha(skillReady ? 1 : 0.55);
     this.skillIcon?.setAlpha(skillReady ? 1 : 0.55);
-    this.skillButtonText?.setAlpha(skillReady ? 1 : 0.55);
     this.setPlayerControlsEnabled(canAct, skillReady);
+  }
+
+  private showSkillTooltip(): void {
+    const state = this.controller.currentState;
+    const skillPower = state.player.stats.skillPower;
+    const skillDamage = Math.max(
+      1,
+      Math.round(50 + skillPower * 4) - Math.floor(state.monster.defense * 0.5),
+    );
+    this.skillTooltipLabel?.setText(
+      `Đèn Phá Mây\n⚡${state.player.energy}/100 · Cần 100\nSP ${skillPower} · Sát thương ${skillDamage}`,
+    );
+    this.skillTooltip?.setVisible(true).setAlpha(1);
+    this.skillTooltipHideTimer?.remove(false);
+    this.skillTooltipHideTimer = this.time.delayedCall(2800, () => {
+      this.skillTooltip?.setVisible(false);
+      this.skillTooltipHideTimer = undefined;
+    });
   }
 
   private renderBoard(board: Board): void {
     for (let row = 0; row < BOARD_SIZE; row += 1) {
       for (let col = 0; col < BOARD_SIZE; col += 1) {
         const key = `${row}:${col}`;
-        const x = BOARD_LEFT + col * CELL_SIZE + CELL_SIZE / 2;
-        const y = BOARD_TOP + row * CELL_SIZE + CELL_SIZE / 2;
+        const x = this.boardLeft + col * this.cellSize + this.cellSize / 2;
+        const y = this.boardTop + row * this.cellSize + this.cellSize / 2;
         const current = this.gemSprites.get(key);
         if (!current || current.getData('gemType') !== board[row][col]) {
           current?.destroy(true);
@@ -1337,11 +1344,11 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
         const target = this.boardPoint({ row, col });
         const candidate = candidates
           .filter((gem) => {
-            const sourceCol = Math.round((gem.x - BOARD_LEFT - CELL_SIZE / 2) / CELL_SIZE);
+            const sourceCol = Math.round((gem.x - this.boardLeft - this.cellSize / 2) / this.cellSize);
             return !claimed.has(gem) && sourceCol === col && gem.getData('gemType') === gemType;
           })
           .sort((first, second) => Math.abs(first.y - target.y) - Math.abs(second.y - target.y))[0];
-        const visual = candidate ?? this.createGem(target.x, target.y - CELL_SIZE, gemType);
+        const visual = candidate ?? this.createGem(target.x, target.y - this.cellSize, gemType);
         claimed.add(visual);
         this.tweens.killTweensOf(visual);
         visual.setVisible(true).setAlpha(1).setScale(1);
@@ -1375,7 +1382,7 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
         let visual = current;
         if (!visual || visual.getData('gemType') !== board[row][col]) {
           current?.destroy(true);
-          visual = this.createGem(target.x, BOARD_TOP - (BOARD_SIZE - row + 1) * CELL_SIZE, board[row][col]);
+          visual = this.createGem(target.x, this.boardTop - (BOARD_SIZE - row + 1) * this.cellSize, board[row][col]);
           landingPoints.push({ row, col });
         }
         this.tweens.killTweensOf(visual);
@@ -1463,13 +1470,13 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
       if (this.selectedCell && this.selectedCell.row === end.row && this.selectedCell.col === end.col) {
         this.selectedCell = undefined;
         this.renderSelection();
-        this.statusLabel?.setText('Đã bỏ chọn. Chọn một ngọc khác');
+        this.statusLabel?.setText('Bỏ chọn');
       } else if (this.selectedCell && areAdjacent(this.selectedCell, end)) {
         void this.dispatchSwap(this.selectedCell, end);
       } else {
         this.selectedCell = end;
         this.renderSelection();
-        this.statusLabel?.setText(`Đã chọn ${this.gemAt(end)} · Chọn ngọc kề bên để đổi`);
+        this.statusLabel?.setText(`Đã chọn ${this.gemName(this.gemAt(end))} · Chọn ô kề`);
       }
       return;
     }
@@ -1479,7 +1486,7 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
     }
     this.selectedCell = end;
     this.renderSelection();
-    this.statusLabel?.setText(`Đã chọn ${this.gemAt(end)} · Chọn ngọc kề bên để đổi`);
+    this.statusLabel?.setText(`Đã chọn ${this.gemName(this.gemAt(end))} · Chọn ô kề`);
   }
 
   private async dispatchSwap(from: Coord, to: Coord): Promise<void> {
@@ -1598,20 +1605,19 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
           const matchCount = this.safeNumber(Number(event.payload['matchCount'] ?? 0));
           const matchLabel = matchCount >= 3 ? `X${matchCount} · ` : '';
           this.playHeroAnimation('attack');
-          this.playSfx(SFX_KEYS.heroAttack, 0.5);
-          // Let the sword swing read before launching the projectile.
-          this.time.delayedCall(180, () => {
-            this.spawnHeroProjectile(() => {
-              this.playSfx(
-                this.controller.currentState.monster.id === 'lantern_cat'
-                  ? SFX_KEYS.lanternHit
-                  : SFX_KEYS.mistHit,
-                0.52,
-              );
-              this.playMonsterAnimation('hit');
-              this.flashMonster(0xffe7a6);
-              this.shakeMonster();
-            });
+          this.playHeroAttackSfx();
+          this.spawnHeroSwordProjectile(() => {
+            const target = this.combatPoint('monster');
+            this.spawnCombatImpact(target.x, target.y, 0x9ed8ff, 48);
+            this.playSfx(
+              this.controller.currentState.monster.id === 'lantern_cat'
+                ? SFX_KEYS.lanternHit
+                : SFX_KEYS.mistHit,
+              0.52,
+            );
+            this.playMonsterAnimation('hit');
+            this.flashMonster(0xffe7a6);
+            this.shakeMonster();
           });
           this.displayedMonsterShield = Math.max(
             0,
@@ -1625,7 +1631,7 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
           );
           this.floatNumber(
             amount > 0 ? `${matchLabel}-${amount} HP` : `${matchLabel}-${monsterShieldAbsorbed} khiên`,
-            294,
+            this.monsterPosition.x,
             104,
             amount > 0 ? '#ff9aa4' : '#9dceff',
           );
@@ -1651,6 +1657,7 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
           this.statusLabel?.setText(healTarget === 'monster' ? `Quái hồi ${amount} HP` : `+${amount} HP`);
           this.floatNumber(`+${amount} HP`, point.x, point.y - 50, '#8ff0ad');
           this.playHealEffect(healTarget);
+          if (healTarget === 'monster') this.playMonsterEffectAnimation('heal', 0.5);
         } else {
           this.statusLabel?.setText(healTarget === 'monster' ? 'HP quái đã đầy' : 'HP đã đầy');
         }
@@ -1669,7 +1676,13 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
         const shieldPoint = this.combatPoint(shieldTarget);
         this.statusLabel?.setText(shieldTarget === 'monster' ? `Quái nhận ${amount} khiên` : `+${amount} khiên`);
         this.floatNumber(`+${amount}`, shieldPoint.x, shieldPoint.y - 50, '#9dceff');
-        if (amount > 0) this.playShieldGainEffect(shieldTarget);
+        if (amount > 0) {
+          this.playShieldGainEffect(shieldTarget);
+          if (shieldTarget === 'monster' && this.controller.currentState.monster.id === 'mist_blob') {
+            this.playSfx(SFX_KEYS.mistShield, 0.5);
+            this.playMonsterAnimation('defend');
+          }
+        }
         this.refreshDisplayedBars();
         break;
       case 'ENERGY_GAINED':
@@ -1685,7 +1698,12 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
         const energyPoint = this.combatPoint(energyTarget);
         this.statusLabel?.setText(energyTarget === 'monster' ? `Quái tích ${amount} năng lượng` : `+${amount} năng lượng`);
         this.floatNumber(`+${amount}`, energyPoint.x, energyPoint.y - 50, '#ffe28c');
-        if (amount > 0) this.playEnergyGainEffect(energyTarget);
+        if (amount > 0) {
+          this.playEnergyGainEffect(energyTarget);
+          if (energyTarget === 'monster' && this.controller.currentState.monster.id === 'mist_blob') {
+            this.playSfx(SFX_KEYS.mistEnergy, 0.5);
+          }
+        }
         this.refreshDisplayedBars();
         break;
       case 'MONSTER_SKILL_USED': {
@@ -1702,7 +1720,7 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
         this.playSfx(SFX_KEYS.lanternLongCharge, 0.62);
         this.playMonsterAnimation('attack');
         this.flashMonster(0xd8c2ff);
-        this.playLongMieuLienKichEffect();
+        this.lanternCatVfx?.playLongMieuLienKich();
         this.refreshDisplayedBars();
         break;
       }
@@ -1710,8 +1728,10 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
         this.setPlayerControlsEnabled(false);
         this.countdownLabel?.setColor('#d5aaff').setText('Nhân vật bị choáng · mất lượt');
         this.statusLabel?.setText(String(event.payload['label'] ?? 'Nhân vật bị choáng — mất lượt'));
+        this.playHeroAnimation('stunned');
+        this.playHeroStatusSfx('stunned');
         this.playerStunIcon
-          ?.setPosition(this.heroVisual?.x ?? 72, (this.heroVisual?.y ?? 578) - 92)
+          ?.setPosition(this.heroVisual?.x ?? this.heroPosition.x, (this.heroVisual?.y ?? this.heroPosition.y) + this.layout.heroStunY)
           .setVisible(true);
         this.tweens.add({
           targets: this.playerStunIcon,
@@ -1746,6 +1766,9 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
           if (event.payload['actor'] === 'monster') {
             if (this.controller.currentState.monster.id === 'lantern_cat') {
               this.playSfx(SFX_KEYS.lanternPoisonCast, 0.56);
+            } else if (this.controller.currentState.monster.id === 'mist_blob') {
+              this.playSfx(SFX_KEYS.mistCast, 0.52);
+              this.playSfx(SFX_KEYS.mistPoison, 0.44);
             }
             if (monsterActionId !== this.lastMonsterActionVisualId) this.playMonsterAnimation('poisonCast');
             this.time.delayedCall(260, () => {
@@ -1772,6 +1795,9 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
           );
           this.displayedMonsterPoisonTurns = turns;
           this.statusLabel?.setText(`NHIỄM ĐỘC! Bụi Sương · ${turns} lượt`);
+          if (this.controller.currentState.monster.id === 'mist_blob') {
+            this.playSfx(SFX_KEYS.mistPoison, 0.52);
+          }
           this.playPoisonProjectile();
           this.refreshDisplayedBars();
         }
@@ -1792,7 +1818,7 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
           this.displayedMonsterHp = Math.max(0, (this.displayedMonsterHp ?? this.controller.currentState.monster.currentHp) - amount);
           this.displayedMonsterPoisonTurns = Math.max(0, this.safeNumber(Number(event.payload['remainingTurns'] ?? 0)));
           this.statusLabel?.setText(`☠ Độc gây ${amount} sát thương lên quái`);
-          this.floatNumber(`☠ -${amount}`, 294, 104, '#d5aaff');
+          this.floatNumber(`☠ -${amount}`, this.monsterPosition.x, 104, '#d5aaff');
           this.playPoisonTickEffect('monster');
         }
         this.refreshDisplayedBars();
@@ -1850,7 +1876,7 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
             if (monsterId === 'lantern_cat') {
               this.playSfx(SFX_KEYS.lanternAttackImpact, 0.56);
             } else if (monsterId === 'mist_blob') {
-              this.playSfx(SFX_KEYS.heroHit, 0.52);
+            this.playHeroHitSfx();
             }
             this.playHeroAnimation('hit');
             this.flashHero(0xff7a80);
@@ -1867,6 +1893,8 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
         this.statusLabel?.setText(shieldGained > 0 ? `Quái tạo khiên ${shieldGained}` : 'Quái tăng phòng thủ trong 1 lượt');
         if (this.controller.currentState.monster.id === 'lantern_cat') {
           this.playSfx(SFX_KEYS.lanternDefend, 0.54);
+        } else if (this.controller.currentState.monster.id === 'mist_blob') {
+          this.playSfx(SFX_KEYS.mistShield, 0.5);
         }
         this.playMonsterAnimation('defend');
         this.showMonsterGuardEffect();
@@ -1889,6 +1917,8 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
         this.hideMonsterGuardEffect();
         if (this.controller.currentState.monster.id === 'lantern_cat') {
           this.playSfx(SFX_KEYS.lanternDeath, 0.58);
+        } else if (this.controller.currentState.monster.id === 'mist_blob') {
+          this.playSfx(SFX_KEYS.mistDeath, 0.58);
         }
         this.playMonsterAnimation('death');
         this.flashMonster(0xffe7a6);
@@ -1897,6 +1927,7 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
         this.statusLabel?.setText('Bạn đã bị đánh bại');
         this.setPlayerControlsEnabled(false);
         this.playerStunIcon?.setVisible(false);
+        this.playHeroDeathSfx();
         this.playHeroAnimation('death');
         break;
       case 'BATTLE_ABANDONED':
@@ -1923,8 +1954,8 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
   }
 
   private shakePlayerBar(): void {
-    if (!this.playerBar) return;
-    this.tweens.add({ targets: this.playerBar, x: 4, yoyo: true, repeat: 2, duration: 45 });
+    // The status module owns the HUD layers. Feedback remains presentation
+    // only and deliberately does not alter battle state.
     this.cameras.main.shake(80, 0.002);
   }
 
@@ -1950,6 +1981,10 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
     const animationKey = keys?.[action];
     if (!sprite || !animationKey || !this.anims.exists(animationKey)) return;
 
+    if (this.controller.currentState.monster.id === 'mist_blob') {
+      this.monsterTransientAnimation = action;
+      this.monsterCurrentAnimationKey = animationKey;
+    }
     sprite.stop();
     if (action === 'attack') {
       sprite.setDisplaySize(
@@ -1964,64 +1999,103 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
       if (action === 'attack') {
         sprite.setDisplaySize(keys?.displayWidth ?? 84, keys?.displayHeight ?? 84);
       }
-      if (this.monsterSprite === sprite && keys && this.anims.exists(keys.idle)) {
+      if (this.monsterSprite !== sprite) return;
+      if (this.controller.currentState.monster.id === 'mist_blob') {
+        this.monsterTransientAnimation = undefined;
+        this.playMonsterPersistentAnimation(this.monsterPersistentStatus);
+      } else if (keys && this.anims.exists(keys.idle)) {
         sprite.play(keys.idle);
       }
     });
   }
 
-  private playHeroAnimation(key: 'attack' | 'hit' | 'death'): void {
-    const sprite = this.heroSprite;
-    const animationKey = this.heroSpriteKeys[key];
-    if (!sprite || !this.anims.exists(animationKey)) return;
-
-    sprite.stop();
-    if (key === 'attack') sprite.setDisplaySize(102, 102);
-    sprite.play(animationKey);
-    if (key === 'death') return;
-
+  private playMonsterEffectAnimation(
+    action: 'heal' | 'antiHeal' | 'dodge' | 'stunned',
+    volume: number,
+  ): void {
+    if (this.controller.currentState.monster.id !== 'mist_blob') return;
+    const sprite = this.monsterSprite;
+    const keys = this.monsterSpriteKeys();
+    const animationKey = keys?.[action];
+    if (!sprite || !animationKey || !this.anims.exists(animationKey)) return;
+    this.monsterTransientAnimation = action;
+    this.monsterCurrentAnimationKey = animationKey;
+    this.playSfx(volume > 0 ? this.monsterEffectSfxKey(action) : '', volume);
+    sprite.stop().play(animationKey);
     sprite.once(`animationcomplete-${animationKey}`, () => {
-      if (key === 'attack') sprite.setDisplaySize(84, 84);
-      if (this.heroSprite === sprite && this.anims.exists(this.heroSpriteKeys.idle)) {
-        sprite.play(this.heroSpriteKeys.idle);
-      }
+      if (this.monsterSprite !== sprite) return;
+      this.monsterTransientAnimation = undefined;
+      this.playMonsterPersistentAnimation(this.monsterPersistentStatus);
     });
   }
 
-  private spawnHeroProjectile(onImpact?: () => void): void {
-    const start = {
-      x: (this.heroVisual?.x ?? 72) + 28,
-      y: (this.heroVisual?.y ?? 578) - 42,
-    };
-    const target = {
-      x: (this.monsterVisual?.x ?? 294) - 20,
-      y: (this.monsterVisual?.y ?? 145) - 24,
-    };
-    this.spawnTravelTrail(start, target, 0x9ed8ff, 320);
-    if (!this.heroVisual || !this.monsterVisual || !this.textures.exists(this.heroSpriteKeys.projectile)) {
-      this.spawnCombatImpact(target.x, target.y, 0x9ed8ff, 48);
-      onImpact?.();
-      return;
+  private monsterEffectSfxKey(action: 'heal' | 'antiHeal' | 'dodge' | 'stunned'): string {
+    if (action === 'heal') return SFX_KEYS.mistHeal;
+    if (action === 'antiHeal') return MIST_DUST_SFX_KEYS.antiHeal;
+    if (action === 'dodge') return MIST_DUST_SFX_KEYS.dodge;
+    return MIST_DUST_SFX_KEYS.stun;
+  }
+
+  private playHeroAnimation(key: 'attack' | 'hit' | 'death' | 'stunned'): void {
+    const sprite = this.heroSprite;
+    const animationKey = this.heroSpriteKeys[key];
+    if (!sprite || !animationKey || !this.anims.exists(animationKey)) return;
+
+    this.heroTransientAnimation = key;
+    sprite.stop();
+    if (key === 'attack') {
+      sprite.setDisplaySize(this.heroSpriteKeys.displayWidth * 1.21, this.heroSpriteKeys.displayHeight * 1.21);
     }
-    const projectile = this.add
-      .image(start.x, start.y, this.heroSpriteKeys.projectile)
-      .setDisplaySize(58, 58)
-      .setRotation(-0.2)
-      .setBlendMode(Phaser.BlendModes.ADD)
-      .setDepth(13);
-    this.transientEffects.add(projectile);
+    sprite.play(animationKey);
+    this.heroCurrentAnimationKey = animationKey;
+    if (key === 'death') return;
+
+    sprite.once(`animationcomplete-${animationKey}`, () => {
+      if (this.heroSprite !== sprite) return;
+      this.heroTransientAnimation = undefined;
+      this.heroCurrentAnimationKey = undefined;
+      this.playHeroPersistentAnimation(this.heroPersistentStatus);
+    });
+  }
+
+  private spawnHeroSwordProjectile(onImpact?: () => void): void {
+    const start = this.combatPoint('player');
+    const target = this.combatPoint('monster');
+    const launch = { x: start.x + 24, y: start.y - 14 };
+    const impact = { x: target.x - 18, y: target.y - 8 };
+    const angle = Phaser.Math.Angle.Between(launch.x, launch.y, impact.x, impact.y);
+    const duration = this.reducedMotion ? 190 : 340;
+
+    const sword = this.add
+      .container(launch.x, launch.y)
+      .setRotation(angle)
+      .setDepth(16);
+    const glow = this.add.graphics();
+    glow.lineStyle(14, 0x8fdcff, 0.24);
+    glow.beginPath();
+    glow.moveTo(-42, 0);
+    glow.lineTo(28, 0);
+    glow.strokePath();
+    const blade = this.add
+      .polygon(0, 0, [-34, -5, 18, -5, 32, 0, 18, 5, -34, 5], 0xdff8ff, 1)
+      .setStrokeStyle(2, 0xffffff, 1);
+    const guard = this.add
+      .rectangle(-28, 0, 4, 18, 0xffd45e, 1)
+      .setStrokeStyle(1, 0xfff0ad, 1);
+    const handle = this.add.rectangle(-38, 0, 16, 6, 0x6c4334, 1);
+    sword.add([glow, blade, guard, handle]);
+    this.transientEffects.add(sword);
+    this.spawnTravelTrail(launch, impact, 0x9ed8ff, duration);
+
     this.tweens.add({
-      targets: projectile,
-      x: target.x,
-      y: target.y,
-      scale: 0.55,
-      alpha: 0.15,
-      rotation: 0.35,
-      duration: 320,
-      ease: 'Cubic.Out',
+      targets: sword,
+      x: impact.x,
+      y: impact.y,
+      scale: 1.08,
+      duration,
+      ease: 'Cubic.In',
       onComplete: () => {
-        this.destroyTransientEffect(projectile);
-        this.spawnCombatImpact(target.x, target.y, 0x9ed8ff, 48);
+        this.destroyTransientEffect(sword);
         onImpact?.();
       },
     });
@@ -2029,12 +2103,12 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
 
   private spawnMonsterProjectile(onImpact?: () => void, poison = false): void {
     const start = {
-      x: (this.monsterVisual?.x ?? 294) - 22,
-      y: (this.monsterVisual?.y ?? 145) + 6,
+      x: (this.monsterVisual?.x ?? this.monsterPosition.x) - 22,
+      y: (this.monsterVisual?.y ?? this.monsterPosition.y) + 6,
     };
     const target = {
-      x: this.heroVisual?.x ?? 72,
-      y: (this.heroVisual?.y ?? 578) - 40,
+      x: this.heroVisual?.x ?? this.heroPosition.x,
+      y: (this.heroVisual?.y ?? this.heroPosition.y) + this.layout.heroCombatY,
     };
     const color = poison ? 0xd5aaff : this.controller.currentState.monster.id === 'lantern_cat' ? 0xffd45e : 0x8ff3ff;
     const textureKey = !poison && this.controller.currentState.monster.id === 'mist_blob' && this.textures.exists('mist-dust-hit-impact')
@@ -2118,8 +2192,8 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
 
   private combatPoint(target: 'player' | 'monster'): { readonly x: number; readonly y: number } {
     return target === 'monster'
-      ? { x: this.monsterVisual?.x ?? 294, y: (this.monsterVisual?.y ?? 145) + MONSTER_COMBAT_Y_OFFSET }
-      : { x: this.heroVisual?.x ?? 72, y: (this.heroVisual?.y ?? 578) - 40 };
+      ? { x: this.monsterVisual?.x ?? this.monsterPosition.x, y: (this.monsterVisual?.y ?? this.monsterPosition.y) + this.layout.monsterCombatY }
+      : { x: this.heroVisual?.x ?? this.heroPosition.x, y: (this.heroVisual?.y ?? this.heroPosition.y) + this.layout.heroCombatY };
   }
 
   private flashCombatant(target: 'player' | 'monster', color: number): void {
@@ -2156,6 +2230,7 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
 
   private playEnergyGainEffect(target: 'player' | 'monster'): void {
     const { x, y } = this.combatPoint(target);
+    if (target === 'player') this.playHeroStatusSfx('energy');
     this.spawnCombatImpact(x, y, 0xffd45e, target === 'monster' ? 62 : 72);
     this.flashCombatant(target, 0xffd45e);
   }
@@ -2205,154 +2280,17 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
     });
   }
 
-  private playLongMieuLienKichEffect(): void {
-    const start = this.combatPoint('monster');
-    const target = this.combatPoint('player');
-    const angle = Phaser.Math.Angle.Between(start.x, start.y, target.x, target.y);
-    if (this.textures.exists(LANTERN_SKILL_VFX_KEYS.icon)) {
-      const skillIcon = this.add
-        .image(start.x, start.y - 66, LANTERN_SKILL_VFX_KEYS.icon)
-        .setDisplaySize(32, 32)
-        .setBlendMode(Phaser.BlendModes.ADD)
-        .setDepth(17);
-      this.transientEffects.add(skillIcon);
-      this.tweens.add({
-        targets: skillIcon,
-        y: start.y - 84,
-        alpha: 0,
-        scale: 1.25,
-        duration: this.reducedMotion ? 280 : 520,
-        ease: 'Cubic.Out',
-        onComplete: () => this.destroyTransientEffect(skillIcon),
-      });
-    }
-    this.spawnVfxSized(
-      LANTERN_SKILL_VFX_KEYS.castCircle,
-      start.x,
-      start.y,
-      92,
-      138,
-      12,
-    );
-
-    this.scheduleLongMieu(this.reducedMotion ? 90 : 180, () => {
-      if (!this.textures.exists(LANTERN_SKILL_VFX_KEYS.multiStrike)
-        || !this.anims.exists(LANTERN_SKILL_VFX_KEYS.multiStrike)) {
-        this.spawnLongMieuImpact(target.x, target.y);
-        return;
-      }
-      const strike = this.add
-        .sprite(start.x, start.y, LANTERN_SKILL_VFX_KEYS.multiStrike, 0)
-        .setOrigin(0.5)
-        .setDisplaySize(78, 117)
-        .setRotation(angle)
-        .setBlendMode(Phaser.BlendModes.ADD)
-        .setDepth(14)
-        .play(LANTERN_SKILL_VFX_KEYS.multiStrike);
-      this.transientEffects.add(strike);
-      this.playSfx(SFX_KEYS.lanternLongDash, 0.56);
-      this.tweens.add({
-        targets: strike,
-        x: target.x,
-        y: target.y,
-        scale: 1.15,
-        duration: this.reducedMotion ? 300 : 420,
-        ease: 'Cubic.In',
-        onComplete: () => {
-          this.destroyTransientEffect(strike);
-          if (this.reducedMotion) {
-            this.spawnLongMieuImpact(target.x, target.y);
-          } else {
-            this.playLongMieuStrikes(target.x, target.y, angle);
-          }
-        },
-      });
-    });
-  }
-
-  private playLongMieuStrikes(x: number, y: number, angle: number): void {
-    const offsets = [
-      { x: -8, y: -8 },
-      { x: 8, y: 0 },
-      { x: 0, y: 8 },
-    ];
-    offsets.forEach((offset, index) => {
-      this.scheduleLongMieu(index * 150, () => {
-        this.spawnLongMieuStrike(x + offset.x, y + offset.y, angle);
-        this.spawnCombatImpact(x + offset.x, y + offset.y, 0xd5aaff, 38);
-      });
-    });
-    this.scheduleLongMieu(480, () => this.spawnLongMieuImpact(x, y));
-  }
-
-  private spawnLongMieuStrike(x: number, y: number, angle: number): void {
-    if (!this.textures.exists(LANTERN_SKILL_VFX_KEYS.multiStrike)
-      || !this.anims.exists(LANTERN_SKILL_VFX_KEYS.multiStrike)) return;
-    const strike = this.add
-      .sprite(x, y, LANTERN_SKILL_VFX_KEYS.multiStrike, 0)
-      .setOrigin(0.5)
-      .setDisplaySize(58, 87)
-      .setRotation(angle)
-      .setBlendMode(Phaser.BlendModes.ADD)
-      .setDepth(16)
-      .setScale(0.8)
-      .play(LANTERN_SKILL_VFX_KEYS.multiStrike);
-    this.transientEffects.add(strike);
-    this.tweens.add({
-      targets: strike,
-      scale: 1.08,
-      alpha: 0.2,
-      duration: 135,
-      ease: 'Cubic.Out',
-    });
-    this.scheduleLongMieu(150, () => this.destroyTransientEffect(strike));
-  }
-
-  private spawnLongMieuImpact(x: number, y: number): void {
-    this.playSfx(SFX_KEYS.lanternLongImpact, 0.62);
-    this.playSfx(SFX_KEYS.lanternLongStun, 0.58);
-    this.spawnVfxSized(LANTERN_SKILL_VFX_KEYS.impactStun, x, y, 94, 141, 16);
-    this.spawnCombatImpact(x, y, 0xd5aaff, 70);
-    this.flashHero(0xd5aaff);
-    this.playHeroAnimation('hit');
-    this.playerStunIcon
-      ?.setPosition(this.heroVisual?.x ?? 72, (this.heroVisual?.y ?? 578) - 92)
-      .setAlpha(0.95)
-      .setVisible(true);
-    if (!this.reducedMotion) {
-      this.shakeHero();
-      this.shakePlayerBar();
-    }
-  }
-
-  private scheduleLongMieu(delay: number, callback: () => void): void {
-    let timer: Phaser.Time.TimerEvent;
-    timer = this.time.delayedCall(delay, () => {
-      this.longMieuTimers.delete(timer);
-      callback();
-    });
-    this.longMieuTimers.add(timer);
-  }
-
   private playShieldGainEffect(target: 'player' | 'monster' = 'player'): void {
     const { x, y } = this.combatPoint(target);
-    if (target === 'monster') {
-      this.monsterGuardVisual?.setPosition(x, y).setVisible(true).setAlpha(0.72);
-    } else {
-      this.heroShieldVisual?.setPosition(x, y).setVisible(true).setAlpha(0.72);
-    }
+    if (target === 'player') this.playHeroStatusSfx('shield');
+    this.statusUi?.setShieldVisible(target, true);
     this.spawnCombatImpact(x, y, 0x9dceff, 58);
     this.flashCombatant(target, 0x9dceff);
   }
 
   private playShieldBreakEffect(target: 'player' | 'monster' = 'player'): void {
     const { x, y } = this.combatPoint(target);
-    if (target === 'monster') {
-      this.monsterGuardActive = false;
-      this.monsterGuardVisual?.setVisible(false).setAlpha(0);
-    } else {
-      this.heroShieldVisual?.setVisible(false).setAlpha(0);
-    }
+    this.statusUi?.setShieldVisible(target, false);
 
     // The persistent shield is removed first, then a short shatter effect
     // makes it clear that the hit broke the shield rather than dealing HP
@@ -2404,9 +2342,10 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
   }
 
   private playPoisonEffect(): void {
-    const x = this.heroVisual?.x ?? 72;
-    const y = (this.heroVisual?.y ?? 578) - 40;
-    this.heroPoisonVisual?.setPosition(x, y).setVisible(true).setAlpha(0.8);
+    const x = this.heroVisual?.x ?? this.heroPosition.x;
+    const y = (this.heroVisual?.y ?? this.heroPosition.y) + this.layout.heroCombatY;
+    this.playHeroStatusSfx('poisoned');
+    this.statusUi?.setPoisonVisible('player', true);
     this.spawnCombatImpact(x, y, 0xd5aaff, 54);
     this.flashHero(0xd5aaff);
     this.spawnPoisonSmoke(x, y);
@@ -2414,8 +2353,8 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
 
   private playPoisonProjectile(): void {
     const start = {
-      x: BOARD_LEFT + BOARD_WIDTH / 2,
-      y: BOARD_TOP + BOARD_WIDTH / 2,
+      x: this.boardLeft + this.boardWidth / 2,
+      y: this.boardTop + this.boardWidth / 2,
     };
     const target = this.combatPoint('monster');
     const direction = Phaser.Math.Angle.Between(start.x, start.y, target.x, target.y);
@@ -2439,7 +2378,7 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
         this.destroyTransientEffect(projectile);
         this.spawnCombatImpact(target.x, target.y, 0xd5aaff, 58);
         this.flashMonster(0xd5aaff);
-        this.monsterPoisonVisual?.setPosition(target.x, target.y).setVisible(true).setAlpha(0.82);
+        this.statusUi?.setPoisonVisible('monster', true);
         this.floatNumber(`☠ NHIỄM ĐỘC!`, target.x, target.y - 48, '#d5aaff', 700);
         this.spawnPoisonSmoke(target.x, target.y);
       },
@@ -2448,11 +2387,7 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
 
   private playPoisonTickEffect(target: 'player' | 'monster'): void {
     const point = this.combatPoint(target);
-    if (target === 'player') {
-      this.heroPoisonVisual?.setPosition(point.x, point.y).setVisible(true).setAlpha(0.86);
-    } else {
-      this.monsterPoisonVisual?.setPosition(point.x, point.y).setVisible(true).setAlpha(0.86);
-    }
+    this.statusUi?.setPoisonVisible(target, true);
     this.spawnCombatImpact(point.x, point.y, 0xd5aaff, target === 'monster' ? 54 : 48);
     this.flashCombatant(target, 0xd5aaff);
     this.spawnPoisonSmoke(point.x, point.y);
@@ -2479,15 +2414,12 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
   }
 
   private showMonsterGuardEffect(): void {
-    const { x, y } = this.combatPoint('monster');
-    this.monsterGuardActive = true;
+    this.statusUi?.setShieldVisible('monster', true);
     this.playShieldGainEffect('monster');
-    this.monsterGuardVisual?.setPosition(x, y).setVisible(true).setAlpha(0.72);
   }
 
   private hideMonsterGuardEffect(): void {
-    this.monsterGuardActive = false;
-    this.monsterGuardVisual?.setVisible(false).setAlpha(0);
+    this.statusUi?.setShieldVisible('monster', false);
   }
 
   private flashHero(color: number): void {
@@ -2521,6 +2453,15 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
       poison: 'ngọc độc',
     };
     return GEM_TYPES.includes(gem as GemType) ? names[gem as GemType] : gem;
+  }
+
+  private compactBattleText(text: string): string {
+    return text
+      .replaceAll(' chuẩn bị hành động', ' · Chuẩn bị')
+      .replaceAll(' đang chuẩn bị...', ' · Chuẩn bị...')
+      .replaceAll(' chuẩn bị ', ' · ')
+      .replaceAll('ngọc kề bên để đổi', 'ô kề')
+      .replaceAll('hai ngọc kề nhau', '2 ô kề nhau');
   }
 
   private syncTurnTimer(): void {
@@ -2632,8 +2573,8 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
 
   private positionMarker(marker: Phaser.GameObjects.Rectangle | undefined, coord: Coord): void {
     marker?.setPosition(
-      BOARD_LEFT + coord.col * CELL_SIZE + CELL_SIZE / 2,
-      BOARD_TOP + coord.row * CELL_SIZE + CELL_SIZE / 2,
+      this.boardLeft + coord.col * this.cellSize + this.cellSize / 2,
+      this.boardTop + coord.row * this.cellSize + this.cellSize / 2,
     ).setVisible(true);
   }
 
@@ -2661,7 +2602,9 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
     skillReady = this.controller.currentState.player.energy >= DEFAULT_BATTLE_CONFIG.energyCap,
   ): void {
     if (this.skillButton?.input) {
-      this.skillButton.input.enabled = enabled && skillReady;
+      // The icon remains tappable when the skill is not ready so the player
+      // can inspect its tooltip. dispatchSkill still enforces the energy gate.
+      this.skillButton.input.enabled = enabled;
     }
     if (this.abandonButton?.input) {
       this.abandonButton.input.enabled = enabled;
@@ -2677,8 +2620,8 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
   }
 
   private cellFromPoint(x: number, y: number): Coord | undefined {
-    const col = Math.floor((x - BOARD_LEFT) / CELL_SIZE);
-    const row = Math.floor((y - BOARD_TOP) / CELL_SIZE);
+    const col = Math.floor((x - this.boardLeft) / this.cellSize);
+    const row = Math.floor((y - this.boardTop) / this.cellSize);
     if (row < 0 || row >= BOARD_SIZE || col < 0 || col >= BOARD_SIZE) return undefined;
     return { row, col };
   }
@@ -2689,8 +2632,8 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
       this.selectionRing?.setVisible(false);
       return;
     }
-    const x = BOARD_LEFT + this.selectedCell.col * CELL_SIZE + CELL_SIZE / 2;
-    const y = BOARD_TOP + this.selectedCell.row * CELL_SIZE + CELL_SIZE / 2;
+    const x = this.boardLeft + this.selectedCell.col * this.cellSize + this.cellSize / 2;
+    const y = this.boardTop + this.selectedCell.row * this.cellSize + this.cellSize / 2;
     this.selection?.setPosition(x, y).setVisible(!this.selectionRing);
     this.selectionRing?.setPosition(x, y).setVisible(true);
   }
@@ -2709,8 +2652,8 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
       );
       this.spawnVfx(
         key,
-        BOARD_LEFT + (center.col / coords.length + 0.5) * CELL_SIZE,
-        BOARD_TOP + (center.row / coords.length + 0.5) * CELL_SIZE,
+        this.boardLeft + (center.col / coords.length + 0.5) * this.cellSize,
+        this.boardTop + (center.row / coords.length + 0.5) * this.cellSize,
         84,
       );
       return;
@@ -2718,8 +2661,8 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
     for (const coord of coords) {
       this.spawnVfx(
         key,
-        BOARD_LEFT + coord.col * CELL_SIZE + CELL_SIZE / 2,
-        BOARD_TOP + coord.row * CELL_SIZE + CELL_SIZE / 2,
+        this.boardLeft + coord.col * this.cellSize + this.cellSize / 2,
+        this.boardTop + coord.row * this.cellSize + this.cellSize / 2,
         62,
       );
     }
@@ -2734,8 +2677,8 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
 
   private boardPoint(coord: Coord): { readonly x: number; readonly y: number } {
     return {
-      x: BOARD_LEFT + coord.col * CELL_SIZE + CELL_SIZE / 2,
-      y: BOARD_TOP + coord.row * CELL_SIZE + CELL_SIZE / 2,
+      x: this.boardLeft + coord.col * this.cellSize + this.cellSize / 2,
+      y: this.boardTop + coord.row * this.cellSize + this.cellSize / 2,
     };
   }
 
@@ -2798,8 +2741,10 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
     this.controller?.attachEventPlayer(undefined);
     this.stopTurnTimer();
     this.stopMonsterCountdown();
-    for (const timer of this.longMieuTimers) timer.remove(false);
-    this.longMieuTimers.clear();
+    this.statusUi?.destroy();
+    this.statusUi = undefined;
+    this.lanternCatVfx?.cleanup();
+    this.lanternCatVfx = undefined;
     this.hideMonsterMove();
     this.selectionRing?.destroy();
     this.selectionRing = undefined;

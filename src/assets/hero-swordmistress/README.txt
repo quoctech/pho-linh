@@ -1,12 +1,7 @@
-PHO LINH - Hero Swordmistress Sprite Pack
+Pho Linh - Hero Female Clean Status Pack (Full HD WebP + SFX)
 
-Contents: portrait, idle, attack, hit, death
-Each animation folder includes:
-- sheet PNG (4x2 layout)
-- sheet JSON metadata
-- 8 individual frame PNGs
-- phaser-usage-example.ts
-Recommended anchor: (0.5, 0.92)
-Recommended scale in battle scene: 0.45-0.62 depending on UI layout
-Attack frames include the flying-sword magic attack effect.
-Color style: white / blue / cyan, consistent with spirit-fantasy heroine.
+States: idle, high_hp, low_hp, energy, poisoned, stunned, shield, hit, death, dodge.
+Sheet grid: 4x2
+Frame size: 443x443
+Each state includes 8 frames and one WebP sprite sheet.
+Portrait, preview, manifest and Phaser 4 example included.

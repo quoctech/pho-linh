@@ -122,7 +122,7 @@ export interface MonsterDefinition {
   readonly attack: number;
   readonly defense: number;
   readonly behaviorId: 'basic' | 'guard' | 'heavy' | 'boss';
-  readonly behaviors: readonly ('basic' | 'guard' | 'heavy' | 'poison')[];
+  readonly behaviors: readonly ('basic' | 'guard' | 'heavy' | 'energy' | 'poison')[];
   readonly tactics: MonsterTactics;
   readonly unlockRequirement?: { readonly monsterId: string; readonly wins: number };
   readonly expReward: number;
@@ -138,6 +138,8 @@ export interface MonsterTactics {
   readonly heal: number;
   /** Weight for shield gems and future shield actions. */
   readonly shield: number;
+  /** Weight for energy gems when the monster is below its energy cap. */
+  readonly energy: number;
   /** Reserved weight for future poison actions. */
   readonly poison: number;
 }
@@ -149,7 +151,7 @@ export interface MonsterBattleState extends MonsterDefinition {
   readonly shield: number;
   readonly poisonPotency: number;
   readonly poisonTurns: number;
-  readonly nextAction: 'basic' | 'guard' | 'heavy' | 'poison' | 'telegraph' | 'long_mieu_lien_kich';
+  readonly nextAction: 'basic' | 'guard' | 'heavy' | 'energy' | 'poison' | 'telegraph' | 'long_mieu_lien_kich';
   readonly phase: 1 | 2;
   readonly actionCount: number;
 }

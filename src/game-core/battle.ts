@@ -134,12 +134,24 @@ function resolveMonsterMove(
       return result;
     }, {});
     const tactics = workingState.monster.tactics;
+    const isLanternCat = workingState.monster.id === 'lantern_cat';
+    const plannedAction = workingState.monster.nextAction;
+    const lowHp = workingState.monster.currentHp < workingState.monster.maxHp * 0.5;
+    const attackPriority = tactics.attack + (isLanternCat ? 10 : 0);
+    const healPriority = lowHp ? tactics.heal + (isLanternCat ? 10 : 0) : 0;
+    const energyPriority = workingState.monster.energy < config.energyCap
+      ? tactics.energy + (isLanternCat && plannedAction === 'energy' ? 8 : 0)
+      : 0;
+    const poisonPriority = isLanternCat && plannedAction !== 'poison'
+      ? 0
+      : tactics.poison + (isLanternCat ? 10 : 0);
+    const shieldPriority = isLanternCat ? 0 : tactics.shield;
     const priority = matched.length
-      + (counts['attack'] ?? 0) * tactics.attack
-      + (counts['shield'] ?? 0) * tactics.shield
-      + (counts['heal'] ?? 0) * tactics.heal
-      + (counts['poison'] ?? 0) * tactics.poison
-      + (counts['energy'] ?? 0) * tactics.defense;
+      + (counts['attack'] ?? 0) * attackPriority
+      + (counts['shield'] ?? 0) * shieldPriority
+      + (counts['heal'] ?? 0) * healPriority
+      + (counts['poison'] ?? 0) * poisonPriority
+      + (counts['energy'] ?? 0) * energyPriority;
     return { candidate, priority };
   });
   const highestPriority = Math.max(...scoredMoves.map((move) => move.priority));
@@ -713,7 +725,7 @@ function resolveMonsterTurn(
     }));
     sequence += 1;
   } else {
-    attackAction = action;
+    attackAction = action === 'energy' ? undefined : action;
   }
 
   if (attackAction && (attackGemCount > 0 || monster.id === 'mist_blob')) {
@@ -857,6 +869,7 @@ function monsterActionText(action: BattleState['monster']['nextAction']): string
   if (action === 'heavy') return 'đòn nặng';
   if (action === 'guard') return 'phòng thủ';
   if (action === 'poison') return 'gieo độc';
+  if (action === 'energy') return 'tích năng lượng';
   if (action === 'telegraph') return 'báo đòn mạnh';
   if (action === 'long_mieu_lien_kich') return 'Long Miêu Liên Kích';
   return 'đánh thường';
@@ -867,7 +880,7 @@ function chooseMonsterAction(
   phase: 1 | 2,
   actionCount: number,
   energyCap = 100,
-): 'basic' | 'guard' | 'heavy' | 'poison' | 'telegraph' | 'long_mieu_lien_kich' {
+): 'basic' | 'guard' | 'heavy' | 'energy' | 'poison' | 'telegraph' | 'long_mieu_lien_kich' {
   const definition = MONSTER_DEFINITIONS[monster.id];
   if (!definition) return 'basic';
   if (monster.id === 'mist_blob') {
