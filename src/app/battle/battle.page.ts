@@ -211,12 +211,22 @@ export class BattlePage implements AfterViewInit, OnDestroy {
   }
 
   private async setBattleFullscreen(active: boolean): Promise<void> {
+    // Let the battle page paint behind the Android status-bar inset. Without
+    // this, hiding the status bar can leave the old native window background
+    // visible as a grey strip above the Phaser canvas.
     try {
-      if (active) {
-        await StatusBar.hide();
-      } else {
-        await StatusBar.show();
-      }
+      await StatusBar.setOverlaysWebView({ overlay: active });
+    } catch {
+      // The web preview does not expose the native overlay API.
+    }
+    try {
+      await StatusBar.setBackgroundColor({ color: '#171426' });
+    } catch {
+      // StatusBar color is Android-only; CSS still provides the fallback.
+    }
+    try {
+      if (active) await StatusBar.hide();
+      else await StatusBar.show();
     } catch {
       // StatusBar is unavailable in browser preview; battle remains playable.
     }

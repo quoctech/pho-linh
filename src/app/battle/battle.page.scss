@@ -6,6 +6,7 @@
   height: 100dvh;
   overflow: hidden;
   z-index: 0;
+  background: #171426;
 }
 
 ion-content {
@@ -18,11 +19,14 @@ ion-content {
   --offset-bottom: 0px;
   --padding-top: 0px;
   --padding-bottom: 0px;
+  --ion-background-color: #171426;
+  background: #171426;
 }
 
 ion-content::part(scroll) {
   min-height: 100%;
   padding: 0;
+  background: #171426;
 }
 
 .game-host {
@@ -33,6 +37,7 @@ ion-content::part(scroll) {
   min-height: 100dvh;
   overflow: hidden;
   touch-action: none;
+  background: #171426 url('/assets/pk-background-parallax/full-background.webp') center / cover no-repeat;
 }
 
 .game-host canvas {

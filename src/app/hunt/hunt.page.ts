@@ -35,7 +35,10 @@ export class HuntPage implements OnInit {
   isLoading = true;
   readonly monsters: readonly MonsterDefinition[] = Object.values(MONSTER_DEFINITIONS);
   private readonly monsterImages: Readonly<Record<string, string>> = {
-    mist_blob: 'assets/monsters/mist_blob.webp',
+    // Use a native 512px portrait from the normalized combat sheet instead
+    // of the legacy 256px thumbnail, which becomes soft in the full-width
+    // hunt card.
+    mist_blob: 'assets/monsters/mist-dust/mist-dust-portrait.webp',
     lantern_cat: 'assets/monsters/mieu-den/ui/mieu-den-portrait.webp',
   };
   async ngOnInit(): Promise<void> {
