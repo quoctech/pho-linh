@@ -1,6 +1,8 @@
 import { DEFAULT_BATTLE_CONFIG } from './config';
 import { findLegalMoves, findMatches, reshuffleBoard, swapCells } from './board';
 import { createMonsterBattleState, MONSTER_DEFINITIONS } from './monsters/monster-definitions';
+import { chooseLanternCatAction, resolveLanternCatTurn } from './monsters/lantern-cat';
+import { applyMonsterAttackDamage, matchDamageMultiplier } from './monsters/monster-combat';
 import { clampPlayerState, createPlayerBattleState } from './player';
 import { createInitialState, resolveSwap } from './resolve';
 import { nextInt } from './rng';
@@ -89,13 +91,6 @@ function reject(state: BattleState, action: BattleAction, reason: string): Battl
 
 function comboMultiplier(cascade: number, config: BattleConfig): number {
   return config.comboMultipliers[Math.min(cascade - 1, config.comboMultipliers.length - 1)] ?? 1;
-}
-
-function matchDamageMultiplier(matchCount: number): number {
-  if (matchCount >= 6) return 1.6;
-  if (matchCount === 5) return 1.4;
-  if (matchCount === 4) return 1.2;
-  return 1;
 }
 
 function resolveMonsterMove(
@@ -339,23 +334,6 @@ function appendOutcome(
     ...state,
     phase,
     terminalReason: reason,
-  };
-}
-
-function applyMonsterAttackDamage(
-  player: PlayerBattleState,
-  amount: number,
-): { readonly player: PlayerBattleState; readonly absorbed: number } {
-  const incoming = Number.isFinite(amount) ? Math.max(1, amount) : 1;
-  const safePlayer = clampPlayerState(player);
-  const absorbed = Math.min(safePlayer.shield, incoming);
-  return {
-    absorbed,
-    player: clampPlayerState({
-      ...safePlayer,
-      shield: safePlayer.shield - absorbed,
-      currentHp: safePlayer.currentHp - (incoming - absorbed),
-    }),
   };
 }
 
@@ -611,6 +589,31 @@ function resolveMonsterTurn(
     }
   }
 
+  if (monster.id === 'lantern_cat') {
+    const lanternTurn = resolveLanternCatTurn({
+      state: { ...state, player, monster },
+      actionId,
+      startSequence: sequence,
+      attackGemCount,
+      config,
+      createEvent: (eventSequence, type, payload = {}) => event(
+        state,
+        actionId,
+        eventSequence,
+        type,
+        payload,
+      ),
+    });
+    events.push(...lanternTurn.events);
+    return finishMonsterTurn(
+      lanternTurn.state,
+      actionId,
+      lanternTurn.nextSequence,
+      events,
+      config,
+    );
+  }
+
   const action = monster.nextAction;
   const mistMatchedAttack = monster.id === 'mist_blob' && attackGemCount > 0;
   let attackAction: 'basic' | 'heavy' | 'poison' | undefined;
@@ -749,6 +752,7 @@ function resolveMonsterTurn(
       events.push(
         event(state, actionId, sequence, 'POISON_APPLIED', {
           actor: 'monster',
+          actionId: `${actionId}:monster:${monster.actionCount}`,
           amount: applied,
           requested,
           turns: 3,
@@ -759,47 +763,41 @@ function resolveMonsterTurn(
       sequence += 1;
   }
 
-  if (player.currentHp <= 0) {
+  return finishMonsterTurn(
+    { ...state, player, monster },
+    actionId,
+    sequence,
+    events,
+    config,
+  );
+}
+
+function finishMonsterTurn(
+  state: BattleState,
+  actionId: string,
+  sequence: number,
+  events: GameEvent[],
+  config: BattleConfig,
+): { readonly state: BattleState; readonly events: GameEvent[] } {
+  if (state.player.currentHp <= 0) {
     return {
-      state: appendOutcome(
-        { ...state, player, monster },
-        events,
-        actionId,
-        sequence,
-        'DEFEAT',
-        'player_hp_zero',
-      ),
+      state: appendOutcome(state, events, actionId, sequence, 'DEFEAT', 'player_hp_zero'),
       events,
     };
   }
 
   if (state.turn >= config.maxTurns) {
     return {
-      state: appendOutcome(
-        { ...state, player, monster },
-        events,
-        actionId,
-        sequence,
-        'DEFEAT',
-        'turn_limit',
-      ),
+      state: appendOutcome(state, events, actionId, sequence, 'DEFEAT', 'turn_limit'),
       events,
     };
   }
 
-  const nextCount = monster.actionCount + 1;
-  const nextPhase = monster.currentHp <= monster.maxHp * 0.5 ? 2 : 1;
-  const nextAction = chooseMonsterAction(monster, nextPhase, nextCount);
-  const nextActionText = nextAction === 'heavy'
-    ? 'đòn nặng'
-    : nextAction === 'guard'
-      ? 'phòng thủ'
-      : nextAction === 'poison'
-        ? 'gieo độc'
-        : nextAction === 'telegraph'
-          ? 'báo đòn mạnh'
-      : 'đánh thường';
-  monster = { ...monster, actionCount: nextCount, phase: nextPhase, nextAction };
+  const nextCount = state.monster.actionCount + 1;
+  const nextPhase: 1 | 2 = state.monster.currentHp <= state.monster.maxHp * 0.5 ? 2 : 1;
+  const nextAction = chooseMonsterAction(state.monster, nextPhase, nextCount);
+  const nextActionText = monsterActionText(nextAction);
+  const monster = { ...state.monster, actionCount: nextCount, phase: nextPhase, nextAction };
   events.push(
     event(state, actionId, sequence, 'MONSTER_TELEGRAPH', {
       actionId: `${actionId}:telegraph:${nextCount}`,
@@ -811,13 +809,20 @@ function resolveMonsterTurn(
   return {
     state: {
       ...state,
-      player: clampPlayerState(player),
       monster,
       phase: 'PLAYER_READY',
       telegraph: `${monster.name} chuẩn bị ${nextActionText}`,
     },
     events,
   };
+}
+
+function monsterActionText(action: BattleState['monster']['nextAction']): string {
+  if (action === 'heavy') return 'đòn nặng';
+  if (action === 'guard') return 'phòng thủ';
+  if (action === 'poison') return 'gieo độc';
+  if (action === 'telegraph') return 'báo đòn mạnh';
+  return 'đánh thường';
 }
 
 function chooseMonsterAction(
@@ -832,6 +837,7 @@ function chooseMonsterAction(
     // readable normal attack with a poison cast. It has no heavy/guard turn.
     return actionCount % 2 === 1 ? 'poison' : 'basic';
   }
+  if (monster.id === 'lantern_cat') return chooseLanternCatAction(actionCount);
   if (monster.id === 'cloud_fox_boss' && phase === 2) return actionCount % 2 === 0 ? 'heavy' : 'basic';
   if (
     definition.behaviors.includes('poison') &&

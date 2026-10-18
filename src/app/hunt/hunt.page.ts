@@ -36,6 +36,7 @@ export class HuntPage implements OnInit {
   readonly monsters: readonly MonsterDefinition[] = Object.values(MONSTER_DEFINITIONS);
   private readonly monsterImages: Readonly<Record<string, string>> = {
     mist_blob: 'assets/monsters/mist_blob.webp',
+    lantern_cat: 'assets/monsters/mieu-den/ui/mieu-den-portrait.webp',
   };
   async ngOnInit(): Promise<void> {
     try {

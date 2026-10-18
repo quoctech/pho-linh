@@ -2,6 +2,8 @@ export * from './board';
 export * from './battle';
 export * from './config';
 export * from './monsters/monster-definitions';
+export * from './monsters/lantern-cat';
+export * from './monsters/monster-combat';
 export * from './player';
 export * from './resolve';
 export * from './rng';

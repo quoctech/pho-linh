@@ -30,6 +30,19 @@ interface HeroSpriteKeys {
   readonly death: string;
   readonly projectile: string;
 }
+interface MonsterSpriteKeys {
+  readonly idle: string;
+  readonly attack: string;
+  readonly defend?: string;
+  readonly poisonCast?: string;
+  readonly hit: string;
+  readonly death: string;
+  readonly frameWidth: number;
+  readonly frameHeight: number;
+  readonly displayWidth: number;
+  readonly displayHeight: number;
+  readonly originY: number;
+}
 const HERO_SPRITE_KEYS: Record<HeroGender, HeroSpriteKeys> = {
   male: {
     idle: 'hero-swordmaster-idle',
@@ -44,6 +57,32 @@ const HERO_SPRITE_KEYS: Record<HeroGender, HeroSpriteKeys> = {
     hit: 'hero-swordmistress-hit',
     death: 'hero-swordmistress-death',
     projectile: 'hero-swordmistress-projectile',
+  },
+};
+const MONSTER_SPRITE_KEYS: Readonly<Record<string, MonsterSpriteKeys>> = {
+  mist_blob: {
+    idle: 'mist-dust-idle',
+    attack: 'mist-dust-attack',
+    hit: 'mist-dust-hit',
+    death: 'mist-dust-death',
+    frameWidth: 512,
+    frameHeight: 512,
+    displayWidth: 84,
+    displayHeight: 84,
+    originY: 0.88,
+  },
+  lantern_cat: {
+    idle: 'mieu-den-idle',
+    attack: 'mieu-den-attack',
+    defend: 'mieu-den-defend',
+    poisonCast: 'mieu-den-poison-cast',
+    hit: 'mieu-den-hit',
+    death: 'mieu-den-death',
+    frameWidth: 256,
+    frameHeight: 384,
+    displayWidth: 78,
+    displayHeight: 117,
+    originY: 0.65,
   },
 };
 const GEM_ATLAS_KEY = 'pho-linh-gems';
@@ -109,6 +148,7 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
   private monsterBody?: Phaser.GameObjects.Arc;
   private monsterArt?: Phaser.GameObjects.Image | Phaser.GameObjects.Sprite;
   private monsterSprite?: Phaser.GameObjects.Sprite;
+  private lastMonsterActionVisualId?: string;
   private heroVisual?: Phaser.GameObjects.Container;
   private heroSprite?: Phaser.GameObjects.Sprite;
   private heroSpriteKeys: HeroSpriteKeys = HERO_SPRITE_KEYS.male;
@@ -265,28 +305,47 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
     for (const [key, file] of Object.entries(sfxFiles)) {
       this.load.audio(key, `${sfxPath}/${file}`);
     }
-    this.load.image('monster-mist-blob', 'assets/monsters/mist_blob.webp');
     const controller = this.registry.get('battleController') as BattleController | undefined;
-    if (!controller || controller.currentState.monster.id === 'mist_blob') {
-      this.load.spritesheet('mist-dust-idle', 'assets/monsters/mist-dust/mist-dust-idle-sheet.png', {
-        frameWidth: 512,
-        frameHeight: 512,
+    const monsterId = controller?.currentState.monster.id ?? 'mist_blob';
+    const monsterAssets = MONSTER_SPRITE_KEYS[monsterId] ?? MONSTER_SPRITE_KEYS['mist_blob'];
+    if (monsterId === 'mist_blob') {
+      this.load.spritesheet(monsterAssets.idle, 'assets/monsters/mist-dust/mist-dust-idle-sheet.png', {
+        frameWidth: monsterAssets.frameWidth,
+        frameHeight: monsterAssets.frameHeight,
       });
-      this.load.spritesheet('mist-dust-attack', 'assets/monsters/mist-dust/combat/attack/mist-dust-attack-sheet.png', {
-        frameWidth: 512,
-        frameHeight: 512,
+      this.load.spritesheet(monsterAssets.attack, 'assets/monsters/mist-dust/combat/attack/mist-dust-attack-sheet.png', {
+        frameWidth: monsterAssets.frameWidth,
+        frameHeight: monsterAssets.frameHeight,
       });
+      this.load.spritesheet(monsterAssets.hit, 'assets/monsters/mist-dust/combat/hit/mist-dust-hit-sheet.png', {
+        frameWidth: monsterAssets.frameWidth,
+        frameHeight: monsterAssets.frameHeight,
+      });
+      this.load.spritesheet(monsterAssets.death, 'assets/monsters/mist-dust/combat/death/mist-dust-death-sheet.png', {
+        frameWidth: monsterAssets.frameWidth,
+        frameHeight: monsterAssets.frameHeight,
+      });
+    } else if (monsterId === 'lantern_cat') {
+      const base = 'assets/monsters/mieu-den/sheets';
+      for (const key of [
+        monsterAssets.idle,
+        monsterAssets.attack,
+        monsterAssets.defend,
+        monsterAssets.poisonCast,
+        monsterAssets.hit,
+        monsterAssets.death,
+      ]) {
+        if (!key) continue;
+        this.load.spritesheet(key, `${base}/${key}-sheet.webp`, {
+          frameWidth: monsterAssets.frameWidth,
+          frameHeight: monsterAssets.frameHeight,
+        });
+      }
+    }
+    if (monsterId === 'mist_blob') {
       this.load.spritesheet('mist-dust-hit-impact', 'assets/monsters/mist-dust/combat/attack-impact/mist-dust-hit-impact-sheet.png', {
         frameWidth: 384,
         frameHeight: 384,
-      });
-      this.load.spritesheet('mist-dust-hit', 'assets/monsters/mist-dust/combat/hit/mist-dust-hit-sheet.png', {
-        frameWidth: 512,
-        frameHeight: 512,
-      });
-      this.load.spritesheet('mist-dust-death', 'assets/monsters/mist-dust/combat/death/mist-dust-death-sheet.png', {
-        frameWidth: 512,
-        frameHeight: 512,
       });
     }
   }
@@ -563,25 +622,20 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
   private createMonsterVisual(): void {
     const monster = this.add.container(294, 145);
     monster.setDepth(6);
-    if (this.controller.currentState.monster.id === 'mist_blob' && this.textures.exists('mist-dust-idle')) {
-      this.ensureMistDustAnimations();
-      const sprite = this.add.sprite(0, 0, 'mist-dust-idle')
-        .setOrigin(0.5, 0.88)
-        .setDisplaySize(84, 84)
+    const spriteKeys = this.monsterSpriteKeys();
+    if (spriteKeys && this.textures.exists(spriteKeys.idle)) {
+      this.ensureMonsterAnimations(spriteKeys);
+      if (this.controller.currentState.monster.id === 'mist_blob' && this.textures.exists('mist-dust-hit-impact')) {
+        this.createMonsterAnimation('mist-dust-hit-impact', 'mist-dust-hit-impact', 12, 0);
+      }
+      const sprite = this.add.sprite(0, 0, spriteKeys.idle)
+        .setOrigin(0.5, spriteKeys.originY)
+        .setDisplaySize(spriteKeys.displayWidth, spriteKeys.displayHeight)
         .setFlipX(true)
-        .play('mist-dust-idle');
+        .play(spriteKeys.idle);
       this.monsterArt = sprite;
       this.monsterSprite = sprite;
       monster.add(sprite);
-      this.monsterVisual = monster;
-      return;
-    }
-    if (this.controller.currentState.monster.id === 'mist_blob' && this.textures.exists('monster-mist-blob')) {
-      this.monsterArt = this.add.image(0, 0, 'monster-mist-blob')
-        .setOrigin(0.5, 0.88)
-        .setDisplaySize(84, 84)
-        .setFlipX(true);
-      monster.add(this.monsterArt);
       this.monsterVisual = monster;
       return;
     }
@@ -713,12 +767,17 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
     return visual;
   }
 
-  private ensureMistDustAnimations(): void {
-    this.createMonsterAnimation('mist-dust-idle', 'mist-dust-idle', 8, -1);
-    this.createMonsterAnimation('mist-dust-attack', 'mist-dust-attack', 8, 0);
-    this.createMonsterAnimation('mist-dust-hit-impact', 'mist-dust-hit-impact', 12, 0);
-    this.createMonsterAnimation('mist-dust-hit', 'mist-dust-hit', 8, 0);
-    this.createMonsterAnimation('mist-dust-death', 'mist-dust-death', 8, 0);
+  private monsterSpriteKeys(): MonsterSpriteKeys | undefined {
+    return MONSTER_SPRITE_KEYS[this.controller.currentState.monster.id];
+  }
+
+  private ensureMonsterAnimations(keys: MonsterSpriteKeys): void {
+    this.createMonsterAnimation(keys.idle, keys.idle, 7, -1);
+    this.createMonsterAnimation(keys.attack, keys.attack, 12, 0);
+    if (keys.defend) this.createMonsterAnimation(keys.defend, keys.defend, 10, 0);
+    if (keys.poisonCast) this.createMonsterAnimation(keys.poisonCast, keys.poisonCast, 10, 0);
+    this.createMonsterAnimation(keys.hit, keys.hit, 12, 0);
+    this.createMonsterAnimation(keys.death, keys.death, 9, 0);
   }
 
   private getHeroGender(): HeroGender {
@@ -1427,7 +1486,7 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
           this.time.delayedCall(180, () => {
             this.spawnHeroProjectile(() => {
               this.playSfx(SFX_KEYS.mistHit, 0.52);
-              this.playMonsterAnimation('mist-dust-hit');
+              this.playMonsterAnimation('hit');
               this.flashMonster(0xffe7a6);
               this.shakeMonster();
             });
@@ -1522,7 +1581,21 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
           this.displayedPlayerPoisonTurns = turns;
           this.statusLabel?.setText(`NHIỄM ĐỘC! Nhân vật · ${turns} lượt`);
           this.floatNumber(`☠ NHIỄM ĐỘC!`, 80, 104, '#d5aaff', 700);
-          this.playPoisonEffect();
+          const monsterActionId = String(event.payload['actionId'] ?? '');
+          if (event.payload['actor'] === 'monster') {
+            if (monsterActionId !== this.lastMonsterActionVisualId) this.playMonsterAnimation('poisonCast');
+            this.time.delayedCall(260, () => {
+              this.spawnMonsterProjectile(() => {
+                this.playPoisonEffect();
+                this.playHeroAnimation('hit');
+                this.flashHero(0xd5aaff);
+                this.shakeHero();
+                this.shakePlayerBar();
+              }, true);
+            });
+          } else {
+            this.playPoisonEffect();
+          }
           this.refreshDisplayedBars();
         } else {
           const turns = Math.max(0, this.safeNumber(Number(event.payload['turns'] ?? 0)));
@@ -1588,14 +1661,22 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
           hpDamage > 0 ? '#ff9aa4' : '#9dceff',
         );
         if (shieldBroken) this.playShieldBreakEffect();
-        this.playSfx(SFX_KEYS.mistAttack, 0.5);
-        this.playMonsterAnimation('mist-dust-attack');
+        if (this.controller.currentState.monster.id === 'mist_blob') this.playSfx(SFX_KEYS.mistAttack, 0.5);
+        const monsterAction = String(event.payload['action'] ?? 'basic');
+        const isPoisonAction = monsterAction === 'poison';
+        this.lastMonsterActionVisualId = String(event.payload['actionId'] ?? '');
+        this.playMonsterAnimation(isPoisonAction ? 'poisonCast' : 'attack');
         // Let the attack pose read first; the projectile launches from the
         // monster's extended strike instead of appearing at the same moment.
-        this.time.delayedCall(260, () => {
-          this.playSfx(SFX_KEYS.mistProjectile, 0.42);
+        if (!isPoisonAction) this.time.delayedCall(260, () => {
+          if (this.controller.currentState.monster.id === 'mist_blob') {
+            this.playSfx(SFX_KEYS.mistProjectile, 0.42);
+          }
           this.spawnMonsterProjectile(() => {
-            this.playSfx(SFX_KEYS.heroHit, 0.52);
+            if (this.controller.currentState.monster.id === 'mist_blob') {
+              this.playSfx(SFX_KEYS.mistProjectile, 0.42);
+              this.playSfx(SFX_KEYS.heroHit, 0.52);
+            }
             this.playHeroAnimation('hit');
             this.flashHero(0xff7a80);
             this.shakeHero();
@@ -1609,6 +1690,7 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
         this.countdownLabel?.setColor('#f3c64f').setText(shieldGained > 0 ? 'Quái đang tạo khiên...' : 'Quái đang phòng thủ...');
         this.telegraphLabel?.setText(`◈ ${this.monsterActionText('guard')}`);
         this.statusLabel?.setText(shieldGained > 0 ? `Quái tạo khiên ${shieldGained}` : 'Quái tăng phòng thủ trong 1 lượt');
+        this.playMonsterAnimation('defend');
         this.showMonsterGuardEffect();
         this.tweenMonsterTelegraph();
         break;
@@ -1626,7 +1708,7 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
         this.statusLabel?.setText('Chiến thắng!');
         this.setPlayerControlsEnabled(false);
         this.hideMonsterGuardEffect();
-        this.playMonsterAnimation('mist-dust-death');
+        this.playMonsterAnimation('death');
         this.flashMonster(0xffe7a6);
         break;
       case 'BATTLE_LOST':
@@ -1679,19 +1761,28 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
     this.time.delayedCall(180, () => this.monsterBody?.setFillStyle(0x8b9bc7, 1));
   }
 
-  private playMonsterAnimation(key: 'mist-dust-attack' | 'mist-dust-hit' | 'mist-dust-death'): void {
+  private playMonsterAnimation(action: 'attack' | 'defend' | 'poisonCast' | 'hit' | 'death'): void {
     const sprite = this.monsterSprite;
-    if (!sprite || !this.anims.exists(key)) return;
+    const keys = this.monsterSpriteKeys();
+    const animationKey = keys?.[action];
+    if (!sprite || !animationKey || !this.anims.exists(animationKey)) return;
 
     sprite.stop();
-    if (key === 'mist-dust-attack') sprite.setDisplaySize(108, 108);
-    sprite.play(key);
-    if (key === 'mist-dust-death') return;
+    if (action === 'attack') {
+      sprite.setDisplaySize(
+        (keys?.displayWidth ?? 84) * 1.12,
+        (keys?.displayHeight ?? 84) * 1.12,
+      );
+    }
+    sprite.play(animationKey);
+    if (action === 'death') return;
 
-    sprite.once(`animationcomplete-${key}`, () => {
-      if (key === 'mist-dust-attack') sprite.setDisplaySize(84, 84);
-      if (this.monsterSprite === sprite && this.anims.exists('mist-dust-idle')) {
-        sprite.play('mist-dust-idle');
+    sprite.once(`animationcomplete-${animationKey}`, () => {
+      if (action === 'attack') {
+        sprite.setDisplaySize(keys?.displayWidth ?? 84, keys?.displayHeight ?? 84);
+      }
+      if (this.monsterSprite === sprite && keys && this.anims.exists(keys.idle)) {
+        sprite.play(keys.idle);
       }
     });
   }
@@ -1753,7 +1844,7 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
     });
   }
 
-  private spawnMonsterProjectile(onImpact?: () => void): void {
+  private spawnMonsterProjectile(onImpact?: () => void, poison = false): void {
     const start = {
       x: (this.monsterVisual?.x ?? 294) - 22,
       y: (this.monsterVisual?.y ?? 145) + 6,
@@ -1762,34 +1853,37 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
       x: this.heroVisual?.x ?? 72,
       y: (this.heroVisual?.y ?? 578) - 40,
     };
-    const textureKey = 'mist-dust-hit-impact';
-    if (!this.textures.exists(textureKey)) {
-      this.spawnVfx(textureKey, target.x, target.y, 76, 14);
-      onImpact?.();
-      return;
-    }
-
-    this.spawnTravelTrail(start, target, 0x8ff3ff, 420);
-    const projectile = this.add
-      .sprite(start.x, start.y, textureKey, 0)
-      .setOrigin(0.5)
-      .setDisplaySize(62, 62)
-      .setBlendMode(Phaser.BlendModes.ADD)
-      .setDepth(14)
-      .setRotation(Phaser.Math.Angle.Between(start.x, start.y, target.x, target.y));
+    const color = poison ? 0xd5aaff : this.controller.currentState.monster.id === 'lantern_cat' ? 0xffd45e : 0x8ff3ff;
+    const textureKey = !poison && this.controller.currentState.monster.id === 'mist_blob' && this.textures.exists('mist-dust-hit-impact')
+      ? 'mist-dust-hit-impact'
+      : undefined;
+    this.spawnTravelTrail(start, target, color, poison ? 360 : 420);
+    const projectile = textureKey
+      ? this.add
+        .sprite(start.x, start.y, textureKey, 0)
+        .setOrigin(0.5)
+        .setDisplaySize(62, 62)
+        .setBlendMode(Phaser.BlendModes.ADD)
+        .setDepth(14)
+        .setRotation(Phaser.Math.Angle.Between(start.x, start.y, target.x, target.y))
+      : this.add
+        .circle(start.x, start.y, poison ? 7 : 6, color, 0.84)
+        .setStrokeStyle(2, 0xfff0ad, 0.8)
+        .setBlendMode(Phaser.BlendModes.ADD)
+        .setDepth(14);
     this.transientEffects.add(projectile);
     this.tweens.add({
       targets: projectile,
       x: target.x,
       y: target.y,
-      scale: 1.35,
-      rotation: projectile.rotation + Math.PI * 0.7,
-      duration: 420,
+      scale: poison ? 0.7 : 1.35,
+      rotation: textureKey ? projectile.rotation + Math.PI * 0.7 : 0,
+      duration: poison ? 360 : 420,
       ease: 'Cubic.In',
       onComplete: () => {
         this.destroyTransientEffect(projectile);
-        this.spawnVfx(textureKey, target.x, target.y, 76, 14);
-        this.spawnCombatImpact(target.x, target.y, 0x8ff3ff, 56);
+        if (textureKey) this.spawnVfx(textureKey, target.x, target.y, 76, 14);
+        this.spawnCombatImpact(target.x, target.y, color, poison ? 58 : 56);
         onImpact?.();
       },
     });
