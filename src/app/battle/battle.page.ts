@@ -18,6 +18,10 @@ import { BattleController } from './battle.controller';
 import { GameStorage } from '../state/game-storage.service';
 
 const GAME_WIDTH = 360;
+// Use an integer render multiplier. A fractional multiplier (for example 1.25
+// on a DPR 2 screen) forces the browser to resample the canvas and makes the
+// gem textures and HUD look soft.
+const MAX_RENDER_QUALITY = 2;
 
 @Component({
   selector: 'app-battle',
@@ -143,9 +147,10 @@ export class BattlePage implements AfterViewInit, OnDestroy {
       // Keep the battle's 360px logical width so the board stays centered.
       // Extend only the logical height to fill tall phone screens.
       const logicalHeight = Math.max(620, (GAME_WIDTH * viewportHeight) / viewportWidth);
+      const devicePixelRatio = typeof window === 'undefined' ? 1 : window.devicePixelRatio || 1;
       const renderQuality = Math.min(
-        typeof window === 'undefined' ? 1 : window.devicePixelRatio || 1,
-        2,
+        devicePixelRatio >= 1.5 ? 2 : 1,
+        MAX_RENDER_QUALITY,
       );
 
       this.zone.runOutsideAngular(() => {
@@ -156,12 +161,12 @@ export class BattlePage implements AfterViewInit, OnDestroy {
           height: Math.round(logicalHeight * renderQuality),
           backgroundColor: '#171426',
           antialias: true,
-          antialiasGL: true,
+          antialiasGL: false,
           pixelArt: false,
           roundPixels: false,
           render: {
             antialias: true,
-            antialiasGL: true,
+            antialiasGL: false,
             pixelArt: false,
             roundPixels: false,
           },

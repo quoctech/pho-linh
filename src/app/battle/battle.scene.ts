@@ -136,6 +136,7 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
   private energyBar?: Phaser.GameObjects.Graphics;
   private turnLabel?: Phaser.GameObjects.Text;
   private countdownLabel?: Phaser.GameObjects.Text;
+  private fpsDebugLabel?: Phaser.GameObjects.Text;
   private telegraphLabel?: Phaser.GameObjects.Text;
   private statusLabel?: Phaser.GameObjects.Text;
   private skillButton?: Phaser.GameObjects.Rectangle;
@@ -160,6 +161,7 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
   private displayedEnergy?: number;
   private displayedPlayerPoisonPotency?: number;
   private displayedPlayerPoisonTurns?: number;
+  private fpsDebugElapsed = 0;
   private lastBoard?: Board;
   private sfxEnabled = true;
   private renderQuality = 1;
@@ -343,8 +345,9 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
     battleReady?.();
   }
 
-  override update(): void {
+  override update(_time: number, delta: number): void {
     if (!this.controller) return;
+    this.updateFpsDebug(delta);
     // Keep persistent VFX synchronized even while the player is idle. This
     // prevents a tweened shield/aura from remaining visible after its value
     // has already reached zero.
@@ -352,6 +355,17 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
     const monsterShield = this.safeNumber(this.displayedMonsterShield ?? this.controller.currentState.monster.shield);
     this.syncProtectionVisuals(shield > 0, monsterShield > 0);
     this.syncEnergyAura(this.safeNumber(this.displayedEnergy ?? this.controller.currentState.player.energy));
+  }
+
+  private updateFpsDebug(delta: number): void {
+    if (!this.fpsDebugLabel) return;
+    this.fpsDebugElapsed += delta;
+    if (this.fpsDebugElapsed < 250) return;
+    this.fpsDebugElapsed = 0;
+
+    const fps = Math.max(0, Math.round(this.game.loop.actualFps));
+    const color = fps >= 50 ? '#49a8ff' : fps >= 30 ? '#f3c64f' : '#ff5d6c';
+    this.fpsDebugLabel.setText(`FPS ${fps}`).setColor(color);
   }
 
   private createBattleBackground(): void {
@@ -468,6 +482,16 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
   }
 
   private createHud(): void {
+    this.fpsDebugLabel = this.add
+      .text(8, 8, 'FPS --', {
+        color: '#49a8ff',
+        fontFamily: 'sans-serif',
+        fontSize: '10px',
+        fontStyle: 'bold',
+      })
+      .setResolution(this.renderQuality)
+      .setOrigin(0, 0)
+      .setDepth(100);
     this.turnLabel = this.add
       .text(180, 16, 'Lượt 0 / 24', { color: '#fff8e8', fontFamily: 'sans-serif', fontSize: '14px' })
       .setResolution(this.renderQuality)
@@ -849,7 +873,7 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
   }
 
   private spawnGemParticles(x: number, y: number, color: number): void {
-    const particleCount = 6;
+    const particleCount = 4;
     for (let index = 0; index < particleCount; index += 1) {
       const angle = (Math.PI * 2 * index) / particleCount + Phaser.Math.FloatBetween(-0.18, 0.18);
       const distance = Phaser.Math.Between(16, 30);
@@ -1156,7 +1180,7 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
   }
 
   private scheduleLandingImpacts(coords: readonly Coord[]): void {
-    for (const coord of coords.slice(0, 12)) {
+    for (const coord of coords.slice(0, 6)) {
       this.time.delayedCall(GEM_REFILL_DURATION, () => {
         const point = this.boardPoint(coord);
         this.spawnVfx(VFX_SHEET_KEYS.impact, point.x, point.y, 50, 13);
@@ -1167,19 +1191,20 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
   private createGem(x: number, y: number, gem: GemType): Phaser.GameObjects.Container {
     const visual = this.gemVisual(gem);
     const container = this.add.container(x, y);
-    const circle = this.add.circle(0, 0, 19, visual.color, 1);
-    circle.setStrokeStyle(2, 0xfff8e8, 0.55).setAlpha(0.3);
     const atlasFrame = GEM_ATLAS_FRAMES[gem];
     const textureKey = GEM_TEXTURE_KEYS[gem];
     if (atlasFrame !== undefined && this.textures.exists(GEM_ATLAS_KEY)) {
       const icon = this.add.image(0, 0, GEM_ATLAS_KEY, atlasFrame).setDisplaySize(40, 40);
-      container.add([circle, icon]);
+      container.add(icon);
     } else if (textureKey && this.textures.exists(textureKey)) {
       const icon = this.add.image(0, 0, textureKey).setDisplaySize(40, 40);
-      container.add([circle, icon]);
+      container.add(icon);
     } else {
+      const circle = this.add.circle(0, 0, 19, visual.color, 1);
+      circle.setStrokeStyle(2, 0xfff8e8, 0.55).setAlpha(0.3);
       const label = this.add
         .text(0, 1, visual.symbol, { color: '#fff8e8', fontSize: '18px', fontStyle: 'bold' })
+        .setResolution(this.renderQuality)
         .setOrigin(0.5);
       container.add([circle, label]);
     }
@@ -1715,7 +1740,7 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
     color: number,
     duration: number,
   ): void {
-    for (let index = 0; index < 4; index += 1) {
+    for (let index = 0; index < 2; index += 1) {
       const trail = this.add
         .circle(start.x, start.y, index === 0 ? 4 : 3, color, 0.72)
         .setBlendMode(Phaser.BlendModes.ADD)
@@ -1881,7 +1906,7 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
       onComplete: () => this.destroyTransientEffect(ring),
     });
 
-    for (let index = 0; index < 8; index += 1) {
+    for (let index = 0; index < 6; index += 1) {
       const angle = (Math.PI * 2 * index) / 8 + Phaser.Math.FloatBetween(-0.12, 0.12);
       const shard = this.add
         .rectangle(x, y, 3, 12, color, 0.95)
@@ -1917,7 +1942,7 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
     this.heroPoisonVisual?.setPosition(x, y).setVisible(true).setAlpha(0.8);
     this.spawnCombatImpact(x, y, 0xd5aaff, 54);
     this.flashHero(0xd5aaff);
-    for (let index = 0; index < 4; index += 1) {
+    for (let index = 0; index < 2; index += 1) {
       const wisp = this.add
         .circle(x + Phaser.Math.Between(-24, 24), y + Phaser.Math.Between(-18, 24), Phaser.Math.Between(2, 4), 0xd5aaff, 0.76)
         .setBlendMode(Phaser.BlendModes.ADD)
