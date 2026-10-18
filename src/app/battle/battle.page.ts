@@ -181,6 +181,7 @@ export class BattlePage implements AfterViewInit, OnDestroy {
               game.registry.set('battleController', this.controller);
               game.registry.set('heroGender', this.saveSnapshot?.settings.gender ?? 'male');
               game.registry.set('sfxEnabled', this.saveSnapshot?.settings.sfx ?? true);
+              game.registry.set('reducedMotion', this.saveSnapshot?.settings.reducedMotion ?? false);
               game.registry.set('renderQuality', renderQuality);
               game.registry.set('logicalWidth', GAME_WIDTH);
               game.registry.set('logicalHeight', logicalHeight);

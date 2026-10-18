@@ -323,6 +323,23 @@ actual = max(1, skillDamage - floor(monsterDEF × 0.5))
 
 Chỉ có **một tuyệt kỹ** ở M2. M3 thêm tối đa ba kỹ năng có vai trò rõ: tấn công/bảo hộ/giải hiệu ứng.
 
+### 11.9. Tuyệt kỹ riêng của Miêu Đèn
+
+**Tên:** Long Miêu Liên Kích. Khi Miêu Đèn đạt 100 năng lượng từ ngọc vàng hoặc phần thưởng năng lượng, lượt quái kế tiếp tự động dùng skill thay cho hành động thường.
+
+```text
+damage = ceil(playerMaxHp × 0.10)
+energyDrain = ceil(playerEnergy × 0.20)
+playerEnergy = max(0, playerEnergy - energyDrain)
+monsterEnergyAfterSkill = 10
+playerSkipTurns = 1
+```
+
+- Sát thương đi thẳng vào HP nhân vật, không bị khiên hấp thụ.
+- Nhân vật tự động mất đúng một lượt; không swap, dùng skill hoặc timeout trong lượt đó.
+- Sau lượt bị bỏ qua, quái tiếp tục xử lý một lượt và sau đó trả quyền điều khiển cho người chơi.
+- Core phát `MONSTER_SKILL_USED` và `PLAYER_TURN_SKIPPED`; Phaser chỉ trình diễn cast, liên kích, impact và icon choáng.
+
 ## 12. Hành vi quái và tính công bằng
 
 Mỗi quái có `behaviorId` và chuỗi hành vi gồm hành động + telegraph. Không random "ăn gian" theo HP người chơi.
@@ -796,6 +813,8 @@ ENERGY_GAINED
 POISON_APPLIED
 MONSTER_TELEGRAPH
 MONSTER_ATTACKED
+MONSTER_SKILL_USED
+PLAYER_TURN_SKIPPED
 SKILL_USED
 BATTLE_WON
 BATTLE_LOST

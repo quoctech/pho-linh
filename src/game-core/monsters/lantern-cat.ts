@@ -7,7 +7,7 @@ import type {
   MonsterBattleState,
 } from '../types';
 
-export type LanternCatAction = 'basic' | 'guard' | 'poison';
+export type LanternCatAction = 'basic' | 'guard' | 'poison' | 'long_mieu_lien_kich';
 
 export interface LanternCatTurnContext {
   readonly state: BattleState;
@@ -29,7 +29,14 @@ export interface LanternCatTurnResult {
 }
 
 /** Miêu Đèn: đánh thường → phòng thủ → đánh thường → gieo độc. */
-export function chooseLanternCatAction(actionCount: number): LanternCatAction {
+export function chooseLanternCatAction(actionCount: number): LanternCatAction;
+export function chooseLanternCatAction(actionCount: number, energy: number, energyCap: number): LanternCatAction;
+export function chooseLanternCatAction(
+  actionCount: number,
+  energy = 0,
+  energyCap = 100,
+): LanternCatAction {
+  if (energy >= energyCap) return 'long_mieu_lien_kich';
   switch (actionCount % 4) {
     case 1: return 'guard';
     case 3: return 'poison';
@@ -45,9 +52,69 @@ export function resolveLanternCatTurn(context: LanternCatTurnContext): LanternCa
   };
   const events: GameEvent[] = [];
   let sequence = context.startSequence;
-  const action: LanternCatAction = isLanternCatAction(monster.nextAction)
+  let action: LanternCatAction = isLanternCatAction(monster.nextAction)
     ? monster.nextAction
-    : chooseLanternCatAction(monster.actionCount);
+    : chooseLanternCatAction(monster.actionCount, monster.energy, context.config.energyCap);
+  if (action === 'long_mieu_lien_kich' && monster.energy < context.config.energyCap) {
+    action = chooseLanternCatAction(monster.actionCount, monster.energy, context.config.energyCap);
+  }
+
+  if (action === 'long_mieu_lien_kich') {
+    const damage = Math.max(1, Math.ceil(player.stats.maxHp * 0.1));
+    const energyDrained = Math.min(
+      context.config.energyCap,
+      Math.max(0, Math.ceil(player.energy * 0.2)),
+    );
+    const monsterEnergyBefore = monster.energy;
+    const monsterEnergyAfter = Math.min(context.config.energyCap, 10);
+    player = clampPlayerState({
+      ...player,
+      currentHp: player.currentHp - damage,
+      energy: player.energy - energyDrained,
+    });
+    monster = { ...monster, energy: monsterEnergyAfter };
+    events.push(context.createEvent(sequence, 'MONSTER_SKILL_USED', {
+      actor: 'monster',
+      actionId: `${context.actionId}:monster:${monster.actionCount}:long-mieu-lien-kich`,
+      skillId: 'lantern_cat_long_mieu_lien_kich',
+      label: `${monster.name} dùng Long Miêu Liên Kích`,
+      damage,
+      shieldBypassed: true,
+      energyBefore: monsterEnergyBefore,
+      energySpent: Math.max(0, monsterEnergyBefore - monsterEnergyAfter),
+      energyRestored: monsterEnergyAfter,
+      playerEnergyBefore: context.state.player.energy,
+      playerEnergyDrained: energyDrained,
+      playerEnergyAfter: player.energy,
+      stunTurns: 1,
+      target: 'player',
+    }));
+    sequence += 1;
+    events.push(context.createEvent(sequence, 'DAMAGE_APPLIED', {
+      actor: 'monster',
+      source: 'lantern_cat_long_mieu_lien_kich',
+      actionId: `${context.actionId}:monster:${monster.actionCount}:long-mieu-lien-kich`,
+      amount: damage,
+      requested: damage,
+      hpDamage: damage,
+      shieldAbsorbed: 0,
+      shieldRemaining: player.shield,
+      shieldBypassed: true,
+      target: 'player',
+      lethal: player.currentHp <= 0,
+    }));
+    sequence += 1;
+    return {
+      state: {
+        ...context.state,
+        player,
+        playerSkipTurns: 1,
+        monster,
+      },
+      events,
+      nextSequence: sequence,
+    };
+  }
 
   if (action === 'guard') {
     monster = { ...monster, defense: monster.baseDefense + 12 };
@@ -151,5 +218,8 @@ export function resolveLanternCatTurn(context: LanternCatTurnContext): LanternCa
 }
 
 function isLanternCatAction(action: MonsterBattleState['nextAction']): action is LanternCatAction {
-  return action === 'basic' || action === 'guard' || action === 'poison';
+  return action === 'basic'
+    || action === 'guard'
+    || action === 'poison'
+    || action === 'long_mieu_lien_kich';
 }

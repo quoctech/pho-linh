@@ -72,6 +72,7 @@ export function createBattleState(
     maxTurns: config.maxTurns,
     phase: 'PLAYER_READY',
     player: player ?? createPlayerBattleState(),
+    playerSkipTurns: 0,
     monster: createMonsterBattleState(monsterId),
     telegraph: `${createMonsterBattleState(monsterId).name} chuẩn bị hành động`,
     terminalReason: undefined,
@@ -306,9 +307,44 @@ function resolveMonsterSequence(
     move.attackGemCount,
     config,
   );
+  const events = [thinkingEvent, ...move.events, ...gemEffects.events, ...turn.events];
+  if (turn.state.playerSkipTurns > 0 && turn.state.phase === 'PLAYER_READY') {
+    const skipped = resolveSkippedPlayerTurn(turn.state, `${actionId}:skip`, config);
+    return {
+      state: skipped.state,
+      events: [...events, ...skipped.events],
+    };
+  }
   return {
     state: turn.state,
-    events: [thinkingEvent, ...move.events, ...gemEffects.events, ...turn.events],
+    events,
+  };
+}
+
+function resolveSkippedPlayerTurn(
+  state: BattleState,
+  actionId: string,
+  config: BattleConfig,
+): { readonly state: BattleState; readonly events: GameEvent[] } {
+  const events: GameEvent[] = [
+    event(state, actionId, 0, 'PLAYER_TURN_SKIPPED', {
+      actor: 'monster',
+      source: 'lantern_cat_long_mieu_lien_kich',
+      turns: 1,
+      remainingTurns: Math.max(0, state.playerSkipTurns - 1),
+      label: 'Nhân vật bị choáng — mất lượt',
+    }),
+  ];
+  const nextState = {
+    ...state,
+    turn: state.turn + 1,
+    phase: 'MONSTER_TURN' as const,
+    playerSkipTurns: Math.max(0, state.playerSkipTurns - 1),
+  };
+  const nextMonsterTurn = resolveMonsterSequence(nextState, `${actionId}:monster`, 1, config);
+  return {
+    state: nextMonsterTurn.state,
+    events: [...events, ...nextMonsterTurn.events],
   };
 }
 
@@ -614,7 +650,7 @@ function resolveMonsterTurn(
     );
   }
 
-  const action = monster.nextAction;
+  const action = monster.nextAction === 'long_mieu_lien_kich' ? 'basic' : monster.nextAction;
   const mistMatchedAttack = monster.id === 'mist_blob' && attackGemCount > 0;
   let attackAction: 'basic' | 'heavy' | 'poison' | undefined;
   if (action === 'telegraph') {
@@ -795,7 +831,7 @@ function finishMonsterTurn(
 
   const nextCount = state.monster.actionCount + 1;
   const nextPhase: 1 | 2 = state.monster.currentHp <= state.monster.maxHp * 0.5 ? 2 : 1;
-  const nextAction = chooseMonsterAction(state.monster, nextPhase, nextCount);
+  const nextAction = chooseMonsterAction(state.monster, nextPhase, nextCount, config.energyCap);
   const nextActionText = monsterActionText(nextAction);
   const monster = { ...state.monster, actionCount: nextCount, phase: nextPhase, nextAction };
   events.push(
@@ -822,6 +858,7 @@ function monsterActionText(action: BattleState['monster']['nextAction']): string
   if (action === 'guard') return 'phòng thủ';
   if (action === 'poison') return 'gieo độc';
   if (action === 'telegraph') return 'báo đòn mạnh';
+  if (action === 'long_mieu_lien_kich') return 'Long Miêu Liên Kích';
   return 'đánh thường';
 }
 
@@ -829,7 +866,8 @@ function chooseMonsterAction(
   monster: BattleState['monster'],
   phase: 1 | 2,
   actionCount: number,
-): 'basic' | 'guard' | 'heavy' | 'poison' | 'telegraph' {
+  energyCap = 100,
+): 'basic' | 'guard' | 'heavy' | 'poison' | 'telegraph' | 'long_mieu_lien_kich' {
   const definition = MONSTER_DEFINITIONS[monster.id];
   if (!definition) return 'basic';
   if (monster.id === 'mist_blob') {
@@ -837,7 +875,7 @@ function chooseMonsterAction(
     // readable normal attack with a poison cast. It has no heavy/guard turn.
     return actionCount % 2 === 1 ? 'poison' : 'basic';
   }
-  if (monster.id === 'lantern_cat') return chooseLanternCatAction(actionCount);
+  if (monster.id === 'lantern_cat') return chooseLanternCatAction(actionCount, monster.energy, energyCap);
   if (monster.id === 'cloud_fox_boss' && phase === 2) return actionCount % 2 === 0 ? 'heavy' : 'basic';
   if (
     definition.behaviors.includes('poison') &&
@@ -951,8 +989,12 @@ export function resolveBattleAction(
   const monsterEnergy = Number.isFinite(state.monster.energy)
     ? Math.max(0, Math.min(100, state.monster.energy))
     : 0;
+  const playerSkipTurns = Number.isFinite(state.playerSkipTurns)
+    ? Math.max(0, Math.min(1, state.playerSkipTurns))
+    : 0;
   state = {
     ...state,
+    playerSkipTurns,
     monster: { ...state.monster, shield: monsterShield, energy: monsterEnergy },
   };
 

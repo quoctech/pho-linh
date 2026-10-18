@@ -525,10 +525,11 @@ export function resolveAction(
 1. `0 <= currentHp <= maxHp`.
 2. `0 <= shield <= round(maxHp * 0.5)`.
 3. `0 <= energy <= 100`.
-4. `0 <= turn <= maxTurns`, end-state không nhận action mới.
-5. Board sau resolve không có null và có nước đi hợp lệ.
-6. `rewardClaimed` hoặc journal tương đương chỉ chuyển `false → true` đúng một lần.
-7. `unspentPoints >= 0`, `attributes` không âm.
+4. `0 <= playerSkipTurns <= 1`; lượt bị choáng được reducer tự động tiêu thụ.
+5. `0 <= turn <= maxTurns`, end-state không nhận action mới.
+6. Board sau resolve không có null và có nước đi hợp lệ.
+7. `rewardClaimed` hoặc journal tương đương chỉ chuyển `false → true` đúng một lần.
+8. `unspentPoints >= 0`, `attributes` không âm.
 
 ## 9. Battle orchestration và event rendering
 

@@ -149,7 +149,7 @@ export interface MonsterBattleState extends MonsterDefinition {
   readonly shield: number;
   readonly poisonPotency: number;
   readonly poisonTurns: number;
-  readonly nextAction: 'basic' | 'guard' | 'heavy' | 'poison' | 'telegraph';
+  readonly nextAction: 'basic' | 'guard' | 'heavy' | 'poison' | 'telegraph' | 'long_mieu_lien_kich';
   readonly phase: 1 | 2;
   readonly actionCount: number;
 }
@@ -191,6 +191,7 @@ export interface BattleState {
   readonly maxTurns: number;
   readonly phase: BattlePhase;
   readonly player: PlayerBattleState;
+  readonly playerSkipTurns: number;
   readonly monster: MonsterBattleState;
   readonly telegraph: string;
   readonly terminalReason?: string;
@@ -248,6 +249,8 @@ export interface GameEvent {
     | 'MONSTER_TELEGRAPH'
     | 'MONSTER_ATTACKED'
     | 'MONSTER_GUARDED'
+    | 'MONSTER_SKILL_USED'
+    | 'PLAYER_TURN_SKIPPED'
     | 'SKILL_USED'
     | 'TURN_STARTED'
     | 'BATTLE_WON'
