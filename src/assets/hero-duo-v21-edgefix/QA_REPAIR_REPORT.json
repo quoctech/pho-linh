@@ -1,0 +1,1507 @@
+{
+  "summary": {
+    "frameCount": 248,
+    "sheets": 34,
+    "paddingFailures": [],
+    "missingFiles": [],
+    "sourceTilesExamined": 120,
+    "edgeRegionsCleaned": 890,
+    "alphaPixelRegionsRemoved": 295784,
+    "sourceBorderCorrections": 182
+  },
+  "perSourceTile": [
+    {
+      "hero": "male",
+      "clip": "energy",
+      "sourceFrame": 0,
+      "sourceGroup": "status",
+      "removedDisconnectedRegions": 8,
+      "removedVisiblePixels": 127,
+      "sourceEdgesFeathered": [
+        "right",
+        "bottom"
+      ],
+      "retainedRegions": 1
+    },
+    {
+      "hero": "male",
+      "clip": "high_hp",
+      "sourceFrame": 1,
+      "sourceGroup": "status",
+      "removedDisconnectedRegions": 5,
+      "removedVisiblePixels": 4376,
+      "sourceEdgesFeathered": [
+        "right",
+        "bottom"
+      ],
+      "retainedRegions": 1
+    },
+    {
+      "hero": "male",
+      "clip": "low_hp",
+      "sourceFrame": 2,
+      "sourceGroup": "status",
+      "removedDisconnectedRegions": 4,
+      "removedVisiblePixels": 393,
+      "sourceEdgesFeathered": [
+        "left",
+        "right",
+        "bottom"
+      ],
+      "retainedRegions": 1
+    },
+    {
+      "hero": "male",
+      "clip": "heal",
+      "sourceFrame": 3,
+      "sourceGroup": "status",
+      "removedDisconnectedRegions": 3,
+      "removedVisiblePixels": 384,
+      "sourceEdgesFeathered": [
+        "bottom"
+      ],
+      "retainedRegions": 1
+    },
+    {
+      "hero": "male",
+      "clip": "anti_heal",
+      "sourceFrame": 4,
+      "sourceGroup": "status",
+      "removedDisconnectedRegions": 13,
+      "removedVisiblePixels": 1380,
+      "sourceEdgesFeathered": [
+        "right"
+      ],
+      "retainedRegions": 5
+    },
+    {
+      "hero": "male",
+      "clip": "poisoned",
+      "sourceFrame": 5,
+      "sourceGroup": "status",
+      "removedDisconnectedRegions": 9,
+      "removedVisiblePixels": 3262,
+      "sourceEdgesFeathered": [
+        "right"
+      ],
+      "retainedRegions": 1
+    },
+    {
+      "hero": "male",
+      "clip": "stunned",
+      "sourceFrame": 6,
+      "sourceGroup": "status",
+      "removedDisconnectedRegions": 7,
+      "removedVisiblePixels": 2480,
+      "sourceEdgesFeathered": [
+        "right"
+      ],
+      "retainedRegions": 3
+    },
+    {
+      "hero": "male",
+      "clip": "shield",
+      "sourceFrame": 7,
+      "sourceGroup": "status",
+      "removedDisconnectedRegions": 2,
+      "removedVisiblePixels": 378,
+      "sourceEdgesFeathered": [
+        "left"
+      ],
+      "retainedRegions": 1
+    },
+    {
+      "hero": "male",
+      "clip": "hit",
+      "sourceFrame": 0,
+      "sourceGroup": "action",
+      "removedDisconnectedRegions": 5,
+      "removedVisiblePixels": 261,
+      "sourceEdgesFeathered": [
+        "right",
+        "bottom"
+      ],
+      "retainedRegions": 3
+    },
+    {
+      "hero": "male",
+      "clip": "hit",
+      "sourceFrame": 1,
+      "sourceGroup": "action",
+      "removedDisconnectedRegions": 7,
+      "removedVisiblePixels": 5189,
+      "sourceEdgesFeathered": [
+        "right",
+        "bottom"
+      ],
+      "retainedRegions": 3
+    },
+    {
+      "hero": "male",
+      "clip": "hit",
+      "sourceFrame": 2,
+      "sourceGroup": "action",
+      "removedDisconnectedRegions": 7,
+      "removedVisiblePixels": 757,
+      "sourceEdgesFeathered": [
+        "right",
+        "bottom"
+      ],
+      "retainedRegions": 3
+    },
+    {
+      "hero": "male",
+      "clip": "hit",
+      "sourceFrame": 3,
+      "sourceGroup": "action",
+      "removedDisconnectedRegions": 12,
+      "removedVisiblePixels": 1589,
+      "sourceEdgesFeathered": [
+        "bottom"
+      ],
+      "retainedRegions": 2
+    },
+    {
+      "hero": "male",
+      "clip": "dodge",
+      "sourceFrame": 4,
+      "sourceGroup": "action",
+      "removedDisconnectedRegions": 11,
+      "removedVisiblePixels": 3521,
+      "sourceEdgesFeathered": [
+        "right",
+        "bottom"
+      ],
+      "retainedRegions": 3
+    },
+    {
+      "hero": "male",
+      "clip": "dodge",
+      "sourceFrame": 5,
+      "sourceGroup": "action",
+      "removedDisconnectedRegions": 4,
+      "removedVisiblePixels": 7504,
+      "sourceEdgesFeathered": [
+        "left",
+        "right",
+        "bottom"
+      ],
+      "retainedRegions": 1
+    },
+    {
+      "hero": "male",
+      "clip": "dodge",
+      "sourceFrame": 6,
+      "sourceGroup": "action",
+      "removedDisconnectedRegions": 11,
+      "removedVisiblePixels": 4607,
+      "sourceEdgesFeathered": [
+        "left",
+        "right",
+        "bottom"
+      ],
+      "retainedRegions": 2
+    },
+    {
+      "hero": "male",
+      "clip": "dodge",
+      "sourceFrame": 7,
+      "sourceGroup": "action",
+      "removedDisconnectedRegions": 9,
+      "removedVisiblePixels": 6967,
+      "sourceEdgesFeathered": [
+        "bottom"
+      ],
+      "retainedRegions": 3
+    },
+    {
+      "hero": "male",
+      "clip": "death",
+      "sourceFrame": 8,
+      "sourceGroup": "action",
+      "removedDisconnectedRegions": 17,
+      "removedVisiblePixels": 3723,
+      "sourceEdgesFeathered": [
+        "right"
+      ],
+      "retainedRegions": 3
+    },
+    {
+      "hero": "male",
+      "clip": "death",
+      "sourceFrame": 9,
+      "sourceGroup": "action",
+      "removedDisconnectedRegions": 16,
+      "removedVisiblePixels": 3750,
+      "sourceEdgesFeathered": [
+        "left",
+        "right"
+      ],
+      "retainedRegions": 5
+    },
+    {
+      "hero": "male",
+      "clip": "death",
+      "sourceFrame": 10,
+      "sourceGroup": "action",
+      "removedDisconnectedRegions": 9,
+      "removedVisiblePixels": 3647,
+      "sourceEdgesFeathered": [
+        "left",
+        "right"
+      ],
+      "retainedRegions": 8
+    },
+    {
+      "hero": "male",
+      "clip": "death",
+      "sourceFrame": 11,
+      "sourceGroup": "action",
+      "removedDisconnectedRegions": 21,
+      "removedVisiblePixels": 4139,
+      "sourceEdgesFeathered": [
+        "left"
+      ],
+      "retainedRegions": 7
+    },
+    {
+      "hero": "male",
+      "clip": "normal_attack",
+      "sourceFrame": 0,
+      "sourceGroup": "action",
+      "removedDisconnectedRegions": 1,
+      "removedVisiblePixels": 1,
+      "sourceEdgesFeathered": [
+        "right",
+        "bottom"
+      ],
+      "retainedRegions": 1
+    },
+    {
+      "hero": "male",
+      "clip": "normal_attack",
+      "sourceFrame": 1,
+      "sourceGroup": "action",
+      "removedDisconnectedRegions": 2,
+      "removedVisiblePixels": 455,
+      "sourceEdgesFeathered": [
+        "right",
+        "bottom"
+      ],
+      "retainedRegions": 1
+    },
+    {
+      "hero": "male",
+      "clip": "normal_attack",
+      "sourceFrame": 2,
+      "sourceGroup": "action",
+      "removedDisconnectedRegions": 1,
+      "removedVisiblePixels": 1,
+      "sourceEdgesFeathered": [
+        "left",
+        "right",
+        "bottom"
+      ],
+      "retainedRegions": 2
+    },
+    {
+      "hero": "male",
+      "clip": "normal_attack",
+      "sourceFrame": 3,
+      "sourceGroup": "action",
+      "removedDisconnectedRegions": 4,
+      "removedVisiblePixels": 8,
+      "sourceEdgesFeathered": [
+        "left",
+        "bottom"
+      ],
+      "retainedRegions": 2
+    },
+    {
+      "hero": "male",
+      "clip": "normal_attack",
+      "sourceFrame": 8,
+      "sourceGroup": "action",
+      "removedDisconnectedRegions": 1,
+      "removedVisiblePixels": 92,
+      "sourceEdgesFeathered": [
+        "right",
+        "top"
+      ],
+      "retainedRegions": 1
+    },
+    {
+      "hero": "male",
+      "clip": "normal_attack",
+      "sourceFrame": 9,
+      "sourceGroup": "action",
+      "removedDisconnectedRegions": 7,
+      "removedVisiblePixels": 115,
+      "sourceEdgesFeathered": [
+        "left",
+        "right",
+        "top"
+      ],
+      "retainedRegions": 1
+    },
+    {
+      "hero": "male",
+      "clip": "normal_attack",
+      "sourceFrame": 10,
+      "sourceGroup": "action",
+      "removedDisconnectedRegions": 5,
+      "removedVisiblePixels": 2272,
+      "sourceEdgesFeathered": [
+        "right",
+        "top"
+      ],
+      "retainedRegions": 1
+    },
+    {
+      "hero": "male",
+      "clip": "normal_attack",
+      "sourceFrame": 11,
+      "sourceGroup": "action",
+      "removedDisconnectedRegions": 1,
+      "removedVisiblePixels": 746,
+      "sourceEdgesFeathered": [
+        "left",
+        "top"
+      ],
+      "retainedRegions": 2
+    },
+    {
+      "hero": "male",
+      "clip": "normal_attack_fx",
+      "sourceFrame": 4,
+      "sourceGroup": "fx",
+      "removedDisconnectedRegions": 10,
+      "removedVisiblePixels": 9006,
+      "sourceEdgesFeathered": [
+        "right"
+      ],
+      "retainedRegions": 2
+    },
+    {
+      "hero": "male",
+      "clip": "normal_attack_fx",
+      "sourceFrame": 5,
+      "sourceGroup": "fx",
+      "removedDisconnectedRegions": 11,
+      "removedVisiblePixels": 6313,
+      "sourceEdgesFeathered": [
+        "right"
+      ],
+      "retainedRegions": 1
+    },
+    {
+      "hero": "male",
+      "clip": "normal_attack_fx",
+      "sourceFrame": 6,
+      "sourceGroup": "fx",
+      "removedDisconnectedRegions": 7,
+      "removedVisiblePixels": 5845,
+      "sourceEdgesFeathered": [
+        "left",
+        "right"
+      ],
+      "retainedRegions": 1
+    },
+    {
+      "hero": "male",
+      "clip": "normal_attack_fx",
+      "sourceFrame": 7,
+      "sourceGroup": "fx",
+      "removedDisconnectedRegions": 5,
+      "removedVisiblePixels": 9464,
+      "sourceEdgesFeathered": [],
+      "retainedRegions": 3
+    },
+    {
+      "hero": "male",
+      "clip": "cast",
+      "sourceFrame": 0,
+      "sourceGroup": "action",
+      "removedDisconnectedRegions": 4,
+      "removedVisiblePixels": 6,
+      "sourceEdgesFeathered": [
+        "left",
+        "right",
+        "bottom"
+      ],
+      "retainedRegions": 1
+    },
+    {
+      "hero": "male",
+      "clip": "cast",
+      "sourceFrame": 1,
+      "sourceGroup": "action",
+      "removedDisconnectedRegions": 7,
+      "removedVisiblePixels": 1054,
+      "sourceEdgesFeathered": [
+        "right",
+        "bottom"
+      ],
+      "retainedRegions": 1
+    },
+    {
+      "hero": "male",
+      "clip": "cast",
+      "sourceFrame": 2,
+      "sourceGroup": "action",
+      "removedDisconnectedRegions": 2,
+      "removedVisiblePixels": 477,
+      "sourceEdgesFeathered": [
+        "left",
+        "right",
+        "bottom"
+      ],
+      "retainedRegions": 1
+    },
+    {
+      "hero": "male",
+      "clip": "cast",
+      "sourceFrame": 3,
+      "sourceGroup": "action",
+      "removedDisconnectedRegions": 4,
+      "removedVisiblePixels": 1679,
+      "sourceEdgesFeathered": [
+        "top",
+        "bottom"
+      ],
+      "retainedRegions": 1
+    },
+    {
+      "hero": "male",
+      "clip": "cast",
+      "sourceFrame": 4,
+      "sourceGroup": "action",
+      "removedDisconnectedRegions": 3,
+      "removedVisiblePixels": 473,
+      "sourceEdgesFeathered": [
+        "right"
+      ],
+      "retainedRegions": 1
+    },
+    {
+      "hero": "male",
+      "clip": "cast",
+      "sourceFrame": 5,
+      "sourceGroup": "action",
+      "removedDisconnectedRegions": 10,
+      "removedVisiblePixels": 3148,
+      "sourceEdgesFeathered": [],
+      "retainedRegions": 1
+    },
+    {
+      "hero": "male",
+      "clip": "cast",
+      "sourceFrame": 6,
+      "sourceGroup": "action",
+      "removedDisconnectedRegions": 6,
+      "removedVisiblePixels": 4864,
+      "sourceEdgesFeathered": [
+        "left",
+        "right"
+      ],
+      "retainedRegions": 1
+    },
+    {
+      "hero": "male",
+      "clip": "cast",
+      "sourceFrame": 7,
+      "sourceGroup": "action",
+      "removedDisconnectedRegions": 6,
+      "removedVisiblePixels": 2050,
+      "sourceEdgesFeathered": [
+        "left"
+      ],
+      "retainedRegions": 1
+    },
+    {
+      "hero": "male",
+      "clip": "cast",
+      "sourceFrame": 8,
+      "sourceGroup": "action",
+      "removedDisconnectedRegions": 6,
+      "removedVisiblePixels": 565,
+      "sourceEdgesFeathered": [
+        "right"
+      ],
+      "retainedRegions": 1
+    },
+    {
+      "hero": "male",
+      "clip": "cast",
+      "sourceFrame": 9,
+      "sourceGroup": "action",
+      "removedDisconnectedRegions": 5,
+      "removedVisiblePixels": 66,
+      "sourceEdgesFeathered": [
+        "left",
+        "right",
+        "top"
+      ],
+      "retainedRegions": 1
+    },
+    {
+      "hero": "male",
+      "clip": "cast",
+      "sourceFrame": 10,
+      "sourceGroup": "action",
+      "removedDisconnectedRegions": 14,
+      "removedVisiblePixels": 9366,
+      "sourceEdgesFeathered": [
+        "right",
+        "top"
+      ],
+      "retainedRegions": 2
+    },
+    {
+      "hero": "male",
+      "clip": "cast",
+      "sourceFrame": 11,
+      "sourceGroup": "action",
+      "removedDisconnectedRegions": 5,
+      "removedVisiblePixels": 2002,
+      "sourceEdgesFeathered": [
+        "left",
+        "top"
+      ],
+      "retainedRegions": 1
+    },
+    {
+      "hero": "male",
+      "clip": "attack_projectile",
+      "sourceFrame": 0,
+      "sourceGroup": "fx",
+      "removedDisconnectedRegions": 2,
+      "removedVisiblePixels": 1138,
+      "sourceEdgesFeathered": [],
+      "retainedRegions": 4
+    },
+    {
+      "hero": "male",
+      "clip": "attack_projectile",
+      "sourceFrame": 1,
+      "sourceGroup": "fx",
+      "removedDisconnectedRegions": 1,
+      "removedVisiblePixels": 1033,
+      "sourceEdgesFeathered": [
+        "left",
+        "right"
+      ],
+      "retainedRegions": 4
+    },
+    {
+      "hero": "male",
+      "clip": "attack_projectile",
+      "sourceFrame": 2,
+      "sourceGroup": "fx",
+      "removedDisconnectedRegions": 6,
+      "removedVisiblePixels": 1020,
+      "sourceEdgesFeathered": [
+        "left"
+      ],
+      "retainedRegions": 9
+    },
+    {
+      "hero": "male",
+      "clip": "attack_projectile",
+      "sourceFrame": 3,
+      "sourceGroup": "fx",
+      "removedDisconnectedRegions": 1,
+      "removedVisiblePixels": 10,
+      "sourceEdgesFeathered": [
+        "left"
+      ],
+      "retainedRegions": 2
+    },
+    {
+      "hero": "male",
+      "clip": "attack_projectile",
+      "sourceFrame": 4,
+      "sourceGroup": "fx",
+      "removedDisconnectedRegions": 3,
+      "removedVisiblePixels": 232,
+      "sourceEdgesFeathered": [
+        "right"
+      ],
+      "retainedRegions": 2
+    },
+    {
+      "hero": "male",
+      "clip": "attack_projectile",
+      "sourceFrame": 5,
+      "sourceGroup": "fx",
+      "removedDisconnectedRegions": 5,
+      "removedVisiblePixels": 2655,
+      "sourceEdgesFeathered": [
+        "right"
+      ],
+      "retainedRegions": 5
+    },
+    {
+      "hero": "male",
+      "clip": "attack_projectile",
+      "sourceFrame": 6,
+      "sourceGroup": "fx",
+      "removedDisconnectedRegions": 3,
+      "removedVisiblePixels": 2354,
+      "sourceEdgesFeathered": [
+        "right"
+      ],
+      "retainedRegions": 5
+    },
+    {
+      "hero": "male",
+      "clip": "attack_projectile",
+      "sourceFrame": 7,
+      "sourceGroup": "fx",
+      "removedDisconnectedRegions": 4,
+      "removedVisiblePixels": 976,
+      "sourceEdgesFeathered": [],
+      "retainedRegions": 12
+    },
+    {
+      "hero": "male",
+      "clip": "cast_impact",
+      "sourceFrame": 0,
+      "sourceGroup": "fx",
+      "removedDisconnectedRegions": 1,
+      "removedVisiblePixels": 1,
+      "sourceEdgesFeathered": [
+        "bottom"
+      ],
+      "retainedRegions": 1
+    },
+    {
+      "hero": "male",
+      "clip": "cast_impact",
+      "sourceFrame": 1,
+      "sourceGroup": "fx",
+      "removedDisconnectedRegions": 1,
+      "removedVisiblePixels": 1,
+      "sourceEdgesFeathered": [
+        "bottom"
+      ],
+      "retainedRegions": 1
+    },
+    {
+      "hero": "male",
+      "clip": "cast_impact",
+      "sourceFrame": 2,
+      "sourceGroup": "fx",
+      "removedDisconnectedRegions": 4,
+      "removedVisiblePixels": 117,
+      "sourceEdgesFeathered": [
+        "top",
+        "bottom"
+      ],
+      "retainedRegions": 2
+    },
+    {
+      "hero": "male",
+      "clip": "cast_impact",
+      "sourceFrame": 3,
+      "sourceGroup": "fx",
+      "removedDisconnectedRegions": 7,
+      "removedVisiblePixels": 1397,
+      "sourceEdgesFeathered": [
+        "left"
+      ],
+      "retainedRegions": 4
+    },
+    {
+      "hero": "male",
+      "clip": "cast_impact",
+      "sourceFrame": 4,
+      "sourceGroup": "fx",
+      "removedDisconnectedRegions": 3,
+      "removedVisiblePixels": 878,
+      "sourceEdgesFeathered": [
+        "right"
+      ],
+      "retainedRegions": 6
+    },
+    {
+      "hero": "male",
+      "clip": "cast_impact",
+      "sourceFrame": 5,
+      "sourceGroup": "fx",
+      "removedDisconnectedRegions": 10,
+      "removedVisiblePixels": 1561,
+      "sourceEdgesFeathered": [
+        "left",
+        "right"
+      ],
+      "retainedRegions": 4
+    },
+    {
+      "hero": "male",
+      "clip": "cast_impact",
+      "sourceFrame": 6,
+      "sourceGroup": "fx",
+      "removedDisconnectedRegions": 8,
+      "removedVisiblePixels": 13306,
+      "sourceEdgesFeathered": [
+        "right"
+      ],
+      "retainedRegions": 6
+    },
+    {
+      "hero": "male",
+      "clip": "cast_impact",
+      "sourceFrame": 7,
+      "sourceGroup": "fx",
+      "removedDisconnectedRegions": 4,
+      "removedVisiblePixels": 790,
+      "sourceEdgesFeathered": [],
+      "retainedRegions": 4
+    },
+    {
+      "hero": "female",
+      "clip": "energy",
+      "sourceFrame": 0,
+      "sourceGroup": "status",
+      "removedDisconnectedRegions": 3,
+      "removedVisiblePixels": 3,
+      "sourceEdgesFeathered": [
+        "right",
+        "bottom"
+      ],
+      "retainedRegions": 1
+    },
+    {
+      "hero": "female",
+      "clip": "high_hp",
+      "sourceFrame": 1,
+      "sourceGroup": "status",
+      "removedDisconnectedRegions": 8,
+      "removedVisiblePixels": 19427,
+      "sourceEdgesFeathered": [
+        "right",
+        "bottom"
+      ],
+      "retainedRegions": 2
+    },
+    {
+      "hero": "female",
+      "clip": "low_hp",
+      "sourceFrame": 2,
+      "sourceGroup": "status",
+      "removedDisconnectedRegions": 8,
+      "removedVisiblePixels": 1997,
+      "sourceEdgesFeathered": [
+        "bottom"
+      ],
+      "retainedRegions": 1
+    },
+    {
+      "hero": "female",
+      "clip": "heal",
+      "sourceFrame": 3,
+      "sourceGroup": "status",
+      "removedDisconnectedRegions": 6,
+      "removedVisiblePixels": 401,
+      "sourceEdgesFeathered": [
+        "left",
+        "bottom"
+      ],
+      "retainedRegions": 2
+    },
+    {
+      "hero": "female",
+      "clip": "anti_heal",
+      "sourceFrame": 4,
+      "sourceGroup": "status",
+      "removedDisconnectedRegions": 12,
+      "removedVisiblePixels": 1421,
+      "sourceEdgesFeathered": [
+        "right",
+        "top"
+      ],
+      "retainedRegions": 1
+    },
+    {
+      "hero": "female",
+      "clip": "poisoned",
+      "sourceFrame": 5,
+      "sourceGroup": "status",
+      "removedDisconnectedRegions": 20,
+      "removedVisiblePixels": 13408,
+      "sourceEdgesFeathered": [
+        "right"
+      ],
+      "retainedRegions": 2
+    },
+    {
+      "hero": "female",
+      "clip": "stunned",
+      "sourceFrame": 6,
+      "sourceGroup": "status",
+      "removedDisconnectedRegions": 12,
+      "removedVisiblePixels": 5565,
+      "sourceEdgesFeathered": [
+        "left"
+      ],
+      "retainedRegions": 3
+    },
+    {
+      "hero": "female",
+      "clip": "shield",
+      "sourceFrame": 7,
+      "sourceGroup": "status",
+      "removedDisconnectedRegions": 6,
+      "removedVisiblePixels": 1267,
+      "sourceEdgesFeathered": [
+        "left"
+      ],
+      "retainedRegions": 2
+    },
+    {
+      "hero": "female",
+      "clip": "hit",
+      "sourceFrame": 0,
+      "sourceGroup": "action",
+      "removedDisconnectedRegions": 31,
+      "removedVisiblePixels": 399,
+      "sourceEdgesFeathered": [
+        "right",
+        "bottom"
+      ],
+      "retainedRegions": 1
+    },
+    {
+      "hero": "female",
+      "clip": "hit",
+      "sourceFrame": 1,
+      "sourceGroup": "action",
+      "removedDisconnectedRegions": 24,
+      "removedVisiblePixels": 412,
+      "sourceEdgesFeathered": [
+        "right",
+        "bottom"
+      ],
+      "retainedRegions": 1
+    },
+    {
+      "hero": "female",
+      "clip": "hit",
+      "sourceFrame": 2,
+      "sourceGroup": "action",
+      "removedDisconnectedRegions": 13,
+      "removedVisiblePixels": 2378,
+      "sourceEdgesFeathered": [
+        "right",
+        "bottom"
+      ],
+      "retainedRegions": 1
+    },
+    {
+      "hero": "female",
+      "clip": "hit",
+      "sourceFrame": 3,
+      "sourceGroup": "action",
+      "removedDisconnectedRegions": 15,
+      "removedVisiblePixels": 832,
+      "sourceEdgesFeathered": [
+        "bottom"
+      ],
+      "retainedRegions": 1
+    },
+    {
+      "hero": "female",
+      "clip": "dodge",
+      "sourceFrame": 4,
+      "sourceGroup": "action",
+      "removedDisconnectedRegions": 17,
+      "removedVisiblePixels": 4750,
+      "sourceEdgesFeathered": [
+        "right",
+        "bottom"
+      ],
+      "retainedRegions": 1
+    },
+    {
+      "hero": "female",
+      "clip": "dodge",
+      "sourceFrame": 5,
+      "sourceGroup": "action",
+      "removedDisconnectedRegions": 17,
+      "removedVisiblePixels": 5299,
+      "sourceEdgesFeathered": [
+        "right",
+        "bottom"
+      ],
+      "retainedRegions": 1
+    },
+    {
+      "hero": "female",
+      "clip": "dodge",
+      "sourceFrame": 6,
+      "sourceGroup": "action",
+      "removedDisconnectedRegions": 18,
+      "removedVisiblePixels": 6998,
+      "sourceEdgesFeathered": [
+        "right",
+        "bottom"
+      ],
+      "retainedRegions": 1
+    },
+    {
+      "hero": "female",
+      "clip": "dodge",
+      "sourceFrame": 7,
+      "sourceGroup": "action",
+      "removedDisconnectedRegions": 14,
+      "removedVisiblePixels": 7240,
+      "sourceEdgesFeathered": [
+        "bottom"
+      ],
+      "retainedRegions": 2
+    },
+    {
+      "hero": "female",
+      "clip": "death",
+      "sourceFrame": 8,
+      "sourceGroup": "action",
+      "removedDisconnectedRegions": 17,
+      "removedVisiblePixels": 617,
+      "sourceEdgesFeathered": [
+        "right",
+        "bottom"
+      ],
+      "retainedRegions": 3
+    },
+    {
+      "hero": "female",
+      "clip": "death",
+      "sourceFrame": 9,
+      "sourceGroup": "action",
+      "removedDisconnectedRegions": 7,
+      "removedVisiblePixels": 1363,
+      "sourceEdgesFeathered": [
+        "right"
+      ],
+      "retainedRegions": 1
+    },
+    {
+      "hero": "female",
+      "clip": "death",
+      "sourceFrame": 10,
+      "sourceGroup": "action",
+      "removedDisconnectedRegions": 11,
+      "removedVisiblePixels": 5110,
+      "sourceEdgesFeathered": [
+        "left"
+      ],
+      "retainedRegions": 4
+    },
+    {
+      "hero": "female",
+      "clip": "death",
+      "sourceFrame": 11,
+      "sourceGroup": "action",
+      "removedDisconnectedRegions": 9,
+      "removedVisiblePixels": 1224,
+      "sourceEdgesFeathered": [
+        "left"
+      ],
+      "retainedRegions": 4
+    },
+    {
+      "hero": "female",
+      "clip": "normal_attack",
+      "sourceFrame": 0,
+      "sourceGroup": "action",
+      "removedDisconnectedRegions": 1,
+      "removedVisiblePixels": 1,
+      "sourceEdgesFeathered": [
+        "right",
+        "bottom"
+      ],
+      "retainedRegions": 1
+    },
+    {
+      "hero": "female",
+      "clip": "normal_attack",
+      "sourceFrame": 1,
+      "sourceGroup": "action",
+      "removedDisconnectedRegions": 7,
+      "removedVisiblePixels": 2031,
+      "sourceEdgesFeathered": [
+        "right",
+        "bottom"
+      ],
+      "retainedRegions": 1
+    },
+    {
+      "hero": "female",
+      "clip": "normal_attack",
+      "sourceFrame": 2,
+      "sourceGroup": "action",
+      "removedDisconnectedRegions": 4,
+      "removedVisiblePixels": 5700,
+      "sourceEdgesFeathered": [
+        "right",
+        "bottom"
+      ],
+      "retainedRegions": 1
+    },
+    {
+      "hero": "female",
+      "clip": "normal_attack",
+      "sourceFrame": 3,
+      "sourceGroup": "action",
+      "removedDisconnectedRegions": 1,
+      "removedVisiblePixels": 7512,
+      "sourceEdgesFeathered": [
+        "bottom"
+      ],
+      "retainedRegions": 1
+    },
+    {
+      "hero": "female",
+      "clip": "normal_attack",
+      "sourceFrame": 8,
+      "sourceGroup": "action",
+      "removedDisconnectedRegions": 4,
+      "removedVisiblePixels": 336,
+      "sourceEdgesFeathered": [
+        "right"
+      ],
+      "retainedRegions": 1
+    },
+    {
+      "hero": "female",
+      "clip": "normal_attack",
+      "sourceFrame": 9,
+      "sourceGroup": "action",
+      "removedDisconnectedRegions": 6,
+      "removedVisiblePixels": 883,
+      "sourceEdgesFeathered": [
+        "left",
+        "right"
+      ],
+      "retainedRegions": 2
+    },
+    {
+      "hero": "female",
+      "clip": "normal_attack",
+      "sourceFrame": 10,
+      "sourceGroup": "action",
+      "removedDisconnectedRegions": 19,
+      "removedVisiblePixels": 1899,
+      "sourceEdgesFeathered": [
+        "right"
+      ],
+      "retainedRegions": 5
+    },
+    {
+      "hero": "female",
+      "clip": "normal_attack",
+      "sourceFrame": 11,
+      "sourceGroup": "action",
+      "removedDisconnectedRegions": 7,
+      "removedVisiblePixels": 346,
+      "sourceEdgesFeathered": [
+        "left",
+        "top"
+      ],
+      "retainedRegions": 2
+    },
+    {
+      "hero": "female",
+      "clip": "normal_attack_fx",
+      "sourceFrame": 4,
+      "sourceGroup": "fx",
+      "removedDisconnectedRegions": 16,
+      "removedVisiblePixels": 1984,
+      "sourceEdgesFeathered": [
+        "right"
+      ],
+      "retainedRegions": 10
+    },
+    {
+      "hero": "female",
+      "clip": "normal_attack_fx",
+      "sourceFrame": 5,
+      "sourceGroup": "fx",
+      "removedDisconnectedRegions": 14,
+      "removedVisiblePixels": 992,
+      "sourceEdgesFeathered": [
+        "left",
+        "right"
+      ],
+      "retainedRegions": 8
+    },
+    {
+      "hero": "female",
+      "clip": "normal_attack_fx",
+      "sourceFrame": 6,
+      "sourceGroup": "fx",
+      "removedDisconnectedRegions": 19,
+      "removedVisiblePixels": 2506,
+      "sourceEdgesFeathered": [
+        "left",
+        "right"
+      ],
+      "retainedRegions": 4
+    },
+    {
+      "hero": "female",
+      "clip": "normal_attack_fx",
+      "sourceFrame": 7,
+      "sourceGroup": "fx",
+      "removedDisconnectedRegions": 14,
+      "removedVisiblePixels": 3282,
+      "sourceEdgesFeathered": [],
+      "retainedRegions": 11
+    },
+    {
+      "hero": "female",
+      "clip": "cast",
+      "sourceFrame": 0,
+      "sourceGroup": "action",
+      "removedDisconnectedRegions": 3,
+      "removedVisiblePixels": 5,
+      "sourceEdgesFeathered": [
+        "right",
+        "bottom"
+      ],
+      "retainedRegions": 1
+    },
+    {
+      "hero": "female",
+      "clip": "cast",
+      "sourceFrame": 1,
+      "sourceGroup": "action",
+      "removedDisconnectedRegions": 9,
+      "removedVisiblePixels": 893,
+      "sourceEdgesFeathered": [
+        "right",
+        "top",
+        "bottom"
+      ],
+      "retainedRegions": 1
+    },
+    {
+      "hero": "female",
+      "clip": "cast",
+      "sourceFrame": 2,
+      "sourceGroup": "action",
+      "removedDisconnectedRegions": 7,
+      "removedVisiblePixels": 3070,
+      "sourceEdgesFeathered": [
+        "left",
+        "top",
+        "bottom"
+      ],
+      "retainedRegions": 1
+    },
+    {
+      "hero": "female",
+      "clip": "cast",
+      "sourceFrame": 3,
+      "sourceGroup": "action",
+      "removedDisconnectedRegions": 3,
+      "removedVisiblePixels": 6,
+      "sourceEdgesFeathered": [
+        "left",
+        "bottom"
+      ],
+      "retainedRegions": 1
+    },
+    {
+      "hero": "female",
+      "clip": "cast",
+      "sourceFrame": 4,
+      "sourceGroup": "action",
+      "removedDisconnectedRegions": 5,
+      "removedVisiblePixels": 347,
+      "sourceEdgesFeathered": [
+        "right"
+      ],
+      "retainedRegions": 1
+    },
+    {
+      "hero": "female",
+      "clip": "cast",
+      "sourceFrame": 5,
+      "sourceGroup": "action",
+      "removedDisconnectedRegions": 9,
+      "removedVisiblePixels": 7299,
+      "sourceEdgesFeathered": [
+        "right"
+      ],
+      "retainedRegions": 1
+    },
+    {
+      "hero": "female",
+      "clip": "cast",
+      "sourceFrame": 6,
+      "sourceGroup": "action",
+      "removedDisconnectedRegions": 4,
+      "removedVisiblePixels": 565,
+      "sourceEdgesFeathered": [
+        "left",
+        "right"
+      ],
+      "retainedRegions": 2
+    },
+    {
+      "hero": "female",
+      "clip": "cast",
+      "sourceFrame": 7,
+      "sourceGroup": "action",
+      "removedDisconnectedRegions": 6,
+      "removedVisiblePixels": 35,
+      "sourceEdgesFeathered": [
+        "left"
+      ],
+      "retainedRegions": 1
+    },
+    {
+      "hero": "female",
+      "clip": "cast",
+      "sourceFrame": 8,
+      "sourceGroup": "action",
+      "removedDisconnectedRegions": 4,
+      "removedVisiblePixels": 5,
+      "sourceEdgesFeathered": [
+        "right",
+        "top"
+      ],
+      "retainedRegions": 1
+    },
+    {
+      "hero": "female",
+      "clip": "cast",
+      "sourceFrame": 9,
+      "sourceGroup": "action",
+      "removedDisconnectedRegions": 10,
+      "removedVisiblePixels": 1097,
+      "sourceEdgesFeathered": [
+        "right",
+        "top"
+      ],
+      "retainedRegions": 1
+    },
+    {
+      "hero": "female",
+      "clip": "cast",
+      "sourceFrame": 10,
+      "sourceGroup": "action",
+      "removedDisconnectedRegions": 13,
+      "removedVisiblePixels": 1049,
+      "sourceEdgesFeathered": [
+        "left",
+        "right"
+      ],
+      "retainedRegions": 2
+    },
+    {
+      "hero": "female",
+      "clip": "cast",
+      "sourceFrame": 11,
+      "sourceGroup": "action",
+      "removedDisconnectedRegions": 4,
+      "removedVisiblePixels": 390,
+      "sourceEdgesFeathered": [
+        "left",
+        "top"
+      ],
+      "retainedRegions": 1
+    },
+    {
+      "hero": "female",
+      "clip": "attack_projectile",
+      "sourceFrame": 0,
+      "sourceGroup": "fx",
+      "removedDisconnectedRegions": 2,
+      "removedVisiblePixels": 1138,
+      "sourceEdgesFeathered": [],
+      "retainedRegions": 4
+    },
+    {
+      "hero": "female",
+      "clip": "attack_projectile",
+      "sourceFrame": 1,
+      "sourceGroup": "fx",
+      "removedDisconnectedRegions": 1,
+      "removedVisiblePixels": 1033,
+      "sourceEdgesFeathered": [
+        "left",
+        "right"
+      ],
+      "retainedRegions": 4
+    },
+    {
+      "hero": "female",
+      "clip": "attack_projectile",
+      "sourceFrame": 2,
+      "sourceGroup": "fx",
+      "removedDisconnectedRegions": 6,
+      "removedVisiblePixels": 1020,
+      "sourceEdgesFeathered": [
+        "left"
+      ],
+      "retainedRegions": 9
+    },
+    {
+      "hero": "female",
+      "clip": "attack_projectile",
+      "sourceFrame": 3,
+      "sourceGroup": "fx",
+      "removedDisconnectedRegions": 1,
+      "removedVisiblePixels": 10,
+      "sourceEdgesFeathered": [
+        "left"
+      ],
+      "retainedRegions": 2
+    },
+    {
+      "hero": "female",
+      "clip": "attack_projectile",
+      "sourceFrame": 4,
+      "sourceGroup": "fx",
+      "removedDisconnectedRegions": 3,
+      "removedVisiblePixels": 232,
+      "sourceEdgesFeathered": [
+        "right"
+      ],
+      "retainedRegions": 2
+    },
+    {
+      "hero": "female",
+      "clip": "attack_projectile",
+      "sourceFrame": 5,
+      "sourceGroup": "fx",
+      "removedDisconnectedRegions": 5,
+      "removedVisiblePixels": 2655,
+      "sourceEdgesFeathered": [
+        "right"
+      ],
+      "retainedRegions": 5
+    },
+    {
+      "hero": "female",
+      "clip": "attack_projectile",
+      "sourceFrame": 6,
+      "sourceGroup": "fx",
+      "removedDisconnectedRegions": 3,
+      "removedVisiblePixels": 2354,
+      "sourceEdgesFeathered": [
+        "right"
+      ],
+      "retainedRegions": 5
+    },
+    {
+      "hero": "female",
+      "clip": "attack_projectile",
+      "sourceFrame": 7,
+      "sourceGroup": "fx",
+      "removedDisconnectedRegions": 4,
+      "removedVisiblePixels": 976,
+      "sourceEdgesFeathered": [],
+      "retainedRegions": 12
+    },
+    {
+      "hero": "female",
+      "clip": "cast_impact",
+      "sourceFrame": 0,
+      "sourceGroup": "fx",
+      "removedDisconnectedRegions": 1,
+      "removedVisiblePixels": 1,
+      "sourceEdgesFeathered": [
+        "bottom"
+      ],
+      "retainedRegions": 1
+    },
+    {
+      "hero": "female",
+      "clip": "cast_impact",
+      "sourceFrame": 1,
+      "sourceGroup": "fx",
+      "removedDisconnectedRegions": 1,
+      "removedVisiblePixels": 1,
+      "sourceEdgesFeathered": [
+        "bottom"
+      ],
+      "retainedRegions": 1
+    },
+    {
+      "hero": "female",
+      "clip": "cast_impact",
+      "sourceFrame": 2,
+      "sourceGroup": "fx",
+      "removedDisconnectedRegions": 4,
+      "removedVisiblePixels": 117,
+      "sourceEdgesFeathered": [
+        "top",
+        "bottom"
+      ],
+      "retainedRegions": 2
+    },
+    {
+      "hero": "female",
+      "clip": "cast_impact",
+      "sourceFrame": 3,
+      "sourceGroup": "fx",
+      "removedDisconnectedRegions": 7,
+      "removedVisiblePixels": 1397,
+      "sourceEdgesFeathered": [
+        "left"
+      ],
+      "retainedRegions": 4
+    },
+    {
+      "hero": "female",
+      "clip": "cast_impact",
+      "sourceFrame": 4,
+      "sourceGroup": "fx",
+      "removedDisconnectedRegions": 3,
+      "removedVisiblePixels": 878,
+      "sourceEdgesFeathered": [
+        "right"
+      ],
+      "retainedRegions": 6
+    },
+    {
+      "hero": "female",
+      "clip": "cast_impact",
+      "sourceFrame": 5,
+      "sourceGroup": "fx",
+      "removedDisconnectedRegions": 10,
+      "removedVisiblePixels": 1561,
+      "sourceEdgesFeathered": [
+        "left",
+        "right"
+      ],
+      "retainedRegions": 4
+    },
+    {
+      "hero": "female",
+      "clip": "cast_impact",
+      "sourceFrame": 6,
+      "sourceGroup": "fx",
+      "removedDisconnectedRegions": 8,
+      "removedVisiblePixels": 13306,
+      "sourceEdgesFeathered": [
+        "right"
+      ],
+      "retainedRegions": 6
+    },
+    {
+      "hero": "female",
+      "clip": "cast_impact",
+      "sourceFrame": 7,
+      "sourceGroup": "fx",
+      "removedDisconnectedRegions": 4,
+      "removedVisiblePixels": 790,
+      "sourceEdgesFeathered": [],
+      "retainedRegions": 4
+    }
+  ]
+}

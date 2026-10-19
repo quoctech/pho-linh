@@ -39,6 +39,19 @@ import {
 } from './hero-status-vfx';
 import { preloadStatusUiAssets, ensureStatusUiAnimations } from './status/status-ui-assets';
 import { StatusUiVfx } from './status/status-ui-vfx';
+import {
+  HERO_ASSETS_AVAILABLE,
+  HERO_SPRITE_KEYS,
+  HERO_DISPLAY_HEIGHT,
+  HERO_DISPLAY_WIDTH,
+  ensureHeroAnimations,
+  heroSfxKey,
+  preloadHeroAssets,
+  type HeroGender,
+  type HeroSfxName,
+  type HeroSpriteKeys,
+  type HeroTransientAnimation,
+} from './hero-assets';
 
 const GEM_TYPES: readonly GemType[] = ['attack', 'heal', 'shield', 'energy', 'poison'];
 const BOARD_SIZE = 6;
@@ -46,25 +59,6 @@ const GEM_FALL_DURATION = 200;
 const GEM_REFILL_DURATION = 160;
 const LOGICAL_GAME_WIDTH = 360;
 const DEFAULT_LOGICAL_GAME_HEIGHT = 620;
-type HeroGender = 'male' | 'female';
-interface HeroSpriteKeys {
-  readonly idle: string;
-  readonly attack: string;
-  readonly hit: string;
-  readonly death: string;
-  readonly highHp?: string;
-  readonly energy?: string;
-  readonly lowHp?: string;
-  readonly poisoned?: string;
-  readonly stunned?: string;
-  readonly shield?: string;
-  readonly dodge?: string;
-  readonly frameWidth: number;
-  readonly frameHeight: number;
-  readonly displayWidth: number;
-  readonly displayHeight: number;
-  readonly originY: number;
-}
 interface MonsterSpriteKeys {
   readonly idle: string;
   readonly attack: string;
@@ -87,72 +81,6 @@ interface MonsterSpriteKeys {
   readonly displayHeight: number;
   readonly originY: number;
 }
-const HERO_SPRITE_KEYS: Record<HeroGender, HeroSpriteKeys> = {
-  male: {
-    idle: 'hero-male-idle',
-    attack: 'hero-male-normal-attack',
-    hit: 'hero-male-hit',
-    death: 'hero-male-death',
-    highHp: 'hero-male-high-hp',
-    energy: 'hero-male-energy',
-    lowHp: 'hero-male-low-hp',
-    poisoned: 'hero-male-poisoned',
-    stunned: 'hero-male-stunned',
-    shield: 'hero-male-shield',
-    dodge: 'hero-male-dodge',
-    frameWidth: 418,
-    frameHeight: 470,
-    displayWidth: 84,
-    displayHeight: 94,
-    originY: 0.92,
-  },
-  female: {
-    idle: 'hero-female-idle',
-    // Reuse the supplied male normal-attack animation until a dedicated
-    // female normal-attack sheet is available.
-    attack: 'hero-male-normal-attack',
-    hit: 'hero-female-hit',
-    death: 'hero-female-death',
-    highHp: 'hero-female-high-hp',
-    energy: 'hero-female-energy',
-    lowHp: 'hero-female-low-hp',
-    poisoned: 'hero-female-poisoned',
-    stunned: 'hero-female-stunned',
-    shield: 'hero-female-shield',
-    dodge: 'hero-female-dodge',
-    frameWidth: 443,
-    frameHeight: 443,
-    displayWidth: 84,
-    displayHeight: 84,
-    originY: 0.92,
-  },
-};
-const HERO_MALE_SHEETS = {
-  idle: 'hero-male-idle-sheet.webp',
-  attack: 'hero-male-normal-attack-sheet.webp',
-  highHp: 'hero-male-high_hp-sheet.webp',
-  energy: 'hero-male-energy-sheet.webp',
-  lowHp: 'hero-male-low_hp-sheet.webp',
-  poisoned: 'hero-male-poisoned-sheet.webp',
-  stunned: 'hero-male-stunned-sheet.webp',
-  shield: 'hero-male-shield-sheet.webp',
-  hit: 'hero-male-hit-sheet.webp',
-  death: 'hero-male-death-sheet.webp',
-  dodge: 'hero-male-dodge-sheet.webp',
-} as const;
-const HERO_MALE_ATTACK_FX_KEY = 'hero-male-normal-attack-fx';
-const HERO_FEMALE_SHEETS = {
-  idle: 'hero-female-idle-sheet.webp',
-  highHp: 'hero-female-high_hp-sheet.webp',
-  energy: 'hero-female-energy-sheet.webp',
-  lowHp: 'hero-female-low_hp-sheet.webp',
-  poisoned: 'hero-female-poisoned-sheet.webp',
-  stunned: 'hero-female-stunned-sheet.webp',
-  shield: 'hero-female-shield-sheet.webp',
-  hit: 'hero-female-hit-sheet.webp',
-  death: 'hero-female-death-sheet.webp',
-  dodge: 'hero-female-dodge-sheet.webp',
-} as const;
 const MONSTER_SPRITE_KEYS: Readonly<Record<string, MonsterSpriteKeys>> = {
   mist_blob: MIST_DUST_SPRITE_KEYS,
   lantern_cat: LANTERN_CAT_SPRITE_KEYS,
@@ -197,27 +125,6 @@ const SKILL_VFX_KEYS = {
   spark: 'fx-cloudbreaker-spark',
 } as const;
 const SFX_KEYS = {
-  heroMaleAttack: 'sfx-hero-male-attack',
-  heroMaleProjectile: 'sfx-hero-male-projectile',
-  heroMaleHit: 'sfx-hero-male-hit',
-  heroMaleDeath: 'sfx-hero-male-death',
-  heroMaleDodge: 'sfx-hero-male-dodge',
-  heroMaleEnergy: 'sfx-hero-male-energy',
-  heroMaleHighHp: 'sfx-hero-male-high-hp',
-  heroMaleLowHp: 'sfx-hero-male-low-hp',
-  heroMalePoisoned: 'sfx-hero-male-poisoned',
-  heroMaleShield: 'sfx-hero-male-shield',
-  heroMaleStunned: 'sfx-hero-male-stunned',
-  heroFemaleAttack: 'sfx-hero-female-attack',
-  heroFemaleHit: 'sfx-hero-female-hit',
-  heroFemaleDeath: 'sfx-hero-female-death',
-  heroFemaleDodge: 'sfx-hero-female-dodge',
-  heroFemaleEnergy: 'sfx-hero-female-energy',
-  heroFemaleHighHp: 'sfx-hero-female-high-hp',
-  heroFemaleLowHp: 'sfx-hero-female-low-hp',
-  heroFemalePoisoned: 'sfx-hero-female-poisoned',
-  heroFemaleShield: 'sfx-hero-female-shield',
-  heroFemaleStunned: 'sfx-hero-female-stunned',
   mistAttack: MIST_DUST_SFX_KEYS.attack,
   mistHit: MIST_DUST_SFX_KEYS.hit,
   mistProjectile: MIST_DUST_SFX_KEYS.projectile,
@@ -255,8 +162,7 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
   private heroSprite?: Phaser.GameObjects.Sprite;
   private heroSpriteKeys: HeroSpriteKeys = HERO_SPRITE_KEYS.male;
   private heroGender: HeroGender = 'male';
-  private heroAssetName: 'hero-swordmaster' | 'hero-swordmistress' = 'hero-swordmaster';
-  private heroTransientAnimation?: 'attack' | 'hit' | 'death' | 'stunned';
+  private heroTransientAnimation?: HeroTransientAnimation;
   private heroPersistentStatus: HeroPersistentStatus = 'idle';
   private heroHpBand?: HeroHpBand;
   private heroCurrentAnimationKey?: string;
@@ -338,7 +244,7 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
     const heroGender = this.getHeroGender();
     this.heroGender = heroGender;
     this.heroSpriteKeys = HERO_SPRITE_KEYS[heroGender];
-    this.heroAssetName = heroGender === 'female' ? 'hero-swordmistress' : 'hero-swordmaster';
+    preloadHeroAssets(this, heroGender);
     this.load.spritesheet(GEM_ATLAS_KEY, 'assets/gems/pho-linh/pho-linh-gems-sheet.png', {
       frameWidth: 256,
       frameHeight: 256,
@@ -348,31 +254,6 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
     this.load.image('gem-poison-pure', 'assets/gems/pho-linh/gem-p-pure.png');
     this.load.image('gem-shield', 'assets/gems/shield.webp');
     this.load.image('gem-energy', 'assets/gems/energy.webp');
-    const heroSheets = heroGender === 'male' ? HERO_MALE_SHEETS : HERO_FEMALE_SHEETS;
-    const heroSheetsPath = `assets/${this.heroAssetName}/sheets-webp`;
-    for (const [state, file] of Object.entries(heroSheets)) {
-      const key = this.heroSpriteKeys[state as keyof HeroSpriteKeys];
-      if (typeof key !== 'string') continue;
-      this.load.spritesheet(key, `${heroSheetsPath}/${file}`, {
-        frameWidth: heroGender === 'male' && state === 'attack' ? 460 : this.heroSpriteKeys.frameWidth,
-        frameHeight: heroGender === 'male' && state === 'attack' ? 460 : this.heroSpriteKeys.frameHeight,
-      });
-    }
-    if (heroGender === 'female') {
-      this.load.spritesheet(
-        HERO_SPRITE_KEYS.female.attack,
-        'assets/hero-swordmaster/sheets-webp/hero-male-normal-attack-sheet.webp',
-        { frameWidth: 460, frameHeight: 460 },
-      );
-    }
-    // The normal-attack projectile is shared by both hero genders.
-    {
-      this.load.spritesheet(
-        HERO_MALE_ATTACK_FX_KEY,
-        'assets/hero-swordmaster/sheets-webp/hero-male-normal-attack-fx-sheet.webp',
-        { frameWidth: 460, frameHeight: 436 },
-      );
-    }
     this.load.spritesheet(VFX_SHEET_KEYS.selectRing, 'assets/vfx/fx-select-ring/fx-select-ring-sheet.png', {
       frameWidth: 256,
       frameHeight: 256,
@@ -431,36 +312,6 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
     for (const [key, file] of Object.entries(sfxFiles)) {
       this.load.audio(key, `${sfxPath}/${file}`);
     }
-    {
-      const heroSfxPath = `assets/${this.heroAssetName}/sfx/mp3`;
-      const heroSfxFiles: Readonly<Record<string, string>> = heroGender === 'male' ? {
-        [SFX_KEYS.heroMaleAttack]: 'hero-normal-attack.mp3',
-        [SFX_KEYS.heroMaleProjectile]: 'hero-normal-projectile.mp3',
-        [SFX_KEYS.heroMaleHit]: 'hero-male-hit.mp3',
-        [SFX_KEYS.heroMaleDeath]: 'hero-male-death.mp3',
-        [SFX_KEYS.heroMaleDodge]: 'hero-male-dodge.mp3',
-        [SFX_KEYS.heroMaleEnergy]: 'hero-male-energy-charge.mp3',
-        [SFX_KEYS.heroMaleHighHp]: 'hero-male-high-hp-glow.mp3',
-        [SFX_KEYS.heroMaleLowHp]: 'hero-male-low-hp-warning.mp3',
-        [SFX_KEYS.heroMalePoisoned]: 'hero-male-poisoned.mp3',
-        [SFX_KEYS.heroMaleShield]: 'hero-male-shield-on.mp3',
-        [SFX_KEYS.heroMaleStunned]: 'hero-male-stunned.mp3',
-      } : {
-        [SFX_KEYS.heroFemaleAttack]: 'hero-female-attack-sword.mp3',
-        [SFX_KEYS.heroFemaleHit]: 'hero-female-hit.mp3',
-        [SFX_KEYS.heroFemaleDeath]: 'hero-female-death.mp3',
-        [SFX_KEYS.heroFemaleDodge]: 'hero-female-dodge.mp3',
-        [SFX_KEYS.heroFemaleEnergy]: 'hero-female-energy-charge.mp3',
-        [SFX_KEYS.heroFemaleHighHp]: 'hero-female-high-hp-glow.mp3',
-        [SFX_KEYS.heroFemaleLowHp]: 'hero-female-low-hp-warning.mp3',
-        [SFX_KEYS.heroFemalePoisoned]: 'hero-female-poisoned.mp3',
-        [SFX_KEYS.heroFemaleShield]: 'hero-female-shield-on.mp3',
-        [SFX_KEYS.heroFemaleStunned]: 'hero-female-stunned.mp3',
-      };
-      for (const [key, file] of Object.entries(heroSfxFiles)) {
-        this.load.audio(key, `${heroSfxPath}/${file}`);
-      }
-    }
     const controller = battleController;
     const monsterId = controller?.currentState.monster.id ?? 'mist_blob';
     const monsterAssets = MONSTER_SPRITE_KEYS[monsterId] ?? MONSTER_SPRITE_KEYS['mist_blob'];
@@ -500,7 +351,7 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
     ensureLanternCatAnimations(this);
     ensureLanternCatSkillAnimations(this);
     ensureMistDustAnimations(this);
-    this.ensureHeroAnimations();
+    ensureHeroAnimations(this, this.heroGender);
     this.createHeroVisual();
     this.createHud();
     this.createMonsterVisual();
@@ -845,32 +696,18 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
     });
   }
 
-  private ensureHeroAnimations(): void {
-    const loopingStates: readonly (string | undefined)[] = [
-      this.heroSpriteKeys.idle,
-      this.heroSpriteKeys.highHp,
-      this.heroSpriteKeys.energy,
-      this.heroSpriteKeys.lowHp,
-      this.heroSpriteKeys.poisoned,
-      this.heroSpriteKeys.shield,
-    ];
-    for (const key of loopingStates) {
-      if (key) this.createMonsterAnimation(key, key, 8, -1);
-    }
-    this.createMonsterAnimation(this.heroSpriteKeys.attack, this.heroSpriteKeys.attack, 12, 0);
-    this.createMonsterAnimation(this.heroSpriteKeys.hit, this.heroSpriteKeys.hit, 10, 0);
-    this.createMonsterAnimation(this.heroSpriteKeys.death, this.heroSpriteKeys.death, 8, 0);
-    if (this.heroSpriteKeys.stunned) this.createMonsterAnimation(this.heroSpriteKeys.stunned, this.heroSpriteKeys.stunned, 8, 0);
-    if (this.heroSpriteKeys.dodge) this.createMonsterAnimation(this.heroSpriteKeys.dodge, this.heroSpriteKeys.dodge, 12, 0);
-    this.createMonsterAnimation(HERO_MALE_ATTACK_FX_KEY, HERO_MALE_ATTACK_FX_KEY, 12, 0);
-  }
-
   private createHeroVisual(): void {
-    if (!this.textures.exists(this.heroSpriteKeys.idle)) return;
+    if (!HERO_ASSETS_AVAILABLE[this.heroGender] || !this.textures.exists(this.heroSpriteKeys.idle)) return;
     const hero = this.add.container(this.heroPosition.x, this.heroPosition.y).setDepth(6);
+    const monsterKeys = this.monsterSpriteKeys();
+    const displayWidth = monsterKeys?.displayWidth ?? HERO_DISPLAY_WIDTH;
+    const displayHeight = monsterKeys?.displayHeight ?? HERO_DISPLAY_HEIGHT;
     const sprite = this.add.sprite(0, 0, this.heroSpriteKeys.idle)
       .setOrigin(0.5, this.heroSpriteKeys.originY)
-      .setDisplaySize(this.heroSpriteKeys.displayWidth, this.heroSpriteKeys.displayHeight)
+      // Keep this as the final size transform. Calling setScale(1) after
+      // setDisplaySize would restore the native 480x540 FullHD frame and
+      // make the hero fill a large part of the viewport.
+      .setDisplaySize(displayWidth, displayHeight)
       .play(this.heroSpriteKeys.idle);
     this.heroSprite = sprite;
     this.heroVisual = hero;
@@ -1211,37 +1048,32 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
     }
   }
 
+  private playHeroSfx(name: HeroSfxName, volume: number): void {
+    this.playSfx(heroSfxKey(this.heroGender, name), volume);
+  }
+
   private playHeroAttackSfx(): void {
-    this.playSfx(this.heroGender === 'male' ? SFX_KEYS.heroMaleAttack : SFX_KEYS.heroFemaleAttack, 0.5);
+    this.playHeroSfx('normal_attack', 0.5);
   }
 
   private playHeroHitSfx(volume = 0.52): void {
-    this.playSfx(this.heroGender === 'male' ? SFX_KEYS.heroMaleHit : SFX_KEYS.heroFemaleHit, volume);
+    this.playHeroSfx('hit', volume);
   }
 
   private playHeroDeathSfx(): void {
-    this.playSfx(this.heroGender === 'male' ? SFX_KEYS.heroMaleDeath : SFX_KEYS.heroFemaleDeath, 0.58);
+    this.playHeroSfx('death', 0.58);
   }
 
   private playHeroStatusSfx(status: 'energy' | 'highHp' | 'lowHp' | 'poisoned' | 'shield' | 'stunned'): void {
-    const keys: Readonly<Record<typeof status, string>> = this.heroGender === 'male'
-      ? {
-        energy: SFX_KEYS.heroMaleEnergy,
-        highHp: SFX_KEYS.heroMaleHighHp,
-        lowHp: SFX_KEYS.heroMaleLowHp,
-        poisoned: SFX_KEYS.heroMalePoisoned,
-        shield: SFX_KEYS.heroMaleShield,
-        stunned: SFX_KEYS.heroMaleStunned,
-      }
-      : {
-        energy: SFX_KEYS.heroFemaleEnergy,
-        highHp: SFX_KEYS.heroFemaleHighHp,
-        lowHp: SFX_KEYS.heroFemaleLowHp,
-        poisoned: SFX_KEYS.heroFemalePoisoned,
-        shield: SFX_KEYS.heroFemaleShield,
-        stunned: SFX_KEYS.heroFemaleStunned,
-      };
-    this.playSfx(keys[status], 0.5);
+    const names: Readonly<Record<typeof status, HeroSfxName>> = {
+      energy: 'energy',
+      highHp: 'high_hp',
+      lowHp: 'low_hp',
+      poisoned: 'poisoned',
+      shield: 'shield',
+      stunned: 'stunned',
+    };
+    this.playHeroSfx(names[status], 0.5);
   }
 
   private syncHeroPersistentVisual(snapshot: HeroStatusSnapshot): void {
@@ -1264,7 +1096,6 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
     if (!sprite || !animationKey || !this.anims.exists(animationKey)) return;
     if (this.heroCurrentAnimationKey === animationKey && sprite.anims.isPlaying) return;
     sprite.stop();
-    sprite.setDisplaySize(this.heroSpriteKeys.displayWidth, this.heroSpriteKeys.displayHeight);
     sprite.play(animationKey);
     this.heroCurrentAnimationKey = animationKey;
   }
@@ -1669,16 +1500,20 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
           this.floatNumber(`-${amount} HP`, 80, 59, '#ff9aa4');
           this.shakePlayerBar();
         } else if (event.payload['target'] === 'monster') {
+          const isSkillAttack = event.payload['source'] === 'cloud_break_lantern';
           const monsterShieldAbsorbed = this.safeNumber(Number(event.payload['shieldAbsorbed'] ?? 0));
           const monsterShieldBroken = Boolean(event.payload['shieldBroken'])
             || (monsterShieldAbsorbed > 0 && this.safeNumber(Number(event.payload['shieldRemaining'] ?? 0)) === 0);
           const matchCount = this.safeNumber(Number(event.payload['matchCount'] ?? 0));
           const matchLabel = matchCount >= 3 ? `X${matchCount} · ` : '';
-          this.playHeroAnimation('attack');
-          this.playHeroAttackSfx();
-          this.spawnHeroSwordProjectile(() => {
+          if (!isSkillAttack) {
+            this.playHeroAnimation('attack');
+            this.playHeroAttackSfx();
+          }
+          const onHeroImpact = () => {
             const target = this.combatPoint('monster');
             this.spawnCombatImpact(target.x, target.y, 0x9ed8ff, 48);
+            if (!isSkillAttack) this.playHeroSfx('attack_impact', 0.5);
             this.playSfx(
               this.controller.currentState.monster.id === 'lantern_cat'
                 ? SFX_KEYS.lanternHit
@@ -1688,7 +1523,12 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
             this.playMonsterAnimation('hit');
             this.flashMonster(0xffe7a6);
             this.shakeMonster();
-          });
+          };
+          if (isSkillAttack) {
+            this.playHeroCastImpact(onHeroImpact);
+          } else {
+            this.spawnHeroSwordProjectile(onHeroImpact);
+          }
           this.displayedMonsterShield = Math.max(
             0,
             (this.displayedMonsterShield ?? this.controller.currentState.monster.shield) - monsterShieldAbsorbed,
@@ -1738,6 +1578,10 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
           const point = this.combatPoint(healTarget);
           this.statusLabel?.setText(healTarget === 'monster' ? `Quái hồi ${amount} HP` : `+${amount} HP`);
           this.floatNumber(`+${amount} HP`, point.x, point.y - 50, '#8ff0ad');
+          if (healTarget === 'player') {
+            this.playHeroEffectAnimation('heal');
+            this.playHeroSfx('heal', 0.5);
+          }
           this.playHealEffect(healTarget);
           if (healTarget === 'monster') this.playMonsterEffectAnimation('heal', 0.5);
         } else {
@@ -1760,6 +1604,7 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
         this.floatNumber(`+${amount}`, shieldPoint.x, shieldPoint.y - 50, '#9dceff');
         if (amount > 0) {
           this.playShieldGainEffect(shieldTarget);
+          if (shieldTarget === 'player') this.playHeroSfx('shield', 0.5);
           if (shieldTarget === 'monster' && this.usesMonsterStatusSheets()) {
             this.playSfx(
               this.controller.currentState.monster.id === 'lantern_cat'
@@ -1854,6 +1699,7 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
           this.displayedPlayerPoisonTurns = turns;
           this.statusLabel?.setText(`NHIỄM ĐỘC! Nhân vật · ${turns} lượt`);
           this.floatNumber(`☠ NHIỄM ĐỘC!`, 80, 104, '#d5aaff', 700);
+          this.playHeroSfx('poisoned', 0.5);
           const monsterActionId = String(event.payload['actionId'] ?? '');
           if (event.payload['actor'] === 'monster') {
             if (this.controller.currentState.monster.id === 'lantern_cat') {
@@ -1876,6 +1722,7 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
               }, true);
             });
           } else {
+            this.playHeroEffectAnimation('poisonCast');
             this.playPoisonEffect();
           }
           this.refreshDisplayedBars();
@@ -1973,8 +1820,9 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
             if (monsterId === 'lantern_cat') {
               this.playSfx(SFX_KEYS.lanternAttackImpact, 0.56);
             } else if (monsterId === 'mist_blob') {
-            this.playHeroHitSfx();
+              this.playSfx(SFX_KEYS.mistHit, 0.52);
             }
+            this.playHeroHitSfx();
             this.playHeroAnimation('hit');
             this.flashHero(0xff7a80);
             this.shakeHero();
@@ -2004,6 +1852,8 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
       case 'SKILL_USED':
         this.statusLabel?.setText('Đèn Phá Mây!');
         this.playSfx(SFX_KEYS.skillCast, 0.48);
+        this.playHeroAnimation('cast');
+        this.playHeroSfx('cast_charge', 0.52);
         this.flashMonster(0xcda8ff);
         this.playCloudbreakerEffect();
         break;
@@ -2151,16 +2001,13 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
     return MIST_DUST_SFX_KEYS.stun;
   }
 
-  private playHeroAnimation(key: 'attack' | 'hit' | 'death' | 'stunned'): void {
+  private playHeroAnimation(key: 'attack' | 'cast' | 'hit' | 'death' | 'stunned'): void {
     const sprite = this.heroSprite;
     const animationKey = this.heroSpriteKeys[key];
     if (!sprite || !animationKey || !this.anims.exists(animationKey)) return;
 
     this.heroTransientAnimation = key;
     sprite.stop();
-    if (key === 'attack') {
-      sprite.setDisplaySize(this.heroSpriteKeys.displayWidth * 1.21, this.heroSpriteKeys.displayHeight * 1.21);
-    }
     sprite.play(animationKey);
     this.heroCurrentAnimationKey = animationKey;
     if (key === 'death') return;
@@ -2173,6 +2020,49 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
     });
   }
 
+  private playHeroEffectAnimation(key: 'heal' | 'antiHeal' | 'dodge' | 'poisonCast'): void {
+    const sprite = this.heroSprite;
+    const animationKey = key === 'antiHeal'
+      ? this.heroSpriteKeys.antiHeal
+      : key === 'poisonCast'
+        ? this.heroSpriteKeys.poisonCast
+        : this.heroSpriteKeys[key];
+    if (!sprite || !animationKey || !this.anims.exists(animationKey)) return;
+
+    this.heroTransientAnimation = key;
+    sprite.stop();
+    sprite.play(animationKey);
+    this.heroCurrentAnimationKey = animationKey;
+    sprite.once(`animationcomplete-${animationKey}`, () => {
+      if (this.heroSprite !== sprite) return;
+      this.heroTransientAnimation = undefined;
+      this.heroCurrentAnimationKey = undefined;
+      this.playHeroPersistentAnimation(this.heroPersistentStatus);
+    });
+  }
+
+  private playHeroCastImpact(onImpact?: () => void): void {
+    const target = this.combatPoint('monster');
+    const animationKey = this.heroSpriteKeys.castImpact;
+    if (!this.textures.exists(animationKey) || !this.anims.exists(animationKey)) {
+      onImpact?.();
+      return;
+    }
+    const impact = this.add
+      .sprite(target.x, target.y, animationKey, 0)
+      .setOrigin(0.5)
+      .setDisplaySize(112, 112)
+      .setBlendMode(Phaser.BlendModes.ADD)
+      .setDepth(17)
+      .play(animationKey);
+    this.playHeroSfx('cast_impact', 0.5);
+    this.transientEffects.add(impact);
+    onImpact?.();
+    impact.once(`animationcomplete-${animationKey}`, () => {
+      this.destroyTransientEffect(impact);
+    });
+  }
+
   private spawnHeroSwordProjectile(onImpact?: () => void): void {
     const start = this.combatPoint('player');
     const target = this.combatPoint('monster');
@@ -2181,68 +2071,79 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
     const angle = Phaser.Math.Angle.Between(launch.x, launch.y, impact.x, impact.y);
     const duration = this.reducedMotion ? 190 : 340;
 
-    if (this.textures.exists(HERO_MALE_ATTACK_FX_KEY)
-      && this.anims.exists(HERO_MALE_ATTACK_FX_KEY)) {
-      const projectile = this.add
-        .sprite(launch.x, launch.y, HERO_MALE_ATTACK_FX_KEY, 0)
+    const attackFxKey = this.heroSpriteKeys.attackFx;
+    if (this.textures.exists(attackFxKey) && this.anims.exists(attackFxKey)) {
+      const slash = this.add
+        .sprite(start.x, start.y - 8, attackFxKey, 0)
         .setOrigin(0.5)
-        .setDisplaySize(112, 106)
-        .setRotation(angle)
+        .setDisplaySize(108, 108)
         .setBlendMode(Phaser.BlendModes.ADD)
         .setDepth(16)
-        .play(HERO_MALE_ATTACK_FX_KEY);
-      this.transientEffects.add(projectile);
-      if (this.heroGender === 'male') {
-        this.playSfx(SFX_KEYS.heroMaleProjectile, 0.46);
+        .play(attackFxKey);
+      this.transientEffects.add(slash);
+      this.playHeroSfx('normal_attack_fx', 0.46);
+      slash.once(`animationcomplete-${attackFxKey}`, () => this.destroyTransientEffect(slash));
+    }
+
+    this.time.delayedCall(this.reducedMotion ? 40 : 110, () => {
+      const projectileKey = this.heroSpriteKeys.projectile;
+      const projectile = this.textures.exists(projectileKey) && this.anims.exists(projectileKey)
+        ? this.add
+          .sprite(launch.x, launch.y, projectileKey, 0)
+          .setOrigin(0.5)
+          .setDisplaySize(88, 88)
+          .setRotation(angle)
+          .setBlendMode(Phaser.BlendModes.ADD)
+          .setDepth(16)
+          .play(projectileKey)
+        : undefined;
+      if (projectile) {
+        this.transientEffects.add(projectile);
+        this.playHeroSfx('attack_projectile', 0.46);
+        this.spawnTravelTrail(launch, impact, 0x9ed8ff, duration);
+        this.tweens.add({
+          targets: projectile,
+          x: impact.x,
+          y: impact.y,
+          scale: 1.08,
+          duration,
+          ease: 'Cubic.In',
+          onComplete: () => {
+            this.destroyTransientEffect(projectile);
+            onImpact?.();
+          },
+        });
+        return;
       }
+
+      const sword = this.add.container(launch.x, launch.y).setRotation(angle).setDepth(16);
+      const glow = this.add.graphics();
+      glow.lineStyle(14, 0x8fdcff, 0.24);
+      glow.beginPath();
+      glow.moveTo(-42, 0);
+      glow.lineTo(28, 0);
+      glow.strokePath();
+      const blade = this.add
+        .polygon(0, 0, [-34, -5, 18, -5, 32, 0, 18, 5, -34, 5], 0xdff8ff, 1)
+        .setStrokeStyle(2, 0xffffff, 1);
+      const guard = this.add.rectangle(-28, 0, 4, 18, 0xffd45e, 1).setStrokeStyle(1, 0xfff0ad, 1);
+      const handle = this.add.rectangle(-38, 0, 16, 6, 0x6c4334, 1);
+      sword.add([glow, blade, guard, handle]);
+      this.transientEffects.add(sword);
+      this.playHeroSfx('attack_projectile', 0.46);
       this.spawnTravelTrail(launch, impact, 0x9ed8ff, duration);
       this.tweens.add({
-        targets: projectile,
+        targets: sword,
         x: impact.x,
         y: impact.y,
         scale: 1.08,
         duration,
         ease: 'Cubic.In',
         onComplete: () => {
-          this.destroyTransientEffect(projectile);
+          this.destroyTransientEffect(sword);
           onImpact?.();
         },
       });
-      return;
-    }
-
-    const sword = this.add
-      .container(launch.x, launch.y)
-      .setRotation(angle)
-      .setDepth(16);
-    const glow = this.add.graphics();
-    glow.lineStyle(14, 0x8fdcff, 0.24);
-    glow.beginPath();
-    glow.moveTo(-42, 0);
-    glow.lineTo(28, 0);
-    glow.strokePath();
-    const blade = this.add
-      .polygon(0, 0, [-34, -5, 18, -5, 32, 0, 18, 5, -34, 5], 0xdff8ff, 1)
-      .setStrokeStyle(2, 0xffffff, 1);
-    const guard = this.add
-      .rectangle(-28, 0, 4, 18, 0xffd45e, 1)
-      .setStrokeStyle(1, 0xfff0ad, 1);
-    const handle = this.add.rectangle(-38, 0, 16, 6, 0x6c4334, 1);
-    sword.add([glow, blade, guard, handle]);
-    this.transientEffects.add(sword);
-    this.spawnTravelTrail(launch, impact, 0x9ed8ff, duration);
-
-    this.tweens.add({
-      targets: sword,
-      x: impact.x,
-      y: impact.y,
-      scale: 1.08,
-      duration,
-      ease: 'Cubic.In',
-      onComplete: () => {
-        this.destroyTransientEffect(sword);
-        onImpact?.();
-      },
     });
   }
 
@@ -2394,6 +2295,7 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
     this.spawnVfx(SKILL_VFX_KEYS.swordGlow, start.x + 12, start.y - 8, 96, 14);
 
     this.time.delayedCall(180, () => {
+      this.playHeroSfx('cast_release', 0.5);
       if (!this.textures.exists(SKILL_VFX_KEYS.projectile) || !this.anims.exists(SKILL_VFX_KEYS.projectile)) {
         this.spawnVfx(SKILL_VFX_KEYS.impact, target.x, target.y, 132, 15);
         return;
@@ -2849,6 +2751,7 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
       case 'MONSTER_ATTACKED': return event.payload['lethal'] === true ? 1400 : 1000;
       case 'MONSTER_ACTION_SKIPPED': return 260;
       case 'MONSTER_GUARDED': return 260;
+      case 'SKILL_USED': return this.reducedMotion ? 120 : 240;
       case 'MONSTER_SKILL_USED': return this.reducedMotion ? 650 : 1150;
       case 'PLAYER_TURN_SKIPPED': return 700;
       case 'MONSTER_THINKING': return Number(event.payload['seconds'] ?? 1.2) * 1000;

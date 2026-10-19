@@ -194,6 +194,26 @@ PLAYER_INPUT
 
 Các mốc ms là gợi ý, phải điều chỉnh theo cảm giác thực tế; hỗ trợ `animationSpeed` để tăng tốc và `reducedMotion` để giảm hiệu ứng. Logic game resolve độc lập; animation chỉ tiêu thụ event log, không quyết định kết quả.
 
+### 9.1. Contract hiệu ứng của combatant
+
+Danh sách VFX/animation chuẩn cho hero và quái nằm tại [`GAME_DESIGN.md` §15.4](./game_design.md#154-bộ-hiệu-ứng-bắt-buộc-cho-nhân-vật-và-quái). Mọi actor cần dùng cùng key semantic để asset loader có thể thay sprite, model hoặc VFX mà không đổi luật combat.
+
+| Loại trigger | State/event nguồn | Hiệu ứng tối thiểu |
+|---|---|---|
+| Persistent state | HP band, energy/rage, shield, poison turns | `idle`, `energy`, `high_hp`, `low_hp`, `shield`, `poisoned` |
+| Action | Player/monster attack hoặc skill event | `normal_attack`, `normal_attack_fx`, `attack_projectile`, `cast`, `cast_impact` |
+| Reaction | Damage, dodge, death, skipped turn | `hit`, `dodge`, `death`, `stunned` |
+| Recovery/debuff | Heal, anti-heal, poison apply/tick | `heal`, `anti_heal`, `poison_cast`, `poison_projectile`, `poisoned` |
+| Future control/status | Freeze, burn, lightning, skill lock, armor break event | `frozen`, `burning`, `lightning_struck`, `skill_locked`, `armor_break` |
+
+Nguyên tắc bắt buộc:
+
+- `game-core` quyết định state, damage, lượt và event; Phaser chỉ phát hiệu ứng tương ứng.
+- Nếu chưa có event/state gameplay thì không tự phát hiệu ứng giả. Asset có thể được đăng ký sẵn để mở rộng sau.
+- Một hiệu ứng không được cộng damage, hồi máu, khóa lượt hoặc thay đổi RNG lần thứ hai.
+- Với trạng thái theo lượt, HUD phải hiển thị icon và số lượt còn lại; VFX chỉ là lớp bổ trợ.
+- `reducedMotion` phải giảm flash, shake, particle và thời lượng tween nhưng vẫn giữ icon/text và kết quả combat.
+
 ---
 
 # PHẦN D — CHIẾN ĐẤU, CHỈ SỐ VÀ KỸ NĂNG
@@ -524,6 +544,7 @@ Win/lose rõ ràng, EXP/vàng/item hiện theo thứ tự, thanh EXP lên mượ
 - **Bảng màu định hướng:** xanh ngọc trầm, vàng đèn ấm, đỏ san hô, tím huyền ảo; kiểm tra tương phản UI.
 - **Ngọc:** 5 silhouette khác nhau + icon giữa viên, không chỉ phân biệt màu.
 - **Quái:** biểu cảm dễ đọc, silhouette riêng; không cần skeletal animation ở M2.
+- **Combatant effects:** hero và quái phải tuân theo checklist hiệu ứng tại `GAME_DESIGN.md` §15.4; nhóm freeze/burn/lightning/skill-lock/armor-break chỉ bật khi game-core có state/event tương ứng.
 - **Nền:** ít chi tiết ở vùng phía sau bàn ngọc; nền tối hơn ngọc.
 - **Asset:** ưu tiên PNG/WebP nền trong suốt; chuẩn hóa tỉ lệ, đặt tên, đóng atlas; lưu prompt/phiên bản và quy trình hậu kỳ.
 - **AI generated assets:** rà soát quyền thương mại và độ tương đồng; tránh logo/nhân vật nổi tiếng; kiểm tra tách nền trước tích hợp.

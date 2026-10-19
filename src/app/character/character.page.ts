@@ -15,10 +15,10 @@ export class CharacterPage implements OnInit {
   readonly attributeKeys: readonly (keyof Attributes)[] = ['str', 'vit', 'agi', 'int'];
   draft: Attributes = { str: 0, vit: 0, agi: 0, int: 0 };
 
-  get heroPortrait(): string {
+  get heroPortrait(): string | undefined {
     return this.save?.settings.gender === 'female'
       ? 'assets/hero-swordmistress/portrait/hero-female-portrait.webp'
-      : 'assets/hero-swordmaster/portrait/hero-male-portrait.webp';
+      : undefined;
   }
 
   async ngOnInit(): Promise<void> { this.save = await this.storage.load(); this.cdr.markForCheck(); }

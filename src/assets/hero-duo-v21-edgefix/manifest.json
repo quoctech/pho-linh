@@ -1,0 +1,18 @@
+{
+  "pack": "PHỐ LINH HERO DUO V2.1 — EDGE FIX",
+  "format": "WebP RGBA",
+  "runtimeOverrides": {
+    "maleAssetsAvailable": false,
+    "maleAssetsStatus": "awaiting-2.5d-pack"
+  },
+  "characters": {
+    "male": {
+      "assetsAvailable": false,
+      "note": "Legacy male images and SFX were removed; integrate the new 2.5D pack here."
+    },
+    "female": {
+      "assetsAvailable": true,
+      "root": "female/"
+    }
+  }
+}

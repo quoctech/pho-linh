@@ -524,6 +524,44 @@ Sử dụng Phaser tween; game-core quyết định thứ tự events và kết 
 
 Tên/hình là thiết kế đề xuất cần kiểm tra trùng lặp với tác phẩm thương mại, không mặc nhiên có tính độc quyền.
 
+### 15.4. Bộ hiệu ứng bắt buộc cho nhân vật và quái
+
+Mỗi combatant (hero, quái thường và boss) phải có một bộ hiệu ứng phản hồi tối thiểu. Hiệu ứng có thể dùng sprite sheet, VFX layer, tween, particle và SFX; không bắt buộc mọi combatant có artwork khác nhau cho cùng một trạng thái, nhưng phải giữ cùng tên key và cùng ý nghĩa trigger.
+
+| Nhóm | Key chuẩn | Khi phát | Nội dung cần thể hiện | Hero | Quái |
+|---|---|---|---|:---:|:---:|
+| Nền | `idle` | Không có action hoặc đang chờ lượt | Chuyển động thở/đứng chờ, loop nhẹ | ✓ | ✓ |
+| Năng lượng | `energy` / `rage` | Năng lượng hoặc nộ đạt ngưỡng/khi đang tích lực | Glow, aura, màu năng lượng và SFX riêng | ✓ | ✓ |
+| HP cao | `high_hp` | HP thuộc band cao | Aura nhẹ, không lấn át action | ✓ | ✓ |
+| HP yếu | `low_hp` | HP thuộc band thấp | Nhịp cảnh báo, tint/glow tiết chế | ✓ | ✓ |
+| Hồi máu | `heal` | HP tăng thật | Vòng hồi phục, hạt xanh, số `+HP` | ✓ | ✓ |
+| Giảm hồi máu | `anti_heal` | Nhận debuff làm giảm hoặc chặn heal | Overlay ngược màu hồi máu, icon debuff, thời hạn | ✓ | ✓ |
+| Dính độc | `poisoned` | Poison được áp dụng hoặc còn lượt độc | Overlay tím/xanh độc, icon và số lượt | ✓ | ✓ |
+| Choáng | `stunned` | Bị choáng hoặc mất lượt | Animation one-shot + icon choáng; không để loop khóa actor | ✓ | ✓ |
+| Có khiên | `shield` | Shield > 0 | Vòng/lớp bảo vệ, giá trị khiên, trạng thái vỡ khi về 0 | ✓ | ✓ |
+| Bị tấn công | `hit` | HP hoặc shield bị tác động | Recoil, flash ngắn, hit SFX và damage feedback | ✓ | ✓ |
+| Bị tiêu diệt | `death` | HP về 0/kết thúc combatant | Death one-shot, fade/knockout, SFX death | ✓ | ✓ |
+| Đánh thường | `normal_attack` | Action tấn công cơ bản bắt đầu | Body attack; có thể nối `normal_attack_fx` → projectile | ✓ | ✓ |
+| FX đòn thường | `normal_attack_fx` | Đòn chém/đòn đánh rời body | Slash/trail riêng, không dùng lại animation body | ✓ | ✓ |
+| Tung chiêu | `cast` | Skill bắt đầu/đang charge | Pose cast, charge/release SFX, skill telegraph | ✓ | ✓ |
+| Impact chiêu | `cast_impact` | Skill chạm mục tiêu | Impact tại mục tiêu, camera shake/VFX, impact SFX | ✓ | ✓ |
+| Phóng độc | `poison_cast` + `poison_projectile` | Chuẩn bị và phóng đòn độc | Cast độc → projectile → impact → `poisoned` | ✓ | ✓ |
+| Né đòn | `dodge` | Attack bị né | Motion né/ghost trail, chữ `NÉ!`, không phát hit impact | ✓ | ✓ |
+| Đóng băng | `frozen` | Bị freeze và mất/giảm quyền hành động | Ice overlay, crack khi phá, icon + số lượt | ✓ | ✓ |
+| Thiêu đốt | `burning` | Nhận burn damage theo lượt | Lửa quanh thân, ember, tick damage, icon + lượt | ✓ | ✓ |
+| Sét đánh | `lightning_struck` | Bị lightning impact hoặc shock | Flash trắng/xanh, tia sét, camera shake ngắn | ✓ | ✓ |
+| Khóa chiêu | `skill_locked` | Không thể dùng skill | Icon khóa trên nút skill và overlay ngắn trên actor | ✓ | ✓ |
+| Phá giáp | `armor_break` | DEF/giáp bị giảm hoặc phá | Crack/fragment armor, icon debuff, số DEF mới | ✓ | ✓ |
+
+#### Quy tắc asset và phát hiệu ứng
+
+- `idle`, `energy`, `high_hp`, `low_hp`, `poisoned`, `shield` là trạng thái loop; các key còn lại là one-shot hoặc event-driven.
+- `hit`, `dodge`, `death`, `stunned`, `frozen`, `burning`, `lightning_struck`, `skill_locked`, `armor_break` phải có điểm kết thúc rõ ràng để không khóa animation của actor.
+- Một action hoàn chỉnh nên tách thành các mốc: **body action → FX/action projectile → impact → state feedback**. Damage chỉ được áp dụng bởi `game-core` event, không do animation quyết định.
+- Mỗi hiệu ứng gameplay có ít nhất ba lớp phản hồi khi cần: hình ảnh trên actor, feedback tại mục tiêu/HUD và SFX. Không dùng màu đơn lẻ để truyền đạt trạng thái; luôn có icon, text hoặc motion bổ trợ.
+- `freeze`, `burning`, `lightning_struck`, `skill_locked` và `armor_break` là nhóm mở rộng. Có thể preload asset trước, nhưng chỉ phát khi `game-core` có event/state tương ứng; không tự thêm gameplay event trong lớp Phaser.
+- Khi nhiều trạng thái cùng tồn tại, death ưu tiên cao nhất; control/debuff vẫn hiển thị qua overlay/icon; action one-shot được phục hồi về persistent state sau khi kết thúc.
+
 ## 16. Motion, VFX, âm thanh và haptics
 
 ### 16.1. Motion tokens — baseline theo `GAMEPLAY.md` §9/§25

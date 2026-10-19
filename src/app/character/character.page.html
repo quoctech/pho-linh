@@ -2,7 +2,14 @@
 <ion-content>
   @if (save; as current) {
     <main class="shell">
-      <div class="hero-card"><img [src]="heroPortrait" [alt]="current.settings.gender === 'female' ? 'Nữ kiếm sĩ' : 'Nam kiếm sĩ'" /><div><p class="eyebrow">PHIẾU NHÂN VẬT</p><h1>Cấp {{ current.profile.level }}</h1></div></div>
+      <div class="hero-card">
+        @if (heroPortrait; as portrait) {
+          <img [src]="portrait" [alt]="current.settings.gender === 'female' ? 'Nữ kiếm sĩ' : 'Nam kiếm sĩ'" />
+        } @else {
+          <div class="hero-placeholder" aria-label="Assets nam đang chờ bộ 2.5D mới">Nam kiếm sĩ<br /><small>Đang cập nhật 2.5D</small></div>
+        }
+        <div><p class="eyebrow">PHIẾU NHÂN VẬT</p><h1>Cấp {{ current.profile.level }}</h1></div>
+      </div>
       <p>EXP {{ current.profile.exp }} / {{ expRequired }} · Điểm chưa dùng <strong>{{ current.profile.unspentPoints }}</strong></p>
       <div class="exp"><span [style.width.%]="current.profile.exp / expRequired * 100"></span></div>
       <div class="power">POWER <strong>{{ stats?.power }}</strong></div>
