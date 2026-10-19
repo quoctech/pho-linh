@@ -61,9 +61,8 @@ h1 {
   position: relative;
   z-index: 1;
   display: block;
-  width: 100%;
-  height: auto;
-  min-height: 180px;
+  width: min(100%, 240px);
+  height: 180px;
   object-fit: contain;
   image-rendering: auto;
   filter: drop-shadow(0 12px 16px rgb(0 0 0 / 35%));

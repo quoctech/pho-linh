@@ -1,46 +1,37 @@
 import Phaser from 'phaser';
+import { actorAnimationKey, actorRows, ensureActorAnimation, preloadActorFrames } from '../../actor-frame-assets';
 
-export const MIST_DUST_SHEET_PATH = 'assets/monsters/mist-dust/sheets';
 export const MIST_DUST_SFX_PATH = 'assets/monsters/mist-dust/sfx/mp3';
+const action = (row: string) => actorAnimationKey('mist_blob', row);
 
 export const MIST_DUST_SPRITE_KEYS = {
-  idle: 'mist-dust-high-hp',
-  attack: 'mist-dust-normal-attack',
-  defend: 'mist-dust-shield',
-  poisonCast: 'mist-dust-cast',
-  hit: 'mist-dust-hit',
-  death: 'mist-dust-death',
-  highHp: 'mist-dust-high-hp',
-  energy: 'mist-dust-energy',
-  lowHp: 'mist-dust-low-hp',
-  poisoned: 'mist-dust-poison',
-  shield: 'mist-dust-shield',
-  heal: 'mist-dust-heal',
-  antiHeal: 'mist-dust-anti-heal',
-  dodge: 'mist-dust-dodge',
-  stunned: 'mist-dust-stun',
-  frameWidth: 330,
-  frameHeight: 329,
+  idle: action('idle'),
+  attack: action('normal_attack_a'),
+  heavyAttack: action('normal_attack_b'),
+  defend: action('mist_body'),
+  poisonCast: action('suong_mu_xam_thuc'),
+  hit: action('hit'),
+  death: action('defeat'),
+  highHp: action('high_hp'),
+  energy: action('energy_rage'),
+  lowHp: action('low_hp'),
+  poisoned: action('poison'),
+  shield: action('shield'),
+  heal: action('heal'),
+  antiHeal: action('anti_heal'),
+  dodge: action('dodge'),
+  stunned: action('stun'),
+  skillLocked: action('skill_lock'),
+  frozen: action('frozen'),
+  burning: action('burning'),
+  lightningStruck: action('lightning'),
+  armorBreak: action('armor_break'),
+  frameWidth: 132,
+  frameHeight: 114,
   displayWidth: 84,
-  displayHeight: 84,
-  originY: 0.88,
+  displayHeight: 84 * 114 / 132,
+  originY: 1,
 } as const;
-
-const MIST_DUST_SHEET_SPECS = [
-  ['mist-dust-high-hp', 'mist-dust-high-hp-sheet.webp', 330, 312],
-  ['mist-dust-normal-attack', 'mist-dust-normal-attack-sheet.webp', 330, 329],
-  ['mist-dust-cast', 'mist-dust-cast-sheet.webp', 329, 329],
-  ['mist-dust-death', 'mist-dust-death-sheet.webp', 459, 445],
-  ['mist-dust-dodge', 'mist-dust-dodge-sheet.webp', 330, 329],
-  ['mist-dust-energy', 'mist-dust-energy-sheet.webp', 449, 459],
-  ['mist-dust-heal', 'mist-dust-heal-sheet.webp', 330, 329],
-  ['mist-dust-hit', 'mist-dust-hit-sheet.webp', 329, 329],
-  ['mist-dust-low-hp', 'mist-dust-low-hp-sheet.webp', 330, 314],
-  ['mist-dust-anti-heal', 'mist-dust-anti-heal-sheet.webp', 330, 330],
-  ['mist-dust-poison', 'mist-dust-poison-sheet.webp', 330, 329],
-  ['mist-dust-shield', 'mist-dust-shield-sheet.webp', 449, 433],
-  ['mist-dust-stun', 'mist-dust-stun-sheet.webp', 329, 330],
-] as const;
 
 export const MIST_DUST_SFX_KEYS = {
   attack: 'sfx-mist-dust-attack',
@@ -83,44 +74,10 @@ export function preloadMistDustAssets(scene: Phaser.Scene): void {
 }
 
 export function preloadMistDustSprites(scene: Phaser.Scene): void {
-  for (const [key, file, frameWidth, frameHeight] of MIST_DUST_SHEET_SPECS) {
-    scene.load.spritesheet(key, `${MIST_DUST_SHEET_PATH}/${file}`, { frameWidth, frameHeight });
-  }
+  preloadActorFrames(scene, 'mist_blob');
 }
 
 export function ensureMistDustAnimations(scene: Phaser.Scene): void {
-  const looping = [
-    MIST_DUST_SPRITE_KEYS.idle,
-    MIST_DUST_SPRITE_KEYS.highHp,
-    MIST_DUST_SPRITE_KEYS.energy,
-    MIST_DUST_SPRITE_KEYS.lowHp,
-    MIST_DUST_SPRITE_KEYS.poisoned,
-    MIST_DUST_SPRITE_KEYS.shield,
-  ] as const;
-  for (const key of looping) {
-    createAnimation(scene, key, 8, -1);
-  }
-  for (const key of [
-    MIST_DUST_SPRITE_KEYS.attack,
-    MIST_DUST_SPRITE_KEYS.defend,
-    MIST_DUST_SPRITE_KEYS.poisonCast,
-    MIST_DUST_SPRITE_KEYS.hit,
-    MIST_DUST_SPRITE_KEYS.death,
-    MIST_DUST_SPRITE_KEYS.heal,
-    MIST_DUST_SPRITE_KEYS.antiHeal,
-    MIST_DUST_SPRITE_KEYS.dodge,
-    MIST_DUST_SPRITE_KEYS.stunned,
-  ] as const) {
-    createAnimation(scene, key, key === MIST_DUST_SPRITE_KEYS.attack ? 14 : 10, 0);
-  }
-}
-
-function createAnimation(scene: Phaser.Scene, key: string, frameRate: number, repeat: number): void {
-  if (scene.anims.exists(key) || !scene.textures.exists(key)) return;
-  scene.anims.create({
-    key,
-    frames: scene.anims.generateFrameNumbers(key, { start: 0, end: 7 }),
-    frameRate,
-    repeat,
-  });
+  const persistent = new Set(['idle', 'energy_rage', 'low_hp', 'high_hp', 'poison', 'shield']);
+  for (const row of actorRows('mist_blob')) ensureActorAnimation(scene, 'mist_blob', row.id, action(row.id), persistent.has(row.id) ? -1 : 0);
 }

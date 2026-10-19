@@ -10,6 +10,10 @@ export const routes: Routes = [
     loadComponent: () => import('./element-selection/element-selection.page').then((m) => m.ElementSelectionPage),
   },
   {
+    path: 'skin-preview',
+    loadComponent: () => import('./skin-preview/skin-preview.page').then((m) => m.SkinPreviewPage),
+  },
+  {
     path: 'hunt',
     loadComponent: () => import('./hunt/hunt.page').then((m) => m.HuntPage),
   },

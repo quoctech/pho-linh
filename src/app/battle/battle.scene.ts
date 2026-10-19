@@ -1,4 +1,5 @@
 import Phaser from 'phaser';
+import { actorFrameKey, normalizeActorSprite, type ActorFrameId } from './actor-frame-assets';
 import {
   areAdjacent,
   CHARACTER_DATA,
@@ -50,6 +51,7 @@ import {
   HERO_DISPLAY_WIDTH,
   HERO_DISPLAY_ORIGIN_Y,
   heroAnimationTextureKey,
+  heroSkillAnimationKey,
   ensureHeroAnimations,
   heroSfxKey,
   preloadHeroAssets,
@@ -61,10 +63,6 @@ import {
 } from './hero-assets';
 import {
   ELEMENT_SKILL_CONFIG,
-  elementSkillAnimationKey,
-  elementSkillFrameNames,
-  ensureElementSkillAnimations,
-  preloadElementSkillAssets,
   type ElementSkillSlot,
 } from './element-skill-assets';
 
@@ -77,6 +75,8 @@ const DEFAULT_LOGICAL_GAME_HEIGHT = 620;
 interface MonsterSpriteKeys {
   readonly idle: string;
   readonly attack: string;
+  readonly heavyAttack?: string;
+  readonly specialAttack?: string;
   readonly defend?: string;
   readonly poisonCast?: string;
   readonly hit: string;
@@ -175,7 +175,6 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
   private lastLongMieuVisualId?: string;
   private heroVisual?: Phaser.GameObjects.Container;
   private heroSprite?: Phaser.GameObjects.Sprite;
-  private heroSkillSprite?: Phaser.GameObjects.Sprite;
   private heroSpriteKeys: HeroSpriteKeys = HERO_SPRITE_KEYS.male;
   private heroGender: HeroGender = 'male';
   private heroElement: HeroElement = 'metal';
@@ -183,9 +182,11 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
   private heroSkillAnimationToken = 0;
   private heroTransientAnimation?: HeroTransientAnimation;
   private heroPersistentStatus: HeroPersistentStatus = 'idle';
+  private heroIntroIdle = true;
   private heroHpBand?: HeroHpBand;
   private heroCurrentAnimationKey?: string;
-  private monsterTransientAnimation?: 'attack' | 'defend' | 'poisonCast' | 'hit' | 'death' | 'heal' | 'antiHeal' | 'dodge' | 'stunned';
+  private monsterTransientAnimation?: 'attack' | 'heavyAttack' | 'specialAttack' | 'defend' | 'poisonCast' | 'hit' | 'death' | 'heal' | 'antiHeal' | 'dodge' | 'stunned';
+  private monsterAnimationToken = 0;
   private monsterPersistentStatus: HeroPersistentStatus = 'idle';
   private monsterHpBand?: HeroHpBand;
   private monsterCurrentAnimationKey?: string;
@@ -268,7 +269,6 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
     this.heroElement = heroElement;
     this.heroSpriteKeys = heroGender === 'male' ? HERO_ELEMENT_SPRITE_KEYS[heroElement] : HERO_SPRITE_KEYS[heroGender];
     preloadHeroAssets(this, heroGender, heroElement);
-    preloadElementSkillAssets(this, heroElement);
     this.load.spritesheet(GEM_ATLAS_KEY, 'assets/gems/pho-linh/pho-linh-gems-sheet.png', {
       frameWidth: 256,
       frameHeight: 256,
@@ -376,10 +376,11 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
     ensureLanternCatSkillAnimations(this);
     ensureMistDustAnimations(this);
     ensureHeroAnimations(this, this.heroGender, this.heroElement);
-    ensureElementSkillAnimations(this, this.heroElement);
     this.createHeroVisual();
     this.createHud();
     this.createMonsterVisual();
+    // Apply the same idle-calibrated scale before the first visible frame.
+    this.normalizeHeroSprite();
     this.statusUi = new StatusUiVfx({
       scene: this,
       heroPosition: {
@@ -445,6 +446,12 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
       .setStrokeStyle(2, 0xfff0a6, 0.95).setFillStyle(0xfff0a6, 0.1).setDepth(9).setVisible(false);
 
     this.unsubscribe = this.controller.subscribe((state) => this.renderState(state));
+    // Always present the character's idle row first. Full HP would otherwise
+    // replace it with high_hp in the same create tick before the player sees it.
+    this.time.delayedCall(this.reducedMotion ? 80 : 360, () => {
+      this.heroIntroIdle = false;
+      this.refreshDisplayedBars();
+    });
     this.syncTurnTimer();
     this.input.on('pointerdown', this.onPointerDown, this);
     this.input.on('pointerup', this.onPointerUp, this);
@@ -649,26 +656,24 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
   }
 
   private createMonsterVisual(): void {
-    // Mist Dust's clean sheet has transparent padding below the visible
-    // effect. Compensate for that padding so the visible feet/cloud edge
-    // sits exactly 3px above the board frame.
-    const monsterY = this.controller.currentState.monster.id === 'mist_blob'
-      ? this.monsterPosition.y + 9
-      : this.monsterPosition.y;
+    const monsterY = this.monsterPosition.y;
     const monster = this.add.container(this.monsterPosition.x, monsterY);
     monster.setDepth(6);
     const spriteKeys = this.monsterSpriteKeys();
-    if (spriteKeys && this.textures.exists(spriteKeys.idle)) {
+    const monsterId = this.controller.currentState.monster.id as ActorFrameId;
+    const idleTexture = monsterId === 'mist_blob' || monsterId === 'lantern_cat' ? actorFrameKey(monsterId, 'idle', 0) : '';
+    if (spriteKeys && this.textures.exists(idleTexture)) {
       this.ensureMonsterAnimations(spriteKeys);
       if (this.controller.currentState.monster.id === 'mist_blob' && this.textures.exists('mist-dust-hit-impact')) {
         this.createMonsterAnimation('mist-dust-hit-impact', 'mist-dust-hit-impact', 12, 0);
       }
-      const sprite = this.add.sprite(0, 0, spriteKeys.idle)
+      const sprite = this.add.sprite(0, 0, idleTexture)
         .setOrigin(0.5, spriteKeys.originY)
-        .setDisplaySize(spriteKeys.displayWidth, spriteKeys.displayHeight)
         .setAlpha(1)
         .setFlipX(true)
         .play(spriteKeys.idle);
+      sprite.on('animationupdate', () => this.normalizeMonsterSprite(sprite));
+      this.normalizeMonsterSprite(sprite);
       this.monsterArt = sprite;
       this.monsterSprite = sprite;
       monster.add(sprite);
@@ -729,18 +734,13 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
     const sprite = this.add.sprite(0, 0, idleTextureKey)
       .setOrigin(0.5, HERO_DISPLAY_ORIGIN_Y)
       .play(this.heroSpriteKeys.idle);
+    // Phaser 4 updates frame dimensions before this event. Re-assert the
+    // bottom pivot and display transform after every frame swap so animation
+    // rows with different native canvases never inherit a stale transform.
+    sprite.on('animationupdate', () => this.normalizeHeroSprite(sprite));
     this.heroSprite = sprite;
     this.heroVisual = hero;
     hero.add(sprite);
-    const skillConfig = ELEMENT_SKILL_CONFIG[this.heroElement];
-    const skillFrame = elementSkillFrameNames(this.heroElement, 'basicAttack')[0];
-    if (this.textures.exists(skillConfig.atlasKey)) {
-      this.heroSkillSprite = this.add.sprite(0, 0, skillConfig.atlasKey, skillFrame)
-        .setOrigin(0.5, HERO_DISPLAY_ORIGIN_Y)
-        .setVisible(false);
-      hero.add(this.heroSkillSprite);
-      this.normalizeHeroSprite(this.heroSkillSprite);
-    }
     this.normalizeHeroSprite();
     this.heroPersistentStatus = 'idle';
     this.heroCurrentAnimationKey = this.heroSpriteKeys.idle;
@@ -748,9 +748,19 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
 
   private normalizeHeroSprite(sprite = this.heroSprite): void {
     if (!sprite) return;
-    // Every element hero WebP and skill atlas frame is a 1080x1920 canvas. Re-apply the same transform
-    // after play() so Phaser never exposes a native-frame-size jump.
-    sprite.setOrigin(0.5, HERO_DISPLAY_ORIGIN_Y).setDisplaySize(HERO_DISPLAY_WIDTH, HERO_DISPLAY_HEIGHT);
+    sprite.setOrigin(0.5, HERO_DISPLAY_ORIGIN_Y);
+    if (this.heroGender === 'male' && sprite === this.heroSprite) {
+      normalizeActorSprite(sprite, this.heroElement, this.monsterSpriteKeys()?.displayWidth ?? HERO_DISPLAY_WIDTH);
+      return;
+    }
+    sprite.setDisplaySize(HERO_DISPLAY_WIDTH, HERO_DISPLAY_HEIGHT);
+  }
+
+  private normalizeMonsterSprite(sprite = this.monsterSprite): void {
+    const keys = this.monsterSpriteKeys();
+    const id = this.controller.currentState.monster.id;
+    if (!sprite || !keys || (id !== 'mist_blob' && id !== 'lantern_cat')) return;
+    normalizeActorSprite(sprite, id, keys.displayWidth);
   }
 
   private ensureMatch3VfxAnimations(): void {
@@ -1114,6 +1124,7 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
   }
 
   private syncHeroPersistentVisual(snapshot: HeroStatusSnapshot): void {
+    if (this.heroIntroIdle) return;
     const hpBand = getHeroHpBand(snapshot.currentHp, snapshot.maxHp);
     if (this.heroHpBand && hpBand !== this.heroHpBand) {
       if (hpBand === 'low') this.playHeroStatusSfx('lowHp');
@@ -1132,7 +1143,6 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
     const animationKey = this.heroPersistentAnimationKey(status);
     if (!sprite || !animationKey || !this.anims.exists(animationKey)) return;
     sprite.setVisible(true);
-    this.heroSkillSprite?.setVisible(false);
     if (this.heroCurrentAnimationKey === animationKey && sprite.anims.isPlaying) return;
     sprite.stop();
     sprite.play(animationKey);
@@ -1141,7 +1151,7 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
   }
 
   private syncMonsterPersistentVisual(snapshot: HeroStatusSnapshot): void {
-    if (!this.usesMonsterStatusSheets()) return;
+    if (!this.usesMonsterStatusSheets() || this.heroIntroIdle) return;
     const hpBand = getHeroHpBand(snapshot.currentHp, snapshot.maxHp);
     if (this.monsterHpBand && hpBand !== this.monsterHpBand) {
       if (hpBand === 'low') {
@@ -1182,11 +1192,9 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
     if (!animationKey || !this.anims.exists(animationKey)) return;
     if (this.monsterCurrentAnimationKey === animationKey && sprite.anims.isPlaying) return;
     sprite.stop();
-    sprite.setScale(1).setAlpha(1);
+    sprite.setAlpha(1);
     sprite.play(animationKey);
-    // Apply the size after switching sheets: Mist Dust's status sheets have
-    // different native frame dimensions.
-    sprite.setDisplaySize(keys.displayWidth, keys.displayHeight);
+    this.normalizeMonsterSprite(sprite);
     this.monsterCurrentAnimationKey = animationKey;
   }
 
@@ -1565,7 +1573,7 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
             this.shakeMonster();
           };
           if (isSkillAttack) {
-            const primarySkillKey = elementSkillAnimationKey(this.heroElement, 'primarySkill');
+            const primarySkillKey = heroSkillAnimationKey(this.heroElement, 'primarySkill');
             if (this.heroSkillAnimationKey === primarySkillKey) onHeroImpact();
             else this.playHeroCastImpact(onHeroImpact);
           } else {
@@ -1705,7 +1713,7 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
         this.telegraphLabel?.setText('⚡ Miêu Đèn · Long Miêu Liên Kích');
         this.statusLabel?.setText('Miêu Đèn dùng Long Miêu Liên Kích');
         this.playSfx(SFX_KEYS.lanternLongCharge, 0.62);
-        this.playMonsterAnimation('attack');
+        this.playMonsterAnimation('specialAttack');
         this.flashMonster(0xd8c2ff);
         this.lanternCatVfx?.playLongMieuLienKich();
         this.refreshDisplayedBars();
@@ -1859,7 +1867,7 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
           }
         }
         this.lastMonsterActionVisualId = String(event.payload['actionId'] ?? '');
-        this.playMonsterAnimation(isPoisonAction ? 'poisonCast' : 'attack');
+        this.playMonsterAnimation(isPoisonAction ? 'poisonCast' : monsterAction === 'heavy' ? 'heavyAttack' : 'attack');
         // Let the attack pose read first; the projectile launches from the
         // monster's extended strike instead of appearing at the same moment.
         if (!isPoisonAction) this.time.delayedCall(260, () => {
@@ -1904,10 +1912,8 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
         this.playSfx(SFX_KEYS.skillCast, 0.48);
         this.playHeroSfx('cast_charge', 0.52);
         this.flashMonster(0xcda8ff);
-        if (!this.playElementSkillAnimation('primarySkill')) {
-          this.playHeroAnimation('cast');
-          this.playCloudbreakerEffect();
-        }
+        if (!this.playElementSkillAnimation('primarySkill')) this.playHeroAnimation('cast');
+        this.playCloudbreakerEffect();
         break;
       case 'BATTLE_WON':
         this.statusLabel?.setText('Chiến thắng!');
@@ -1982,37 +1988,31 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
     this.time.delayedCall(180, () => this.monsterBody?.setFillStyle(0x8b9bc7, 1));
   }
 
-  private playMonsterAnimation(action: 'attack' | 'defend' | 'poisonCast' | 'hit' | 'death'): void {
+  private playMonsterAnimation(action: 'attack' | 'heavyAttack' | 'specialAttack' | 'defend' | 'poisonCast' | 'hit' | 'death'): void {
     const sprite = this.monsterSprite;
     const keys = this.monsterSpriteKeys();
     const animationKey = keys?.[action];
     if (!sprite || !animationKey || !this.anims.exists(animationKey)) return;
+    const animationToken = ++this.monsterAnimationToken;
 
     if (this.usesMonsterStatusSheets()) {
       this.monsterTransientAnimation = action;
       this.monsterCurrentAnimationKey = animationKey;
     }
     sprite.stop();
-    sprite.setScale(1).setAlpha(1);
+    sprite.setAlpha(1);
     sprite.play(animationKey);
-    sprite.setDisplaySize(keys?.displayWidth ?? 84, keys?.displayHeight ?? 84);
-    if (action === 'attack' && !this.usesMonsterStatusSheets()) {
-      sprite.setDisplaySize(
-        (keys?.displayWidth ?? 84) * 1.12,
-        (keys?.displayHeight ?? 84) * 1.12,
-      );
-    }
+    this.normalizeMonsterSprite(sprite);
     if (action === 'death') return;
 
     sprite.once(`animationcomplete-${animationKey}`, () => {
-      if (this.monsterSprite !== sprite) return;
+      if (this.monsterSprite !== sprite || this.monsterAnimationToken !== animationToken) return;
       if (this.usesMonsterStatusSheets()) {
         this.monsterTransientAnimation = undefined;
         this.playMonsterPersistentAnimation(this.monsterPersistentStatus);
       } else if (keys && this.anims.exists(keys.idle)) {
-        sprite.setScale(1);
         sprite.play(keys.idle);
-        sprite.setDisplaySize(keys.displayWidth, keys.displayHeight);
+        this.normalizeMonsterSprite(sprite);
       }
     });
   }
@@ -2026,15 +2026,16 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
     const keys = this.monsterSpriteKeys();
     const animationKey = keys?.[action];
     if (!sprite || !animationKey || !this.anims.exists(animationKey)) return;
+    const animationToken = ++this.monsterAnimationToken;
     this.monsterTransientAnimation = action;
     this.monsterCurrentAnimationKey = animationKey;
     this.playSfx(volume > 0 ? this.monsterEffectSfxKey(action) : '', volume);
     sprite.stop();
-    sprite.setScale(1).setAlpha(1);
+    sprite.setAlpha(1);
     sprite.play(animationKey);
-    sprite.setDisplaySize(keys.displayWidth, keys.displayHeight);
+    this.normalizeMonsterSprite(sprite);
     sprite.once(`animationcomplete-${animationKey}`, () => {
-      if (this.monsterSprite !== sprite) return;
+      if (this.monsterSprite !== sprite || this.monsterAnimationToken !== animationToken) return;
       this.monsterTransientAnimation = undefined;
       this.playMonsterPersistentAnimation(this.monsterPersistentStatus);
     });
@@ -2058,34 +2059,35 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
     onImpact?: () => void,
     impactDelay = 500,
   ): boolean {
-    const sprite = this.heroSkillSprite;
-    const baseSprite = this.heroSprite;
-    const animationKey = elementSkillAnimationKey(this.heroElement, slot);
-    if (!sprite || !baseSprite || !this.anims.exists(animationKey)) return false;
-
+    const sprite = this.heroSprite;
+    const animationKey = heroSkillAnimationKey(this.heroElement, slot);
+    if (!sprite || !this.anims.exists(animationKey)) return false;
     this.heroTransientAnimation = slot === 'basicAttack' ? 'attack' : 'cast';
     this.heroSkillAnimationKey = animationKey;
     const animationToken = ++this.heroSkillAnimationToken;
-    baseSprite.setVisible(false);
     sprite.setVisible(true).stop().play(animationKey);
     this.normalizeHeroSprite(sprite);
-
+    let animationDone = false;
     let impactPlayed = false;
-    const playImpact = () => {
-      if (impactPlayed || this.heroSkillAnimationKey !== animationKey || this.heroSkillAnimationToken !== animationToken) return;
-      impactPlayed = true;
-      onImpact?.();
-    };
-    if (onImpact) this.time.delayedCall(this.reducedMotion ? 80 : impactDelay, playImpact);
-    sprite.once(`animationcomplete-${animationKey}`, () => {
-      if (this.heroSkillSprite !== sprite || this.heroSkillAnimationKey !== animationKey || this.heroSkillAnimationToken !== animationToken) return;
-      playImpact();
-      sprite.setVisible(false);
-      baseSprite.setVisible(true);
+    const finish = () => {
+      if (!animationDone || !impactPlayed || this.heroSprite !== sprite || this.heroSkillAnimationToken !== animationToken) return;
       this.heroSkillAnimationKey = undefined;
       this.heroTransientAnimation = undefined;
       this.heroCurrentAnimationKey = undefined;
       this.playHeroPersistentAnimation(this.heroPersistentStatus);
+    };
+    const playImpact = () => {
+      if (impactPlayed || this.heroSkillAnimationKey !== animationKey || this.heroSkillAnimationToken !== animationToken) return;
+      impactPlayed = true;
+      onImpact?.();
+      finish();
+    };
+    if (onImpact) this.time.delayedCall(this.reducedMotion ? 80 : impactDelay, playImpact);
+    sprite.once(`animationcomplete-${animationKey}`, () => {
+      if (this.heroSprite !== sprite || this.heroSkillAnimationToken !== animationToken) return;
+      animationDone = true;
+      if (!onImpact) playImpact();
+      finish();
     });
     return true;
   }
@@ -2097,7 +2099,6 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
 
     this.heroSkillAnimationToken += 1;
     this.heroSkillAnimationKey = undefined;
-    this.heroSkillSprite?.setVisible(false);
     sprite.setVisible(true);
     this.heroTransientAnimation = key;
     sprite.stop();
@@ -2125,7 +2126,6 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
 
     this.heroSkillAnimationToken += 1;
     this.heroSkillAnimationKey = undefined;
-    this.heroSkillSprite?.setVisible(false);
     sprite.setVisible(true);
     this.heroTransientAnimation = key;
     sprite.stop();

@@ -1,0 +1,22 @@
+<ion-header><ion-toolbar><ion-title>Kiểm tra skin V2</ion-title></ion-toolbar></ion-header>
+<ion-content>
+  <main class="preview-shell">
+    <div #gameHost class="game-host" aria-label="Preview nhân vật và quái"></div>
+    <div class="actor-grid" aria-label="Chọn nhân vật">
+      @for (actor of actors; track actor.id) {
+        <ion-button size="small" [fill]="selectedActor === actor.id ? 'solid' : 'outline'" (click)="selectActor(actor.id)">
+          {{ actor.label }}
+        </ion-button>
+      }
+    </div>
+    <p class="hint">Chọn một hiệu ứng để chạy lặp và kiểm tra đầy đủ frame.</p>
+    <div class="action-grid" aria-label="24 hiệu ứng">
+      @for (action of actions; track action.id) {
+        <ion-button size="small" [fill]="selected === action.id ? 'solid' : 'outline'" (click)="select(action.id)">
+          {{ actionLabel(action.label) }}
+        </ion-button>
+      }
+    </div>
+    <ion-button expand="block" fill="clear" routerLink="/home">Về nhà</ion-button>
+  </main>
+</ion-content>

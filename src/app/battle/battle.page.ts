@@ -169,6 +169,10 @@ export class BattlePage implements AfterViewInit, OnDestroy {
             antialiasGL: false,
             pixelArt: false,
             roundPixels: false,
+            // Prefer WebGL on devices that expose more than one graphics path.
+            // The game still falls back through Phaser.AUTO when WebGL is unavailable.
+            powerPreference: 'high-performance',
+            preserveDrawingBuffer: false,
           },
           scale: {
             // The scene uses logical coordinates and the camera zoom restores

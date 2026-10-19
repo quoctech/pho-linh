@@ -2,13 +2,14 @@ import {
   ELEMENT_SKILL_CONFIG,
   elementSkillAnimationKey,
   elementSkillFrameNames,
+  usesElementSkillAtlas,
 } from './element-skill-assets';
 
 describe('five-element skill runtime assets', () => {
   it('registers the basic attack and both named skills for every element', () => {
     const elements = ['metal', 'wood', 'water', 'fire', 'earth'] as const;
     const expectedPrimary = {
-      metal: ['kim_quang_tram', 'Kim Quang Trảm'],
+      metal: ['kim_quang_pha_giap', 'Kim Quang Phá Giáp'],
       wood: ['van_doc_phe_tam', 'Vạn Độc Phệ Tâm'],
       water: ['han_bang_phong_an', 'Hàn Băng Phong Ấn'],
       fire: ['liet_diem_xuyen_tam', 'Liệt Diễm Xuyên Tâm'],
@@ -18,8 +19,9 @@ describe('five-element skill runtime assets', () => {
 
     for (const element of elements) {
       const config = ELEMENT_SKILL_CONFIG[element];
-      expect(config.atlasImage).toBe(`assets/skills/5-elements-runtime/${element}/atlas/pl_${element}_skills_atlas_fullhd.png`);
-      expect(config.atlasJson).toBe(`assets/skills/5-elements-runtime/${element}/atlas/pl_${element}_skills_atlas_fullhd.json`);
+      expect(usesElementSkillAtlas(element)).toBe(false);
+      expect(config.atlasImage).toBe('');
+      expect(config.atlasJson).toBe('');
       expect([config.basicAttackFolder, config.primarySkillFolder, config.secondarySkillFolder]).toHaveLength(3);
       expect(config.primarySkillFolder).toBe(expectedPrimary[element][0]);
       expect(config.primarySkillLabel).toBe(expectedPrimary[element][1]);
@@ -27,8 +29,7 @@ describe('five-element skill runtime assets', () => {
         const key = elementSkillAnimationKey(element, slot);
         expect(keys.has(key)).toBe(false);
         keys.add(key);
-        expect(elementSkillFrameNames(element, slot)).toHaveLength(6);
-        expect(elementSkillFrameNames(element, slot)[0]).toMatch(new RegExp(`^pl_${element}_.+_01$`));
+        expect(elementSkillFrameNames(element, slot)).toHaveLength(0);
       }
     }
     expect(keys.size).toBe(15);

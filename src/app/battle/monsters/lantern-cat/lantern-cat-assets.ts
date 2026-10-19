@@ -1,30 +1,38 @@
 import Phaser from 'phaser';
+import { actorAnimationKey, actorRows, ensureActorAnimation, preloadActorFrames } from '../../actor-frame-assets';
 
-export const LANTERN_CAT_SHEET_PATH = 'assets/monsters/mieu-den/sheets';
 export const LANTERN_CAT_SFX_PATH = 'assets/monsters/mieu-den/sfx/mp3';
 const LANTERN_SKILL_SFX_PATH = 'assets/audio/combat/lantern-cat';
+const action = (row: string) => actorAnimationKey('lantern_cat', row);
 
 export const LANTERN_CAT_SPRITE_KEYS = {
-  idle: 'mieu-den-high-hp',
-  attack: 'mieu-den-normal-attack',
-  defend: 'mieu-den-defend',
-  poisonCast: 'mieu-den-cast',
-  hit: 'mieu-den-hit',
-  death: 'mieu-den-death',
-  highHp: 'mieu-den-high-hp',
-  energy: 'mieu-den-energy',
-  lowHp: 'mieu-den-low-hp',
-  poisoned: 'mieu-den-poison',
-  shield: 'mieu-den-shield',
-  heal: 'mieu-den-heal',
-  antiHeal: 'mieu-den-anti-heal',
-  dodge: 'mieu-den-dodge',
-  stunned: 'mieu-den-stun',
-  frameWidth: 512,
-  frameHeight: 512,
+  idle: action('idle'),
+  attack: action('normal_attack_a'),
+  heavyAttack: action('normal_attack_b'),
+  specialAttack: action('long_mieu_lien_kich'),
+  defend: action('linh_dang_ho_menh'),
+  poisonCast: action('fire_projectile'),
+  hit: action('hit'),
+  death: action('defeat'),
+  highHp: action('high_hp'),
+  energy: action('energy_rage'),
+  lowHp: action('low_hp'),
+  poisoned: action('poison'),
+  shield: action('shield'),
+  heal: action('heal'),
+  antiHeal: action('anti_heal'),
+  dodge: action('dodge'),
+  stunned: action('stun'),
+  skillLocked: action('skill_lock'),
+  frozen: action('frozen'),
+  burning: action('burning'),
+  lightningStruck: action('lightning'),
+  armorBreak: action('armor_break'),
+  frameWidth: 170,
+  frameHeight: 126,
   displayWidth: 92,
-  displayHeight: 92,
-  originY: 0.9,
+  displayHeight: 92 * 126 / 170,
+  originY: 1,
 } as const;
 
 export const LANTERN_CAT_ATTACK_FX_KEY = 'mieu-den-normal-attack-fx';
@@ -80,24 +88,6 @@ export const LANTERN_SFX_FILES: Readonly<Record<string, string>> = {
   [LANTERN_SFX_KEYS.lanternLongStun]: `${LANTERN_SKILL_SFX_PATH}/long-mieu-lien-kich-stun.mp3`,
 };
 
-const LANTERN_CAT_SHEET_SPECS = [
-  [LANTERN_CAT_SPRITE_KEYS.highHp, 'high-hp-sheet.webp'],
-  [LANTERN_CAT_SPRITE_KEYS.energy, 'energy-sheet.webp'],
-  [LANTERN_CAT_SPRITE_KEYS.lowHp, 'low-hp-sheet.webp'],
-  [LANTERN_CAT_SPRITE_KEYS.poisoned, 'poison-sheet.webp'],
-  [LANTERN_CAT_SPRITE_KEYS.shield, 'shield-sheet.webp'],
-  [LANTERN_CAT_SPRITE_KEYS.heal, 'heal-sheet.webp'],
-  [LANTERN_CAT_SPRITE_KEYS.antiHeal, 'anti-heal-sheet.webp'],
-  [LANTERN_CAT_SPRITE_KEYS.dodge, 'dodge-sheet.webp'],
-  [LANTERN_CAT_SPRITE_KEYS.stunned, 'stun-sheet.webp'],
-  [LANTERN_CAT_SPRITE_KEYS.attack, 'normal-attack-sheet.webp'],
-  [LANTERN_CAT_SPRITE_KEYS.poisonCast, 'cast-sheet.webp'],
-  [LANTERN_CAT_SPRITE_KEYS.hit, 'hit-sheet.webp'],
-  [LANTERN_CAT_SPRITE_KEYS.death, 'death-sheet.webp'],
-  [LANTERN_CAT_ATTACK_FX_KEY, 'normal-attack-fx-sheet.webp'],
-  [LANTERN_CAT_CAST_FX_KEY, 'cast-fx-sheet.webp'],
-] as const;
-
 export function preloadLanternCatAssets(scene: Phaser.Scene): void {
   scene.load.image(
     LANTERN_SKILL_VFX_KEYS.icon,
@@ -123,38 +113,15 @@ export function preloadLanternCatAssets(scene: Phaser.Scene): void {
 }
 
 export function preloadLanternCatSprites(scene: Phaser.Scene): void {
-  for (const [key, file] of LANTERN_CAT_SHEET_SPECS) {
-    scene.load.spritesheet(key, `${LANTERN_CAT_SHEET_PATH}/${file}`, {
-      frameWidth: LANTERN_CAT_SPRITE_KEYS.frameWidth,
-      frameHeight: LANTERN_CAT_SPRITE_KEYS.frameHeight,
-    });
+  preloadActorFrames(scene, 'lantern_cat');
+  for (const [key, file] of [[LANTERN_CAT_ATTACK_FX_KEY, 'normal-attack-fx-sheet.webp'], [LANTERN_CAT_CAST_FX_KEY, 'cast-fx-sheet.webp']] as const) {
+    scene.load.spritesheet(key, `assets/monsters/mieu-den/sheets/${file}`, { frameWidth: 512, frameHeight: 512 });
   }
 }
 
 export function ensureLanternCatAnimations(scene: Phaser.Scene): void {
-  for (const key of [
-    LANTERN_CAT_SPRITE_KEYS.idle,
-    LANTERN_CAT_SPRITE_KEYS.highHp,
-    LANTERN_CAT_SPRITE_KEYS.energy,
-    LANTERN_CAT_SPRITE_KEYS.lowHp,
-    LANTERN_CAT_SPRITE_KEYS.poisoned,
-    LANTERN_CAT_SPRITE_KEYS.shield,
-  ] as const) {
-    createAnimation(scene, key, 8, -1);
-  }
-  createAnimation(scene, LANTERN_CAT_SPRITE_KEYS.defend, 10, 0, LANTERN_CAT_SPRITE_KEYS.shield);
-  for (const key of [
-    LANTERN_CAT_SPRITE_KEYS.attack,
-    LANTERN_CAT_SPRITE_KEYS.poisonCast,
-    LANTERN_CAT_SPRITE_KEYS.hit,
-    LANTERN_CAT_SPRITE_KEYS.death,
-    LANTERN_CAT_SPRITE_KEYS.heal,
-    LANTERN_CAT_SPRITE_KEYS.antiHeal,
-    LANTERN_CAT_SPRITE_KEYS.dodge,
-    LANTERN_CAT_SPRITE_KEYS.stunned,
-  ] as const) {
-    createAnimation(scene, key, key === LANTERN_CAT_SPRITE_KEYS.attack ? 14 : 10, 0);
-  }
+  const persistent = new Set(['idle', 'energy_rage', 'low_hp', 'high_hp', 'poison', 'shield']);
+  for (const row of actorRows('lantern_cat')) ensureActorAnimation(scene, 'lantern_cat', row.id, action(row.id), persistent.has(row.id) ? -1 : 0);
   createAnimation(scene, LANTERN_CAT_ATTACK_FX_KEY, 14, 0);
   createAnimation(scene, LANTERN_CAT_CAST_FX_KEY, 12, 0);
 }

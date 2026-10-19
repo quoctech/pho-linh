@@ -9,21 +9,23 @@ import {
   HERO_ASSETS_AVAILABLE,
   HERO_DISPLAY_HEIGHT,
   HERO_DISPLAY_WIDTH,
+  HERO_METAL_DISPLAY_WIDTH,
   HERO_MALE_ONLY_ANIMATION_NAMES,
   HERO_METAL_ANIMATION_NAMES,
   HERO_METAL_FRAME_COUNT,
-  HERO_METAL_FRAME_HEIGHT,
   HERO_METAL_FRAME_RATE,
   HERO_METAL_FRAME_WIDTH,
   HERO_METAL_RUNTIME_MAPPING,
+  METAL_PREVIEW_ACTIONS,
   heroDisplaySize,
   HERO_STATUS_ANIMATION_NAMES,
   HERO_SFX_NAMES,
   type HeroStatusAnimationName,
 } from './hero-assets';
+import { ACTOR_FRAME_RATE, actorDisplaySize, actorRow, actorRows, type ActorFrameId } from './actor-frame-assets';
 
 describe('hero asset metadata', () => {
-  it('declares the complete Male Metal pack as individual 1080x1920 frames', () => {
+  it('declares the complete Male Metal pack as 24 sets of six separated WebP frames', () => {
     const animations = HERO_ANIMATION_METADATA.male;
 
     expect(HERO_ASSETS_AVAILABLE.male).toBe(true);
@@ -32,14 +34,21 @@ describe('hero asset metadata', () => {
     for (const animation of HERO_METAL_ANIMATION_NAMES) {
       const metadata = animations[animation];
       expect(metadata.framePaths).toHaveLength(HERO_METAL_FRAME_COUNT);
-      expect(metadata.frameWidth).toBe(HERO_METAL_FRAME_WIDTH);
-      expect(metadata.frameHeight).toBe(HERO_METAL_FRAME_HEIGHT);
+      expect(metadata.sheet).toBe('');
+      expect(metadata.assetId).toBe(HERO_METAL_RUNTIME_MAPPING[animation]);
+      expect(metadata.framePaths).toEqual(expect.arrayContaining([
+        expect.stringMatching(/^frames_webp\/\d{2}_.+\/\d{2}_.+_01\.webp$/),
+      ]));
+      const row = actorRow('metal', metadata.assetId ?? '');
+      expect(metadata.frameWidth).toBe(row?.equalFrameSize.w);
+      expect(metadata.frameHeight).toBe(row?.equalFrameSize.h);
+      expect(metadata.frameCount).toBe(HERO_METAL_FRAME_COUNT);
       expect(metadata.frameRate).toBe(HERO_METAL_FRAME_RATE);
       expect(HERO_METAL_RUNTIME_MAPPING[animation]).toBeTruthy();
     }
   });
 
-  it('declares all five male element packs with the same 24-state runtime contract', () => {
+  it('maps every male runtime action to a six-frame V2 row', () => {
     for (const element of ['metal', 'wood', 'water', 'fire', 'earth'] as const) {
       const animations = HERO_ELEMENT_ANIMATION_METADATA[element];
       const expectedRoot = element === 'metal' ? 'assets/hero-metal' : `assets/hero-${element}`;
@@ -48,9 +57,11 @@ describe('hero asset metadata', () => {
       for (const animation of HERO_METAL_ANIMATION_NAMES) {
         const metadata = animations[animation];
         expect(metadata.framePaths).toHaveLength(HERO_METAL_FRAME_COUNT);
-        expect(metadata.frameWidth).toBe(HERO_METAL_FRAME_WIDTH);
-        expect(metadata.frameHeight).toBe(HERO_METAL_FRAME_HEIGHT);
-        expect(metadata.frameRate).toBe(HERO_METAL_FRAME_RATE);
+        const row = actorRow(element, metadata.assetId ?? '');
+        expect(row).toBeDefined();
+        expect(metadata.frameWidth).toBe(row?.equalFrameSize.w);
+        expect(metadata.frameHeight).toBe(row?.equalFrameSize.h);
+        expect(metadata.frameRate).toBe(ACTOR_FRAME_RATE);
         expect(HERO_ELEMENT_RUNTIME_MAPPING[animation]).toBeTruthy();
       }
     }
@@ -72,11 +83,13 @@ describe('hero asset metadata', () => {
     expect(new Set(HERO_SFX_NAMES).size).toBe(19);
   });
 
-  it('locks every hero animation to exactly one display box', () => {
-    for (const animation of HERO_ANIMATION_NAMES) {
+  it('keeps one idle-calibrated scale across Metal actions', () => {
+    for (const animation of HERO_METAL_ANIMATION_NAMES) {
+      const metadata = HERO_ELEMENT_ANIMATION_METADATA.metal[animation];
+      const scale = HERO_METAL_DISPLAY_WIDTH / HERO_METAL_FRAME_WIDTH;
       expect(heroDisplaySize('male', animation)).toEqual({
-        width: HERO_DISPLAY_WIDTH,
-        height: HERO_DISPLAY_HEIGHT,
+        width: metadata.frameWidth * scale,
+        height: metadata.frameHeight * scale,
       });
     }
     for (const animation of HERO_ANIMATION_NAMES) {
@@ -84,6 +97,32 @@ describe('hero asset metadata', () => {
         width: HERO_DISPLAY_WIDTH,
         height: HERO_DISPLAY_HEIGHT,
       });
+    }
+  });
+
+  it('exposes all 24 physical Kim V2 rows for the skin preview', () => {
+    expect(METAL_PREVIEW_ACTIONS).toHaveLength(24);
+    expect(new Set(METAL_PREVIEW_ACTIONS.map((action) => action.id)).size).toBe(24);
+    expect(METAL_PREVIEW_ACTIONS.map((action) => action.id)).toEqual(expect.arrayContaining([
+      'idle', 'poison', 'skill_dodge', 'van_kiem_quy_tong', 'kim_quang_pha_giap',
+    ]));
+  });
+
+  it('ships 24 independent six-frame rows for all seven V2 actors', () => {
+    for (const actor of ['metal', 'wood', 'water', 'fire', 'earth', 'mist_blob', 'lantern_cat'] as const satisfies readonly ActorFrameId[]) {
+      const rows = actorRows(actor);
+      expect(rows).toHaveLength(24);
+      expect(new Set(rows.map((row) => row.id)).size).toBe(24);
+      for (const row of rows) {
+        const full = actorRow(actor, row.id);
+        expect(full?.frames).toHaveLength(6);
+        expect(full?.frames.map((frame) => frame.file)).toEqual(expect.arrayContaining([
+          expect.stringMatching(/^frames_webp\/\d{2}_.+\/\d{2}_.+_06\.webp$/),
+        ]));
+      }
+      const attack = actorDisplaySize(actor, rows.find((row) => row.id.startsWith('normal_attack'))?.id ?? 'idle', 90);
+      expect(attack.width).toBeGreaterThan(0);
+      expect(attack.height).toBeGreaterThan(0);
     }
   });
 });

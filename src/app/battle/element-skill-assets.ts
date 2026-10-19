@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
 import type { ElementId } from '../../game-core';
+import { heroSkillAnimationKey } from './hero-assets';
 
 export type ElementSkillSlot = 'basicAttack' | 'primarySkill' | 'secondarySkill';
 
@@ -15,14 +16,13 @@ export interface ElementSkillConfig {
   readonly secondarySkillLabel: string;
 }
 
-const SKILL_ASSET_ROOT = 'assets/skills/5-elements-runtime';
 const ELEMENT_SKILL_DETAILS: Readonly<Record<ElementId, Omit<ElementSkillConfig, 'element' | 'atlasKey' | 'atlasImage' | 'atlasJson'>>> = {
   metal: {
     basicAttackFolder: 'basic_attack',
-    primarySkillFolder: 'kim_quang_tram',
-    primarySkillLabel: 'Kim Quang Trảm',
-    secondarySkillFolder: 'van_kiem_pha_giap',
-    secondarySkillLabel: 'Vạn Kiếm Phá Giáp',
+    primarySkillFolder: 'kim_quang_pha_giap',
+    primarySkillLabel: 'Kim Quang Phá Giáp',
+    secondarySkillFolder: 'van_kiem_quy_tong',
+    secondarySkillLabel: 'Vạn Kiếm Quy Tông',
   },
   wood: {
     basicAttackFolder: 'basic_attack',
@@ -61,17 +61,21 @@ export const ELEMENT_SKILL_CONFIG: Readonly<Record<ElementId, ElementSkillConfig
       element,
       ...ELEMENT_SKILL_DETAILS[element],
       atlasKey: `pl-${element}-skills`,
-      atlasImage: `${SKILL_ASSET_ROOT}/${element}/atlas/pl_${element}_skills_atlas_fullhd.png`,
-      atlasJson: `${SKILL_ASSET_ROOT}/${element}/atlas/pl_${element}_skills_atlas_fullhd.json`,
+      atlasImage: '',
+      atlasJson: '',
     },
   ]),
 ) as Record<ElementId, ElementSkillConfig>;
 
 export function elementSkillAnimationKey(element: ElementId, slot: ElementSkillSlot): string {
-  return `hero-${element}-skill-${slot}`;
+  return heroSkillAnimationKey(element, slot);
 }
 
+/** All five male hero skill poses now come from separated V2 frames. */
+export function usesElementSkillAtlas(_element: ElementId): boolean { return false; }
+
 export function elementSkillFrameNames(element: ElementId, slot: ElementSkillSlot): readonly string[] {
+  if (!usesElementSkillAtlas(element)) return [];
   const config = ELEMENT_SKILL_CONFIG[element];
   const folder = slot === 'basicAttack'
     ? config.basicAttackFolder
@@ -82,11 +86,13 @@ export function elementSkillFrameNames(element: ElementId, slot: ElementSkillSlo
 }
 
 export function preloadElementSkillAssets(scene: Phaser.Scene, element: ElementId): void {
+  if (!usesElementSkillAtlas(element)) return;
   const config = ELEMENT_SKILL_CONFIG[element];
   scene.load.atlas(config.atlasKey, config.atlasImage, config.atlasJson);
 }
 
 export function ensureElementSkillAnimations(scene: Phaser.Scene, element: ElementId): void {
+  if (!usesElementSkillAtlas(element)) return;
   const config = ELEMENT_SKILL_CONFIG[element];
   for (const slot of ['basicAttack', 'primarySkill', 'secondarySkill'] as const) {
     const key = elementSkillAnimationKey(element, slot);

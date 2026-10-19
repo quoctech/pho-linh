@@ -1,0 +1,9 @@
+:host { --page-bg: #171426; }
+ion-content { --background: radial-gradient(circle at 50% -10%, #40315d 0, #171426 48%); }
+.preview-shell { max-width: 640px; margin: auto; padding: 14px 12px 28px; color: #fff8e8; }
+.game-host { width: 100%; min-height: 340px; overflow: hidden; border: 1px solid #ffffff22; border-radius: 18px; background: #171426; }
+.hint { margin: 14px 4px; color: #c7bedc; font-size: 13px; line-height: 1.45; }
+.actor-grid { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
+.action-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+ion-button { --border-radius: 10px; margin: 0; font-size: 11px; }
+@media (min-width: 540px) { .action-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }

@@ -1,5 +1,0 @@
-this.load.atlas('pl_metal_skills', 'metal/atlas/pl_metal_skills_atlas_fullhd.png', 'metal/atlas/pl_metal_skills_atlas_fullhd.json');
-this.load.atlas('pl_wood_skills', 'wood/atlas/pl_wood_skills_atlas_fullhd.png', 'wood/atlas/pl_wood_skills_atlas_fullhd.json');
-this.load.atlas('pl_water_skills', 'water/atlas/pl_water_skills_atlas_fullhd.png', 'water/atlas/pl_water_skills_atlas_fullhd.json');
-this.load.atlas('pl_fire_skills', 'fire/atlas/pl_fire_skills_atlas_fullhd.png', 'fire/atlas/pl_fire_skills_atlas_fullhd.json');
-this.load.atlas('pl_earth_skills', 'earth/atlas/pl_earth_skills_atlas_fullhd.png', 'earth/atlas/pl_earth_skills_atlas_fullhd.json');
