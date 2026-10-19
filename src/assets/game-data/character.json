@@ -1,0 +1,81 @@
+{
+  "schemaVersion": 1,
+  "id": "player-character",
+  "baseAttributes": {
+    "str": 5,
+    "vit": 5,
+    "agi": 5,
+    "int": 5
+  },
+  "progression": {
+    "startingLevel": 1,
+    "startingExp": 0,
+    "startingGold": 0,
+    "startingUnspentPoints": 0,
+    "expBase": 100,
+    "expPerLevel": 50,
+    "minimumExpRequired": 50,
+    "attributePointsPerLevel": 3
+  },
+  "derivedStats": {
+    "maxHp": {
+      "base": 200,
+      "vitPerPoint": 20
+    },
+    "atk": {
+      "base": 10,
+      "strPerPoint": 3
+    },
+    "defense": {
+      "base": 0,
+      "vitPerPoint": 2
+    },
+    "skillPower": {
+      "base": 5,
+      "intPerPoint": 3
+    },
+    "agiBonus": {
+      "agiPerPoint": 0.005,
+      "cap": 0.2
+    },
+    "power": {
+      "maxHpDivisor": 10,
+      "atkMultiplier": 4,
+      "defenseMultiplier": 2,
+      "skillPowerMultiplier": 2
+    }
+  },
+  "limits": {
+    "minAttribute": 0,
+    "maxEnergy": 100,
+    "shieldMaxHpRatio": 0.5,
+    "poisonMaxHpRatio": 0.2
+  },
+  "combat": {
+    "attackGemStatDivisor": 3,
+    "heal": {
+      "base": 8,
+      "intMultiplier": 0.6
+    },
+    "shield": {
+      "base": 8,
+      "vitMultiplier": 0.5
+    },
+    "energy": {
+      "perGem": 8
+    },
+    "poison": {
+      "intBase": 3,
+      "intMultiplier": 0.4,
+      "turns": 3
+    }
+  },
+  "skills": {
+    "cloud_break_lantern": {
+      "energyCost": 100,
+      "baseDamage": 50,
+      "skillPowerMultiplier": 4,
+      "defenseMultiplier": 0.5
+    }
+  }
+}

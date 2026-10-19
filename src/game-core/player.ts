@@ -1,25 +1,22 @@
+import { CHARACTER_DATA } from './game-data';
 import type { Attributes, DerivedStats, EquipmentBonuses, PlayerBattleState } from './types';
 
-export const BASE_ATTRIBUTES: Attributes = {
-  str: 5,
-  vit: 5,
-  agi: 5,
-  int: 5,
-};
+export const BASE_ATTRIBUTES: Attributes = { ...CHARACTER_DATA.baseAttributes };
 
 export function computeDerivedStats(
   attributes: Attributes,
   equipmentBonuses: EquipmentBonuses = {},
 ): DerivedStats {
-  const str = safeAttribute(attributes.str);
-  const vit = safeAttribute(attributes.vit);
-  const agi = safeAttribute(attributes.agi);
-  const int = safeAttribute(attributes.int);
-  const maxHp = Math.max(1, 200 + 20 * vit + safeBonus(equipmentBonuses.maxHp));
-  const atk = Math.max(0, 10 + 3 * str + safeBonus(equipmentBonuses.atk));
-  const defense = Math.max(0, 2 * vit + safeBonus(equipmentBonuses.defense));
-  const skillPower = Math.max(0, 5 + 3 * int + safeBonus(equipmentBonuses.skillPower));
-  const agiBonus = Math.min(0.2, agi * 0.005 + safeBonus(equipmentBonuses.agiBonus));
+  const str = safeAttribute(attributes.str, CHARACTER_DATA.baseAttributes.str);
+  const vit = safeAttribute(attributes.vit, CHARACTER_DATA.baseAttributes.vit);
+  const agi = safeAttribute(attributes.agi, CHARACTER_DATA.baseAttributes.agi);
+  const int = safeAttribute(attributes.int, CHARACTER_DATA.baseAttributes.int);
+  const formula = CHARACTER_DATA.derivedStats;
+  const maxHp = Math.max(1, formula.maxHp.base + formula.maxHp.vitPerPoint * vit + safeBonus(equipmentBonuses.maxHp));
+  const atk = Math.max(0, formula.atk.base + formula.atk.strPerPoint * str + safeBonus(equipmentBonuses.atk));
+  const defense = Math.max(0, formula.defense.base + formula.defense.vitPerPoint * vit + safeBonus(equipmentBonuses.defense));
+  const skillPower = Math.max(0, formula.skillPower.base + formula.skillPower.intPerPoint * int + safeBonus(equipmentBonuses.skillPower));
+  const agiBonus = Math.min(formula.agiBonus.cap, agi * formula.agiBonus.agiPerPoint + safeBonus(equipmentBonuses.agiBonus));
 
   return {
     maxHp,
@@ -27,7 +24,12 @@ export function computeDerivedStats(
     defense,
     skillPower,
     agiBonus,
-    power: Math.round(maxHp / 10 + atk * 4 + defense * 2 + skillPower * 2),
+    power: Math.round(
+      maxHp / formula.power.maxHpDivisor
+      + atk * formula.power.atkMultiplier
+      + defense * formula.power.defenseMultiplier
+      + skillPower * formula.power.skillPowerMultiplier,
+    ),
   };
 }
 
@@ -64,15 +66,15 @@ export function clampPlayerState(player: PlayerBattleState): PlayerBattleState {
     ...player,
     stats,
     currentHp: Math.max(0, Math.min(maxHp, safeNonNegative(player.currentHp, 0))),
-    shield: Math.max(0, Math.min(Math.round(maxHp * 0.5), safeNonNegative(player.shield, 0))),
-    energy: Math.max(0, Math.min(100, safeNonNegative(player.energy, 0))),
+    shield: Math.max(0, Math.min(Math.round(maxHp * CHARACTER_DATA.limits.shieldMaxHpRatio), safeNonNegative(player.shield, 0))),
+    energy: Math.max(0, Math.min(CHARACTER_DATA.limits.maxEnergy, safeNonNegative(player.energy, 0))),
     poisonPotency: safeNonNegative(player.poisonPotency, 0),
     poisonTurns: Math.max(0, Math.floor(safeNonNegative(player.poisonTurns, 0))),
   };
 }
 
-function safeAttribute(value: number): number {
-  return safeNonNegative(value, 5);
+function safeAttribute(value: number, fallback: number): number {
+  return safeNonNegative(value, fallback);
 }
 
 function safeBonus(value: number | undefined): number {

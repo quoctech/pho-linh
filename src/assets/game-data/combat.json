@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "id": "pho-linh-combat",
+  "match3": {
+    "rows": 6,
+    "cols": 6,
+    "gemTypes": ["attack", "heal", "shield", "energy", "poison"],
+    "gemWeights": {"attack": 6, "heal": 5, "shield": 5, "energy": 5, "poison": 5},
+    "maxCascade": 12,
+    "maxGenerationAttempts": 100,
+    "balanceVersion": 1,
+    "comboMultipliers": [1, 1.2, 1.4, 1.6]
+  },
+  "battle": {
+    "maxTurns": 24,
+    "playerTurnSeconds": 10
+  },
+  "monsterRewards": {
+    "dropChance": 0.2,
+    "rareDropThreshold": 0.98
+  }
+}

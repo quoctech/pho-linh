@@ -11,3 +11,4 @@ export * from './types';
 export * from './items';
 export * from './progression';
 export * from './save';
+export * from './game-data';

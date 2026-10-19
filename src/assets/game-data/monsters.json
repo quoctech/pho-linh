@@ -1,0 +1,89 @@
+{
+  "schemaVersion": 1,
+  "id": "pho-linh-monsters",
+  "combat": {
+    "lowHpPhaseRatio": 0.5,
+    "tacticDefenseRatio": 0.5,
+    "thinkingSeconds": {
+      "minimum": 1.2,
+      "steps": 19,
+      "step": 0.1
+    },
+    "heavyDamageMultiplier": 1.7,
+    "defenseMitigationMultiplier": 0.6,
+    "guardDefenseBonus": 12,
+    "mistGuardShield": 20,
+    "playerEnergyOnMonsterAttack": 10,
+    "monsterEnergyOnAttack": 15,
+    "poisonPotencyMultiplier": 1.5,
+    "poisonTurns": 3,
+    "lanternCatSkill": {
+      "maxHpDamageRatio": 0.1,
+      "playerEnergyDrainRatio": 0.2,
+      "energyRestored": 10
+    }
+  },
+  "definitions": {
+    "mist_blob": {
+      "id": "mist_blob",
+      "name": "Bụi Sương",
+      "level": 1,
+      "maxHp": 270,
+      "attack": 55,
+      "defense": 0,
+      "shieldCap": 50,
+      "behaviorId": "basic",
+      "behaviors": ["basic", "poison"],
+      "tactics": {"attack": 8, "defense": 1, "heal": 0, "shield": 2, "energy": 1, "poison": 1},
+      "dodgeChance": 0.25,
+      "dropPool": ["twig_blade", "cloth_coat"],
+      "expReward": 35,
+      "goldReward": 12
+    },
+    "lantern_cat": {
+      "id": "lantern_cat",
+      "name": "Miêu Đèn",
+      "level": 2,
+      "maxHp": 260,
+      "attack": 40,
+      "defense": 10,
+      "behaviorId": "heavy",
+      "behaviors": ["basic", "energy", "heavy", "poison"],
+      "tactics": {"attack": 12, "defense": 8, "heal": 10, "shield": 0, "energy": 10, "poison": 12},
+      "unlockRequirement": {"monsterId": "mist_blob", "wins": 2},
+      "dropPool": ["leaf_charm", "swift_charm"],
+      "expReward": 65,
+      "goldReward": 24
+    },
+    "bamboo_mantis": {
+      "id": "bamboo_mantis",
+      "name": "Bọ Lá Tre",
+      "level": 3,
+      "maxHp": 360,
+      "attack": 38,
+      "defense": 10,
+      "behaviorId": "heavy",
+      "behaviors": ["basic", "heavy", "poison"],
+      "tactics": {"attack": 8, "defense": 2, "heal": 1, "shield": 3, "energy": 2, "poison": 4},
+      "unlockRequirement": {"monsterId": "lantern_cat", "wins": 1},
+      "dropPool": ["lantern_blade", "mist_coat", "leaf_charm"],
+      "expReward": 105,
+      "goldReward": 42
+    },
+    "cloud_fox_boss": {
+      "id": "cloud_fox_boss",
+      "name": "Cáo Mây",
+      "level": 5,
+      "maxHp": 620,
+      "attack": 52,
+      "defense": 14,
+      "behaviorId": "boss",
+      "behaviors": ["basic", "guard", "heavy", "poison"],
+      "tactics": {"attack": 8, "defense": 7, "heal": 3, "shield": 6, "energy": 7, "poison": 5},
+      "unlockRequirement": {"monsterId": "bamboo_mantis", "wins": 1},
+      "dropPool": ["lantern_blade", "mist_coat", "moon_charm", "sturdy_charm"],
+      "expReward": 240,
+      "goldReward": 100
+    }
+  }
+}

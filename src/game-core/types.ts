@@ -121,12 +121,15 @@ export interface MonsterDefinition {
   readonly maxHp: number;
   readonly attack: number;
   readonly defense: number;
+  /** Chance for a monster-specific normal attack dodge mechanic. */
+  readonly dodgeChance?: number;
   /** Optional absolute shield cap; otherwise the battle config ratio is used. */
   readonly shieldCap?: number;
   readonly behaviorId: 'basic' | 'guard' | 'heavy' | 'boss';
   readonly behaviors: readonly ('basic' | 'guard' | 'heavy' | 'energy' | 'poison')[];
   readonly tactics: MonsterTactics;
   readonly unlockRequirement?: { readonly monsterId: string; readonly wins: number };
+  readonly dropPool?: readonly string[];
   readonly expReward: number;
   readonly goldReward: number;
 }

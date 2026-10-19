@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import {
   areAdjacent,
+  CHARACTER_DATA,
   DEFAULT_BATTLE_CONFIG,
   findLegalMoves,
   type Board,
@@ -1204,7 +1205,7 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
 
   private updateSkillButton(state: BattleState): void {
     const canAct = state.phase === 'PLAYER_READY';
-    const skillReady = canAct && state.player.energy >= DEFAULT_BATTLE_CONFIG.energyCap;
+    const skillReady = canAct && state.player.energy >= CHARACTER_DATA.skills.cloud_break_lantern.energyCost;
     this.skillButton?.setFillStyle(skillReady ? 0x8c5fd1 : 0x403653, 1).setAlpha(skillReady ? 1 : 0.55);
     this.skillIcon?.setAlpha(skillReady ? 1 : 0.55);
     this.setPlayerControlsEnabled(canAct, skillReady);
@@ -1215,10 +1216,14 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
     const skillPower = state.player.stats.skillPower;
     const skillDamage = Math.max(
       1,
-      Math.round(50 + skillPower * 4) - Math.floor(state.monster.defense * 0.5),
+      Math.round(
+        CHARACTER_DATA.skills.cloud_break_lantern.baseDamage
+        + skillPower * CHARACTER_DATA.skills.cloud_break_lantern.skillPowerMultiplier,
+      ) - Math.floor(state.monster.defense * CHARACTER_DATA.skills.cloud_break_lantern.defenseMultiplier),
     );
+    const skillEnergyCost = CHARACTER_DATA.skills.cloud_break_lantern.energyCost;
     this.skillTooltipLabel?.setText(
-      `${ELEMENT_SKILL_CONFIG[this.heroElement].primarySkillLabel}\n⚡${state.player.energy}/100 · Cần 100\nSP ${skillPower} · Sát thương ${skillDamage}`,
+      `${ELEMENT_SKILL_CONFIG[this.heroElement].primarySkillLabel}\n⚡${state.player.energy}/${DEFAULT_BATTLE_CONFIG.energyCap} · Cần ${skillEnergyCost}\nSP ${skillPower} · Sát thương ${skillDamage}`,
     );
     this.skillTooltip?.setVisible(true).setAlpha(1);
     this.skillTooltipHideTimer?.remove(false);
@@ -1446,7 +1451,7 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
   }
 
   private async dispatchSkill(): Promise<void> {
-    if (!this.canPlayerAct() || this.controller.currentState.player.energy < DEFAULT_BATTLE_CONFIG.energyCap) return;
+    if (!this.canPlayerAct() || this.controller.currentState.player.energy < CHARACTER_DATA.skills.cloud_break_lantern.energyCost) return;
     this.stopTurnTimer();
     this.setPlayerControlsEnabled(false);
     await this.controller.dispatch({

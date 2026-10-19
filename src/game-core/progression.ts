@@ -1,4 +1,5 @@
 import { nextInt, nextRandom } from './rng';
+import { CHARACTER_DATA, COMBAT_DATA } from './game-data';
 import { ITEM_TEMPLATES, INVENTORY_CAPACITY, createItemInstance, getEquippedItemIds } from './items';
 import { MONSTER_DEFINITIONS } from './monsters/monster-definitions';
 import { computeDerivedStats } from './player';
@@ -10,11 +11,22 @@ import type {
 export const MAX_INVENTORY = INVENTORY_CAPACITY;
 
 export function getExpRequired(level: number): number {
-  return Math.max(50, 100 + Math.max(0, level - 1) * 50);
+  const progression = CHARACTER_DATA.progression;
+  return Math.max(
+    progression.minimumExpRequired,
+    progression.expBase + Math.max(0, level - 1) * progression.expPerLevel,
+  );
 }
 
 export function createDefaultProfile(): PlayerProfile {
-  return { level: 1, exp: 0, gold: 0, attributes: { str: 5, vit: 5, agi: 5, int: 5 }, unspentPoints: 0 };
+  const progression = CHARACTER_DATA.progression;
+  return {
+    level: progression.startingLevel,
+    exp: progression.startingExp,
+    gold: progression.startingGold,
+    attributes: { ...CHARACTER_DATA.baseAttributes },
+    unspentPoints: progression.startingUnspentPoints,
+  };
 }
 
 export function previewAttributeAllocation(profile: PlayerProfile, draft: Partial<Attributes>): PlayerProfile {
@@ -69,13 +81,11 @@ function hash(value: string): number {
 
 function makeDrop(monsterId: string, seed: number, battleId: string): ItemInstance | undefined {
   const roll = nextRandom(seed);
-  if (roll.value < 0.8) return undefined;
-  const rarity = roll.value < 0.98 ? 'common' : 'rare';
-  const pools: Record<string, readonly string[]> = {
-    mist_blob: ['twig_blade', 'cloth_coat'], lantern_cat: ['leaf_charm', 'swift_charm'],
-    bamboo_mantis: ['lantern_blade', 'mist_coat', 'leaf_charm'], cloud_fox_boss: ['lantern_blade', 'mist_coat', 'moon_charm', 'sturdy_charm'],
-  };
-  const pool = (pools[monsterId] ?? pools['mist_blob']).filter((id) => ITEM_TEMPLATES[id].rarity === rarity);
+  if (roll.value < 1 - COMBAT_DATA.monsterRewards.dropChance) return undefined;
+  const rarity = roll.value < COMBAT_DATA.monsterRewards.rareDropThreshold ? 'common' : 'rare';
+  const definition = MONSTER_DEFINITIONS[monsterId] ?? MONSTER_DEFINITIONS['mist_blob'];
+  const fallback = MONSTER_DEFINITIONS['mist_blob'];
+  const pool = (definition.dropPool ?? fallback.dropPool ?? []).filter((id) => ITEM_TEMPLATES[id].rarity === rarity);
   if (pool.length === 0) return undefined;
   const picked = nextInt(roll.state, pool.length);
   return createItemInstance(pool[picked.value], `${battleId}:item:${picked.value}`, 0);
@@ -108,7 +118,12 @@ export function applyBattleReward(save: LocalSaveV1, outcome: BattleOutcome | Ba
   let exp = save.profile.exp + definition.expReward;
   let points = save.profile.unspentPoints;
   let leveledUp = 0;
-  while (exp >= getExpRequired(level)) { exp -= getExpRequired(level); level += 1; points += 3; leveledUp += 1; }
+  while (exp >= getExpRequired(level)) {
+    exp -= getExpRequired(level);
+    level += 1;
+    points += CHARACTER_DATA.progression.attributePointsPerLevel;
+    leveledUp += 1;
+  }
   const item = makeDrop(monsterId, seedOf(outcome), outcome.battleId);
   const reward: RewardGrant = { rewardType: 'battle', battleId: outcome.battleId, exp: definition.expReward, gold: definition.goldReward, ...(item ? { item } : {}) };
   const inventory = item && save.inventory.length < MAX_INVENTORY ? [...save.inventory, item] : save.inventory;
