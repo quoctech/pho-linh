@@ -25,6 +25,16 @@ Mỗi file phải có:
 
 `schemaVersion` là version của schema, không phải version trận đấu. `balanceVersion` trong `combat.json` được ghi vào `BattleState` để replay/save có thể nhận biết bộ cân bằng đã dùng.
 
+## Asset animation metadata
+
+Thông tin animation của hero và quái là presentation metadata, tách khỏi balance gameplay. Bộ frame V2 hiện được lưu trong các thư mục `src/assets/hero-*` và `src/assets/monsters/*`, mỗi actor có `frames-manifest.json` gồm 24 animation, 6 frame mỗi animation và tổng 144 frame.
+
+- Tốc độ runtime chuẩn: **12 FPS**.
+- Frame là WebP độc lập; manifest quyết định thứ tự và đường dẫn, không dùng spritesheet cũ.
+- Battle/preview dùng origin đáy giữa và kích thước hiển thị chuẩn hóa theo `idle`.
+- Khi chuyển sang backend/CDN, có thể đưa manifest vào asset catalog với các field `actorId`, `animationId`, `frameIndex`, `path`, `width`, `height`, `fps`, `loop`, `version`.
+- Thay asset hoặc tốc độ render không được tự ý thay đổi `balanceVersion`; chỉ tăng `dataVersion`/asset version nếu snapshot backend cần cache bất biến.
+
 ## Character data
 
 `character.json` gồm các nhóm:

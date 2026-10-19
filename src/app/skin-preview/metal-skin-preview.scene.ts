@@ -15,6 +15,14 @@ export class MetalSkinPreviewScene extends Phaser.Scene {
   preload(): void { preloadActorFrames(this, this.actor); }
 
   create(): void {
+    // The preview canvas is rendered at 2x; keep scene coordinates in the
+    // original 360x340 logical space so the actor gets the same crispness as
+    // the battle renderer.
+    this.cameras.main
+      .setOrigin(0, 0)
+      .setScroll(0, 0)
+      .setZoom(2)
+      .setRoundPixels(true);
     const actorName: Record<ActorFrameId, string> = {
       metal: 'Nam hệ Kim', wood: 'Nam hệ Mộc', water: 'Nam hệ Thủy',
       fire: 'Nam hệ Hỏa', earth: 'Nam hệ Thổ', mist_blob: 'Bụi Sương', lantern_cat: 'Miêu Đèn',

@@ -31,11 +31,22 @@ export class SkinPreviewPage implements AfterViewInit, OnDestroy {
     this.game = new PhaserRuntime.Game({
       type: PhaserRuntime.AUTO,
       parent: this.gameHost.nativeElement,
-      width: 360,
-      height: 340,
+      width: 720,
+      height: 680,
       transparent: true,
-      antialias: true,
-      render: { antialias: true, antialiasGL: false, powerPreference: 'high-performance' },
+      // Keep the separated actor frames crisp when the preview scales them
+      // down from their source canvas.
+      antialias: false,
+      antialiasGL: false,
+      pixelArt: true,
+      roundPixels: true,
+      render: {
+        antialias: false,
+        antialiasGL: false,
+        pixelArt: true,
+        roundPixels: true,
+        powerPreference: 'high-performance',
+      },
       scale: { mode: PhaserRuntime.Scale.FIT, autoCenter: PhaserRuntime.Scale.CENTER_BOTH },
       scene: [MetalSkinPreviewScene],
     });

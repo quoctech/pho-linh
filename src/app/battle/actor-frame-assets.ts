@@ -73,5 +73,5 @@ export function normalizeActorSprite(sprite: Phaser.GameObjects.Sprite, actor: A
   const scale = idleDisplayWidth / idle.w;
   const width = sprite.frame.realWidth || sprite.frame.width;
   const height = sprite.frame.realHeight || sprite.frame.height;
-  sprite.setOrigin(0.5, 1).setDisplaySize(width * scale, height * scale);
+  sprite.setOrigin(0.5, 1).setDisplaySize(Math.max(1, Math.round(width * scale)), Math.max(1, Math.round(height * scale)));
 }

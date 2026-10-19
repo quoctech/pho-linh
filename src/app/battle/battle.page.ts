@@ -147,11 +147,10 @@ export class BattlePage implements AfterViewInit, OnDestroy {
       // Keep the battle's 360px logical width so the board stays centered.
       // Extend only the logical height to fill tall phone screens.
       const logicalHeight = Math.max(620, (GAME_WIDTH * viewportHeight) / viewportWidth);
-      const devicePixelRatio = typeof window === 'undefined' ? 1 : window.devicePixelRatio || 1;
-      const renderQuality = Math.min(
-        devicePixelRatio >= 1.5 ? 2 : 1,
-        MAX_RENDER_QUALITY,
-      );
+      // Keep a 2x backing buffer even on DPR-1 screens. The separated actor
+      // frames are downscaled in battle; a 1x canvas would throw away detail
+      // before the browser presents the canvas.
+      const renderQuality = MAX_RENDER_QUALITY;
 
       this.zone.runOutsideAngular(() => {
         this.game = new PhaserRuntime.Game({
@@ -160,15 +159,18 @@ export class BattlePage implements AfterViewInit, OnDestroy {
           width: Math.round(GAME_WIDTH * renderQuality),
           height: Math.round(logicalHeight * renderQuality),
           backgroundColor: '#171426',
-          antialias: true,
+          // Actor frames are separated WebP images rendered below their
+          // source size. Nearest filtering keeps their edges sharp instead
+          // of applying a blurry linear sample on every frame.
+          antialias: false,
           antialiasGL: false,
-          pixelArt: false,
-          roundPixels: false,
+          pixelArt: true,
+          roundPixels: true,
           render: {
-            antialias: true,
+            antialias: false,
             antialiasGL: false,
-            pixelArt: false,
-            roundPixels: false,
+            pixelArt: true,
+            roundPixels: true,
             // Prefer WebGL on devices that expose more than one graphics path.
             // The game still falls back through Phaser.AUTO when WebGL is unavailable.
             powerPreference: 'high-performance',

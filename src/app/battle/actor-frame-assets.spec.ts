@@ -56,8 +56,8 @@ describe('separated V2 actor frames', () => {
       normalizeActorSprite(sprite, actor, 90);
       expect(sprite.setOrigin).toHaveBeenCalledWith(0.5, 1);
       const [width, height] = vi.mocked(sprite.setDisplaySize).mock.lastCall ?? [];
-      expect(width).toBeCloseTo(frame.width);
-      expect(height).toBeCloseTo(frame.height);
+      expect(width).toBe(Math.round(frame.width));
+      expect(height).toBe(Math.round(frame.height));
     }
   });
 });

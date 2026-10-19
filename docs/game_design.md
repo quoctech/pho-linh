@@ -555,6 +555,10 @@ Mỗi combatant (hero, quái thường và boss) phải có một bộ hiệu �
 
 #### Quy tắc asset và phát hiệu ứng
 
+- Bộ actor V2 hiện tại dùng frame WebP tách rời, gồm **24 animation × 6 frame = 144 frame** cho mỗi hero hệ Kim/Mộc/Thủy/Hỏa/Thổ và hai quái `mist_blob`/`lantern_cat`. Manifest là nguồn sự thật về thứ tự frame và đường dẫn file.
+- Runtime phát bộ frame này ở **12 FPS**. Sáu frame chạy hết một lượt trong khoảng **0,5 giây**; preview và battle phải lấy cùng một constant tốc độ, không hardcode riêng theo màn.
+- Mỗi frame phải giữ cùng canvas/kích thước logic và origin đáy giữa (`0.5, 1`). Không crop lại theo bounding box khi đang chạy animation; display size của actor được chuẩn hóa từ frame `idle` để tránh nhảy kích thước giữa các trạng thái.
+- Frame phải được preload trước khi vào battle/preview. Loader dùng texture riêng cho từng frame, không dùng lại spritesheet cũ hoặc ghép frame động trong `update()`.
 - `idle`, `energy`, `high_hp`, `low_hp`, `poisoned`, `shield` là trạng thái loop; các key còn lại là one-shot hoặc event-driven.
 - `hit`, `dodge`, `death`, `stunned`, `frozen`, `burning`, `lightning_struck`, `skill_locked`, `armor_break` phải có điểm kết thúc rõ ràng để không khóa animation của actor.
 - Một action hoàn chỉnh nên tách thành các mốc: **body action → FX/action projectile → impact → state feedback**. Damage chỉ được áp dụng bởi `game-core` event, không do animation quyết định.
