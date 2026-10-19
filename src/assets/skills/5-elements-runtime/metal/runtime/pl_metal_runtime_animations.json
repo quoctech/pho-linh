@@ -1,0 +1,55 @@
+{
+  "element": "metal",
+  "element_vi": "Kim",
+  "textureKey": "pl_metal_skills",
+  "atlasImage": "metal/atlas/pl_metal_skills_atlas_fullhd.png",
+  "atlasJson": "metal/atlas/pl_metal_skills_atlas_fullhd.json",
+  "animations": [
+    {
+      "key": "pl_metal_basic_attack",
+      "textureKey": "pl_metal_skills",
+      "frameRate": 8,
+      "repeat": 0,
+      "frames": [
+        "pl_metal_basic_attack_01",
+        "pl_metal_basic_attack_02",
+        "pl_metal_basic_attack_03",
+        "pl_metal_basic_attack_04",
+        "pl_metal_basic_attack_05",
+        "pl_metal_basic_attack_06"
+      ],
+      "label_vi": "Đòn đánh thường"
+    },
+    {
+      "key": "pl_metal_kim_quang_tram",
+      "textureKey": "pl_metal_skills",
+      "frameRate": 8,
+      "repeat": 0,
+      "frames": [
+        "pl_metal_kim_quang_tram_01",
+        "pl_metal_kim_quang_tram_02",
+        "pl_metal_kim_quang_tram_03",
+        "pl_metal_kim_quang_tram_04",
+        "pl_metal_kim_quang_tram_05",
+        "pl_metal_kim_quang_tram_06"
+      ],
+      "label_vi": "Kim Quang Trảm"
+    },
+    {
+      "key": "pl_metal_van_kiem_pha_giap",
+      "textureKey": "pl_metal_skills",
+      "frameRate": 8,
+      "repeat": 0,
+      "frames": [
+        "pl_metal_van_kiem_pha_giap_01",
+        "pl_metal_van_kiem_pha_giap_02",
+        "pl_metal_van_kiem_pha_giap_03",
+        "pl_metal_van_kiem_pha_giap_04",
+        "pl_metal_van_kiem_pha_giap_05",
+        "pl_metal_van_kiem_pha_giap_06"
+      ],
+      "label_vi": "Vạn Kiếm Phá Giáp"
+    }
+  ],
+  "namingConvention": "pl_<element>_<animation>_<frame:02d>"
+}

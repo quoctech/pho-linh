@@ -1,0 +1,203 @@
+{
+  "key": "pl_fire_skills_sheet",
+  "image": "pl_fire_skills_atlas_fullhd.png",
+  "frameConfig": {
+    "frameWidth": 1080,
+    "frameHeight": 1920,
+    "startFrame": 0,
+    "endFrame": 17,
+    "margin": 0,
+    "spacing": 0
+  },
+  "grid": {
+    "rows": 3,
+    "cols": 6
+  },
+  "indexMap": [
+    {
+      "index": 0,
+      "name": "pl_fire_basic_attack_01",
+      "animation": "basic_attack",
+      "frameNumber": 1,
+      "sourceCell": {
+        "row": 0,
+        "col": 0
+      }
+    },
+    {
+      "index": 1,
+      "name": "pl_fire_basic_attack_02",
+      "animation": "basic_attack",
+      "frameNumber": 2,
+      "sourceCell": {
+        "row": 0,
+        "col": 1
+      }
+    },
+    {
+      "index": 2,
+      "name": "pl_fire_basic_attack_03",
+      "animation": "basic_attack",
+      "frameNumber": 3,
+      "sourceCell": {
+        "row": 0,
+        "col": 2
+      }
+    },
+    {
+      "index": 3,
+      "name": "pl_fire_basic_attack_04",
+      "animation": "basic_attack",
+      "frameNumber": 4,
+      "sourceCell": {
+        "row": 0,
+        "col": 3
+      }
+    },
+    {
+      "index": 4,
+      "name": "pl_fire_basic_attack_05",
+      "animation": "basic_attack",
+      "frameNumber": 5,
+      "sourceCell": {
+        "row": 0,
+        "col": 4
+      }
+    },
+    {
+      "index": 5,
+      "name": "pl_fire_basic_attack_06",
+      "animation": "basic_attack",
+      "frameNumber": 6,
+      "sourceCell": {
+        "row": 0,
+        "col": 5
+      }
+    },
+    {
+      "index": 6,
+      "name": "pl_fire_liet_diem_xuyen_tam_01",
+      "animation": "liet_diem_xuyen_tam",
+      "frameNumber": 1,
+      "sourceCell": {
+        "row": 1,
+        "col": 0
+      }
+    },
+    {
+      "index": 7,
+      "name": "pl_fire_liet_diem_xuyen_tam_02",
+      "animation": "liet_diem_xuyen_tam",
+      "frameNumber": 2,
+      "sourceCell": {
+        "row": 1,
+        "col": 1
+      }
+    },
+    {
+      "index": 8,
+      "name": "pl_fire_liet_diem_xuyen_tam_03",
+      "animation": "liet_diem_xuyen_tam",
+      "frameNumber": 3,
+      "sourceCell": {
+        "row": 1,
+        "col": 2
+      }
+    },
+    {
+      "index": 9,
+      "name": "pl_fire_liet_diem_xuyen_tam_04",
+      "animation": "liet_diem_xuyen_tam",
+      "frameNumber": 4,
+      "sourceCell": {
+        "row": 1,
+        "col": 3
+      }
+    },
+    {
+      "index": 10,
+      "name": "pl_fire_liet_diem_xuyen_tam_05",
+      "animation": "liet_diem_xuyen_tam",
+      "frameNumber": 5,
+      "sourceCell": {
+        "row": 1,
+        "col": 4
+      }
+    },
+    {
+      "index": 11,
+      "name": "pl_fire_liet_diem_xuyen_tam_06",
+      "animation": "liet_diem_xuyen_tam",
+      "frameNumber": 6,
+      "sourceCell": {
+        "row": 1,
+        "col": 5
+      }
+    },
+    {
+      "index": 12,
+      "name": "pl_fire_phan_thien_hoa_vu_01",
+      "animation": "phan_thien_hoa_vu",
+      "frameNumber": 1,
+      "sourceCell": {
+        "row": 2,
+        "col": 0
+      }
+    },
+    {
+      "index": 13,
+      "name": "pl_fire_phan_thien_hoa_vu_02",
+      "animation": "phan_thien_hoa_vu",
+      "frameNumber": 2,
+      "sourceCell": {
+        "row": 2,
+        "col": 1
+      }
+    },
+    {
+      "index": 14,
+      "name": "pl_fire_phan_thien_hoa_vu_03",
+      "animation": "phan_thien_hoa_vu",
+      "frameNumber": 3,
+      "sourceCell": {
+        "row": 2,
+        "col": 2
+      }
+    },
+    {
+      "index": 15,
+      "name": "pl_fire_phan_thien_hoa_vu_04",
+      "animation": "phan_thien_hoa_vu",
+      "frameNumber": 4,
+      "sourceCell": {
+        "row": 2,
+        "col": 3
+      }
+    },
+    {
+      "index": 16,
+      "name": "pl_fire_phan_thien_hoa_vu_05",
+      "animation": "phan_thien_hoa_vu",
+      "frameNumber": 5,
+      "sourceCell": {
+        "row": 2,
+        "col": 4
+      }
+    },
+    {
+      "index": 17,
+      "name": "pl_fire_phan_thien_hoa_vu_06",
+      "animation": "phan_thien_hoa_vu",
+      "frameNumber": 6,
+      "sourceCell": {
+        "row": 2,
+        "col": 5
+      }
+    }
+  ],
+  "animationOrder": [
+    "basic_attack",
+    "liet_diem_xuyen_tam",
+    "phan_thien_hoa_vu"
+  ]
+}

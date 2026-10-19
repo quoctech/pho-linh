@@ -30,6 +30,8 @@ describe('M2 progression and save', () => {
     const oldSave = { ...save, settings: { music: true, sfx: false, reducedMotion: false } };
     expect(migrateSave(oldSave).settings.gender).toBe('male');
     expect(migrateSave({ ...oldSave, settings: { ...oldSave.settings, gender: 'female' } }).settings.gender).toBe('female');
+    expect(migrateSave(oldSave).settings.element).toBe('metal');
+    expect(migrateSave({ ...oldSave, settings: { ...oldSave.settings, element: 'water' } }).settings.element).toBe('water');
   });
 
   it('allocates only available points', () => {

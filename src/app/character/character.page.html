@@ -8,7 +8,7 @@
         } @else {
           <div class="hero-placeholder" aria-label="Assets nam đang chờ bộ 2.5D mới">Nam kiếm sĩ<br /><small>Đang cập nhật 2.5D</small></div>
         }
-        <div><p class="eyebrow">PHIẾU NHÂN VẬT</p><h1>Cấp {{ current.profile.level }}</h1></div>
+        <div><p class="eyebrow">PHIẾU NHÂN VẬT · HỆ {{ current.settings.element === 'metal' ? 'KIM' : current.settings.element.toUpperCase() }}</p><h1>Cấp {{ current.profile.level }}</h1></div>
       </div>
       <p>EXP {{ current.profile.exp }} / {{ expRequired }} · Điểm chưa dùng <strong>{{ current.profile.unspentPoints }}</strong></p>
       <div class="exp"><span [style.width.%]="current.profile.exp / expRequired * 100"></span></div>
@@ -26,6 +26,7 @@
       <ion-button expand="block" (click)="commit()" [disabled]="!preview || preview.unspentPoints === current.profile.unspentPoints">Xác nhận điểm</ion-button>
       <ion-button expand="block" fill="outline" (click)="cancel()">Hủy draft</ion-button>
       <ion-button expand="block" fill="clear" routerLink="/home">Về nhà</ion-button>
+      <ion-button expand="block" fill="outline" routerLink="/element-selection">Đổi hệ Ngũ Hành</ion-button>
     </main>
   }
 </ion-content>

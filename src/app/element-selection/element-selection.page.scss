@@ -1,0 +1,17 @@
+:host { --page-bg: #171426; }
+ion-content { --background: radial-gradient(circle at 50% -10%, #40315d 0, #171426 48%); }
+.element-shell { max-width: 720px; margin: auto; padding: 28px 18px 40px; color: #fff8e8; }
+.eyebrow { color: #f3c64f; font-size: 12px; font-weight: 700; letter-spacing: .14em; margin: 0 0 10px; }
+h1 { font-size: clamp(28px, 7vw, 42px); margin: 0 0 10px; }
+.intro { color: #c7bedc; max-width: 520px; line-height: 1.55; margin: 0 0 24px; }
+.element-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.element-card { display: flex; flex-direction: column; min-height: 220px; padding: 16px; border: 1px solid color-mix(in srgb, var(--element-color) 45%, #ffffff20); border-radius: 18px; background: #28213d; box-shadow: 0 12px 28px #0a081366; }
+.element-card.selected { border-color: var(--element-color); box-shadow: 0 0 0 2px color-mix(in srgb, var(--element-color) 40%, transparent), 0 12px 28px #0a081366; }
+.element-card.locked { opacity: .58; filter: saturate(.5); }
+.element-icon { color: var(--element-color); font-size: 42px; line-height: 1; margin-bottom: 14px; }
+.element-copy { flex: 1; }
+.element-copy h2 { margin: 0 0 6px; font-size: 23px; }
+.element-copy p { color: #c7bedc; font-size: 13px; line-height: 1.4; margin: 0 0 14px; }
+.locked-label { display: block; padding: 10px 0 2px; color: #b0a8c2; font-size: 13px; font-weight: 700; }
+ion-button { --border-radius: 12px; }
+@media (max-width: 480px) { .element-grid { grid-template-columns: 1fr; } .element-card { min-height: 0; } }

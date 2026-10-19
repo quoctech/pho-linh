@@ -16,6 +16,8 @@ export class CharacterPage implements OnInit {
   draft: Attributes = { str: 0, vit: 0, agi: 0, int: 0 };
 
   get heroPortrait(): string | undefined {
+    const element = this.save?.settings.element;
+    if (element) return `assets/hero-${element}/idle/idle_01.webp`;
     return this.save?.settings.gender === 'female'
       ? 'assets/hero-swordmistress/portrait/hero-female-portrait.webp'
       : undefined;

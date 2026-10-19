@@ -1,0 +1,447 @@
+{
+  "frames": {
+    "pl_water_basic_attack_01": {
+      "frame": {
+        "x": 0,
+        "y": 0,
+        "w": 1080,
+        "h": 1920
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 1080,
+        "h": 1920
+      },
+      "sourceSize": {
+        "w": 1080,
+        "h": 1920
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    "pl_water_basic_attack_02": {
+      "frame": {
+        "x": 1080,
+        "y": 0,
+        "w": 1080,
+        "h": 1920
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 1080,
+        "h": 1920
+      },
+      "sourceSize": {
+        "w": 1080,
+        "h": 1920
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    "pl_water_basic_attack_03": {
+      "frame": {
+        "x": 2160,
+        "y": 0,
+        "w": 1080,
+        "h": 1920
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 1080,
+        "h": 1920
+      },
+      "sourceSize": {
+        "w": 1080,
+        "h": 1920
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    "pl_water_basic_attack_04": {
+      "frame": {
+        "x": 3240,
+        "y": 0,
+        "w": 1080,
+        "h": 1920
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 1080,
+        "h": 1920
+      },
+      "sourceSize": {
+        "w": 1080,
+        "h": 1920
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    "pl_water_basic_attack_05": {
+      "frame": {
+        "x": 4320,
+        "y": 0,
+        "w": 1080,
+        "h": 1920
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 1080,
+        "h": 1920
+      },
+      "sourceSize": {
+        "w": 1080,
+        "h": 1920
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    "pl_water_basic_attack_06": {
+      "frame": {
+        "x": 5400,
+        "y": 0,
+        "w": 1080,
+        "h": 1920
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 1080,
+        "h": 1920
+      },
+      "sourceSize": {
+        "w": 1080,
+        "h": 1920
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    "pl_water_han_bang_phong_an_01": {
+      "frame": {
+        "x": 0,
+        "y": 1920,
+        "w": 1080,
+        "h": 1920
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 1080,
+        "h": 1920
+      },
+      "sourceSize": {
+        "w": 1080,
+        "h": 1920
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    "pl_water_han_bang_phong_an_02": {
+      "frame": {
+        "x": 1080,
+        "y": 1920,
+        "w": 1080,
+        "h": 1920
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 1080,
+        "h": 1920
+      },
+      "sourceSize": {
+        "w": 1080,
+        "h": 1920
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    "pl_water_han_bang_phong_an_03": {
+      "frame": {
+        "x": 2160,
+        "y": 1920,
+        "w": 1080,
+        "h": 1920
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 1080,
+        "h": 1920
+      },
+      "sourceSize": {
+        "w": 1080,
+        "h": 1920
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    "pl_water_han_bang_phong_an_04": {
+      "frame": {
+        "x": 3240,
+        "y": 1920,
+        "w": 1080,
+        "h": 1920
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 1080,
+        "h": 1920
+      },
+      "sourceSize": {
+        "w": 1080,
+        "h": 1920
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    "pl_water_han_bang_phong_an_05": {
+      "frame": {
+        "x": 4320,
+        "y": 1920,
+        "w": 1080,
+        "h": 1920
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 1080,
+        "h": 1920
+      },
+      "sourceSize": {
+        "w": 1080,
+        "h": 1920
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    "pl_water_han_bang_phong_an_06": {
+      "frame": {
+        "x": 5400,
+        "y": 1920,
+        "w": 1080,
+        "h": 1920
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 1080,
+        "h": 1920
+      },
+      "sourceSize": {
+        "w": 1080,
+        "h": 1920
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    "pl_water_thuy_linh_ho_the_01": {
+      "frame": {
+        "x": 0,
+        "y": 3840,
+        "w": 1080,
+        "h": 1920
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 1080,
+        "h": 1920
+      },
+      "sourceSize": {
+        "w": 1080,
+        "h": 1920
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    "pl_water_thuy_linh_ho_the_02": {
+      "frame": {
+        "x": 1080,
+        "y": 3840,
+        "w": 1080,
+        "h": 1920
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 1080,
+        "h": 1920
+      },
+      "sourceSize": {
+        "w": 1080,
+        "h": 1920
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    "pl_water_thuy_linh_ho_the_03": {
+      "frame": {
+        "x": 2160,
+        "y": 3840,
+        "w": 1080,
+        "h": 1920
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 1080,
+        "h": 1920
+      },
+      "sourceSize": {
+        "w": 1080,
+        "h": 1920
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    "pl_water_thuy_linh_ho_the_04": {
+      "frame": {
+        "x": 3240,
+        "y": 3840,
+        "w": 1080,
+        "h": 1920
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 1080,
+        "h": 1920
+      },
+      "sourceSize": {
+        "w": 1080,
+        "h": 1920
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    "pl_water_thuy_linh_ho_the_05": {
+      "frame": {
+        "x": 4320,
+        "y": 3840,
+        "w": 1080,
+        "h": 1920
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 1080,
+        "h": 1920
+      },
+      "sourceSize": {
+        "w": 1080,
+        "h": 1920
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    "pl_water_thuy_linh_ho_the_06": {
+      "frame": {
+        "x": 5400,
+        "y": 3840,
+        "w": 1080,
+        "h": 1920
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 1080,
+        "h": 1920
+      },
+      "sourceSize": {
+        "w": 1080,
+        "h": 1920
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    }
+  },
+  "meta": {
+    "app": "PHO LINH Atlas Builder",
+    "version": "1.0",
+    "image": "pl_water_skills_atlas_fullhd.png",
+    "format": "RGBA8888",
+    "size": {
+      "w": 6480,
+      "h": 5760
+    },
+    "scale": "1"
+  }
+}

@@ -272,6 +272,9 @@ export interface PlayerProfile {
   readonly unspentPoints: number;
 }
 
+export const ELEMENT_IDS = ['metal', 'wood', 'water', 'fire', 'earth'] as const;
+export type ElementId = (typeof ELEMENT_IDS)[number];
+
 export interface MonsterProgress {
   readonly wins: number;
   readonly unlocked: boolean;
@@ -303,6 +306,7 @@ export interface GameSettings {
   readonly sfx: boolean;
   readonly reducedMotion: boolean;
   readonly gender: 'male' | 'female';
+  readonly element: ElementId;
 }
 
 export interface LocalSaveV1 {

@@ -1,0 +1,25 @@
+<ion-header><ion-toolbar><ion-title>Chọn hệ Ngũ Hành</ion-title></ion-toolbar></ion-header>
+<ion-content>
+  <main class="element-shell">
+    <p class="eyebrow">NGŨ HÀNH · PHỐ LINH</p>
+    <h1>Chọn linh lực của bạn</h1>
+    <p class="intro">Mỗi hệ mở ra một phong cách chiến đấu riêng. Hãy chọn linh lực phù hợp với lối đánh của bạn.</p>
+
+    <div class="element-grid" aria-label="Các hệ Ngũ Hành">
+      @for (element of elements; track element.id) {
+        <article class="element-card" [class.locked]="!element.available" [class.selected]="isSelected(element)" [style.--element-color]="element.color">
+          <div class="element-icon" aria-hidden="true">{{ element.icon }}</div>
+          <div class="element-copy"><h2>{{ element.name }}</h2><p>{{ element.description }}</p></div>
+          @if (element.available) {
+            <ion-button expand="block" (click)="choose(element)" [disabled]="isSaving">
+              {{ isSelected(element) ? 'Đang chọn' : 'Chọn hệ ' + element.name }}
+            </ion-button>
+          } @else {
+            <span class="locked-label">🔒 Sắp ra mắt</span>
+          }
+        </article>
+      }
+    </div>
+    <ion-button fill="clear" expand="block" (click)="goBack()">Về nhà</ion-button>
+  </main>
+</ion-content>

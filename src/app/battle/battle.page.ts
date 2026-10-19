@@ -180,6 +180,7 @@ export class BattlePage implements AfterViewInit, OnDestroy {
             preBoot: (game) => {
               game.registry.set('battleController', this.controller);
               game.registry.set('heroGender', this.saveSnapshot?.settings.gender ?? 'male');
+              game.registry.set('heroElement', this.saveSnapshot?.settings.element ?? 'metal');
               game.registry.set('sfxEnabled', this.saveSnapshot?.settings.sfx ?? true);
               game.registry.set('reducedMotion', this.saveSnapshot?.settings.reducedMotion ?? false);
               game.registry.set('renderQuality', renderQuality);

@@ -1,9 +1,16 @@
 import { MONSTER_DEFINITIONS } from './monsters/monster-definitions';
 import { createDefaultProfile } from './progression';
+import { ELEMENT_IDS } from './types';
 import type { BattleState, GameSettings, LocalSaveV1 } from './types';
 
 export const SAVE_VERSION = 1;
-export const DEFAULT_SETTINGS: GameSettings = { music: true, sfx: true, reducedMotion: false, gender: 'male' };
+export const DEFAULT_SETTINGS: GameSettings = {
+  music: true,
+  sfx: true,
+  reducedMotion: false,
+  gender: 'male',
+  element: 'metal',
+};
 
 export function createDefaultSave(): LocalSaveV1 {
   return {
@@ -35,7 +42,8 @@ export function isLocalSave(value: unknown): value is LocalSaveV1 {
   const validNumber = (entry: unknown) => typeof entry === 'number' && Number.isFinite(entry) && entry >= 0;
   const validAttributes = isRecord(attributes) && ['str', 'vit', 'agi', 'int'].every((key) => validNumber(attributes[key]));
   const validGender = !isRecord(settings) || settings['gender'] === undefined || settings['gender'] === 'male' || settings['gender'] === 'female';
-  const validSettings = isRecord(settings) && typeof settings['music'] === 'boolean' && typeof settings['sfx'] === 'boolean' && typeof settings['reducedMotion'] === 'boolean' && validGender;
+  const validElement = !isRecord(settings) || settings['element'] === undefined || ELEMENT_IDS.includes(settings['element']);
+  const validSettings = isRecord(settings) && typeof settings['music'] === 'boolean' && typeof settings['sfx'] === 'boolean' && typeof settings['reducedMotion'] === 'boolean' && validGender && validElement;
   return isRecord(profile) && validAttributes && validNumber(profile['level']) && profile['level'] >= 1 && validNumber(profile['exp']) && validNumber(profile['gold']) && validNumber(profile['unspentPoints']) && Array.isArray(value['inventory']) && value['inventory'].length <= 60 && Array.isArray(value['pendingRewards']) && Array.isArray(value['rewardJournal']) && isRecord(value['equipment']) && isRecord(value['monsterProgress']) && validSettings;
 }
 

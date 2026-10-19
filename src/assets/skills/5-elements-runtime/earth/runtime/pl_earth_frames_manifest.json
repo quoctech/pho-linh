@@ -1,0 +1,110 @@
+{
+  "pl_earth_basic_attack_01": {
+    "animation": "basic_attack",
+    "label_vi": "Đòn đánh thường",
+    "frame": 1,
+    "file": "earth/frames_fullhd/basic_attack/pl_earth_basic_attack_01.webp"
+  },
+  "pl_earth_basic_attack_02": {
+    "animation": "basic_attack",
+    "label_vi": "Đòn đánh thường",
+    "frame": 2,
+    "file": "earth/frames_fullhd/basic_attack/pl_earth_basic_attack_02.webp"
+  },
+  "pl_earth_basic_attack_03": {
+    "animation": "basic_attack",
+    "label_vi": "Đòn đánh thường",
+    "frame": 3,
+    "file": "earth/frames_fullhd/basic_attack/pl_earth_basic_attack_03.webp"
+  },
+  "pl_earth_basic_attack_04": {
+    "animation": "basic_attack",
+    "label_vi": "Đòn đánh thường",
+    "frame": 4,
+    "file": "earth/frames_fullhd/basic_attack/pl_earth_basic_attack_04.webp"
+  },
+  "pl_earth_basic_attack_05": {
+    "animation": "basic_attack",
+    "label_vi": "Đòn đánh thường",
+    "frame": 5,
+    "file": "earth/frames_fullhd/basic_attack/pl_earth_basic_attack_05.webp"
+  },
+  "pl_earth_basic_attack_06": {
+    "animation": "basic_attack",
+    "label_vi": "Đòn đánh thường",
+    "frame": 6,
+    "file": "earth/frames_fullhd/basic_attack/pl_earth_basic_attack_06.webp"
+  },
+  "pl_earth_bat_dong_son_ha_01": {
+    "animation": "bat_dong_son_ha",
+    "label_vi": "Bất Động Sơn Hà",
+    "frame": 1,
+    "file": "earth/frames_fullhd/bat_dong_son_ha/pl_earth_bat_dong_son_ha_01.webp"
+  },
+  "pl_earth_bat_dong_son_ha_02": {
+    "animation": "bat_dong_son_ha",
+    "label_vi": "Bất Động Sơn Hà",
+    "frame": 2,
+    "file": "earth/frames_fullhd/bat_dong_son_ha/pl_earth_bat_dong_son_ha_02.webp"
+  },
+  "pl_earth_bat_dong_son_ha_03": {
+    "animation": "bat_dong_son_ha",
+    "label_vi": "Bất Động Sơn Hà",
+    "frame": 3,
+    "file": "earth/frames_fullhd/bat_dong_son_ha/pl_earth_bat_dong_son_ha_03.webp"
+  },
+  "pl_earth_bat_dong_son_ha_04": {
+    "animation": "bat_dong_son_ha",
+    "label_vi": "Bất Động Sơn Hà",
+    "frame": 4,
+    "file": "earth/frames_fullhd/bat_dong_son_ha/pl_earth_bat_dong_son_ha_04.webp"
+  },
+  "pl_earth_bat_dong_son_ha_05": {
+    "animation": "bat_dong_son_ha",
+    "label_vi": "Bất Động Sơn Hà",
+    "frame": 5,
+    "file": "earth/frames_fullhd/bat_dong_son_ha/pl_earth_bat_dong_son_ha_05.webp"
+  },
+  "pl_earth_bat_dong_son_ha_06": {
+    "animation": "bat_dong_son_ha",
+    "label_vi": "Bất Động Sơn Hà",
+    "frame": 6,
+    "file": "earth/frames_fullhd/bat_dong_son_ha/pl_earth_bat_dong_son_ha_06.webp"
+  },
+  "pl_earth_dia_sat_phan_chan_01": {
+    "animation": "dia_sat_phan_chan",
+    "label_vi": "Địa Sát Phản Chấn",
+    "frame": 1,
+    "file": "earth/frames_fullhd/dia_sat_phan_chan/pl_earth_dia_sat_phan_chan_01.webp"
+  },
+  "pl_earth_dia_sat_phan_chan_02": {
+    "animation": "dia_sat_phan_chan",
+    "label_vi": "Địa Sát Phản Chấn",
+    "frame": 2,
+    "file": "earth/frames_fullhd/dia_sat_phan_chan/pl_earth_dia_sat_phan_chan_02.webp"
+  },
+  "pl_earth_dia_sat_phan_chan_03": {
+    "animation": "dia_sat_phan_chan",
+    "label_vi": "Địa Sát Phản Chấn",
+    "frame": 3,
+    "file": "earth/frames_fullhd/dia_sat_phan_chan/pl_earth_dia_sat_phan_chan_03.webp"
+  },
+  "pl_earth_dia_sat_phan_chan_04": {
+    "animation": "dia_sat_phan_chan",
+    "label_vi": "Địa Sát Phản Chấn",
+    "frame": 4,
+    "file": "earth/frames_fullhd/dia_sat_phan_chan/pl_earth_dia_sat_phan_chan_04.webp"
+  },
+  "pl_earth_dia_sat_phan_chan_05": {
+    "animation": "dia_sat_phan_chan",
+    "label_vi": "Địa Sát Phản Chấn",
+    "frame": 5,
+    "file": "earth/frames_fullhd/dia_sat_phan_chan/pl_earth_dia_sat_phan_chan_05.webp"
+  },
+  "pl_earth_dia_sat_phan_chan_06": {
+    "animation": "dia_sat_phan_chan",
+    "label_vi": "Địa Sát Phản Chấn",
+    "frame": 6,
+    "file": "earth/frames_fullhd/dia_sat_phan_chan/pl_earth_dia_sat_phan_chan_06.webp"
+  }
+}

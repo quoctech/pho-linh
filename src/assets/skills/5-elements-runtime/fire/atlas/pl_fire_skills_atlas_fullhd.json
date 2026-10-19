@@ -1,0 +1,447 @@
+{
+  "frames": {
+    "pl_fire_basic_attack_01": {
+      "frame": {
+        "x": 0,
+        "y": 0,
+        "w": 1080,
+        "h": 1920
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 1080,
+        "h": 1920
+      },
+      "sourceSize": {
+        "w": 1080,
+        "h": 1920
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    "pl_fire_basic_attack_02": {
+      "frame": {
+        "x": 1080,
+        "y": 0,
+        "w": 1080,
+        "h": 1920
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 1080,
+        "h": 1920
+      },
+      "sourceSize": {
+        "w": 1080,
+        "h": 1920
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    "pl_fire_basic_attack_03": {
+      "frame": {
+        "x": 2160,
+        "y": 0,
+        "w": 1080,
+        "h": 1920
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 1080,
+        "h": 1920
+      },
+      "sourceSize": {
+        "w": 1080,
+        "h": 1920
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    "pl_fire_basic_attack_04": {
+      "frame": {
+        "x": 3240,
+        "y": 0,
+        "w": 1080,
+        "h": 1920
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 1080,
+        "h": 1920
+      },
+      "sourceSize": {
+        "w": 1080,
+        "h": 1920
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    "pl_fire_basic_attack_05": {
+      "frame": {
+        "x": 4320,
+        "y": 0,
+        "w": 1080,
+        "h": 1920
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 1080,
+        "h": 1920
+      },
+      "sourceSize": {
+        "w": 1080,
+        "h": 1920
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    "pl_fire_basic_attack_06": {
+      "frame": {
+        "x": 5400,
+        "y": 0,
+        "w": 1080,
+        "h": 1920
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 1080,
+        "h": 1920
+      },
+      "sourceSize": {
+        "w": 1080,
+        "h": 1920
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    "pl_fire_liet_diem_xuyen_tam_01": {
+      "frame": {
+        "x": 0,
+        "y": 1920,
+        "w": 1080,
+        "h": 1920
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 1080,
+        "h": 1920
+      },
+      "sourceSize": {
+        "w": 1080,
+        "h": 1920
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    "pl_fire_liet_diem_xuyen_tam_02": {
+      "frame": {
+        "x": 1080,
+        "y": 1920,
+        "w": 1080,
+        "h": 1920
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 1080,
+        "h": 1920
+      },
+      "sourceSize": {
+        "w": 1080,
+        "h": 1920
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    "pl_fire_liet_diem_xuyen_tam_03": {
+      "frame": {
+        "x": 2160,
+        "y": 1920,
+        "w": 1080,
+        "h": 1920
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 1080,
+        "h": 1920
+      },
+      "sourceSize": {
+        "w": 1080,
+        "h": 1920
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    "pl_fire_liet_diem_xuyen_tam_04": {
+      "frame": {
+        "x": 3240,
+        "y": 1920,
+        "w": 1080,
+        "h": 1920
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 1080,
+        "h": 1920
+      },
+      "sourceSize": {
+        "w": 1080,
+        "h": 1920
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    "pl_fire_liet_diem_xuyen_tam_05": {
+      "frame": {
+        "x": 4320,
+        "y": 1920,
+        "w": 1080,
+        "h": 1920
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 1080,
+        "h": 1920
+      },
+      "sourceSize": {
+        "w": 1080,
+        "h": 1920
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    "pl_fire_liet_diem_xuyen_tam_06": {
+      "frame": {
+        "x": 5400,
+        "y": 1920,
+        "w": 1080,
+        "h": 1920
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 1080,
+        "h": 1920
+      },
+      "sourceSize": {
+        "w": 1080,
+        "h": 1920
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    "pl_fire_phan_thien_hoa_vu_01": {
+      "frame": {
+        "x": 0,
+        "y": 3840,
+        "w": 1080,
+        "h": 1920
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 1080,
+        "h": 1920
+      },
+      "sourceSize": {
+        "w": 1080,
+        "h": 1920
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    "pl_fire_phan_thien_hoa_vu_02": {
+      "frame": {
+        "x": 1080,
+        "y": 3840,
+        "w": 1080,
+        "h": 1920
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 1080,
+        "h": 1920
+      },
+      "sourceSize": {
+        "w": 1080,
+        "h": 1920
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    "pl_fire_phan_thien_hoa_vu_03": {
+      "frame": {
+        "x": 2160,
+        "y": 3840,
+        "w": 1080,
+        "h": 1920
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 1080,
+        "h": 1920
+      },
+      "sourceSize": {
+        "w": 1080,
+        "h": 1920
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    "pl_fire_phan_thien_hoa_vu_04": {
+      "frame": {
+        "x": 3240,
+        "y": 3840,
+        "w": 1080,
+        "h": 1920
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 1080,
+        "h": 1920
+      },
+      "sourceSize": {
+        "w": 1080,
+        "h": 1920
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    "pl_fire_phan_thien_hoa_vu_05": {
+      "frame": {
+        "x": 4320,
+        "y": 3840,
+        "w": 1080,
+        "h": 1920
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 1080,
+        "h": 1920
+      },
+      "sourceSize": {
+        "w": 1080,
+        "h": 1920
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    "pl_fire_phan_thien_hoa_vu_06": {
+      "frame": {
+        "x": 5400,
+        "y": 3840,
+        "w": 1080,
+        "h": 1920
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 1080,
+        "h": 1920
+      },
+      "sourceSize": {
+        "w": 1080,
+        "h": 1920
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    }
+  },
+  "meta": {
+    "app": "PHO LINH Atlas Builder",
+    "version": "1.0",
+    "image": "pl_fire_skills_atlas_fullhd.png",
+    "format": "RGBA8888",
+    "size": {
+      "w": 6480,
+      "h": 5760
+    },
+    "scale": "1"
+  }
+}

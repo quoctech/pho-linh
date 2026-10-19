@@ -1,0 +1,203 @@
+{
+  "key": "pl_earth_skills_sheet",
+  "image": "pl_earth_skills_atlas_fullhd.png",
+  "frameConfig": {
+    "frameWidth": 1080,
+    "frameHeight": 1920,
+    "startFrame": 0,
+    "endFrame": 17,
+    "margin": 0,
+    "spacing": 0
+  },
+  "grid": {
+    "rows": 3,
+    "cols": 6
+  },
+  "indexMap": [
+    {
+      "index": 0,
+      "name": "pl_earth_basic_attack_01",
+      "animation": "basic_attack",
+      "frameNumber": 1,
+      "sourceCell": {
+        "row": 0,
+        "col": 0
+      }
+    },
+    {
+      "index": 1,
+      "name": "pl_earth_basic_attack_02",
+      "animation": "basic_attack",
+      "frameNumber": 2,
+      "sourceCell": {
+        "row": 0,
+        "col": 1
+      }
+    },
+    {
+      "index": 2,
+      "name": "pl_earth_basic_attack_03",
+      "animation": "basic_attack",
+      "frameNumber": 3,
+      "sourceCell": {
+        "row": 0,
+        "col": 2
+      }
+    },
+    {
+      "index": 3,
+      "name": "pl_earth_basic_attack_04",
+      "animation": "basic_attack",
+      "frameNumber": 4,
+      "sourceCell": {
+        "row": 0,
+        "col": 3
+      }
+    },
+    {
+      "index": 4,
+      "name": "pl_earth_basic_attack_05",
+      "animation": "basic_attack",
+      "frameNumber": 5,
+      "sourceCell": {
+        "row": 0,
+        "col": 4
+      }
+    },
+    {
+      "index": 5,
+      "name": "pl_earth_basic_attack_06",
+      "animation": "basic_attack",
+      "frameNumber": 6,
+      "sourceCell": {
+        "row": 0,
+        "col": 5
+      }
+    },
+    {
+      "index": 6,
+      "name": "pl_earth_bat_dong_son_ha_01",
+      "animation": "bat_dong_son_ha",
+      "frameNumber": 1,
+      "sourceCell": {
+        "row": 1,
+        "col": 0
+      }
+    },
+    {
+      "index": 7,
+      "name": "pl_earth_bat_dong_son_ha_02",
+      "animation": "bat_dong_son_ha",
+      "frameNumber": 2,
+      "sourceCell": {
+        "row": 1,
+        "col": 1
+      }
+    },
+    {
+      "index": 8,
+      "name": "pl_earth_bat_dong_son_ha_03",
+      "animation": "bat_dong_son_ha",
+      "frameNumber": 3,
+      "sourceCell": {
+        "row": 1,
+        "col": 2
+      }
+    },
+    {
+      "index": 9,
+      "name": "pl_earth_bat_dong_son_ha_04",
+      "animation": "bat_dong_son_ha",
+      "frameNumber": 4,
+      "sourceCell": {
+        "row": 1,
+        "col": 3
+      }
+    },
+    {
+      "index": 10,
+      "name": "pl_earth_bat_dong_son_ha_05",
+      "animation": "bat_dong_son_ha",
+      "frameNumber": 5,
+      "sourceCell": {
+        "row": 1,
+        "col": 4
+      }
+    },
+    {
+      "index": 11,
+      "name": "pl_earth_bat_dong_son_ha_06",
+      "animation": "bat_dong_son_ha",
+      "frameNumber": 6,
+      "sourceCell": {
+        "row": 1,
+        "col": 5
+      }
+    },
+    {
+      "index": 12,
+      "name": "pl_earth_dia_sat_phan_chan_01",
+      "animation": "dia_sat_phan_chan",
+      "frameNumber": 1,
+      "sourceCell": {
+        "row": 2,
+        "col": 0
+      }
+    },
+    {
+      "index": 13,
+      "name": "pl_earth_dia_sat_phan_chan_02",
+      "animation": "dia_sat_phan_chan",
+      "frameNumber": 2,
+      "sourceCell": {
+        "row": 2,
+        "col": 1
+      }
+    },
+    {
+      "index": 14,
+      "name": "pl_earth_dia_sat_phan_chan_03",
+      "animation": "dia_sat_phan_chan",
+      "frameNumber": 3,
+      "sourceCell": {
+        "row": 2,
+        "col": 2
+      }
+    },
+    {
+      "index": 15,
+      "name": "pl_earth_dia_sat_phan_chan_04",
+      "animation": "dia_sat_phan_chan",
+      "frameNumber": 4,
+      "sourceCell": {
+        "row": 2,
+        "col": 3
+      }
+    },
+    {
+      "index": 16,
+      "name": "pl_earth_dia_sat_phan_chan_05",
+      "animation": "dia_sat_phan_chan",
+      "frameNumber": 5,
+      "sourceCell": {
+        "row": 2,
+        "col": 4
+      }
+    },
+    {
+      "index": 17,
+      "name": "pl_earth_dia_sat_phan_chan_06",
+      "animation": "dia_sat_phan_chan",
+      "frameNumber": 6,
+      "sourceCell": {
+        "row": 2,
+        "col": 5
+      }
+    }
+  ],
+  "animationOrder": [
+    "basic_attack",
+    "bat_dong_son_ha",
+    "dia_sat_phan_chan"
+  ]
+}
