@@ -394,7 +394,11 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
       playerStatusBounds: this.layout.playerStatusBounds,
       monsterStatusBounds: this.layout.monsterStatusBounds,
       statusBarY: this.layout.statusBarY,
+      statusBadgeY: this.layout.statusBadgeY,
       energyBarY: this.layout.energyBarY,
+      monsterStatusBarY: this.layout.monsterStatusBarY,
+      monsterStatusBadgeY: this.layout.monsterStatusBadgeY,
+      monsterEnergyBarY: this.layout.monsterEnergyBarY,
       heroUsesInlineStatus: true,
       monsterUsesInlineStatus: ['mist_blob', 'lantern_cat'].includes(this.controller.currentState.monster.id),
       renderQuality: this.renderQuality,
@@ -607,22 +611,22 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
       .setOrigin(0.5, 0.5);
 
     this.add
-      .rectangle(this.layout.hudLeft, 48, 92, 22, 0x211a34, 0.94)
+      .rectangle(this.layout.hudLeft, 47, 92, 16, 0x211a34, 0.94)
       .setOrigin(0, 0.5)
       .setStrokeStyle(1, 0x66567f, 0.9)
       .setDepth(8);
     this.add
-      .text(this.layout.hudLeft + 7, 48, 'Nhân vật', { color: '#eee5ff', fontSize: '12px', fontStyle: 'bold' })
+      .text(this.layout.hudLeft + 7, 47, 'Nhân vật', { color: '#eee5ff', fontSize: '10px', fontStyle: 'bold' })
       .setResolution(this.renderQuality)
       .setOrigin(0, 0.5)
       .setDepth(9);
     this.add
-      .rectangle(this.layout.hudRight - 94, 48, 94, 22, 0x211a34, 0.94)
+      .rectangle(this.layout.hudRight - 130, 47, 130, 16, 0x211a34, 0.94)
       .setOrigin(0, 0.5)
       .setStrokeStyle(1, 0x66567f, 0.9)
       .setDepth(8);
     this.add
-      .text(this.layout.hudRight - 7, 48, this.controller.currentState.monster.name, { color: '#eee5ff', fontSize: '12px', fontStyle: 'bold' })
+      .text(this.layout.hudRight - 7, 47, this.controller.currentState.monster.name, { color: '#eee5ff', fontSize: '10px', fontStyle: 'bold' })
       .setResolution(this.renderQuality)
       .setOrigin(1, 0.5)
       .setDepth(9);

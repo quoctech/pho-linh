@@ -20,7 +20,7 @@ describe('status presentation mapping', () => {
     expect(values).toEqual({ hp: 140, maxHp: 100, energy: -4 });
   });
 
-  it('keeps hero fill growth left-to-right and monster fill growth right-to-left', () => {
+  it('keeps hero and monster HP fills mirrored across the two HUD columns', () => {
     const layout = createBattleLayout(360, 620);
     const heroHalf = getStatusFillGeometry(layout.playerStatusBounds, false, 0.5);
     const heroFull = getStatusFillGeometry(layout.playerStatusBounds, false, 1);
@@ -33,7 +33,7 @@ describe('status presentation mapping', () => {
     expect(monsterHalf.left + monsterHalf.width).toBe(monsterFull.left + monsterFull.width);
   });
 
-  it('formats all status values in one line and omits poison when it expires', () => {
+  it('formats HP separately so shield and poison can render as non-overlapping badges', () => {
     expect(formatStatusText({
       currentHp: 120,
       maxHp: 180,
@@ -41,7 +41,7 @@ describe('status presentation mapping', () => {
       poisonPotency: 7,
       poisonTurns: 2,
       energy: 51,
-    })).toBe('120/180 🛡24 ☠7');
+    })).toBe('120/180');
 
     expect(formatStatusText({
       currentHp: 120,
@@ -70,6 +70,11 @@ describe('battle layout', () => {
       expect(Number.isInteger(layout.playerStatusBounds.right)).toBe(true);
       expect(Number.isInteger(layout.monsterStatusBounds.left)).toBe(true);
       expect(Number.isInteger(layout.monsterStatusBounds.right)).toBe(true);
+      expect(layout.statusBarY + 15).toBeLessThan(layout.statusBadgeY);
+      expect(layout.statusBadgeY + 10).toBeLessThan(layout.energyBarY);
+      expect(layout.energyBarY + 15).toBeLessThan(layout.telegraphY);
+      expect(layout.statusY).toBeGreaterThan(layout.telegraphY);
+      expect(layout.statusY).toBeLessThan(layout.boardTop);
     }
   });
 

@@ -22,7 +22,11 @@ export interface BattleLayout {
   readonly monsterCombatY: number;
   readonly heroStunY: number;
   readonly statusBarY: number;
+  readonly statusBadgeY: number;
   readonly energyBarY: number;
+  readonly monsterStatusBarY: number;
+  readonly monsterStatusBadgeY: number;
+  readonly monsterEnergyBarY: number;
   readonly hudLeft: number;
   readonly hudRight: number;
   readonly statusBarWidth: number;
@@ -50,7 +54,7 @@ export function createBattleLayout(width: number, height: number): BattleLayout 
   const safeHeight = Math.max(520, height);
   const cellSize = Math.max(MIN_CELL_SIZE, Math.min(MAX_CELL_SIZE, (safeHeight - 308) / BOARD_SIZE));
   const boardWidth = cellSize * BOARD_SIZE;
-  const boardTop = Math.max(196, Math.min(240, safeHeight - boardWidth - 92));
+  const boardTop = Math.max(200, Math.min(240, safeHeight - boardWidth - 92));
   const boardBottom = boardTop + boardWidth;
   const heroY = Math.min(safeHeight - 8, boardBottom + 112);
   const skillY = Math.min(safeHeight - 48, boardBottom + 52);
@@ -80,8 +84,12 @@ export function createBattleLayout(width: number, height: number): BattleLayout 
     heroCombatY: -40,
     monsterCombatY: -32,
     heroStunY: -92,
-    statusBarY: 69,
-    energyBarY: 105,
+    statusBarY: 66,
+    statusBadgeY: 84,
+    energyBarY: 106,
+    monsterStatusBarY: 66,
+    monsterStatusBadgeY: 84,
+    monsterEnergyBarY: 106,
     hudLeft,
     hudRight,
     statusBarWidth,
@@ -95,8 +103,8 @@ export function createBattleLayout(width: number, height: number): BattleLayout 
       right: monsterStatusRight,
       width: statusBarWidth,
     },
-    telegraphY: boardTop - 46,
-    statusY: boardTop - 26,
+    telegraphY: 146,
+    statusY: 166,
     skillButton: { x: safeWidth - 86 - sidePadding, y: skillY },
   };
 }

@@ -15,6 +15,20 @@ export const STATUS_UI_KEYS = {
   energyBars: 'status-ui-energy-bars',
 } as const;
 
+export const HUD_BAR_CROPS = {
+  heroHp: { x: 0, y: 38, width: 520, height: 128 },
+  heroEnergy: { x: 0, y: 38, width: 510, height: 128 },
+  monsterHp: { x: 0, y: 18, width: 520, height: 122 },
+  monsterEnergy: { x: 0, y: 18, width: 510, height: 122 },
+} as const;
+
+export const HUD_BAR_ASSET_PATHS = {
+  heroHp: 'assets/hud-icons-v1/hud/hero_hp.webp',
+  heroEnergy: 'assets/hud-icons-v1/hud/hero_energy.webp',
+  monsterHp: 'assets/hud-icons-v1/hud/monster_hp.webp',
+  monsterEnergy: 'assets/hud-icons-v1/hud/monster_energy.webp',
+} as const;
+
 export type StatusOverlayKey =
   | 'heroShield'
   | 'heroPoison'
@@ -45,16 +59,10 @@ export function preloadStatusUiAssets(
       frameHeight: STATUS_UI_FRAME_HEIGHT,
     });
   }
-  scene.load.spritesheet(
-    STATUS_UI_KEYS.healthBars,
-    'assets/status-ui/ui/ui-health-bars-sheet-fullhd.webp',
-    { frameWidth: STATUS_UI_FRAME_WIDTH, frameHeight: STATUS_UI_FRAME_HEIGHT },
-  );
-  scene.load.spritesheet(
-    STATUS_UI_KEYS.energyBars,
-    'assets/status-ui/ui/ui-energy-bars-sheet-fullhd.webp',
-    { frameWidth: STATUS_UI_FRAME_WIDTH, frameHeight: STATUS_UI_FRAME_HEIGHT },
-  );
+  scene.load.image(STATUS_UI_KEYS.healthBars, HUD_BAR_ASSET_PATHS.heroHp);
+  scene.load.image(STATUS_UI_KEYS.energyBars, HUD_BAR_ASSET_PATHS.heroEnergy);
+  scene.load.image('status-monster-health-bars', HUD_BAR_ASSET_PATHS.monsterHp);
+  scene.load.image('status-monster-energy-bars', HUD_BAR_ASSET_PATHS.monsterEnergy);
 }
 
 export function ensureStatusUiAnimations(scene: Phaser.Scene): void {
