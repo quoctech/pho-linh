@@ -2,7 +2,7 @@
   @if (isLoading) {
     <div class="loading-state" role="status" aria-live="polite"><ion-spinner name="crescent"></ion-spinner><h1>Đang chuẩn bị khu săn...</h1><p>Đang tải tiến trình và trạng thái mở khóa.</p></div>
   } @else {
-    <p class="eyebrow">NGÕ ĐÈN · M2</p><h1>Chọn mục tiêu</h1><p class="intro">Mở khóa theo chiến thắng. Mỗi quái có nhịp đánh thường, phòng thủ hoặc đòn nặng riêng.</p>
+    <p class="eyebrow">NGÕ ĐÈN · M2</p><h1>Chọn mục tiêu</h1><p class="intro">Tạm thời mở toàn bộ quái để test. Mỗi quái có nhịp đánh thường, phòng thủ hoặc đòn nặng riêng.</p>
     <div class="monster-list">
       @for (monster of monsters; track monster.id) {
         <ion-card class="monster-card" [class.locked]="!isUnlocked(monster)">

@@ -13,7 +13,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { IonContent, IonProgressBar, IonSpinner } from '@ionic/angular';
 import { StatusBar } from '@capacitor/status-bar';
 import type Phaser from 'phaser';
-import { applyBattleReward, createBattleState, createPlayerBattleState, equipmentBonuses, type BattleState, type LocalSaveV1 } from '../../game-core';
+import { ALL_MONSTERS_TEMPORARILY_UNLOCKED, applyBattleReward, createBattleState, createPlayerBattleState, equipmentBonuses, type BattleState, type LocalSaveV1 } from '../../game-core';
 import { BattleController } from './battle.controller';
 import { GameStorage } from '../state/game-storage.service';
 
@@ -105,7 +105,7 @@ export class BattlePage implements AfterViewInit, OnDestroy {
     this.resultNavigated = false;
     const monsterId = this.route.snapshot.paramMap.get('monsterId') ?? 'mist_blob';
     const save = await this.gameStorage.load();
-    if (!(save.monsterProgress[monsterId]?.unlocked ?? monsterId === 'mist_blob')) {
+    if (!ALL_MONSTERS_TEMPORARILY_UNLOCKED && !(save.monsterProgress[monsterId]?.unlocked ?? monsterId === 'mist_blob')) {
       await this.router.navigate(['/hunt']);
       return;
     }

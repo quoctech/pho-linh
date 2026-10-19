@@ -8,6 +8,10 @@ export const CLOUD_FOX_BOSS: MonsterDefinition = MONSTER_DATA.definitions['cloud
 
 export const MONSTER_DEFINITIONS: Readonly<Record<string, MonsterDefinition>> = MONSTER_DATA.definitions;
 
+// Temporary QA flag: expose every monster from the target-selection screen
+// while the full roster and its V2 art are being reviewed.
+export const ALL_MONSTERS_TEMPORARILY_UNLOCKED = true;
+
 export function createMonsterBattleState(monsterId: string): MonsterBattleState {
   const definition = MONSTER_DEFINITIONS[monsterId] ?? MIST_BLOB;
   return {

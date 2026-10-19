@@ -36,6 +36,10 @@ h1 {
   color: #fff8e8;
 }
 
+// The separated V2 idle frames are already small, tightly cropped canvases.
+// Never upscale them in the target list; browser interpolation makes the art
+// visibly soft. Let the image render at native size and center it in the card.
+
 .monster-art {
   position: relative;
   display: grid;
@@ -61,10 +65,12 @@ h1 {
   position: relative;
   z-index: 1;
   display: block;
-  width: min(100%, 240px);
-  height: 180px;
+  width: auto;
+  max-width: 100%;
+  height: auto;
+  max-height: 180px;
   object-fit: contain;
-  image-rendering: auto;
+  image-rendering: crisp-edges;
   filter: drop-shadow(0 12px 16px rgb(0 0 0 / 35%));
 }
 

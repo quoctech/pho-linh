@@ -9,7 +9,7 @@ import {
   IonContent,
   IonSpinner,
 } from '@ionic/angular';
-import { MONSTER_DEFINITIONS, type LocalSaveV1, type MonsterDefinition } from '../../game-core';
+import { ALL_MONSTERS_TEMPORARILY_UNLOCKED, MONSTER_DEFINITIONS, type LocalSaveV1, type MonsterDefinition } from '../../game-core';
 import { GameStorage } from '../state/game-storage.service';
 
 @Component({
@@ -46,7 +46,9 @@ export class HuntPage implements OnInit {
       this.cdr.markForCheck();
     }
   }
-  isUnlocked(monster: MonsterDefinition): boolean { return this.save?.monsterProgress[monster.id]?.unlocked ?? monster.id === 'mist_blob'; }
+  isUnlocked(monster: MonsterDefinition): boolean {
+    return ALL_MONSTERS_TEMPORARILY_UNLOCKED || (this.save?.monsterProgress[monster.id]?.unlocked ?? monster.id === 'mist_blob');
+  }
   unlockText(monster: MonsterDefinition): string { const req = monster.unlockRequirement; return req ? `Thắng ${req.wins} trận ${MONSTER_DEFINITIONS[req.monsterId].name}` : 'Mở sẵn'; }
   behaviorText(behavior: string): string {
     return { basic: 'đánh thường', guard: 'phòng thủ', heavy: 'đòn nặng', poison: 'gieo độc' }[behavior] ?? behavior;
