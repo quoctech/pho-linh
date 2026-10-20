@@ -367,8 +367,8 @@ Wireframe biểu tượng minh họa; bản chính thức dùng 5 gem assets có
 
 ### 10.4. Nguyên tắc input
 
-1. Mọi viên có hit area ít nhất bằng cell; tap A→tap B hoặc drag A→B đều hợp lệ.
-2. Selected gem có halo/scale nhẹ trong ~80ms; không che icon ngọc.
+1. Mọi viên có hit area ít nhất bằng cell; vuốt A→B sang ô kề trực giao sẽ swap trực tiếp.
+2. Tap đơn không để lại trạng thái selected; có thể hiện hướng dẫn ngắn để người chơi biết cần vuốt.
 3. Swap sai: tween quay lại, feedback ngắn; không tốn lượt.
 4. Khi resolving/cascade: khóa input và có phản hồi trực quan rằng đang xử lý.
 5. Resolve xong mới phản công, sau đó mở input lượt kế.

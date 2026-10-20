@@ -7,6 +7,8 @@
 > **Nền tảng MVP:** Android offline-first (Ionic 9 + Angular + Phaser 4 + Capacitor 8 + TypeScript)  
 > **Tương lai:** JohnCMS/PHP + MySQL; Node.js + Socket.IO cho matchmaking và PvP. **Không nằm trong MVP offline.**
 
+> **Balance V2:** Đặc tả mới về năm ngọc, Ngũ Hành, nội tại nghề, trọng số và công thức combat nằm tại [`GAMEPLAY_BALANCE_V2.md`](./gameplay-balance-v2.md). Tài liệu đó là nguồn thiết kế cho đợt triển khai kế tiếp và **chưa thay đổi runtime hiện tại**; các công thức cũ trong tài liệu này được xem là baseline legacy cho đến khi V2 được code và test.
+
 ---
 
 # PHẦN A — TẦM NHÌN VÀ PHẠM VI
@@ -124,9 +126,9 @@ Mở chương → săn trang bị có chỉ số hợp build → vượt boss �
 
 ### 7.2. Luật thao tác
 
-1. Chọn ô A bằng tap/drag, chọn ô B ở trên/dưới/trái/phải.
+1. Vuốt từ ô A sang ô B ở trên/dưới/trái/phải để đổi trực tiếp.
 2. Game chỉ cho swap nếu A và B là hai ô kề cạnh; không cho swap đường chéo.
-3. Nếu swap không tạo nhóm ≥3, trả ngọc về chỗ cũ, không kích hoạt phản công.
+3. Tap đơn không tạo selection state; nếu swap không tạo nhóm ≥3, trả ngọc về chỗ cũ, không kích hoạt phản công.
 4. Nếu hợp lệ, khóa input, tính **toàn bộ nhóm match** cùng lúc.
 5. Xóa nhóm; các viên phía trên rơi; sinh ngọc mới; kiểm tra cascade.
 6. Resolve tiếp cho đến khi không còn match; chỉ sau đó quái mới thực hiện một hành động.
