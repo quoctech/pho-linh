@@ -1,4 +1,4 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { IonButton, IonContent } from '@ionic/angular';
 import type { LocalSaveV1 } from '../../game-core';
 import { GameStorage } from '../state/game-storage.service';
@@ -11,11 +11,14 @@ import { environment } from '../../environments/environment';
   styleUrls: ['home.page.scss'],
   imports: [IonButton, IonContent, RouterLink],
 })
-export class HomePage implements OnInit {
+export class HomePage {
   private readonly storage = inject(GameStorage);
   save?: LocalSaveV1;
   get isDevelopment(): boolean { return !environment.production && this.save?.settings.devMode === true; }
-  async ngOnInit(): Promise<void> { this.save = await this.storage.load(); }
+
+  // Ionic cache lại page Home nên ngOnInit chỉ chạy một lần; phải load lại save mỗi lần
+  // trang hiển thị để dev mode, gold/EXP và điểm cộng cập nhật sau khi rời Settings/Character.
+  async ionViewWillEnter(): Promise<void> { this.save = await this.storage.load(); }
 
   ionViewWillLeave(): void {
     this.blurFocusedElement();

@@ -52,6 +52,12 @@ import {
   type MonsterSkillEffectId,
 } from './monster-skill-effect-assets';
 import {
+  ensureMonsterBasicAttackAnimation,
+  monsterBasicAttackForMonster,
+  preloadMonsterBasicAttack,
+  type TestMonsterId,
+} from './monster-basic-attack-assets';
+import {
   HERO_ASSETS_AVAILABLE,
   HERO_ELEMENT_SPRITE_KEYS,
   HERO_FEMALE_ELEMENT_SPRITE_KEYS,
@@ -384,6 +390,7 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
     } else if (monsterId === 'bamboo_mantis') {
       preloadBambooMantisSprites(this);
     }
+    preloadMonsterBasicAttack(this, monsterId as TestMonsterId);
     preloadMonsterSkillEffects(this, monsterId as ActorFrameId);
   }
 
@@ -408,11 +415,18 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
     this.ensureMatch3VfxAnimations();
     this.ensureSkillVfxAnimations();
     ensureStatusUiAnimations(this);
-    ensureLanternCatAnimations(this);
-    ensureMistDustAnimations(this);
-    ensureCloudFoxAnimations(this);
-    ensureBambooMantisAnimations(this);
-    ensureMonsterSkillEffectAnimations(this, this.controller.currentState.monster.id as ActorFrameId);
+    const monsterId = this.controller.currentState.monster.id;
+    if (monsterId === 'mist_blob') {
+      ensureMistDustAnimations(this);
+    } else if (monsterId === 'lantern_cat') {
+      ensureLanternCatAnimations(this);
+    } else if (monsterId === 'cloud_fox_boss') {
+      ensureCloudFoxAnimations(this);
+    } else if (monsterId === 'bamboo_mantis') {
+      ensureBambooMantisAnimations(this);
+    }
+    ensureMonsterBasicAttackAnimation(this, monsterId as TestMonsterId);
+    ensureMonsterSkillEffectAnimations(this, monsterId as ActorFrameId);
     ensureHeroAnimations(this, this.heroGender, this.heroElement);
     ensureBasicAttackEffectAnimations(this, this.heroElement);
     ensureElementSkillAnimations(this, this.heroElement);
@@ -946,6 +960,59 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
     fx.once(Phaser.Animations.Events.ANIMATION_COMPLETE, () => {
       this.vfxSprites.delete(fx);
       this.battleVfxPool?.release(fx);
+    });
+  }
+
+  private playMonsterBasicAttackEffect(onComplete: () => void): void {
+    const monsterId = this.controller.currentState.monster.id as TestMonsterId;
+    const effect = monsterBasicAttackForMonster(monsterId);
+    if (!this.battleVfxPool || !this.anims.exists(effect.animationKey)) {
+      onComplete();
+      return;
+    }
+    const start = this.combatPoint('monster');
+    const target = this.combatPoint('player');
+    const sprite = this.battleVfxPool.acquireSpriteVfx(effect.textureKeys[0]);
+    if (!sprite) {
+      onComplete();
+      return;
+    }
+    const displayHeight = effect.displayWidth * effect.frameHeight / effect.frameWidth;
+    let released = false;
+    let animationDone = false;
+    let travelDone = false;
+    const finish = (): void => {
+      if (released || !animationDone || !travelDone) return;
+      released = true;
+      this.vfxSprites.delete(sprite);
+      this.battleVfxPool?.release(sprite);
+      onComplete();
+    };
+    sprite
+      .setPosition(start.x, start.y - 20)
+      .setOrigin(0.5)
+      .setDisplaySize(effect.displayWidth, displayHeight)
+      .setDepth(14)
+      .setAlpha(1)
+      .setVisible(true)
+      .setBlendMode(Phaser.BlendModes.ADD)
+      .play(effect.animationKey);
+    sprite.anims.timeScale = this.reducedMotion ? 1.8 : 1;
+    this.vfxSprites.add(sprite);
+    sprite.once(Phaser.Animations.Events.ANIMATION_COMPLETE, () => {
+      animationDone = true;
+      finish();
+    });
+    this.tweens.add({
+      targets: sprite,
+      x: target.x,
+      y: target.y - 20,
+      duration: this.reducedMotion ? 360 : 700,
+      ease: 'Sine.easeInOut',
+      onComplete: () => {
+        travelDone = true;
+        finish();
+      },
     });
   }
 
@@ -2094,13 +2161,12 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
         if (shieldBroken) this.playShieldBreakEffect();
         const monsterAction = String(event.payload['action'] ?? 'basic');
         const isPoisonAction = monsterAction === 'poison';
-        const monsterId = this.controller.currentState.monster.id;
         this.lastMonsterActionVisualId = String(event.payload['actionId'] ?? '');
         this.playMonsterAnimation(isPoisonAction ? 'poisonCast' : monsterAction === 'heavy' ? 'heavyAttack' : 'attack');
         // Let the attack pose read first; the projectile launches from the
         // monster's extended strike instead of appearing at the same moment.
         if (!isPoisonAction) this.time.delayedCall(260, () => {
-          this.spawnMonsterProjectile(() => {
+          this.playMonsterBasicAttackEffect(() => {
             this.playHeroHitSfx();
             this.playHeroAnimation('hit');
             this.flashHero(0xff7a80);
