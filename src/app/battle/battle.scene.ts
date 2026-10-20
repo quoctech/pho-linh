@@ -20,6 +20,16 @@ import {
 } from './monsters/lantern-cat/lantern-cat-assets';
 import { LanternCatVfx } from './monsters/lantern-cat/lantern-cat-vfx';
 import {
+  BAMBOO_MANTIS_SPRITE_KEYS,
+  ensureBambooMantisAnimations,
+  preloadBambooMantisSprites,
+} from './monsters/bamboo-mantis/bamboo-mantis-assets';
+import {
+  CLOUD_FOX_SPRITE_KEYS,
+  ensureCloudFoxAnimations,
+  preloadCloudFoxSprites,
+} from './monsters/cloud-fox/cloud-fox-assets';
+import {
   MIST_DUST_SPRITE_KEYS,
   ensureMistDustAnimations,
   preloadMistDustSprites,
@@ -100,6 +110,8 @@ interface MonsterSpriteKeys {
 const MONSTER_SPRITE_KEYS: Readonly<Record<string, MonsterSpriteKeys>> = {
   mist_blob: MIST_DUST_SPRITE_KEYS,
   lantern_cat: LANTERN_CAT_SPRITE_KEYS,
+  cloud_fox_boss: CLOUD_FOX_SPRITE_KEYS,
+  bamboo_mantis: BAMBOO_MANTIS_SPRITE_KEYS,
 };
 const GEM_ATLAS_KEY = 'pho-linh-gems';
 const BATTLE_BACKGROUND_KEY = 'pho-linh-pk-background';
@@ -310,7 +322,7 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
     // Keep the shared bars, but do not load the legacy monster aura overlays
     // when Mist Dust is using its inline status sheets.
     const battleController = this.registry.get('battleController') as BattleController | undefined;
-    const preloadMonsterStatusOverlays = !['mist_blob', 'lantern_cat'].includes(
+    const preloadMonsterStatusOverlays = !['mist_blob', 'lantern_cat', 'cloud_fox_boss', 'bamboo_mantis'].includes(
       battleController?.currentState.monster.id ?? 'mist_blob',
     );
     preloadStatusUiAssets(this, false, preloadMonsterStatusOverlays);
@@ -330,6 +342,10 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
       preloadMistDustSprites(this);
     } else if (monsterId === 'lantern_cat') {
       preloadLanternCatSprites(this);
+    } else if (monsterId === 'cloud_fox_boss') {
+      preloadCloudFoxSprites(this);
+    } else if (monsterId === 'bamboo_mantis') {
+      preloadBambooMantisSprites(this);
     }
   }
 
@@ -355,6 +371,8 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
     ensureStatusUiAnimations(this);
     ensureLanternCatAnimations(this);
     ensureMistDustAnimations(this);
+    ensureCloudFoxAnimations(this);
+    ensureBambooMantisAnimations(this);
     ensureHeroAnimations(this, this.heroGender, this.heroElement);
     ensureElementSkillAnimations(this, this.heroElement);
     this.createHeroVisual();
@@ -381,7 +399,7 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
       monsterStatusBadgeY: this.layout.monsterStatusBadgeY,
       monsterEnergyBarY: this.layout.monsterEnergyBarY,
       heroUsesInlineStatus: true,
-      monsterUsesInlineStatus: ['mist_blob', 'lantern_cat'].includes(this.controller.currentState.monster.id),
+      monsterUsesInlineStatus: ['mist_blob', 'lantern_cat', 'cloud_fox_boss', 'bamboo_mantis'].includes(this.controller.currentState.monster.id),
       renderQuality: this.renderQuality,
     });
     this.createBoardFrame();
@@ -631,7 +649,9 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
     monster.setDepth(6);
     const spriteKeys = this.monsterSpriteKeys();
     const monsterId = this.controller.currentState.monster.id as ActorFrameId;
-    const idleTexture = monsterId === 'mist_blob' || monsterId === 'lantern_cat' ? actorFrameKey(monsterId, 'idle', 0) : '';
+    const idleTexture = ['mist_blob', 'lantern_cat', 'cloud_fox_boss', 'bamboo_mantis'].includes(monsterId)
+      ? actorFrameKey(monsterId, 'idle', 0)
+      : '';
     if (spriteKeys && this.textures.exists(idleTexture)) {
       this.ensureMonsterAnimations(spriteKeys);
       const sprite = this.add.sprite(0, 0, idleTexture)
@@ -664,7 +684,7 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
   }
 
   private usesMonsterStatusSheets(): boolean {
-    return ['mist_blob', 'lantern_cat'].includes(this.controller.currentState.monster.id);
+    return ['mist_blob', 'lantern_cat', 'cloud_fox_boss', 'bamboo_mantis'].includes(this.controller.currentState.monster.id);
   }
 
   private ensureMonsterAnimations(keys: MonsterSpriteKeys): void {
@@ -731,8 +751,8 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
   private normalizeMonsterSprite(sprite = this.monsterSprite): void {
     const keys = this.monsterSpriteKeys();
     const id = this.controller.currentState.monster.id;
-    if (!sprite || !keys || (id !== 'mist_blob' && id !== 'lantern_cat')) return;
-    normalizeActorSprite(sprite, id, keys.displayWidth);
+    if (!sprite || !keys || !['mist_blob', 'lantern_cat', 'cloud_fox_boss', 'bamboo_mantis'].includes(id)) return;
+    normalizeActorSprite(sprite, id as ActorFrameId, keys.displayWidth);
   }
 
   private ensureMatch3VfxAnimations(): void {
@@ -2190,7 +2210,9 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
     const color = poison ? 0xd5aaff : this.controller.currentState.monster.id === 'lantern_cat' ? 0xffd45e : 0x8ff3ff;
     const monsterId = this.controller.currentState.monster.id;
     const textureKey = this.monsterSpriteKeys()?.projectile;
-    const projectileFrameKey = monsterId === 'mist_blob' || monsterId === 'lantern_cat'
+    const projectileFrameKey = monsterId === 'mist_blob'
+      || monsterId === 'lantern_cat'
+      || monsterId === 'cloud_fox_boss'
       ? actorFrameKey(monsterId, 'element_projectile', 0)
       : undefined;
     const hasProjectileAnimation = Boolean(

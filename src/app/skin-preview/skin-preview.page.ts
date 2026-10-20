@@ -18,6 +18,7 @@ export class SkinPreviewPage implements AfterViewInit, OnDestroy {
     { id: 'metal', label: 'Kim' }, { id: 'wood', label: 'Mộc' }, { id: 'water', label: 'Thủy' },
     { id: 'fire', label: 'Hỏa' }, { id: 'earth', label: 'Thổ' },
     { id: 'mist_blob', label: 'Bụi Sương' }, { id: 'lantern_cat', label: 'Miêu Đèn' },
+    { id: 'cloud_fox_boss', label: 'Cáo Mây' }, { id: 'bamboo_mantis', label: 'Bọ Lá Tre' },
   ];
   selectedActor: ActorFrameId = 'metal';
   get actions() { return actorRows(this.selectedActor); }

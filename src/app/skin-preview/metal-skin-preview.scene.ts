@@ -26,6 +26,7 @@ export class MetalSkinPreviewScene extends Phaser.Scene {
     const actorName: Record<ActorFrameId, string> = {
       metal: 'Nam hệ Kim', wood: 'Nam hệ Mộc', water: 'Nam hệ Thủy',
       fire: 'Nam hệ Hỏa', earth: 'Nam hệ Thổ', mist_blob: 'Bụi Sương', lantern_cat: 'Miêu Đèn',
+      cloud_fox_boss: 'Cáo Mây', bamboo_mantis: 'Bọ Lá Tre',
       female_metal: 'Nữ hệ Kim', female_wood: 'Nữ hệ Mộc', female_water: 'Nữ hệ Thủy',
       female_fire: 'Nữ hệ Hỏa', female_earth: 'Nữ hệ Thổ',
     };

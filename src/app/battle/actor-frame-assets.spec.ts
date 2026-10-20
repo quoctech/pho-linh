@@ -16,7 +16,7 @@ import {
 const ACTORS: readonly ActorFrameId[] = [
   'metal', 'wood', 'water', 'fire', 'earth',
   'female_metal', 'female_wood', 'female_water', 'female_fire', 'female_earth',
-  'mist_blob', 'lantern_cat',
+  'mist_blob', 'lantern_cat', 'cloud_fox_boss', 'bamboo_mantis',
 ];
 
 describe('separated V2 actor frames', () => {
@@ -26,9 +26,10 @@ describe('separated V2 actor frames', () => {
       const spritesheet = vi.fn();
       const scene = { textures: { exists: () => false }, load: { image, spritesheet } } as unknown as Phaser.Scene;
       preloadActorFrames(scene, actor);
-      expect(image).toHaveBeenCalledTimes(144);
+      const expectedFrameCount = actor === 'bamboo_mantis' ? 72 : 144;
+      expect(image).toHaveBeenCalledTimes(expectedFrameCount);
       expect(spritesheet).not.toHaveBeenCalled();
-      expect(new Set(image.mock.calls.map((call) => call[0])).size).toBe(144);
+      expect(new Set(image.mock.calls.map((call) => call[0])).size).toBe(expectedFrameCount);
       expect(image.mock.calls[0][1]).toMatch(/\/frames_webp\/01_idle\/01_idle_01\.webp$/);
     }
   });

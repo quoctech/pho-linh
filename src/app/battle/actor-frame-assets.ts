@@ -11,11 +11,13 @@ import femaleFireManifest from '../../assets/hero-female-elements/fire/frames-ma
 import femaleEarthManifest from '../../assets/hero-female-elements/earth/frames-manifest.json';
 import mistManifest from '../../assets/monsters/mist-dust/frames-manifest.json';
 import lanternManifest from '../../assets/monsters/mieu-den/frames-manifest.json';
+import cloudFoxManifest from '../../assets/monsters/cloud-fox/frames-manifest.json';
+import bambooMantisManifest from '../../assets/monsters/bamboo-mantis/frames-manifest.json';
 
 export type ActorFrameId =
   | 'metal' | 'wood' | 'water' | 'fire' | 'earth'
   | 'female_metal' | 'female_wood' | 'female_water' | 'female_fire' | 'female_earth'
-  | 'mist_blob' | 'lantern_cat';
+  | 'mist_blob' | 'lantern_cat' | 'cloud_fox_boss' | 'bamboo_mantis';
 export const ACTOR_FRAME_RATE = 12;
 
 const ACTOR_ASSETS = {
@@ -31,6 +33,8 @@ const ACTOR_ASSETS = {
   female_earth: { root: 'assets/hero-female-elements/earth', manifest: femaleEarthManifest },
   mist_blob: { root: 'assets/monsters/mist-dust', manifest: mistManifest },
   lantern_cat: { root: 'assets/monsters/mieu-den', manifest: lanternManifest },
+  cloud_fox_boss: { root: 'assets/monsters/cloud-fox', manifest: cloudFoxManifest },
+  bamboo_mantis: { root: 'assets/monsters/bamboo-mantis', manifest: bambooMantisManifest },
 } as const;
 
 export function femaleActorForElement(element: 'metal' | 'wood' | 'water' | 'fire' | 'earth'): ActorFrameId {
