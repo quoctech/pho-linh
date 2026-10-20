@@ -173,6 +173,8 @@ export interface MonsterBattleState extends MonsterDefinition {
   readonly poisonTurns: number;
   /** Số tầng độc đang chịu (mô hình độc theo tầng V2). */
   readonly poisonStacks: number;
+  /** Phần potency trong poisonPotency đến từ skill (Vạn Diệp Độc Chú), cộng dồn với tầng ngọc tím. */
+  readonly skillPoisonPotency: number;
   /** Burning state applied by the Fire hero passive. */
   readonly burningPotency: number;
   readonly burningTurns: number;
@@ -180,6 +182,8 @@ export interface MonsterBattleState extends MonsterDefinition {
   readonly controlTurns: number;
   readonly damageTakenBonus: number;
   readonly damageTakenBonusTurns: number;
+  /** Số hành động của người chơi mà DEF cộng từ guard còn hiệu lực. */
+  readonly guardTurns: number;
   readonly nextAction: 'basic' | 'guard' | 'heavy' | 'energy' | 'poison' | 'telegraph' | 'long_mieu_lien_kich';
   readonly phase: 1 | 2;
   readonly actionCount: number;

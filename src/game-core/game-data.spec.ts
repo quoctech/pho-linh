@@ -33,7 +33,7 @@ describe('local game data contract', () => {
 
   it('keeps the match-3 and battle config in the shared combat JSON', () => {
     expect(COMBAT_DATA.match3.gemTypes).toEqual(['attack', 'heal', 'shield', 'energy', 'poison']);
-    expect(COMBAT_DATA.match3.balanceVersion).toBe(3);
+    expect(COMBAT_DATA.match3.balanceVersion).toBe(4);
     expect(COMBAT_DATA.battle.maxTurns).toBe(24);
   });
 

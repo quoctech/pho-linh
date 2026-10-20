@@ -8,7 +8,7 @@
     "gemWeights": {"attack": 25, "poison": 20, "energy": 20, "heal": 18, "shield": 17},
     "maxCascade": 12,
     "maxGenerationAttempts": 100,
-    "balanceVersion": 3,
+    "balanceVersion": 4,
     "comboMultipliers": [1, 1.2, 1.4, 1.6]
   },
   "energyByMatchLength": {"3": 15, "4": 25, "5": 40, "6": 50},

@@ -77,9 +77,11 @@ describe('Balance V3 combat core', () => {
           kind: 'skill', skillId, actionId: `${slot}-${element}`,
         });
 
+        const config = slot === 'primary' ? elementSkills.primarySkill : elementSkills.secondarySkill;
+        const dealsDamage = config.attackMultiplier !== undefined || config.fixedDamage !== undefined;
         expect(result.accepted, `${element}-${slot}`).toBe(true);
         expect(result.events.some((event) => event.type === 'SKILL_USED' && event.payload['skillId'] === skillId)).toBe(true);
-        expect(result.events.some((event) => event.type === 'DAMAGE_APPLIED' && event.payload['source'] === skillId)).toBe(true);
+        expect(result.events.some((event) => event.type === 'DAMAGE_APPLIED' && event.payload['source'] === skillId)).toBe(dealsDamage);
       }
     }
   });
@@ -97,8 +99,8 @@ describe('Balance V3 combat core', () => {
     const damage = firstEvent(result.events, (event) => event.type === 'DAMAGE_APPLIED' && event.payload['source'] === 'van_kiem_quy_tong');
 
     expect(result.accepted).toBe(true);
-    expect(damage?.payload['requested']).toBe(30); // 25 ATK × 120%
-    expect(damage?.payload['shieldAbsorbed']).toBe(30);
+    expect(damage?.payload['requested']).toBe(20); // 25 ATK × 120% − 10 DEF
+    expect(damage?.payload['shieldAbsorbed']).toBe(20);
     expect(damage?.payload['amount']).toBe(0);
     expect(result.events.find((event) => event.type === 'SKILL_USED')?.payload['energySpent']).toBe(60);
   });
@@ -116,9 +118,9 @@ describe('Balance V3 combat core', () => {
     const damage = firstEvent(result.events, (event) => event.type === 'DAMAGE_APPLIED' && event.payload['source'] === 'kim_quang_pha_giap');
 
     expect(result.accepted).toBe(true);
-    expect(damage?.payload['requested']).toBe(45); // 25 ATK × 180%
+    expect(damage?.payload['requested']).toBe(35); // 25 ATK × 180% − 10 DEF
     expect(damage?.payload['shieldAbsorbed']).toBe(0);
-    expect(damage?.payload['amount']).toBe(45);
+    expect(damage?.payload['amount']).toBe(35);
     expect(result.events.some((event) => event.type === 'DEFENSE_REDUCED' && event.payload['turns'] === 2)).toBe(true);
     expect(result.nextState.monster.defense).toBe(7);
     expect(result.nextState.monster.defenseReductionTurns).toBe(2);
@@ -212,9 +214,9 @@ describe('Balance V3 combat core', () => {
     expect(poison?.payload['turns']).toBe(3);
   });
 
-  it('tạo cùng event log cho cùng seed và cùng action (balanceVersion 3)', () => {
+  it('tạo cùng event log cho cùng seed và cùng action (balanceVersion 4)', () => {
     const base = setup({ topRow: ['attack', 'heal', 'attack', 'attack', 'shield', 'energy'], seed: 321 });
-    expect(base.balanceVersion).toBe(3);
+    expect(base.balanceVersion).toBe(4);
     const a = swap(base, 'replay');
     const b = swap(base, 'replay');
     expect(a.events).toEqual(b.events);
@@ -270,7 +272,7 @@ describe('Balance V3 nội tại nghề', () => {
     expect(result.events.some((e) => e.type === 'BURNING_APPLIED')).toBe(true);
   });
 
-  it('THỔ — khi đang có khiên, incoming damage giảm 10%', () => {
+  it('THỔ — khi đang có khiên, incoming damage giảm 10% (giữ nguyên)', () => {
     const result = swap(setup({
       topRow: ['attack', 'heal', 'attack', 'attack', 'shield', 'energy'],
       playerElement: 'earth', monsterId: 'mist_blob',
@@ -279,5 +281,190 @@ describe('Balance V3 nội tại nghề', () => {
     }), 'tho-resist');
     expect(result.events.some((e) => e.type === 'PASSIVE_TRIGGERED' && e.payload['passiveId'] === 'earth_shield_resistance')).toBe(true);
     expect(result.events.find((e) => e.type === 'MONSTER_ATTACKED')?.payload['amount']).toBe(44);
+  });
+});
+
+const ATTACK_ROW: readonly GemType[] = ['attack', 'heal', 'attack', 'attack', 'shield', 'energy'];
+const POISON_ROW: readonly GemType[] = ['poison', 'attack', 'poison', 'poison', 'heal', 'shield'];
+
+function castSkill(state: BattleState, element: ElementId, slot: 'primary' | 'secondary', actionId: string) {
+  const skills = CHARACTER_DATA.elementSkills[element];
+  const skillId = slot === 'primary' ? skills.primarySkillId : skills.secondarySkillId;
+  return resolveBattleAction(state, { kind: 'skill', skillId, actionId });
+}
+
+/** Lượt kế tiếp với cùng bàn cờ dựng sẵn để swap (0,0)↔(0,1) luôn tạo match mong muốn. */
+function nextTurn(previous: BattleState, setupState: BattleState, topRow: readonly GemType[] = ATTACK_ROW): BattleState {
+  const board = setupState.board.map((row) => [...row]);
+  board[0] = [...topRow];
+  // Reset chuỗi đánh để nội tại chí mạng Kim không làm số liệu phụ thuộc RNG.
+  return { ...previous, board, player: { ...previous.player, attackStreak: 0 } };
+}
+
+function skillDamage(events: readonly GameEvent[], skillId: string): GameEvent[] {
+  return events.filter((e) => e.type === 'DAMAGE_APPLIED' && e.payload['source'] === skillId);
+}
+
+describe('Cân bằng skill hệ (balanceVersion 4)', () => {
+  it('KIM — Kim Quang Phá Giáp: DEF -30% kéo dài đúng 2 hành động kế tiếp rồi hồi', () => {
+    const state = setup({
+      topRow: ATTACK_ROW, playerElement: 'metal', monsterId: 'bamboo_mantis',
+      player: { energy: 100 }, monster: { element: 'earth', defense: 10, baseDefense: 10 },
+    });
+    const cast = castSkill(state, 'metal', 'primary', 'kim-def-cast');
+    expect(cast.nextState.monster.defense).toBe(7);
+    expect(cast.nextState.monster.defenseReductionTurns).toBe(2);
+
+    const first = swap(nextTurn(cast.nextState, state), 'kim-def-1');
+    const firstGem = firstEvent(first.events, (e) => e.type === 'DAMAGE_APPLIED' && e.payload['source'] === 'attack_gems');
+    expect(firstGem?.payload['requested']).toBe(23); // 30 − 7 DEF
+    expect(first.nextState.monster.defenseReductionTurns).toBe(1);
+    expect(first.nextState.monster.defense).toBe(7);
+
+    const second = swap(nextTurn(first.nextState, state), 'kim-def-2');
+    expect(second.nextState.monster.defenseReductionTurns).toBe(0);
+    expect(second.nextState.monster.defense).toBe(10);
+  });
+
+  it('MỘC — Thanh Đằng Trói Hồn: 80% ATK và hút 15 năng lượng quái', () => {
+    const state = setup({ topRow: ATTACK_ROW, playerElement: 'wood', player: { energy: 50 }, monster: { energy: 40 } });
+    const result = castSkill(state, 'wood', 'primary', 'moc-1');
+    expect(skillDamage(result.events, 'thanh_dang_troi_hon')[0]?.payload['requested']).toBe(20); // 25 × 80% − 0 DEF
+    expect(firstEvent(result.events, (e) => e.type === 'ENERGY_STOLEN')?.payload['amount']).toBe(15);
+  });
+
+  it('MỘC — Vạn Diệp Độc Chú cộng dồn với độc tầng ngọc tím, ngọc tím sau đó không xóa phần của skill', () => {
+    const state = setup({
+      topRow: POISON_ROW, playerElement: 'wood', player: { energy: 90 },
+      monster: { poisonStacks: 2, poisonPotency: 12, poisonTurns: 2 },
+    });
+    const cast = castSkill(state, 'wood', 'secondary', 'moc-2');
+    expect(skillDamage(cast.events, 'thanh_moc_hoi_xuan')[0]?.payload['requested']).toBe(23); // round(25 × 0.9) − 0
+    const applied = firstEvent(cast.events, (e) => e.type === 'POISON_APPLIED' && e.payload['target'] === 'monster');
+    expect(applied?.payload['amount']).toBe(17); // 12 tầng + 5 (20% ATK)
+    expect(applied?.payload['turns']).toBe(3);
+    expect(firstEvent(cast.events, (e) => e.type === 'POISON_TICKED' && e.payload['target'] === 'monster')?.payload['amount']).toBe(17);
+
+    const gem = swap(nextTurn(cast.nextState, state, POISON_ROW), 'moc-2-gem');
+    const gemPoison = firstEvent(gem.events, (e) => e.type === 'POISON_APPLIED' && e.payload['target'] === 'monster');
+    expect(gemPoison?.payload['stacks']).toBe(3);
+    expect(gemPoison?.payload['amount']).toBe(23); // 3 tầng × 6 + 5 từ skill
+  });
+
+  it('THỦY — Hàn Triều Phá Không trừ thẳng 22 khiên; hết khiên thì trừ thẳng HP', () => {
+    const shielded = castSkill(
+      setup({ topRow: ATTACK_ROW, playerElement: 'water', player: { energy: 50 }, monster: { shield: 30 } }),
+      'water', 'primary', 'thuy-1-shield',
+    );
+    const shieldHit = skillDamage(shielded.events, 'han_trieu_pha_khong')[0];
+    expect(shieldHit?.payload['shieldAbsorbed']).toBe(22);
+    expect(shieldHit?.payload['shieldRemaining']).toBe(8);
+    expect(shieldHit?.payload['amount']).toBe(0);
+
+    const bare = castSkill(
+      setup({ topRow: ATTACK_ROW, playerElement: 'water', player: { energy: 50 }, monster: { shield: 0, defense: 10, baseDefense: 10 } }),
+      'water', 'primary', 'thuy-1-hp',
+    );
+    expect(skillDamage(bare.events, 'han_trieu_pha_khong')[0]?.payload['amount']).toBe(22); // không trừ DEF
+  });
+
+  it('THỦY — Băng Phong Thiên Lý đóng băng: quái bỏ trọn lượt (không swap ngọc), độc vẫn tick', () => {
+    for (const monsterId of ['mist_blob', 'lantern_cat', 'bamboo_mantis', 'cloud_fox_boss']) {
+      const result = castSkill(
+        setup({
+          topRow: ATTACK_ROW, playerElement: 'water', monsterId, player: { energy: 100 },
+          monster: { defense: 0, baseDefense: 0, poisonPotency: 6, poisonTurns: 2, poisonStacks: 1 },
+        }),
+        'water', 'secondary', `thuy-2-${monsterId}`,
+      );
+      expect(skillDamage(result.events, 'thuy_linh_ho_the')[0]?.payload['requested'], monsterId).toBe(28); // round(27.5)
+      expect(result.events.some((e) => e.type === 'CONTROL_APPLIED' && e.payload['effect'] === 'freeze'), monsterId).toBe(true);
+      expect(result.events.some((e) => e.type === 'MONSTER_ACTION_SKIPPED' && e.payload['reason'] === 'freeze'), monsterId).toBe(true);
+      expect(result.events.some((e) => e.type === 'MONSTER_THINKING' || e.type === 'MONSTER_MOVE_SELECTED'), monsterId).toBe(false);
+      expect(result.events.some((e) => e.type === 'MONSTER_ATTACKED' || e.type === 'MONSTER_SKILL_USED'), monsterId).toBe(false);
+      expect(result.events.some((e) => e.type === 'POISON_TICKED' && e.payload['target'] === 'monster'), monsterId).toBe(true);
+      expect(result.nextState.monster.controlTurns, monsterId).toBe(0);
+      expect(result.nextState.phase, monsterId).toBe('PLAYER_READY');
+    }
+  });
+
+  it('HỎA — Hỏa Vũ Liên Châu: 3 đòn × 40% ATK, bonus Thiêu đốt chỉ cộng đòn đầu', () => {
+    const result = castSkill(
+      setup({ topRow: ATTACK_ROW, playerElement: 'fire', player: { energy: 60 }, monster: { burningPotency: 1, burningTurns: 2 } }),
+      'fire', 'primary', 'hoa-1',
+    );
+    const hits = skillDamage(result.events, 'hoa_vu_lien_chau');
+    expect(hits.map((e) => e.payload['requested'])).toEqual([30, 10, 10]);
+    expect(hits.map((e) => e.payload['burningBonus'])).toEqual([20, 0, 0]);
+  });
+
+  it('HỎA — Phần Thiên Xạ Nhật: +15% sát thương nhận vào áp cho ngọc đỏ, đúng 2 hành động rồi hết', () => {
+    const state = setup({
+      topRow: ATTACK_ROW, playerElement: 'fire', monsterId: 'bamboo_mantis',
+      player: { energy: 100 }, monster: { element: 'earth', defense: 0, baseDefense: 0 },
+    });
+    const cast = castSkill(state, 'fire', 'secondary', 'hoa-2');
+    expect(skillDamage(cast.events, 'phan_thien_hoa_vu')[0]?.payload['requested']).toBe(38); // round(37.5)
+    expect(cast.nextState.monster.damageTakenBonusTurns).toBe(2);
+
+    const first = swap(nextTurn(cast.nextState, state), 'hoa-2-gem-1');
+    const gem = firstEvent(first.events, (e) => e.type === 'DAMAGE_APPLIED' && e.payload['source'] === 'attack_gems');
+    expect(gem?.payload['requested']).toBe(58); // (30 + 20 thiêu đốt) × 1.15 = 57.5
+    expect(first.nextState.monster.damageTakenBonusTurns).toBe(1);
+
+    const second = swap(nextTurn(first.nextState, state), 'hoa-2-gem-2');
+    expect(second.nextState.monster.damageTakenBonusTurns).toBe(0);
+    expect(second.nextState.monster.damageTakenBonus).toBe(0);
+  });
+
+  it('THỔ — Huyền Nham Hộ Thể: khiên 200% DEF + giảm 25% chặn mọi đòn của 4 quái, phản 35%', () => {
+    for (const monsterId of ['mist_blob', 'lantern_cat', 'bamboo_mantis', 'cloud_fox_boss']) {
+      const attacked = Array.from({ length: 60 }, (_, index) => castSkill(
+        setup({
+          topRow: ATTACK_ROW, playerElement: 'earth', monsterId, seed: index + 1,
+          player: { energy: 80 }, monster: { nextAction: 'basic', energy: 0 },
+        }),
+        'earth', 'secondary', `tho-2-${monsterId}-${index}`,
+      )).find((candidate) => candidate.events.some((e) => e.type === 'MONSTER_ATTACKED'));
+      expect(attacked, monsterId).toBeDefined();
+      const events = attacked!.events;
+      expect(skillDamage(events, 'dia_sat_phan_chan'), monsterId).toHaveLength(0);
+      expect(firstEvent(events, (e) => e.type === 'SHIELD_GAINED' && e.payload['source'] === 'dia_sat_phan_chan')?.payload['amount'], monsterId).toBe(20);
+      const hit = firstEvent(events, (e) => e.type === 'MONSTER_ATTACKED')!;
+      const raw = Number(hit.payload['rawIncoming']);
+      const expected = Math.max(1, Math.round(raw * 0.9 * 0.75)); // Sơn giáp × Huyền Nham
+      expect(hit.payload['amount'], monsterId).toBe(expected);
+      expect(hit.payload['shieldAbsorbed'], monsterId).toBe(Math.min(20, expected));
+      const reflected = firstEvent(events, (e) => e.type === 'DAMAGE_REFLECTED');
+      expect(Number(reflected?.payload['amount']) + Number(reflected?.payload['shieldAbsorbed']), monsterId)
+        .toBe(Math.max(1, Math.round(expected * 0.35)));
+    }
+  });
+
+  it('THỔ — Long Miêu Liên Kích của Miêu Đèn cũng bị giảm, khiên chặn và không gây choáng khi miễn khống chế', () => {
+    const result = castSkill(
+      setup({ topRow: ATTACK_ROW, playerElement: 'earth', monsterId: 'lantern_cat', player: { energy: 80 }, monster: { energy: 100, nextAction: 'long_mieu_lien_kich' } }),
+      'earth', 'secondary', 'tho-2-long-mieu',
+    );
+    const skillHit = firstEvent(result.events, (e) => e.type === 'DAMAGE_APPLIED' && e.payload['source'] === 'lantern_cat_long_mieu_lien_kich');
+    expect(skillHit?.payload['amount']).toBe(20); // ceil(300 × 10%) × 0.675
+    expect(skillHit?.payload['shieldAbsorbed']).toBe(20);
+    expect(result.events.some((e) => e.type === 'DAMAGE_REFLECTED')).toBe(true);
+    expect(result.nextState.playerSkipTurns).toBe(0);
+  });
+
+  it('Guard của Cáo Mây chỉ cộng DEF cho 1 hành động kế tiếp', () => {
+    const state = setup({ topRow: ATTACK_ROW, monsterId: 'cloud_fox_boss', monster: { nextAction: 'guard' } });
+    const guarded = resolveBattleAction(state, { kind: 'timeout', actionId: 'fox-guard' });
+    expect(guarded.events.some((e) => e.type === 'MONSTER_GUARDED')).toBe(true);
+    expect(guarded.nextState.monster.defense).toBe(26);
+    expect(guarded.nextState.monster.guardTurns).toBe(1);
+
+    const after = resolveBattleAction(
+      { ...guarded.nextState, monster: { ...guarded.nextState.monster, nextAction: 'basic' } },
+      { kind: 'timeout', actionId: 'fox-guard-expire' },
+    );
+    expect(after.nextState.monster.guardTurns).toBe(0);
+    expect(after.nextState.monster.defense).toBe(14);
   });
 });

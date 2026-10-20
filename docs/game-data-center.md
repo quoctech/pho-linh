@@ -84,12 +84,23 @@ Thông số kỹ năng hiện hành:
 | Hỏa | Hỏa Vũ Liên Châu: 60, 3 × 40% ATK | Phần Thiên Xạ Nhật: 100, 150% ATK, mục tiêu nhận thêm 15% sát thương/2 lượt |
 | Thổ | Sơn Nhạc Trấn Địa: 65, 70% ATK, 40% choáng 1 lượt | Huyền Nham Hộ Thể: 80, khiên 200% DEF, giảm 25% sát thương, miễn khống chế, phản 35% trong 2 lượt |
 
+Quy tắc resolver skill (balanceVersion 4):
+
+- Skill theo `attackMultiplier`: `round(ATK × hệ số × crit + bonusThiêuĐốt) − DEF quái` (min 1), sau đó nhân `1 + damageTakenBonus` nếu quái đang bị Phần Thiên Xạ Nhật. `fixedDamage` (Hàn Triều Phá Không) không trừ DEF: trừ thẳng vào khiên nếu quái có khiên, hết khiên thì trừ HP.
+- Đa đòn (`hitCount`): bonus Thiêu đốt của nội tại Hỏa chỉ cộng vào đòn đầu.
+- Debuff trên quái (`defenseReductionTurns`, `damageTakenBonusTurns`, `guardTurns`) đếm theo **hành động của người chơi** (swap, skill, hết giờ). Hành động cast không tự trừ lượt của chính nó, nên "2 lượt tiếp theo" = 2 hành động kế tiếp.
+- `controlEffect` (`freeze`/`stun`): lượt quái kế tiếp bị bỏ trọn — không swap ngọc, không nhận hiệu ứng ngọc, không tấn công; độc/thiêu vẫn tick.
+- Độc của Vạn Diệp Độc Chú cộng dồn với độc tầng ngọc tím; phần của skill lưu ở `monster.skillPoisonPotency` để ngọc tím tính lại tầng không làm mất.
+- Skill thuần buff (Huyền Nham Hộ Thể) không gây hit lên quái.
+- Mọi đòn quái đánh người chơi (kể cả Miêu Đèn và Long Miêu Liên Kích) đi qua `resolveIncomingMonsterDamage` trong `monsters/monster-combat.ts`: nội tại Thủy × nội tại Thổ × giảm sát thương chủ động → khiên → HP, sau đó `reflectMonsterDamage` phản đòn.
+- Tooltip lấy số từ `previewPlayerSkill()` — cùng công thức với resolver.
+
 ## Monster data
 
 `monsters.json` có hai phần:
 
 - `definitions`: record theo `monsterId` ổn định. Mỗi definition có tên hiển thị, `element` (hệ Ngũ Hành), level, `maxHp`, `attack`, `defense`, `shieldCap`, behavior, tactic, reward và điều kiện unlock.
-- `combat`: hệ số dùng chung cho heavy attack, giảm damage theo defense, guard, năng lượng, poison và skill riêng của Miêu Đèn.
+- `combat`: hệ số dùng chung cho heavy attack, giảm damage theo defense, guard (`guardDefenseBonus`, `guardTurns`), hệ số sát thương theo số ngọc đỏ quái match (`matchDamageMultipliers`), năng lượng, poison và skill riêng của Miêu Đèn (`lanternCatSkill`, gồm `stunTurns`).
 
 Các ID hiện có:
 

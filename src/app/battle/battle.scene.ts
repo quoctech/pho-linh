@@ -5,6 +5,7 @@ import {
   CHARACTER_DATA,
   DEFAULT_BATTLE_CONFIG,
   findLegalMoves,
+  previewPlayerSkill,
   type Board,
   type BattleState,
   type Coord,
@@ -235,6 +236,11 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
   private playerTurnPrompt?: Phaser.GameObjects.Text;
   private fpsDebugLabel?: Phaser.GameObjects.Text;
   private telegraphLabel?: Phaser.GameObjects.Text;
+  /** Hiệu ứng đang áp lên quái (đóng băng/choáng, thiêu đốt, giảm DEF), đồng bộ theo event playback. */
+  private monsterEffectsLabel?: Phaser.GameObjects.Text;
+  private skillTooltipBackground?: Phaser.GameObjects.Rectangle;
+  private displayedMonsterEffects = new Map<'control' | 'vulnerable' | 'defense', string>();
+  private displayedMonsterControl?: 'freeze' | 'stun';
   private statusLabel?: Phaser.GameObjects.Text;
   private skillButtons: Phaser.GameObjects.Rectangle[] = [];
   private skillIcons: Phaser.GameObjects.Image[] = [];
@@ -723,6 +729,18 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
       .setResolution(this.renderQuality)
       .setOrigin(1, 0.5)
       .setDepth(9);
+    this.monsterEffectsLabel = this.add
+      .text(this.layout.monsterStatusBounds.right - 2, this.layout.monsterStatusBadgeY + 14, '', {
+        color: '#d8f4ff',
+        fontFamily: 'sans-serif',
+        fontSize: '8px',
+        fontStyle: 'bold',
+        stroke: '#171426',
+        strokeThickness: 3,
+      })
+      .setResolution(this.renderQuality)
+      .setOrigin(1, 0.5)
+      .setDepth(12);
     const statusRight = this.layout.skillButtons[1].x + this.layout.skillButtonSize / 2;
     const statusWidth = this.layout.skillButtonSize * 2 + this.layout.skillButtonGap;
     const statusLeft = statusRight - statusWidth;
@@ -1238,6 +1256,7 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
     const tooltipBackground = this.add
       .rectangle(0, 0, 158, 70, 0x171426, 0.98)
       .setStrokeStyle(1, 0xd8c2ff, 0.85);
+    this.skillTooltipBackground = tooltipBackground;
     this.skillTooltipLabel = this.add
       .text(-73, -28, '', {
         color: '#fff8e8',
@@ -1245,6 +1264,7 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
         fontSize: '9px',
         fontStyle: 'bold',
         lineSpacing: 2,
+        wordWrap: { width: 146 },
       })
       .setResolution(this.renderQuality)
       .setOrigin(0, 0);
@@ -1286,6 +1306,7 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
     this.displayedMonsterPoisonTurns = state.monster.poisonTurns;
     this.renderBoard(state.board);
     this.renderBars(state);
+    this.syncMonsterEffectsFromState(state);
     this.telegraphLabel?.setText(this.formatMonsterPreparationText(state.telegraph));
     this.turnLabel?.setText(`${state.turn}/${state.maxTurns}`);
     this.updateSkillButtons(state);
@@ -1352,6 +1373,51 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
 
   private refreshDisplayedBars(): void {
     this.renderBars(this.controller.currentState);
+  }
+
+  private syncMonsterEffectsFromState(state: BattleState): void {
+    const monster = state.monster;
+    this.displayedMonsterEffects.clear();
+    this.displayedMonsterControl = undefined;
+    if (monster.controlTurns > 0) {
+      this.setDisplayedMonsterControl(monster.controlEffect ?? 'stun', monster.controlTurns);
+    }
+    if (monster.damageTakenBonusTurns > 0) {
+      this.setDisplayedMonsterEffect('vulnerable', `🔥+${Math.round(monster.damageTakenBonus * 100)}% ·${monster.damageTakenBonusTurns}`);
+    }
+    if (monster.defenseReductionTurns > 0) {
+      this.setDisplayedMonsterEffect('defense', `🛡-${Math.round(monster.defenseReductionPercent * 100)}% ·${monster.defenseReductionTurns}`);
+    }
+    this.refreshMonsterEffects();
+  }
+
+  private setDisplayedMonsterControl(effect: 'freeze' | 'stun' | undefined, turns: number): void {
+    if (!effect || turns <= 0) {
+      this.displayedMonsterControl = undefined;
+      this.displayedMonsterEffects.delete('control');
+    } else {
+      this.displayedMonsterControl = effect;
+      this.displayedMonsterEffects.set('control', `${effect === 'freeze' ? '❄ Đóng băng' : '💫 Choáng'} ·${turns}`);
+    }
+    this.refreshMonsterEffects();
+  }
+
+  private setDisplayedMonsterEffect(key: 'vulnerable' | 'defense', text: string): void {
+    this.displayedMonsterEffects.set(key, text);
+    this.refreshMonsterEffects();
+  }
+
+  private refreshMonsterEffects(): void {
+    this.monsterEffectsLabel?.setText([...this.displayedMonsterEffects.values()].join('  '));
+    this.applyMonsterControlTint();
+  }
+
+  /** Quái bị đóng băng giữ tint xanh băng; flashMonster khôi phục tint này sau mỗi lần nháy. */
+  private applyMonsterControlTint(): void {
+    if (!this.monsterArt) return;
+    if (this.displayedMonsterControl === 'freeze') this.monsterArt.setTint(0x9fdcff);
+    else if (this.displayedMonsterControl === 'stun') this.monsterArt.setTint(0xfff1a8);
+    else this.monsterArt.clearTint();
   }
 
 
@@ -1519,30 +1585,50 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
 
   private showSkillTooltip(slot: ElementActiveSkillSlot = 'primarySkill'): void {
     const state = this.controller.currentState;
-    const skillPower = state.player.stats.skillPower;
     const elementSkill = CHARACTER_DATA.elementSkills[this.heroElement];
+    const skillId = slot === 'primarySkill' ? elementSkill.primarySkillId : elementSkill.secondarySkillId;
     const skillConfig = slot === 'primarySkill' ? elementSkill.primarySkill : elementSkill.secondarySkill;
     const skillLabel = slot === 'primarySkill' ? elementSkill.primarySkillLabel : elementSkill.secondarySkillLabel;
-    const skillDamage = skillConfig.attackMultiplier !== undefined
-      ? Math.max(1, Math.round(state.player.stats.atk * skillConfig.attackMultiplier))
-      : Math.max(
-        1,
-        Math.round(skillConfig.baseDamage + skillPower * skillConfig.skillPowerMultiplier)
-          - Math.floor(state.monster.defense * skillConfig.defenseMultiplier),
-      );
+    const preview = previewPlayerSkill(state, skillId);
+    const percent = (ratio: number) => Math.round(ratio * 100);
     const skillEnergyCost = skillConfig.energyCost;
     const effects: string[] = [];
-    if (skillConfig.fixedDamage !== undefined) effects.push(`Trừ ${skillConfig.fixedDamage} khiên/HP`);
     if (skillConfig.energySteal) effects.push(`Hút ${skillConfig.energySteal} năng lượng`);
-    if (skillConfig.poisonAtkFactor) effects.push(`Độc ${skillConfig.poisonAtkFactor * 100}% ATK · ${skillConfig.poisonTurns} lượt`);
-    if (skillConfig.hitCount) effects.push(`${skillConfig.hitCount} đòn × ${skillConfig.attackMultiplier! * 100}% ATK`);
-    if (skillConfig.controlEffect) effects.push(`${skillConfig.controlEffect === 'freeze' ? 'Đóng băng' : 'Choáng'} · ${skillConfig.controlChance! * 100}%`);
-    if (skillConfig.damageTakenBonus) effects.push(`Mục tiêu nhận thêm ${skillConfig.damageTakenBonus * 100}% sát thương · ${skillConfig.damageTakenBonusTurns} lượt`);
-    if (skillConfig.defenseReduction) effects.push(`Giảm DEF ${skillConfig.defenseReduction * 100}% · ${skillConfig.defenseReductionTurns} lượt`);
-    if (skillConfig.selfShieldDefenseMultiplier) effects.push(`Khiên ${skillConfig.selfShieldDefenseMultiplier * 100}% DEF · giảm nhận ${skillConfig.selfDamageReduction! * 100}% · phản ${skillConfig.reflectDamageRatio! * 100}%`);
+    if (skillConfig.poisonAtkFactor) effects.push(`Độc ${percent(skillConfig.poisonAtkFactor)}% ATK/lượt · ${skillConfig.poisonTurns} lượt`);
+    if (skillConfig.controlEffect) {
+      const controlLabel = skillConfig.controlEffect === 'freeze' ? 'Đóng băng' : 'Choáng';
+      const chance = skillConfig.controlChance ?? 0;
+      effects.push(`${controlLabel} ${skillConfig.controlTurns ?? 1} lượt${chance < 1 ? ` · ${percent(chance)}%` : ''}`);
+    }
+    if (skillConfig.damageTakenBonus) effects.push(`Thiêu đốt: nhận thêm ${percent(skillConfig.damageTakenBonus)}% sát thương · ${skillConfig.damageTakenBonusTurns} lượt`);
+    if (skillConfig.defenseReduction) effects.push(`Giảm DEF ${percent(skillConfig.defenseReduction)}% · ${skillConfig.defenseReductionTurns} lượt`);
+    if (skillConfig.selfShieldDefenseMultiplier) {
+      const shield = Math.round(state.player.stats.defense * skillConfig.selfShieldDefenseMultiplier);
+      effects.push(`Khiên ${shield} (${percent(skillConfig.selfShieldDefenseMultiplier)}% DEF) · giảm nhận ${percent(skillConfig.selfDamageReduction ?? 0)}% · ${skillConfig.selfDamageReductionTurns ?? 0} lượt`);
+      if (skillConfig.reflectDamageRatio) effects.push(`Phản ${percent(skillConfig.reflectDamageRatio)}% · miễn khống chế`);
+    }
+    let damageLine: string;
+    if (skillConfig.fixedDamage !== undefined) {
+      damageLine = `Trừ ${skillConfig.fixedDamage} khiên (hết khiên → HP)`;
+    } else if (!preview || preview.hitCount === 0) {
+      damageLine = 'Không gây sát thương';
+    } else if (preview.hitCount > 1) {
+      damageLine = `${preview.hitCount} đòn × ${percent(skillConfig.attackMultiplier ?? 0)}% ATK · tổng ${preview.totalDamage}`;
+    } else {
+      const formula = skillConfig.attackMultiplier !== undefined
+        ? `${percent(skillConfig.attackMultiplier)}% ATK`
+        : `SP ×${skillConfig.skillPowerMultiplier}`;
+      damageLine = `Sát thương: ${preview.totalDamage} (${formula})${skillConfig.bypassShield ? ' · Xuyên khiên' : ''}`;
+    }
     this.skillTooltipLabel?.setText(
-      `${skillLabel}\n⚡${state.player.energy}/${DEFAULT_BATTLE_CONFIG.energyCap} · Cần ${skillEnergyCost}\nSát thương: ${skillDamage}${skillConfig.bypassShield ? ' · Xuyên khiên' : ''}\n${skillConfig.attackMultiplier !== undefined ? `ATK ×${skillConfig.attackMultiplier}` : `SP ×${skillConfig.skillPowerMultiplier} · DEF ×${skillConfig.defenseMultiplier}`}${effects.length ? `\n${effects.join('\n')}` : ''}`,
+      `${skillLabel}\n⚡${state.player.energy}/${DEFAULT_BATTLE_CONFIG.energyCap} · Cần ${skillEnergyCost}\n${damageLine}${effects.length ? `\n${effects.join('\n')}` : ''}`,
     );
+    // Khung co theo nội dung, giữ cạnh dưới cố định để không đè lên nút skill.
+    if (this.skillTooltipLabel && this.skillTooltipBackground) {
+      const height = Math.max(70, this.skillTooltipLabel.height + 12);
+      this.skillTooltipBackground.setSize(158, height).setPosition(0, 35 - height / 2);
+      this.skillTooltipLabel.setY(42 - height);
+    }
     this.skillTooltip?.setVisible(true).setAlpha(1);
     this.skillTooltipHideTimer?.remove(false);
     this.skillTooltipHideTimer = this.time.delayedCall(2800, () => {
@@ -2039,7 +2125,48 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
         this.statusLabel?.setText(`🛡 Giảm phòng thủ quái ${Math.round(Number(event.payload['amount'] ?? 0) * 100)}% · ${Number(event.payload['turns'] ?? 0)} lượt`);
         this.floatNumber(`🛡 DEF -${Math.round(Number(event.payload['amount'] ?? 0) * 100)}%`, this.monsterPosition.x, 104, '#b9a7ff');
         this.flashMonster(0x9c7cff);
+        this.setDisplayedMonsterEffect('defense', `🛡-${Math.round(Number(event.payload['amount'] ?? 0) * 100)}% ·${Number(event.payload['turns'] ?? 0)}`);
         break;
+      case 'CONTROL_APPLIED': {
+        if (event.payload['target'] !== 'monster') break;
+        const effect = event.payload['effect'] === 'freeze' ? 'freeze' : 'stun';
+        const turns = this.safeNumber(Number(event.payload['turns'] ?? 1));
+        const label = effect === 'freeze' ? '❄ ĐÓNG BĂNG' : '💫 CHOÁNG';
+        this.statusLabel?.setText(`${label} ${this.controller.currentState.monster.name} · ${turns} lượt`);
+        this.floatNumber(label, this.monsterPosition.x, 104, effect === 'freeze' ? '#9fdcff' : '#fff1a8', 700);
+        this.setDisplayedMonsterControl(effect, turns);
+        break;
+      }
+      case 'DAMAGE_VULNERABILITY_APPLIED': {
+        if (event.payload['target'] !== 'monster') break;
+        const bonus = Math.round(Number(event.payload['amount'] ?? 0) * 100);
+        const turns = this.safeNumber(Number(event.payload['turns'] ?? 0));
+        this.statusLabel?.setText(`🔥 Thiêu đốt: quái nhận thêm ${bonus}% sát thương · ${turns} lượt`);
+        this.floatNumber(`🔥 +${bonus}% ST`, this.monsterPosition.x, 104, '#ff9a4d', 700);
+        this.setDisplayedMonsterEffect('vulnerable', `🔥+${bonus}% ·${turns}`);
+        break;
+      }
+      case 'ENERGY_STOLEN': {
+        this.displayedMonsterEnergy = Math.max(0, (this.displayedMonsterEnergy ?? this.controller.currentState.monster.energy) - amount);
+        this.displayedEnergy = Math.min(
+          DEFAULT_BATTLE_CONFIG.energyCap,
+          (this.displayedEnergy ?? this.controller.currentState.player.energy) + amount,
+        );
+        this.statusLabel?.setText(`⚡ Hút ${amount} năng lượng của quái`);
+        this.floatNumber(`⚡ -${amount}`, this.monsterPosition.x, 104, '#f3c64f');
+        this.refreshDisplayedBars();
+        break;
+      }
+      case 'DAMAGE_REFLECTED': {
+        const absorbed = this.safeNumber(Number(event.payload['shieldAbsorbed'] ?? 0));
+        this.displayedMonsterHp = Math.max(0, (this.displayedMonsterHp ?? this.controller.currentState.monster.currentHp) - amount);
+        this.displayedMonsterShield = Math.max(0, (this.displayedMonsterShield ?? this.controller.currentState.monster.shield) - absorbed);
+        this.statusLabel?.setText(`🪨 Phản ${amount + absorbed} sát thương`);
+        this.floatNumber(`🪨 -${amount}`, this.monsterPosition.x, 104, '#e3c48a');
+        this.flashMonster(0xe3c48a);
+        this.refreshDisplayedBars();
+        break;
+      }
       case 'MONSTER_DODGED': {
         const matchCount = this.safeNumber(Number(event.payload['matchCount'] ?? 0));
         const matchLabel = matchCount >= 3 ? `X${matchCount} · ` : '';
@@ -2166,6 +2293,11 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
           this.telegraphLabel?.setText(`⚠ ${this.monsterActionText('heavy')}`);
           this.statusLabel?.setText('Đòn mạnh tiếp theo');
           this.tweenMonsterTelegraph();
+        } else if (event.payload['reason'] === 'freeze' || event.payload['reason'] === 'stun') {
+          const frozen = event.payload['reason'] === 'freeze';
+          this.statusLabel?.setText(String(event.payload['label'] ?? (frozen ? 'Quái bị đóng băng — mất lượt' : 'Quái bị choáng — mất lượt')));
+          this.floatNumber(frozen ? '❄ MẤT LƯỢT' : '💫 MẤT LƯỢT', this.monsterPosition.x, 104, frozen ? '#9fdcff' : '#fff1a8', 700);
+          this.setDisplayedMonsterControl(frozen ? 'freeze' : 'stun', this.safeNumber(Number(event.payload['remainingTurns'] ?? 0)));
         } else {
           this.statusLabel?.setText('Quái không gây sát thương');
         }
@@ -2401,7 +2533,7 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
   private flashMonster(color: number): void {
     if (this.monsterArt) {
       this.monsterArt.setTint(color);
-      this.time.delayedCall(180, () => this.monsterArt?.clearTint());
+      this.time.delayedCall(180, () => this.applyMonsterControlTint());
       return;
     }
     if (!this.monsterBody) return;
@@ -3372,7 +3504,12 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
       case 'GEMS_FALLING': return GEM_FALL_DURATION;
       case 'GEMS_REFILLED': return GEM_REFILL_DURATION;
       case 'MONSTER_ATTACKED': return event.payload['lethal'] === true ? 1400 : 1000;
-      case 'MONSTER_ACTION_SKIPPED': return 260;
+      case 'MONSTER_ACTION_SKIPPED':
+        return event.payload['reason'] === 'freeze' || event.payload['reason'] === 'stun' ? 700 : 260;
+      case 'CONTROL_APPLIED': return 600;
+      case 'DAMAGE_VULNERABILITY_APPLIED': return 420;
+      case 'ENERGY_STOLEN': return 360;
+      case 'DAMAGE_REFLECTED': return 420;
       case 'MONSTER_GUARDED': return 260;
       case 'SKILL_USED': return this.reducedMotion ? 120 : 800;
       case 'MONSTER_SKILL_USED': return this.reducedMotion ? 650 : 1150;

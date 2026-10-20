@@ -126,6 +126,10 @@ export interface MonsterCombatBalance {
   readonly heavyDamageMultiplier: number;
   readonly defenseMitigationMultiplier: number;
   readonly guardDefenseBonus: number;
+  /** Số hành động của người chơi mà DEF cộng từ guard còn hiệu lực. */
+  readonly guardTurns: number;
+  /** Hệ số sát thương quái theo số ngọc đỏ quái match (khóa 3..6, ≥6 dùng khóa 6). */
+  readonly matchDamageMultipliers: Readonly<Record<string, number>>;
   readonly mistGuardShield: number;
   readonly playerEnergyOnMonsterAttack: number;
   readonly monsterEnergyOnAttack: number;
@@ -135,6 +139,7 @@ export interface MonsterCombatBalance {
     readonly maxHpDamageRatio: number;
     readonly playerEnergyDrainRatio: number;
     readonly energyRestored: number;
+    readonly stunTurns: number;
   };
 }
 

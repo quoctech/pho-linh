@@ -12,6 +12,8 @@
     "heavyDamageMultiplier": 1.7,
     "defenseMitigationMultiplier": 0.6,
     "guardDefenseBonus": 12,
+    "guardTurns": 1,
+    "matchDamageMultipliers": {"3": 1, "4": 1.2, "5": 1.4, "6": 1.6},
     "mistGuardShield": 20,
     "playerEnergyOnMonsterAttack": 10,
     "monsterEnergyOnAttack": 15,
@@ -20,7 +22,8 @@
     "lanternCatSkill": {
       "maxHpDamageRatio": 0.1,
       "playerEnergyDrainRatio": 0.2,
-      "energyRestored": 10
+      "energyRestored": 10,
+      "stunTurns": 1
     }
   },
   "definitions": {

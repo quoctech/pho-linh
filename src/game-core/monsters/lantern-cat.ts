@@ -1,5 +1,5 @@
 import { clampPlayerState } from '../player';
-import { applyMonsterAttackDamage, matchDamageMultiplier } from './monster-combat';
+import { applyMonsterGuard, matchDamageMultiplier, reflectMonsterDamage, resolveIncomingMonsterDamage } from './monster-combat';
 import { CHARACTER_DATA, MONSTER_COMBAT_BALANCE } from '../game-data';
 import type {
   BattleConfig,
@@ -54,6 +54,7 @@ export function resolveLanternCatTurn(context: LanternCatTurnContext): LanternCa
   };
   const events: GameEvent[] = [];
   let sequence = context.startSequence;
+  let damageTakenStreak = 0;
   let action: LanternCatAction = isLanternCatAction(monster.nextAction)
     ? monster.nextAction
     : chooseLanternCatAction(monster.actionCount, monster.energy, context.config.energyCap);
@@ -69,8 +70,12 @@ export function resolveLanternCatTurn(context: LanternCatTurnContext): LanternCa
     );
     const monsterEnergyBefore = monster.energy;
     const monsterEnergyAfter = Math.min(context.config.energyCap, MONSTER_COMBAT_BALANCE.lanternCatSkill.energyRestored);
-    const damageMultiplier = player.damageReductionTurns > 0 ? 1 - player.damageReductionPercent : 1;
-    const damageResult = applyMonsterAttackDamage(player, damage, damageMultiplier);
+    const damageResult = resolveIncomingMonsterDamage(
+      player, monster, damage, context.state.damageTakenStreak, context.createEvent, sequence,
+    );
+    events.push(...damageResult.events);
+    sequence = damageResult.nextSequence;
+    damageTakenStreak = damageResult.damageTakenStreak;
     player = clampPlayerState({ ...damageResult.player, energy: player.energy - energyDrained });
     monster = { ...monster, energy: monsterEnergyAfter };
     events.push(context.createEvent(sequence, 'MONSTER_SKILL_USED', {
@@ -85,7 +90,7 @@ export function resolveLanternCatTurn(context: LanternCatTurnContext): LanternCa
       playerEnergyBefore: context.state.player.energy,
       playerEnergyDrained: energyDrained,
       playerEnergyAfter: player.energy,
-      stunTurns: 1,
+      stunTurns: MONSTER_COMBAT_BALANCE.lanternCatSkill.stunTurns,
       target: 'player',
     }));
     sequence += 1;
@@ -103,11 +108,16 @@ export function resolveLanternCatTurn(context: LanternCatTurnContext): LanternCa
       lethal: player.currentHp <= 0,
     }));
     sequence += 1;
+    const reflected = reflectMonsterDamage(player, monster, damageResult.incoming, context.createEvent, sequence);
+    monster = reflected.monster;
+    events.push(...reflected.events);
+    sequence = reflected.nextSequence;
     return {
       state: {
         ...context.state,
         player,
-        playerSkipTurns: player.controlImmunityTurns > 0 ? 0 : 1,
+        playerSkipTurns: player.controlImmunityTurns > 0 ? 0 : MONSTER_COMBAT_BALANCE.lanternCatSkill.stunTurns,
+        damageTakenStreak,
         monster,
       },
       events,
@@ -116,7 +126,7 @@ export function resolveLanternCatTurn(context: LanternCatTurnContext): LanternCa
   }
 
   if (action === 'guard') {
-    monster = { ...monster, defense: monster.baseDefense + MONSTER_COMBAT_BALANCE.guardDefenseBonus };
+    monster = applyMonsterGuard(monster);
     events.push(context.createEvent(sequence, 'MONSTER_GUARDED', {
       actor: 'monster',
       actionId: `${context.actionId}:monster:${monster.actionCount}`,
@@ -148,16 +158,23 @@ export function resolveLanternCatTurn(context: LanternCatTurnContext): LanternCa
         1,
         Math.round(baseDamage) - Math.floor(player.stats.defense * MONSTER_COMBAT_BALANCE.defenseMitigationMultiplier),
       );
-      const damage = applyMonsterAttackDamage(player, incoming);
+      const damage = resolveIncomingMonsterDamage(
+        player, monster, incoming, context.state.damageTakenStreak, context.createEvent, sequence,
+      );
+      events.push(...damage.events);
+      sequence = damage.nextSequence;
+      damageTakenStreak = damage.damageTakenStreak;
       player = damage.player;
       events.push(context.createEvent(sequence, 'MONSTER_ATTACKED', {
         actor: 'monster',
         actionId: `${context.actionId}:monster:${monster.actionCount}`,
         action: attackAction,
         label: attackAction === 'heavy' ? `${monster.name} tung bạo kích` : `${monster.name} tấn công`,
-        amount: incoming,
+        amount: damage.incoming,
+        rawIncoming: incoming,
         baseDamage,
-        hpDamage: Math.max(0, incoming - damage.absorbed),
+        damageMultiplier: damage.damageMultiplier,
+        hpDamage: Math.max(0, damage.incoming - damage.absorbed),
         shieldAbsorbed: damage.absorbed,
         shieldRemaining: player.shield,
         shieldBroken: damage.absorbed > 0 && player.shield === 0,
@@ -167,6 +184,10 @@ export function resolveLanternCatTurn(context: LanternCatTurnContext): LanternCa
         target: 'player',
       }));
       sequence += 1;
+      const reflected = reflectMonsterDamage(player, monster, damage.incoming, context.createEvent, sequence);
+      monster = reflected.monster;
+      events.push(...reflected.events);
+      sequence = reflected.nextSequence;
 
       const playerEnergyGained = Math.min(context.config.energyCap - player.energy, MONSTER_COMBAT_BALANCE.playerEnergyOnMonsterAttack);
       player = clampPlayerState({ ...player, energy: player.energy + playerEnergyGained });
@@ -214,7 +235,7 @@ export function resolveLanternCatTurn(context: LanternCatTurnContext): LanternCa
   }
 
   return {
-    state: { ...context.state, player, monster },
+    state: { ...context.state, player, monster, damageTakenStreak },
     events,
     nextSequence: sequence,
   };

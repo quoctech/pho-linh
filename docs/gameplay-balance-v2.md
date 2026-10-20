@@ -1,6 +1,8 @@
 # PHỐ LINH — ĐẶC TẢ LỐI CHƠI & CÂN BẰNG V3
 
-> **Trạng thái:** **Đã triển khai trong runtime** (`combat.json.balanceVersion = 3`); còn cần mô phỏng nhiều seed và playtest Android để tinh chỉnh số liệu.
+> **Trạng thái:** **Đã triển khai trong runtime** (`combat.json.balanceVersion = 4`); còn cần mô phỏng nhiều seed và playtest Android để tinh chỉnh số liệu.
+>
+> **V4 (20/10/2026):** skill %ATK trừ DEF quái; debuff quái đếm theo hành động người chơi; đóng băng/choáng bỏ trọn lượt quái; Hỏa Vũ Liên Châu chỉ cộng bonus Thiêu đốt 1 lần; Vạn Diệp Độc Chú cộng dồn với độc tầng; guard quái chỉ kéo dài 1 hành động; mọi đòn quái (kể cả Miêu Đèn) đi chung pipeline giảm sát thương/khiên/phản đòn. Chi tiết: `GAME_DATA_CENTER.md → Quy tắc resolver skill`.
 > **Phạm vi:** Match-3 6×6, ngọc, Ngũ Hành, nội tại nghề và công thức combat.
 > **Nguồn:** Đặc tả gameplay được chốt ngày 20/10/2026; cập nhật cơ chế nội tại bàn cờ ngày 20/10/2026.
 > **Dữ liệu:** mọi con số nằm trong `src/assets/game-data/combat.json` và `character.json`; logic ở `src/game-core` (xem `elements.ts`, `battle.ts`).
@@ -105,9 +107,9 @@ không crit. Damage nhận vào áp dụng `waterReduction` từ hit thứ 3 li�
 `earthReduction` khi player đang có khiên trước bước hấp thụ khiên.
 
 Kỹ năng hệ Kim dùng công thức riêng trong `character.json`: `Vạn Kiếm Quy Tông`
-tiêu 60 năng lượng, gây `120% ATK` và bị khiên hấp thụ trước HP; `Kim Quang Phá
-Giáp` tiêu 100 năng lượng, gây `180% ATK` xuyên khiên và giảm 30% DEF của quái
-trong 2 lượt tiếp theo. Cả hai vẫn đi qua common player-skill resolver.
+tiêu 60 năng lượng, gây `120% ATK − DEF` và bị khiên hấp thụ trước HP; `Kim Quang Phá
+Giáp` tiêu 100 năng lượng, gây `180% ATK − DEF` xuyên khiên và giảm 30% DEF của quái
+trong 2 hành động tiếp theo của người chơi. Cả hai vẫn đi qua common player-skill resolver.
 
 Các hệ còn lại cũng dùng chung resolver và cost riêng: Mộc 50/90 (80% ATK + hút
 15 năng lượng; 90% ATK + độc 20% ATK trong 3 lượt), Thủy 50/100 (trừ 22 khiên/HP;
