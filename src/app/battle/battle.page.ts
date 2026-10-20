@@ -61,7 +61,8 @@ export class BattlePage implements AfterViewInit, OnDestroy {
 
   ionViewDidEnter(): void {
     this.visible = true;
-    void this.setBattleFullscreen(true);
+    // Keep the native Capacitor status/app bar visible on the PK screen.
+    void this.setBattleFullscreen(false);
     this.isLoading = true;
     this.loadingProgress = 0.05;
     this.loadingMessage = 'Đang đọc dữ liệu trận đấu...';

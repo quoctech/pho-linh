@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
 import { MONSTER_DATA, type ElementId, type MonsterDefinition } from '../../../game-core';
+import { MONSTER_IDLE_ASSETS } from '../../shared/monster-portraits';
 import targetMapCoords from '../../../assets/map/target-select/pho_linh_target_map_coords.json';
 
 export const TARGET_MAP_IMAGE_KEY = 'pho-linh-target-map';
@@ -89,12 +90,6 @@ function monsterInfoFromData(monsterId: string): TargetMapMonsterInfo | undefine
   };
 }
 
-const MONSTER_IDLE_ASSETS: Readonly<Record<string, string>> = {
-  mist_blob: 'assets/monsters/mist-dust/frames_webp/01_idle/01_idle_01.webp',
-  lantern_cat: 'assets/monsters/mieu-den/frames_webp/01_idle/01_idle_01.webp',
-  cloud_fox_boss: 'assets/monsters/cloud-fox/frames_webp/01_idle/01_idle_01.webp',
-  bamboo_mantis: 'assets/monsters/bamboo-mantis/frames_webp/01_idle/01_idle_01.webp',
-};
 
 export function targetMapNode(nodeId: string): TargetMapNode | undefined {
   return (targetMapCoords.nodes as readonly TargetMapNode[]).find((node) => node.id === nodeId);

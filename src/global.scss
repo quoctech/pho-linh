@@ -38,3 +38,7 @@
 
 /* Home: thẻ cuối lẻ trong lưới khám phá trải hết hàng (đặt ở global vì home.page.scss chạm ngân sách 4 kB). */
 app-home .menu-grid > .menu-card:last-child:nth-child(odd) { grid-column: 1 / -1; min-height: 72px; }
+
+/* Màn kết quả trận: keyframes đặt global vì result.page.scss chạm ngân sách 4 kB. */
+@keyframes result-spin { to { transform: rotate(360deg); } }
+@keyframes result-pulse { 50% { transform: scale(1.06); box-shadow: 0 0 44px var(--glow); } }

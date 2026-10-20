@@ -1,33 +1,69 @@
-<ion-header>
-  <ion-toolbar>
-    <ion-title>Kết quả</ion-title>
-  </ion-toolbar>
-</ion-header>
-
-<ion-content class="result-content">
+<ion-content class="result-content" [fullscreen]="true">
   @if (state; as battle) {
-    <div class="result-shell" [class.victory]="battle.phase === 'VICTORY'">
-      <div class="result-mark" aria-hidden="true">
-        {{ battle.phase === 'VICTORY' ? '★' : battle.phase === 'DEFEAT' ? '!' : '…' }}
-      </div>
-      <p class="eyebrow">{{ battle.monster.name }} · LƯỢT {{ battle.turn }}</p>
-      <h1>{{ title }}</h1>
-      <p class="description">{{ description }}</p>
+    <main class="shell" [class]="'shell ' + outcome.toLowerCase()">
+      <header class="hero">
+        <div class="rays" aria-hidden="true"></div>
+        <div class="mark" aria-hidden="true">{{ copy.mark }}</div>
+        <p class="eyebrow">{{ copy.eyebrow }} · {{ battle.monster.name }}</p>
+        <h1>{{ copy.title }}</h1>
+        <p class="desc">{{ description }}</p>
+      </header>
 
-      <div class="summary">
-        @if (battle.phase === 'VICTORY' && save; as current) { @let reward = current.rewardJournal.at(-1)?.reward; <span>EXP nhận</span><strong>+{{ reward?.exp ?? 0 }}</strong><span>Vàng nhận</span><strong>+{{ reward?.gold ?? 0 }}</strong><span>Cấp / điểm</span><strong>{{ current.profile.level }} / +{{ current.profile.unspentPoints }}</strong> @if (latestItemName; as itemName) {<span>Vật phẩm</span><strong>{{ itemName }}</strong>} @if (current.pendingRewards.length) {<span>Thưởng chờ nhận</span><strong>{{ current.pendingRewards.length }}</strong>} }
-        <span>HP nhân vật</span>
-        <strong>{{ battle.player.currentHp }} / {{ battle.player.stats.maxHp }}</strong>
-        <span>HP {{ battle.monster.name }}</span>
-        <strong>{{ battle.monster.currentHp }} / {{ battle.monster.maxHp }}</strong>
-      </div>
+      <section class="duel" aria-label="Tình trạng hai bên">
+        <figure class="fighter hero-side">
+          <div class="art"><img [src]="heroPortrait" [alt]="heroClass"></div>
+          <figcaption><b>{{ heroClass }}</b><small>{{ playerHp.text }}</small><span class="bar"><i [style.width.%]="playerHp.percent"></i></span></figcaption>
+        </figure>
+        <span class="vs">VS</span>
+        <figure class="fighter monster-side" [class.down]="outcome === 'VICTORY'">
+          <div class="art">@if (monsterPortrait; as src) {<img [src]="src" [alt]="battle.monster.name">}</div>
+          <figcaption><b>{{ battle.monster.name }}</b><small>{{ monsterHp.text }}</small><span class="bar"><i [style.width.%]="monsterHp.percent"></i></span></figcaption>
+        </figure>
+      </section>
 
-      <ion-button expand="block" (click)="retry()">
-        {{ battle.phase === 'VICTORY' ? 'Săn lại' : 'Thử lại' }}
-      </ion-button>
-      <ion-button expand="block" fill="outline" (click)="chooseMonster()">Chọn quái</ion-button>
-      <ion-button expand="block" fill="clear" routerLink="/character">Nhân vật</ion-button>
-      <ion-button expand="block" fill="clear" routerLink="/inventory">Túi đồ</ion-button>
-    </div>
+      @if (outcome === 'VICTORY') {
+        <section class="box">
+          <h3>Phần thưởng</h3>
+          <div class="rewards">
+            <div class="reward"><small>EXP</small><b>+{{ formatNumber(reward?.exp ?? 0) }}</b></div>
+            <div class="reward gold"><small>Vàng</small><b>+{{ formatNumber(reward?.gold ?? 0) }}</b></div>
+          </div>
+          @if (rewardItem; as item) {
+            <div class="loot" [class.rare]="item.rarity === 'rare'">
+              <span>✦</span><div><b>{{ item.name }}</b><small>{{ rarityText(item.rarity) }} · {{ item.description }}</small></div>
+              @if (rewardPending) {<em>Túi đầy · chờ nhận</em>}
+            </div>
+          }
+          @if (leveledUp) {<p class="level-up">⬆ LÊN CẤP {{ save?.profile?.level }}! Có {{ save?.profile?.unspentPoints }} điểm thuộc tính để cộng.</p>}
+          <div class="exp"><span>Cấp {{ save?.profile?.level }}</span><span class="bar"><i [style.width.%]="expPercent"></i></span><small>{{ expText }}</small></div>
+        </section>
+      } @else if (outcome === 'DEFEAT') {
+        <section class="box">
+          <h3>Gợi ý cho lần sau</h3>
+          <ul class="tips">@for (tip of defeatTips; track tip) {<li>{{ tip }}</li>}</ul>
+          <p class="safe">Thua trận không mất EXP, vàng hay vật phẩm.</p>
+        </section>
+      } @else {
+        <section class="box">
+          <h3>Tình trạng khi rời trận</h3>
+          <p class="safe">Đã đánh {{ battle.turn }} lượt. Có thể quay lại đánh bất cứ lúc nào.</p>
+        </section>
+      }
+
+      <div class="actions">
+        <button type="button" class="primary" (click)="retry()">{{ outcome === 'VICTORY' ? 'Săn tiếp' : outcome === 'DEFEAT' ? 'Thử lại' : 'Đánh lại' }}</button>
+        @if (outcome === 'DEFEAT') {
+          <button type="button" (click)="goCharacter()">Nâng cấp nhân vật</button>
+        }
+        <button type="button" (click)="chooseMonster()">Chọn quái khác</button>
+        <div class="minor">
+          @if (outcome === 'VICTORY') {
+            <button type="button" (click)="goCharacter()">Nhân vật@if (save?.profile?.unspentPoints; as points) {<b>+{{ points }}</b>}</button>
+            <button type="button" (click)="goInventory()">Túi đồ</button>
+          }
+          <button type="button" (click)="goHome()">Về nhà</button>
+        </div>
+      </div>
+    </main>
   }
 </ion-content>
