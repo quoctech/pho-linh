@@ -360,6 +360,64 @@ playerSkipTurns = 1
 - Sau lượt bị bỏ qua, quái tiếp tục xử lý một lượt và sau đó trả quyền điều khiển cho người chơi.
 - Core phát `MONSTER_SKILL_USED` và `PLAYER_TURN_SKIPPED`; Phaser chỉ trình diễn cast, liên kích, impact và icon choáng.
 
+### 11.10. Danh mục kỹ năng quái vật — bản thiết kế đề xuất
+
+Danh mục dưới đây là nội dung kỹ năng đã được đặt tên trong quá trình thiết kế. Đây là **content design**, chưa phải contract gameplay đã triển khai; tên, hệ, hiệu ứng và thông số cần được chốt trước khi cập nhật `monsters.json`, game-core hoặc runtime battle.
+
+#### Bụi Sương
+
+Quái cấp thấp · Hệ Thủy (đề xuất)
+
+| Kỹ năng | Hiệu ứng | Trạng thái |
+|---|---|---|
+| **Sương Mù Xâm Thực** | Phát tán sương lạnh, gây sát thương Thủy nhẹ và giảm tốc độ hành động của mục tiêu. | Đề xuất |
+
+**Trạng thái:** Chưa chốt tên kỹ năng chính thức hoặc kỹ năng thứ hai.
+
+#### Miêu Đèn
+
+Quái cấp trung · Hệ Hỏa (đề xuất)
+
+| Kỹ năng | Hiệu ứng | Trạng thái |
+|---|---|---|
+| **Long Miêu Liên Kích** | Liên tục tấn công bằng móng vuốt, gây nhiều đòn sát thương lên mục tiêu. | Đã đặt tên |
+
+**Trạng thái:** Đã có một kỹ năng được đặt tên; chưa chốt kỹ năng thứ hai.
+
+#### Bọ Lá Tre
+
+Quái cấp cao · Hệ Mộc
+
+| Kỹ năng | Hiệu ứng | Trạng thái |
+|---|---|---|
+| **Trúc Diệp Độc Châm** | Phóng lá tre sắc nhọn như kim độc, gây sát thương Mộc và áp dụng **Dính độc**, làm tiêu hao HP theo lượt. | Đã đặt tên |
+| **Lục Diệp Ẩn Tung** | Ngụy trang trong lá tre, tăng Né tránh và hồi phục một phần HP. | Đã đặt tên |
+
+**Trạng thái:** Đã có đủ hai kỹ năng.
+
+#### Cáo Mây
+
+Quái cấp cao · Hệ Thủy (đề xuất)
+
+| Kỹ năng | Hiệu ứng | Trạng thái |
+|---|---|---|
+| **Vân Sương Ảo Ảo** | Tạo ảo ảnh sương mù, tăng Né tránh và gây **Mù** cho đối thủ. | Đã đặt tên |
+| **Vụ Lưu Thuẫn** | Tạo khiên sương, hồi HP và giảm hiệu quả hồi máu của đối thủ. | Đã đặt tên |
+| **Bích Vân Băng Băng** | Phóng băng khí tấn công, gây sát thương Thủy và có xác suất **Đóng băng**. | Đã đặt tên |
+
+**Trạng thái:** Đã có ba kỹ năng được đặt tên.
+
+#### Bảng tổng kết
+
+| Quái | Kỹ năng đã đặt tên | Tình trạng |
+|---|---:|---|
+| Bụi Sương | 1 đề xuất | Chưa chốt |
+| Miêu Đèn | 1 | Thiếu kỹ năng 2 |
+| Bọ Lá Tre | 2 | Đủ |
+| Cáo Mây | 3 | Đủ, nếu cho phép 3 kỹ năng |
+
+**Quy tắc triển khai sau:** chỉ đưa các kỹ năng này vào data/game-core sau khi đã chốt tên chính thức, hệ, công thức sát thương, trạng thái, điều kiện kích hoạt, telegraph và test cân bằng. Không suy diễn từ tên animation asset thành gameplay skill.
+
 ## 12. Hành vi quái và tính công bằng
 
 Mỗi quái có `behaviorId` và chuỗi hành vi gồm hành động + telegraph. Không random "ăn gian" theo HP người chơi.
