@@ -1,0 +1,176 @@
+{
+  "skillId": "skill_van_diep_doc_chu",
+  "skillLabel": "Vạn Diệp Độc Chú",
+  "element": "moc",
+  "description": "Phát tán lá độc trên diện rộng, gây sát thương Mộc và áp dụng trạng thái Dính độc.",
+  "sourceOriginalFile": "chuỗi_hiệu_ứng_nổ_độc_lá_ma_thuật.png",
+  "sourceConvertedFile": "skill_van_diep_doc_chu_source.webp",
+  "sourceSize": {
+    "width": 2172,
+    "height": 724
+  },
+  "detectedBoundsX": [
+    0,
+    231,
+    611,
+    997,
+    1438,
+    1849,
+    2172
+  ],
+  "backgroundRemoval": {
+    "bgColor": [
+      66.0,
+      66.0,
+      67.0
+    ],
+    "thresholdLow": 6.0,
+    "thresholdHigh": 37.5427756033035
+  },
+  "frameCount": 6,
+  "standardFrameSize": {
+    "width": 441,
+    "height": 450
+  },
+  "equalSpacedPreviewFile": "previews/skill_van_diep_doc_chu_equal_spaced_preview.webp",
+  "frames": [
+    {
+      "index": 1,
+      "name": "skill_van_diep_doc_chu_01",
+      "file": "frames_webp/skill_van_diep_doc_chu_01.webp",
+      "sourceXBounds": {
+        "x0": 0,
+        "x1": 231
+      },
+      "cropBoxInsideSeparatedSegment": {
+        "left": 19,
+        "top": 205,
+        "right": 231,
+        "bottom": 495
+      },
+      "standardFrameSize": {
+        "width": 441,
+        "height": 450
+      },
+      "pastePosition": {
+        "x": 114,
+        "y": 80
+      }
+    },
+    {
+      "index": 2,
+      "name": "skill_van_diep_doc_chu_02",
+      "file": "frames_webp/skill_van_diep_doc_chu_02.webp",
+      "sourceXBounds": {
+        "x0": 231,
+        "x1": 611
+      },
+      "cropBoxInsideSeparatedSegment": {
+        "left": 12,
+        "top": 241,
+        "right": 380,
+        "bottom": 510
+      },
+      "standardFrameSize": {
+        "width": 441,
+        "height": 450
+      },
+      "pastePosition": {
+        "x": 36,
+        "y": 90
+      }
+    },
+    {
+      "index": 3,
+      "name": "skill_van_diep_doc_chu_03",
+      "file": "frames_webp/skill_van_diep_doc_chu_03.webp",
+      "sourceXBounds": {
+        "x0": 611,
+        "x1": 997
+      },
+      "cropBoxInsideSeparatedSegment": {
+        "left": 0,
+        "top": 160,
+        "right": 386,
+        "bottom": 545
+      },
+      "standardFrameSize": {
+        "width": 441,
+        "height": 450
+      },
+      "pastePosition": {
+        "x": 27,
+        "y": 32
+      }
+    },
+    {
+      "index": 4,
+      "name": "skill_van_diep_doc_chu_04",
+      "file": "frames_webp/skill_van_diep_doc_chu_04.webp",
+      "sourceXBounds": {
+        "x0": 997,
+        "x1": 1438
+      },
+      "cropBoxInsideSeparatedSegment": {
+        "left": 0,
+        "top": 145,
+        "right": 441,
+        "bottom": 536
+      },
+      "standardFrameSize": {
+        "width": 441,
+        "height": 450
+      },
+      "pastePosition": {
+        "x": 0,
+        "y": 29
+      }
+    },
+    {
+      "index": 5,
+      "name": "skill_van_diep_doc_chu_05",
+      "file": "frames_webp/skill_van_diep_doc_chu_05.webp",
+      "sourceXBounds": {
+        "x0": 1438,
+        "x1": 1849
+      },
+      "cropBoxInsideSeparatedSegment": {
+        "left": 0,
+        "top": 120,
+        "right": 411,
+        "bottom": 570
+      },
+      "standardFrameSize": {
+        "width": 441,
+        "height": 450
+      },
+      "pastePosition": {
+        "x": 15,
+        "y": 0
+      }
+    },
+    {
+      "index": 6,
+      "name": "skill_van_diep_doc_chu_06",
+      "file": "frames_webp/skill_van_diep_doc_chu_06.webp",
+      "sourceXBounds": {
+        "x0": 1849,
+        "x1": 2172
+      },
+      "cropBoxInsideSeparatedSegment": {
+        "left": 9,
+        "top": 170,
+        "right": 315,
+        "bottom": 529
+      },
+      "standardFrameSize": {
+        "width": 441,
+        "height": 450
+      },
+      "pastePosition": {
+        "x": 67,
+        "y": 45
+      }
+    }
+  ]
+}

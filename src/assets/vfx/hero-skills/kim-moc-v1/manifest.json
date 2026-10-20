@@ -1,0 +1,61 @@
+{
+  "project": "PHO_LINH",
+  "package": "skill_effects_kim_moc_webp_v1",
+  "version": "1.0.0",
+  "format": "webp",
+  "frameCountPerSkill": 6,
+  "skills": [
+    {
+      "skillId": "skill_van_kiem_quy_tong",
+      "skillLabel": "Vạn Kiếm Quy Tông",
+      "element": "kim",
+      "description": "Triệu hồi hàng loạt kiếm khí tấn công liên tiếp, gây sát thương Kim nhiều lần.",
+      "folder": "skill_van_kiem_quy_tong",
+      "manifest": "skill_van_kiem_quy_tong/skill_van_kiem_quy_tong_manifest.json",
+      "frameCount": 6,
+      "standardFrameSize": {
+        "width": 447,
+        "height": 551
+      }
+    },
+    {
+      "skillId": "skill_kim_quang_pha_giap",
+      "skillLabel": "Kim Quang Phá Giáp",
+      "element": "kim",
+      "description": "Đâm xuyên mục tiêu bằng kiếm khí, gây sát thương Kim lớn và giảm phòng thủ.",
+      "folder": "skill_kim_quang_pha_giap",
+      "manifest": "skill_kim_quang_pha_giap/skill_kim_quang_pha_giap_manifest.json",
+      "frameCount": 6,
+      "standardFrameSize": {
+        "width": 426,
+        "height": 391
+      }
+    },
+    {
+      "skillId": "skill_thanh_dang_troi_hon",
+      "skillLabel": "Thanh Đằng Trói Hồn",
+      "element": "moc",
+      "description": "Triệu hồi dây leo trói mục tiêu, gây sát thương Mộc và giảm tốc độ hành động.",
+      "folder": "skill_thanh_dang_troi_hon",
+      "manifest": "skill_thanh_dang_troi_hon/skill_thanh_dang_troi_hon_manifest.json",
+      "frameCount": 6,
+      "standardFrameSize": {
+        "width": 449,
+        "height": 546
+      }
+    },
+    {
+      "skillId": "skill_van_diep_doc_chu",
+      "skillLabel": "Vạn Diệp Độc Chú",
+      "element": "moc",
+      "description": "Phát tán lá độc trên diện rộng, gây sát thương Mộc và áp dụng trạng thái Dính độc.",
+      "folder": "skill_van_diep_doc_chu",
+      "manifest": "skill_van_diep_doc_chu/skill_van_diep_doc_chu_manifest.json",
+      "frameCount": 6,
+      "standardFrameSize": {
+        "width": 441,
+        "height": 450
+      }
+    }
+  ]
+}

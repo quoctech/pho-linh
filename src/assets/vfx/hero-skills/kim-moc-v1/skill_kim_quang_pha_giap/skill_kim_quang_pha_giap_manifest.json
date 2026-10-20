@@ -1,0 +1,176 @@
+{
+  "skillId": "skill_kim_quang_pha_giap",
+  "skillLabel": "Kim Quang Phá Giáp",
+  "element": "kim",
+  "description": "Đâm xuyên mục tiêu bằng kiếm khí, gây sát thương Kim lớn và giảm phòng thủ.",
+  "sourceOriginalFile": "chuỗi_hiệu_ứng_giáo_năng_lượng_vàng_băng_giá.png",
+  "sourceConvertedFile": "skill_kim_quang_pha_giap_source.webp",
+  "sourceSize": {
+    "width": 2172,
+    "height": 724
+  },
+  "detectedBoundsX": [
+    0,
+    245,
+    682,
+    993,
+    1390,
+    1804,
+    2172
+  ],
+  "backgroundRemoval": {
+    "bgColor": [
+      18.0,
+      20.0,
+      25.0
+    ],
+    "thresholdLow": 6.0,
+    "thresholdHigh": 44.40028153063897
+  },
+  "frameCount": 6,
+  "standardFrameSize": {
+    "width": 426,
+    "height": 391
+  },
+  "equalSpacedPreviewFile": "previews/skill_kim_quang_pha_giap_equal_spaced_preview.webp",
+  "frames": [
+    {
+      "index": 1,
+      "name": "skill_kim_quang_pha_giap_01",
+      "file": "frames_webp/skill_kim_quang_pha_giap_01.webp",
+      "sourceXBounds": {
+        "x0": 0,
+        "x1": 245
+      },
+      "cropBoxInsideSeparatedSegment": {
+        "left": 0,
+        "top": 234,
+        "right": 245,
+        "bottom": 456
+      },
+      "standardFrameSize": {
+        "width": 426,
+        "height": 391
+      },
+      "pastePosition": {
+        "x": 90,
+        "y": 84
+      }
+    },
+    {
+      "index": 2,
+      "name": "skill_kim_quang_pha_giap_02",
+      "file": "frames_webp/skill_kim_quang_pha_giap_02.webp",
+      "sourceXBounds": {
+        "x0": 245,
+        "x1": 682
+      },
+      "cropBoxInsideSeparatedSegment": {
+        "left": 11,
+        "top": 231,
+        "right": 437,
+        "bottom": 474
+      },
+      "standardFrameSize": {
+        "width": 426,
+        "height": 391
+      },
+      "pastePosition": {
+        "x": 0,
+        "y": 74
+      }
+    },
+    {
+      "index": 3,
+      "name": "skill_kim_quang_pha_giap_03",
+      "file": "frames_webp/skill_kim_quang_pha_giap_03.webp",
+      "sourceXBounds": {
+        "x0": 682,
+        "x1": 993
+      },
+      "cropBoxInsideSeparatedSegment": {
+        "left": 6,
+        "top": 180,
+        "right": 311,
+        "bottom": 512
+      },
+      "standardFrameSize": {
+        "width": 426,
+        "height": 391
+      },
+      "pastePosition": {
+        "x": 60,
+        "y": 29
+      }
+    },
+    {
+      "index": 4,
+      "name": "skill_kim_quang_pha_giap_04",
+      "file": "frames_webp/skill_kim_quang_pha_giap_04.webp",
+      "sourceXBounds": {
+        "x0": 993,
+        "x1": 1390
+      },
+      "cropBoxInsideSeparatedSegment": {
+        "left": 1,
+        "top": 211,
+        "right": 397,
+        "bottom": 500
+      },
+      "standardFrameSize": {
+        "width": 426,
+        "height": 391
+      },
+      "pastePosition": {
+        "x": 15,
+        "y": 51
+      }
+    },
+    {
+      "index": 5,
+      "name": "skill_kim_quang_pha_giap_05",
+      "file": "frames_webp/skill_kim_quang_pha_giap_05.webp",
+      "sourceXBounds": {
+        "x0": 1390,
+        "x1": 1804
+      },
+      "cropBoxInsideSeparatedSegment": {
+        "left": 0,
+        "top": 161,
+        "right": 414,
+        "bottom": 552
+      },
+      "standardFrameSize": {
+        "width": 426,
+        "height": 391
+      },
+      "pastePosition": {
+        "x": 6,
+        "y": 0
+      }
+    },
+    {
+      "index": 6,
+      "name": "skill_kim_quang_pha_giap_06",
+      "file": "frames_webp/skill_kim_quang_pha_giap_06.webp",
+      "sourceXBounds": {
+        "x0": 1804,
+        "x1": 2172
+      },
+      "cropBoxInsideSeparatedSegment": {
+        "left": 0,
+        "top": 211,
+        "right": 368,
+        "bottom": 496
+      },
+      "standardFrameSize": {
+        "width": 426,
+        "height": 391
+      },
+      "pastePosition": {
+        "x": 29,
+        "y": 53
+      }
+    }
+  ]
+}

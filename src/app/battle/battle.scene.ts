@@ -82,6 +82,12 @@ import {
   type ElementActiveSkillSlot,
   type ElementSkillSlot,
 } from './element-skill-assets';
+import {
+  ensureHeroSkillEffectAnimations,
+  heroSkillEffectForSkill,
+  preloadHeroSkillEffects,
+  fitHeroSkillEffectDisplaySize,
+} from './hero-skill-effect-assets';
 
 const GEM_TYPES: readonly GemType[] = ['attack', 'heal', 'shield', 'energy', 'poison'];
 const BOARD_SIZE = 6;
@@ -289,6 +295,11 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
     this.heroSpriteKeys = heroGender === 'male' ? HERO_ELEMENT_SPRITE_KEYS[heroElement] : HERO_FEMALE_ELEMENT_SPRITE_KEYS[heroElement];
     preloadHeroAssets(this, heroGender, heroElement);
     preloadElementSkillAssets(this, heroElement);
+    preloadHeroSkillEffects(this, 'metal');
+    preloadHeroSkillEffects(this, 'wood');
+    preloadHeroSkillEffects(this, 'water');
+    preloadHeroSkillEffects(this, 'fire');
+    preloadHeroSkillEffects(this, 'earth');
     this.load.spritesheet(GEM_ATLAS_KEY, 'assets/gems/pho-linh/pho-linh-gems-sheet.png', {
       frameWidth: 256,
       frameHeight: 256,
@@ -396,6 +407,11 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
     ensureMonsterSkillEffectAnimations(this, this.controller.currentState.monster.id as ActorFrameId);
     ensureHeroAnimations(this, this.heroGender, this.heroElement);
     ensureElementSkillAnimations(this, this.heroElement);
+    ensureHeroSkillEffectAnimations(this, 'metal');
+    ensureHeroSkillEffectAnimations(this, 'wood');
+    ensureHeroSkillEffectAnimations(this, 'water');
+    ensureHeroSkillEffectAnimations(this, 'fire');
+    ensureHeroSkillEffectAnimations(this, 'earth');
     this.createHeroVisual();
     this.createHud();
     this.createMonsterVisual();
@@ -746,9 +762,9 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
       const sprite = this.add.sprite(0, 0, idleTexture)
         .setOrigin(0.5, spriteKeys.originY)
         .setAlpha(1)
-        // The v3 Cáo Mây frames already face left. Keep the legacy mirror for
-        // Sương Hồn only; don't mirror the new left-facing actors.
-        .setFlipX(monsterId === 'mist_blob')
+        // Keep the combatants facing the player from the right side of the
+        // arena. The supplied Bọ Lá Tre frames face right, so mirror them.
+        .setFlipX(monsterId === 'mist_blob' || monsterId === 'bamboo_mantis')
         .play(spriteKeys.idle);
       sprite.on('animationupdate', () => this.normalizeMonsterSprite(sprite));
       this.normalizeMonsterSprite(sprite);
@@ -842,6 +858,13 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
     const id = this.controller.currentState.monster.id;
     if (!sprite || !keys || !['mist_blob', 'lantern_cat', 'cloud_fox_boss', 'bamboo_mantis'].includes(id)) return;
     normalizeActorSprite(sprite, id as ActorFrameId, keys.displayWidth);
+    if (id === 'bamboo_mantis') {
+      // The source frames are relatively small and are displayed at a
+      // non-native size; nearest filtering keeps the leaf edges crisp.
+      sprite.texture.setFilter(Phaser.Textures.FilterMode.NEAREST);
+      sprite.setDisplaySize(keys.displayWidth, keys.displayHeight);
+      return;
+    }
     // The new Sương Hồn skill frames use a wider effect canvas than the idle
     // row. Keep that canvas from scaling the whole monster up during a heavy
     // attack; the animation may still use its natural aspect ratio.
@@ -2091,7 +2114,9 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
         this.playHeroSfx('cast_charge', 0.52);
         this.flashMonster(0xcda8ff);
         if (!this.playElementSkillAnimation('primarySkill')) this.playHeroAnimation('cast');
-        this.playCloudbreakerEffect();
+        if (!this.playHeroSkillEffect(ELEMENT_SKILL_CONFIG[this.heroElement].primarySkillId)) {
+          this.playCloudbreakerEffect();
+        }
         break;
       case 'BATTLE_WON':
         this.statusLabel?.setText('Chiến thắng!');
@@ -2546,6 +2571,35 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
     if (target === 'player') this.playHeroStatusSfx('energy');
     this.spawnCombatImpact(x, y, 0xffd45e, target === 'monster' ? 62 : 72);
     this.flashCombatant(target, 0xffd45e);
+  }
+
+  private playHeroSkillEffect(skillId: string): boolean {
+    const effect = heroSkillEffectForSkill(skillId);
+    const target = this.combatPoint('monster');
+    if (!effect || !this.battleVfxPool || !this.anims.exists(effect.animationKey)) return false;
+    const sprite = this.battleVfxPool.acquireSpriteVfx(effect.textureKeys[0]);
+    if (!sprite) return false;
+    const displaySize = fitHeroSkillEffectDisplaySize(effect);
+    let released = false;
+    const finish = (): void => {
+      if (released) return;
+      released = true;
+      this.vfxSprites.delete(sprite);
+      this.battleVfxPool?.release(sprite);
+    };
+    sprite
+      .setPosition(target.x, target.y)
+      .setOrigin(0.5)
+      .setDisplaySize(displaySize.width, displaySize.height)
+      .setDepth(16)
+      .setAlpha(1)
+      .setVisible(true)
+      .setBlendMode(Phaser.BlendModes.ADD)
+      .play(effect.animationKey);
+    sprite.anims.timeScale = this.reducedMotion ? 1.8 : 1;
+    this.vfxSprites.add(sprite);
+    sprite.once(Phaser.Animations.Events.ANIMATION_COMPLETE, finish);
+    return true;
   }
 
   private playCloudbreakerEffect(): void {

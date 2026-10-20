@@ -1,0 +1,92 @@
+{
+  "project": "PHO_LINH",
+  "package": "skill_effects_thuy_hoa_tho_transparent_webp_v1",
+  "version": "1.0.2",
+  "format": "webp",
+  "frameCountPerSkill": 6,
+  "transparentBackground": true,
+  "skills": [
+    {
+      "skillId": "skill_han_trieu_pha_khong",
+      "skillLabel": "Hàn Triều Phá Không",
+      "element": "thuy",
+      "description": "Đâm thương tạo dòng nước băng xuyên mục tiêu, gây sát thương Thủy và giảm tốc.",
+      "folder": "skill_han_trieu_pha_khong",
+      "manifest": "skill_han_trieu_pha_khong/skill_han_trieu_pha_khong_manifest.json",
+      "frameCount": 6,
+      "standardFrameSize": {
+        "width": 475,
+        "height": 398
+      }
+    },
+    {
+      "skillId": "skill_bang_phong_thien_ly",
+      "skillLabel": "Băng Phong Thiên Lý",
+      "element": "thuy",
+      "description": "Triệu hồi hàn khí diện rộng, gây sát thương Thủy và có xác suất Đóng băng.",
+      "folder": "skill_bang_phong_thien_ly",
+      "manifest": "skill_bang_phong_thien_ly/skill_bang_phong_thien_ly_manifest.json",
+      "frameCount": 6,
+      "standardFrameSize": {
+        "width": 508,
+        "height": 423
+      },
+      "fix": "transparency_fix_v3"
+    },
+    {
+      "skillId": "skill_hoa_vu_lien_chau",
+      "skillLabel": "Hỏa Vũ Liên Châu",
+      "element": "hoa",
+      "description": "Bắn liên tiếp nhiều hỏa tiễn, gây sát thương Hỏa nhiều lần lên mục tiêu.",
+      "folder": "skill_hoa_vu_lien_chau",
+      "manifest": "skill_hoa_vu_lien_chau/skill_hoa_vu_lien_chau_manifest.json",
+      "frameCount": 6,
+      "standardFrameSize": {
+        "width": 408,
+        "height": 377
+      }
+    },
+    {
+      "skillId": "skill_phan_thien_xa_nhat",
+      "skillLabel": "Phần Thiên Xạ Nhật",
+      "element": "hoa",
+      "description": "Bắn một mũi tên hỏa diễm cực mạnh, phát nổ gây sát thương diện rộng và Thiêu đốt.",
+      "folder": "skill_phan_thien_xa_nhat",
+      "manifest": "skill_phan_thien_xa_nhat/skill_phan_thien_xa_nhat_manifest.json",
+      "frameCount": 6,
+      "standardFrameSize": {
+        "width": 452,
+        "height": 420
+      }
+    },
+    {
+      "skillId": "skill_son_nhac_tran_dia",
+      "skillLabel": "Sơn Nhạc Trấn Địa",
+      "element": "tho",
+      "description": "Đập đại đao xuống đất, gây sát thương Thổ diện rộng và có xác suất Choáng.",
+      "folder": "skill_son_nhac_tran_dia",
+      "manifest": "skill_son_nhac_tran_dia/skill_son_nhac_tran_dia_manifest.json",
+      "frameCount": 6,
+      "standardFrameSize": {
+        "width": 433,
+        "height": 382
+      }
+    },
+    {
+      "skillId": "skill_huyen_nham_ho_the",
+      "skillLabel": "Huyền Nham Hộ Thể",
+      "element": "tho",
+      "description": "Triệu hồi lớp giáp đá tạo Khiên, giảm sát thương nhận vào và bảo vệ đồng đội.",
+      "folder": "skill_huyen_nham_ho_the",
+      "manifest": "skill_huyen_nham_ho_the/skill_huyen_nham_ho_the_manifest.json",
+      "frameCount": 6,
+      "standardFrameSize": {
+        "width": 410,
+        "height": 467
+      }
+    }
+  ],
+  "notes": [
+    "V3: sửa skill_bang_phong_thien_ly với ngưỡng alpha mạnh hơn để nền trong suốt hoàn toàn hơn."
+  ]
+}

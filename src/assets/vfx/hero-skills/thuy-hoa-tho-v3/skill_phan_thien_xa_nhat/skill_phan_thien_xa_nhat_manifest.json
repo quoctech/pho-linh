@@ -1,0 +1,184 @@
+{
+  "skillId": "skill_phan_thien_xa_nhat",
+  "skillLabel": "Phần Thiên Xạ Nhật",
+  "element": "hoa",
+  "description": "Bắn một mũi tên hỏa diễm cực mạnh, phát nổ gây sát thương diện rộng và Thiêu đốt.",
+  "sourceOriginalFile": "chuỗi_hiệu_ứng_mũi_tên_lửa_huyền_ảo.png",
+  "sourceTransparentFile": "skill_phan_thien_xa_nhat_source_transparent.webp",
+  "sourceSize": {
+    "width": 2172,
+    "height": 724
+  },
+  "detectedBoundsX": [
+    0,
+    333,
+    710,
+    1086,
+    1380,
+    1832,
+    2172
+  ],
+  "detectedCentersX": [
+    169.75996898537883,
+    481.2020131537925,
+    885.9702845432332,
+    1265.6010647782562,
+    1622.7809718926135,
+    1995.872061965812
+  ],
+  "backgroundRemoval": {
+    "bgColorMedianRGB": [
+      18.0,
+      18.0,
+      17.0
+    ],
+    "thresholdLow": 6.0,
+    "thresholdHigh": 122.57397766247124
+  },
+  "frameCount": 6,
+  "standardFrameSize": {
+    "width": 452,
+    "height": 420
+  },
+  "equalSpacedPreviewFile": "previews/skill_phan_thien_xa_nhat_equal_spaced_preview.webp",
+  "frames": [
+    {
+      "index": 1,
+      "name": "skill_phan_thien_xa_nhat_01",
+      "file": "frames_webp/skill_phan_thien_xa_nhat_01.webp",
+      "sourceXBounds": {
+        "x0": 0,
+        "x1": 333
+      },
+      "cropBoxInsideSeparatedSegment": {
+        "left": 0,
+        "top": 100,
+        "right": 333,
+        "bottom": 520
+      },
+      "standardFrameSize": {
+        "width": 452,
+        "height": 420
+      },
+      "pastePosition": {
+        "x": 59,
+        "y": 0
+      }
+    },
+    {
+      "index": 2,
+      "name": "skill_phan_thien_xa_nhat_02",
+      "file": "frames_webp/skill_phan_thien_xa_nhat_02.webp",
+      "sourceXBounds": {
+        "x0": 333,
+        "x1": 710
+      },
+      "cropBoxInsideSeparatedSegment": {
+        "left": 2,
+        "top": 172,
+        "right": 377,
+        "bottom": 496
+      },
+      "standardFrameSize": {
+        "width": 452,
+        "height": 420
+      },
+      "pastePosition": {
+        "x": 38,
+        "y": 48
+      }
+    },
+    {
+      "index": 3,
+      "name": "skill_phan_thien_xa_nhat_03",
+      "file": "frames_webp/skill_phan_thien_xa_nhat_03.webp",
+      "sourceXBounds": {
+        "x0": 710,
+        "x1": 1086
+      },
+      "cropBoxInsideSeparatedSegment": {
+        "left": 2,
+        "top": 244,
+        "right": 376,
+        "bottom": 471
+      },
+      "standardFrameSize": {
+        "width": 452,
+        "height": 420
+      },
+      "pastePosition": {
+        "x": 39,
+        "y": 96
+      }
+    },
+    {
+      "index": 4,
+      "name": "skill_phan_thien_xa_nhat_04",
+      "file": "frames_webp/skill_phan_thien_xa_nhat_04.webp",
+      "sourceXBounds": {
+        "x0": 1086,
+        "x1": 1380
+      },
+      "cropBoxInsideSeparatedSegment": {
+        "left": 6,
+        "top": 144,
+        "right": 294,
+        "bottom": 512
+      },
+      "standardFrameSize": {
+        "width": 452,
+        "height": 420
+      },
+      "pastePosition": {
+        "x": 82,
+        "y": 26
+      }
+    },
+    {
+      "index": 5,
+      "name": "skill_phan_thien_xa_nhat_05",
+      "file": "frames_webp/skill_phan_thien_xa_nhat_05.webp",
+      "sourceXBounds": {
+        "x0": 1380,
+        "x1": 1832
+      },
+      "cropBoxInsideSeparatedSegment": {
+        "left": 0,
+        "top": 128,
+        "right": 452,
+        "bottom": 542
+      },
+      "standardFrameSize": {
+        "width": 452,
+        "height": 420
+      },
+      "pastePosition": {
+        "x": 0,
+        "y": 3
+      }
+    },
+    {
+      "index": 6,
+      "name": "skill_phan_thien_xa_nhat_06",
+      "file": "frames_webp/skill_phan_thien_xa_nhat_06.webp",
+      "sourceXBounds": {
+        "x0": 1832,
+        "x1": 2172
+      },
+      "cropBoxInsideSeparatedSegment": {
+        "left": 0,
+        "top": 211,
+        "right": 340,
+        "bottom": 521
+      },
+      "standardFrameSize": {
+        "width": 452,
+        "height": 420
+      },
+      "pastePosition": {
+        "x": 56,
+        "y": 55
+      }
+    }
+  ]
+}

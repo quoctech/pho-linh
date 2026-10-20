@@ -20,6 +20,15 @@ const TEXT_COLOR = '#fff8e8';
 const MUTED_COLOR = '#c7bedc';
 const LONG_PRESS_MS = 600;
 const MOVE_CANCEL_DISTANCE = 12;
+const GLOW_NODE_IDS = new Set(['stage_02', 'stage_03', 'stage_04', 'stage_05']);
+const MONSTER_VISUAL_OFFSETS: Readonly<Record<string, { readonly x: number; readonly y: number }>> = {
+  // These two frames have taller, lower-weighted silhouettes; move their
+  // visual center down so the artwork sits on the painted platform.
+  mist_blob: { x: -4, y: -11 },
+  lantern_cat: { x: -4, y: -6 },
+  bamboo_mantis: { x: -4, y: -6 },
+  cloud_fox_boss: { x: -4, y: 4 },
+};
 
 export class TargetMapScene extends Phaser.Scene {
   private config?: TargetMapSceneConfig;
@@ -40,10 +49,13 @@ export class TargetMapScene extends Phaser.Scene {
     this.cameras.main.setOrigin(0, 0).setScroll(0, 0).setRoundPixels(true);
     const background = this.add.image(0, 0, 'pho-linh-target-map').setOrigin(0, 0).setDepth(0);
     background.setDisplaySize(MAP_WIDTH, MAP_HEIGHT);
-    this.add.text(40, 42, 'CHỌN MỤC TIÊU', {
+    const mistOverlay = this.add.rectangle(0, 0, MAP_WIDTH, MAP_HEIGHT, 0xb5c3df, 0.16)
+      .setOrigin(0).setDepth(1);
+    this.nodeObjects.push(mistOverlay);
+    this.add.text(48, 42, 'CHỌN BOSS', {
       color: TEXT_COLOR, fontFamily: 'sans-serif', fontSize: '30px', fontStyle: 'bold', stroke: '#171426', strokeThickness: 8,
     }).setDepth(20);
-    this.add.text(40, 80, 'Chạm nhanh để bắt đầu · Ấn giữ để xem thông tin', {
+    this.add.text(48, 80, 'Chạm nhanh để bắt đầu · Ấn giữ để xem thông tin', {
       color: MUTED_COLOR, fontFamily: 'sans-serif', fontSize: '18px', stroke: '#171426', strokeThickness: 5,
     }).setDepth(20);
 
@@ -65,10 +77,26 @@ export class TargetMapScene extends Phaser.Scene {
   }
 
   private renderNode(node: TargetMapNode, placements: readonly TargetMapMonsterPlacement[]): void {
-    const nodeColor = targetMapThemeColor(node.theme);
-    const platform = this.add.circle(node.x, node.y, node.platformRadius - 8, nodeColor, placements.length ? 0.12 : 0.06)
-      .setStrokeStyle(5, nodeColor, placements.length ? 0.9 : 0.45).setDepth(node.zIndex + 1);
-    this.nodeObjects.push(platform);
+    if (GLOW_NODE_IDS.has(node.id)) {
+      const nodeGlow = this.add.circle(node.x, node.y, node.platformRadius + 18, targetMapThemeColor(node.theme), 1)
+        .setAlpha(0.2).setBlendMode(Phaser.BlendModes.ADD).setDepth(node.zIndex);
+      this.tweens.add({
+        targets: nodeGlow,
+        alpha: { from: 0.14, to: 0.32 },
+        scale: { from: 0.96, to: 1.04 },
+        duration: 1600,
+        yoyo: true,
+        repeat: -1,
+        ease: 'Sine.easeInOut',
+      });
+      this.nodeObjects.push(nodeGlow);
+    }
+    if (!placements.length) {
+      const nodeColor = targetMapThemeColor(node.theme);
+      const platform = this.add.circle(node.x, node.y, node.platformRadius - 8, nodeColor, 0.06)
+        .setStrokeStyle(5, nodeColor, 0.45).setDepth(node.zIndex + 1);
+      this.nodeObjects.push(platform);
+    }
     const label = this.add.text(node.x + node.labelOffset.x, node.y + node.labelOffset.y, node.name, {
       color: placements.length ? TEXT_COLOR : MUTED_COLOR, fontFamily: 'sans-serif', fontSize: '22px', fontStyle: 'bold',
       stroke: '#171426', strokeThickness: 6, align: 'center',
@@ -89,22 +117,6 @@ export class TargetMapScene extends Phaser.Scene {
     const unlocked = this.config?.unlockedMonsterIds.has(placement.monsterId) ?? false;
     const x = node.x + xOffset;
     const y = node.y;
-    const color = targetMapThemeColor(placement.theme);
-    const markerColor = placement.monsterId === 'lantern_cat'
-      ? 0xffe2ae
-      : placement.monsterId === 'bamboo_mantis' ? 0xe0f3c8
-        : placement.monsterId === 'cloud_fox_boss' ? 0x18334a : color;
-    const accentColor = placement.monsterId === 'lantern_cat'
-      ? 0xffb86b
-      : placement.monsterId === 'bamboo_mantis' ? 0xc8f36a : color;
-    const glow = this.add.circle(x, y, 82, accentColor, unlocked ? 0.18 : 0.08)
-      .setBlendMode(Phaser.BlendModes.ADD).setDepth(node.zIndex + 1);
-    this.tweens.add({ targets: glow, alpha: { from: unlocked ? 0.1 : 0.05, to: unlocked ? 0.28 : 0.12 },
-      scale: { from: 0.92, to: 1.08 }, duration: 1050, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
-    const ring = this.add.circle(x, y, 70, accentColor, 0.2).setStrokeStyle(8, accentColor, unlocked ? 0.98 : 0.48).setDepth(node.zIndex + 2);
-    const marker = this.add.circle(x, y, 61, markerColor, unlocked ? 0.97 : 0.52)
-      .setStrokeStyle(4, 0xfff8e8, unlocked ? 0.95 : 0.45).setDepth(node.zIndex + 3);
-    this.nodeObjects.push(glow, ring, marker);
     const animationKey = `${targetMapMonsterImageKey(placement.monsterId)}-idle`;
     if (!this.anims.exists(animationKey)) {
       this.anims.create({
@@ -116,9 +128,12 @@ export class TargetMapScene extends Phaser.Scene {
     }
     const texture = this.textures.get(targetMapMonsterIdleFrameKey(placement.monsterId, 1));
     const source = texture.getSourceImage() as { width?: number; height?: number };
-    const size = targetMapMonsterDisplaySize(source.width ?? 1, source.height ?? 1, 130, 136);
-    const image = this.add.sprite(x, y, targetMapMonsterIdleFrameKey(placement.monsterId, 1))
-      .setDisplaySize(size.width, size.height).setAlpha(unlocked ? 1 : 0.48).setDepth(node.zIndex + 4);
+    const size = targetMapMonsterDisplaySize(source.width ?? 1, source.height ?? 1, 142, 148);
+    const visualOffset = MONSTER_VISUAL_OFFSETS[placement.monsterId] ?? { x: -4, y: 0 };
+    const image = this.add.sprite(x + visualOffset.x, y + visualOffset.y, targetMapMonsterIdleFrameKey(placement.monsterId, 1))
+      .setDisplaySize(size.width, size.height)
+      .setFlipX(placement.monsterId === 'bamboo_mantis' || placement.monsterId === 'mist_blob')
+      .setAlpha(unlocked ? 1 : 0.48).setDepth(node.zIndex + 4);
     image.play(animationKey);
     this.nodeObjects.push(image);
     const monster = this.config?.monsters.find((entry) => entry.id === placement.monsterId);

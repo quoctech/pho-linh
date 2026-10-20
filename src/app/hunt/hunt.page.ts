@@ -115,7 +115,9 @@ export class HuntPage implements OnInit, AfterViewInit, OnDestroy {
             preserveDrawingBuffer: false,
           },
           scale: {
-            mode: PhaserRuntime.Scale.FIT,
+            // Cover the viewport so the map reaches the full screen height;
+            // the wider sides may crop slightly on portrait screens.
+            mode: PhaserRuntime.Scale.ENVELOP,
             autoCenter: PhaserRuntime.Scale.CENTER_BOTH,
           },
           callbacks: {

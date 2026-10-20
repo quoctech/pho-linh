@@ -28,8 +28,8 @@ export const BAMBOO_MANTIS_SPRITE_KEYS = {
   armorBreak: action('armor_break'),
   frameWidth: 176,
   frameHeight: 140,
-  displayWidth: 96,
-  displayHeight: 96 * 140 / 176,
+  displayWidth: 72,
+  displayHeight: 120,
   originY: 1,
 } as const;
 
