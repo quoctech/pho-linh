@@ -148,9 +148,13 @@ export class BattleVfxPool {
 
   release(effect: Phaser.GameObjects.GameObject): void {
     if (!this.active.delete(effect)) return;
+    this.scene.tweens.killTweensOf(effect);
     const display = effect as Phaser.GameObjects.GameObject & { setVisible?: (visible: boolean) => unknown; setAlpha?: (alpha: number) => unknown };
     display.setVisible?.(false);
     display.setAlpha?.(0);
+    const sprite = effect as Phaser.GameObjects.Sprite;
+    sprite.setPosition(-100, -100).setScale(1).setRotation(0).setBlendMode(Phaser.BlendModes.NORMAL);
+    sprite.anims?.stop();
     effect.setActive(false);
   }
 

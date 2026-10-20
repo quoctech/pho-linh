@@ -16,9 +16,10 @@ export interface LanternCatVfxHost {
   readonly playHeroAnimation: (key: 'hit') => void;
   readonly shakeHero: () => void;
   readonly shakePlayerBar: () => void;
+  readonly playMonsterSkillEffect: (onComplete: () => void) => void;
 }
 
-/** Presentation-only timing for Miêu Đèn's V2 actor skill animation. */
+/** Presentation-only orchestration for Miêu Đèn's V2 actor skill animation. */
 export class LanternCatVfx {
   private readonly timers = new Set<Phaser.Time.TimerEvent>();
 
@@ -26,17 +27,7 @@ export class LanternCatVfx {
 
   playLongMieuLienKich(): void {
     const target = this.host.combatPoint('player');
-    const offsets = [
-      { x: -8, y: -8 },
-      { x: 8, y: 0 },
-      { x: 0, y: 8 },
-    ];
-    offsets.forEach((offset, index) => {
-      this.schedule(index * 150, () => {
-        this.host.spawnCombatImpact(target.x + offset.x, target.y + offset.y, 0xd5aaff, 38);
-      });
-    });
-    this.schedule(this.host.reducedMotion ? 120 : 480, () => {
+    this.host.playMonsterSkillEffect(() => {
       this.host.spawnCombatImpact(target.x, target.y, 0xd5aaff, 70);
       this.host.flashHero(0xd5aaff);
       this.host.playHeroAnimation('hit');

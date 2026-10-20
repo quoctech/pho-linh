@@ -74,7 +74,8 @@ describe('battle layout', () => {
       expect(layout.energyBarY + 15).toBeLessThan(layout.statusBadgeY);
       expect(layout.statusBadgeY + 12).toBeLessThan(layout.telegraphY);
       expect(layout.statusY).toBeGreaterThan(layout.telegraphY);
-      expect(layout.statusY).toBeLessThan(layout.boardTop);
+      expect(layout.telegraphY).toBeGreaterThan(layout.skillButtons[1].y + layout.skillButtonSize / 2);
+      expect(layout.statusY).toBeLessThanOrEqual(620 - 10);
       for (const point of layout.heroSkillButtons) {
         expect(point.x - layout.skillButtonSize / 2).toBeGreaterThanOrEqual(0);
         expect(point.x + layout.skillButtonSize / 2).toBeLessThanOrEqual(width);

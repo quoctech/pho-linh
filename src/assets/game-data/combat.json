@@ -13,7 +13,7 @@
   },
   "battle": {
     "maxTurns": 24,
-    "playerTurnSeconds": 10
+    "playerTurnSeconds": 15
   },
   "monsterRewards": {
     "dropChance": 0.2,

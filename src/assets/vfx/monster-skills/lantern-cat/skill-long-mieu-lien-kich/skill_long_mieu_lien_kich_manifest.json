@@ -1,0 +1,168 @@
+{
+  "skillId": "skill_long_mieu_lien_kich",
+  "skillLabel": "Long Miêu Liên Kích",
+  "description": "Tung nhiều đòn tấn công liên tiếp bằng móng vuốt, gây sát thương dồn lên một mục tiêu.",
+  "sourceStripFile": "skill_long_mieu_lien_kich.webp",
+  "sourceStripSize": {
+    "w": 2172,
+    "h": 724
+  },
+  "detectedColumnBounds": [
+    0,
+    282,
+    605,
+    947,
+    1306,
+    1723,
+    2172
+  ],
+  "detectedCentersX": [
+    139.8951590721555,
+    437.3984676396795,
+    763.6778248213814,
+    1137.6909501833782,
+    1533.2591681451538,
+    1964.1249027940332
+  ],
+  "frameCount": 6,
+  "standardFrameSize": {
+    "w": 435,
+    "h": 532
+  },
+  "previewGapPx": 80,
+  "equalSpacedPreviewFile": "skill_long_mieu_lien_kich_equal_spaced.webp",
+  "frames": [
+    {
+      "index": 1,
+      "file": "frames_webp/skill_long_mieu_lien_kich_01.webp",
+      "sourceXBounds": {
+        "x0": 0,
+        "x1": 282
+      },
+      "cropBoxInsideSeparatedSegment": {
+        "left": 17,
+        "top": 281,
+        "right": 282,
+        "bottom": 585
+      },
+      "standardFrameSize": {
+        "w": 435,
+        "h": 532
+      },
+      "pastePosition": {
+        "x": 85,
+        "y": 114
+      }
+    },
+    {
+      "index": 2,
+      "file": "frames_webp/skill_long_mieu_lien_kich_02.webp",
+      "sourceXBounds": {
+        "x0": 282,
+        "x1": 605
+      },
+      "cropBoxInsideSeparatedSegment": {
+        "left": 2,
+        "top": 191,
+        "right": 323,
+        "bottom": 567
+      },
+      "standardFrameSize": {
+        "w": 435,
+        "h": 532
+      },
+      "pastePosition": {
+        "x": 57,
+        "y": 78
+      }
+    },
+    {
+      "index": 3,
+      "file": "frames_webp/skill_long_mieu_lien_kich_03.webp",
+      "sourceXBounds": {
+        "x0": 605,
+        "x1": 947
+      },
+      "cropBoxInsideSeparatedSegment": {
+        "left": 4,
+        "top": 181,
+        "right": 342,
+        "bottom": 589
+      },
+      "standardFrameSize": {
+        "w": 435,
+        "h": 532
+      },
+      "pastePosition": {
+        "x": 48,
+        "y": 62
+      }
+    },
+    {
+      "index": 4,
+      "file": "frames_webp/skill_long_mieu_lien_kich_04.webp",
+      "sourceXBounds": {
+        "x0": 947,
+        "x1": 1306
+      },
+      "cropBoxInsideSeparatedSegment": {
+        "left": 16,
+        "top": 103,
+        "right": 359,
+        "bottom": 586
+      },
+      "standardFrameSize": {
+        "w": 435,
+        "h": 532
+      },
+      "pastePosition": {
+        "x": 46,
+        "y": 24
+      }
+    },
+    {
+      "index": 5,
+      "file": "frames_webp/skill_long_mieu_lien_kich_05.webp",
+      "sourceXBounds": {
+        "x0": 1306,
+        "x1": 1723
+      },
+      "cropBoxInsideSeparatedSegment": {
+        "left": 0,
+        "top": 120,
+        "right": 417,
+        "bottom": 619
+      },
+      "standardFrameSize": {
+        "w": 435,
+        "h": 532
+      },
+      "pastePosition": {
+        "x": 9,
+        "y": 16
+      }
+    },
+    {
+      "index": 6,
+      "file": "frames_webp/skill_long_mieu_lien_kich_06.webp",
+      "sourceXBounds": {
+        "x0": 1723,
+        "x1": 2172
+      },
+      "cropBoxInsideSeparatedSegment": {
+        "left": 0,
+        "top": 99,
+        "right": 435,
+        "bottom": 631
+      },
+      "standardFrameSize": {
+        "w": 435,
+        "h": 532
+      },
+      "pastePosition": {
+        "x": 0,
+        "y": 0
+      }
+    }
+  ]
+}

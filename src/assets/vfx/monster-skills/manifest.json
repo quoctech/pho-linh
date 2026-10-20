@@ -1,0 +1,38 @@
+{
+  "project": "PHỐ LINH",
+  "pack": "skill_effects_bui_suong_mieu_den_webp_v1",
+  "version": "v1",
+  "rules": {
+    "frameIsolation": "Frame trước không dính frame sau.",
+    "sizing": "Mỗi skill dùng frame có chiều rộng và chiều cao lớn nhất làm chuẩn cho toàn bộ frame còn lại.",
+    "format": "WebP",
+    "frameCountPerSkill": 6,
+    "previewGapPx": 80
+  },
+  "skills": [
+    {
+      "skillId": "skill_suong_mu_xam_thuc",
+      "skillLabel": "Sương Mù Xâm Thực",
+      "description": "Phát tán sương lạnh, gây sát thương Thủy nhẹ và giảm tốc độ hành động của mục tiêu.",
+      "folder": "skill_suong_mu_xam_thuc",
+      "manifest": "skill_suong_mu_xam_thuc/skill_suong_mu_xam_thuc_manifest.json",
+      "frameCount": 6,
+      "standardFrameSize": {
+        "w": 364,
+        "h": 462
+      }
+    },
+    {
+      "skillId": "skill_long_mieu_lien_kich",
+      "skillLabel": "Long Miêu Liên Kích",
+      "description": "Tung nhiều đòn tấn công liên tiếp bằng móng vuốt, gây sát thương dồn lên một mục tiêu.",
+      "folder": "skill_long_mieu_lien_kich",
+      "manifest": "skill_long_mieu_lien_kich/skill_long_mieu_lien_kich_manifest.json",
+      "frameCount": 6,
+      "standardFrameSize": {
+        "w": 435,
+        "h": 532
+      }
+    }
+  ]
+}

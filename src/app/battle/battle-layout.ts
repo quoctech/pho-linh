@@ -61,9 +61,11 @@ export function createBattleLayout(width: number, height: number): BattleLayout 
   const boardTop = Math.max(200, Math.min(240, safeHeight - boardWidth - 92));
   const boardBottom = boardTop + boardWidth;
   const heroY = Math.min(safeHeight - 8, boardBottom + 112);
-  const skillY = Math.min(safeHeight - 50, boardBottom + 48);
   const skillButtonSize = 54;
   const skillButtonGap = 8;
+  // Keep the hero skills directly below the board with a six-pixel gap.
+  const skillY = boardBottom + 6 + skillButtonSize / 2;
+  const statusY = skillY + skillButtonSize / 2 + 22;
   const skillRowWidth = skillButtonSize * 2 + skillButtonGap;
   // The hero skill row follows the board's right edge so its right padding
   // matches the board's right padding at every viewport width.
@@ -114,8 +116,9 @@ export function createBattleLayout(width: number, height: number): BattleLayout 
       right: monsterStatusRight,
       width: statusBarWidth,
     },
-    telegraphY: 146,
-    statusY: 166,
+    // Keep combat status copy under the hero skill row, away from the monster.
+    telegraphY: skillY + skillButtonSize / 2 + 6,
+    statusY,
     skillButtons: [
       { x: skillRowLeft + skillButtonSize / 2, y: skillY },
       { x: skillRowLeft + skillButtonSize + skillButtonGap + skillButtonSize / 2, y: skillY },

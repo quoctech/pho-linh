@@ -1,0 +1,168 @@
+{
+  "skillId": "skill_suong_mu_xam_thuc",
+  "skillLabel": "Sương Mù Xâm Thực",
+  "description": "Phát tán sương lạnh, gây sát thương Thủy nhẹ và giảm tốc độ hành động của mục tiêu.",
+  "sourceStripFile": "skill_suong_mu_xam_thuc.webp",
+  "sourceStripSize": {
+    "w": 2172,
+    "h": 724
+  },
+  "detectedColumnBounds": [
+    0,
+    354,
+    721,
+    1085,
+    1468,
+    1832,
+    2172
+  ],
+  "detectedCentersX": [
+    204.03204926013797,
+    567.4548501693635,
+    926.6469334571275,
+    1290.3779930704213,
+    1651.025111925112,
+    2015.966955203134
+  ],
+  "frameCount": 6,
+  "standardFrameSize": {
+    "w": 364,
+    "h": 462
+  },
+  "previewGapPx": 80,
+  "equalSpacedPreviewFile": "skill_suong_mu_xam_thuc_equal_spaced.webp",
+  "frames": [
+    {
+      "index": 1,
+      "file": "frames_webp/skill_suong_mu_xam_thuc_01.webp",
+      "sourceXBounds": {
+        "x0": 0,
+        "x1": 354
+      },
+      "cropBoxInsideSeparatedSegment": {
+        "left": 43,
+        "top": 280,
+        "right": 354,
+        "bottom": 657
+      },
+      "standardFrameSize": {
+        "w": 364,
+        "h": 462
+      },
+      "pastePosition": {
+        "x": 26,
+        "y": 42
+      }
+    },
+    {
+      "index": 2,
+      "file": "frames_webp/skill_suong_mu_xam_thuc_02.webp",
+      "sourceXBounds": {
+        "x0": 354,
+        "x1": 721
+      },
+      "cropBoxInsideSeparatedSegment": {
+        "left": 22,
+        "top": 235,
+        "right": 367,
+        "bottom": 631
+      },
+      "standardFrameSize": {
+        "w": 364,
+        "h": 462
+      },
+      "pastePosition": {
+        "x": 9,
+        "y": 33
+      }
+    },
+    {
+      "index": 3,
+      "file": "frames_webp/skill_suong_mu_xam_thuc_03.webp",
+      "sourceXBounds": {
+        "x0": 721,
+        "x1": 1085
+      },
+      "cropBoxInsideSeparatedSegment": {
+        "left": 22,
+        "top": 200,
+        "right": 364,
+        "bottom": 662
+      },
+      "standardFrameSize": {
+        "w": 364,
+        "h": 462
+      },
+      "pastePosition": {
+        "x": 11,
+        "y": 0
+      }
+    },
+    {
+      "index": 4,
+      "file": "frames_webp/skill_suong_mu_xam_thuc_04.webp",
+      "sourceXBounds": {
+        "x0": 1085,
+        "x1": 1468
+      },
+      "cropBoxInsideSeparatedSegment": {
+        "left": 19,
+        "top": 157,
+        "right": 383,
+        "bottom": 585
+      },
+      "standardFrameSize": {
+        "w": 364,
+        "h": 462
+      },
+      "pastePosition": {
+        "x": 0,
+        "y": 17
+      }
+    },
+    {
+      "index": 5,
+      "file": "frames_webp/skill_suong_mu_xam_thuc_05.webp",
+      "sourceXBounds": {
+        "x0": 1468,
+        "x1": 1832
+      },
+      "cropBoxInsideSeparatedSegment": {
+        "left": 1,
+        "top": 146,
+        "right": 364,
+        "bottom": 533
+      },
+      "standardFrameSize": {
+        "w": 364,
+        "h": 462
+      },
+      "pastePosition": {
+        "x": 0,
+        "y": 37
+      }
+    },
+    {
+      "index": 6,
+      "file": "frames_webp/skill_suong_mu_xam_thuc_06.webp",
+      "sourceXBounds": {
+        "x0": 1832,
+        "x1": 2172
+      },
+      "cropBoxInsideSeparatedSegment": {
+        "left": 54,
+        "top": 124,
+        "right": 326,
+        "bottom": 401
+      },
+      "standardFrameSize": {
+        "w": 364,
+        "h": 462
+      },
+      "pastePosition": {
+        "x": 46,
+        "y": 92
+      }
+    }
+  ]
+}
