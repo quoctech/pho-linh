@@ -75,13 +75,13 @@ describe('battle layout', () => {
       expect(layout.statusBadgeY + 12).toBeLessThan(layout.telegraphY);
       expect(layout.statusY).toBeGreaterThan(layout.telegraphY);
       expect(layout.telegraphY).toBeGreaterThan(layout.skillButtons[1].y + layout.skillButtonSize / 2);
-      expect(layout.statusY).toBeLessThanOrEqual(620 - 10);
+      expect(layout.statusY).toBeLessThanOrEqual(620 - 3);
       for (const point of layout.heroSkillButtons) {
         expect(point.x - layout.skillButtonSize / 2).toBeGreaterThanOrEqual(0);
         expect(point.x + layout.skillButtonSize / 2).toBeLessThanOrEqual(width);
       }
       const lastHeroSkill = layout.heroSkillButtons[layout.heroSkillButtons.length - 1];
-      expect(lastHeroSkill.x + layout.skillButtonSize / 2).toBe(layout.boardLeft + layout.boardWidth);
+      expect(lastHeroSkill.x + layout.skillButtonSize / 2).toBe(layout.boardLeft + layout.boardWidth + 10);
     }
   });
 

@@ -687,9 +687,8 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
       .text(statusLeft, this.layout.telegraphY, '', {
         color: '#f3c64f',
         fontFamily: 'sans-serif',
-        fontSize: '10px',
+        fontSize: '8px',
         fontStyle: 'bold',
-        wordWrap: { width: statusWidth, useAdvancedWrap: true },
       })
       .setResolution(this.renderQuality)
       .setOrigin(0, 0.5)
@@ -698,8 +697,7 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
       .text(statusLeft, this.layout.statusY, 'Đổi 2 ô kề nhau', {
         color: '#fff8e8',
         fontFamily: 'sans-serif',
-        fontSize: '10px',
-        wordWrap: { width: statusWidth, useAdvancedWrap: true },
+        fontSize: '8px',
       })
       .setResolution(this.renderQuality)
       .setOrigin(0, 0.5)

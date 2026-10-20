@@ -7,7 +7,7 @@ export type ElementActiveSkillSlot = 'primarySkill' | 'secondarySkill';
 export interface ElementSkillVisualState { readonly active: boolean; readonly locked: boolean; readonly animate: boolean; }
 export interface SkillIconDisplaySize { readonly width: number; readonly height: number; }
 
-export function fitSkillIconDisplaySize(sourceWidth: number, sourceHeight: number, maxWidth = 30, maxHeight = 30): SkillIconDisplaySize {
+export function fitSkillIconDisplaySize(sourceWidth: number, sourceHeight: number, maxWidth = 48, maxHeight = 48): SkillIconDisplaySize {
   if (![sourceWidth, sourceHeight, maxWidth, maxHeight].every((value) => Number.isFinite(value) && value > 0)) return { width: maxWidth, height: maxHeight };
   const scale = Math.min(maxWidth / sourceWidth, maxHeight / sourceHeight);
   return { width: Math.max(1, Math.round(sourceWidth * scale)), height: Math.max(1, Math.round(sourceHeight * scale)) };
