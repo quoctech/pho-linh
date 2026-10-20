@@ -1,0 +1,487 @@
+{
+  "key": "bo_la_tre",
+  "name": "Bọ Lá Tre",
+  "sourceSheet": "bộ_sprite_chiến_binh_bọ_lá_xanh_vàng.png",
+  "sourceSize": {
+    "w": 1448,
+    "h": 1086
+  },
+  "rows": [
+    {
+      "index": 1,
+      "effectId": "normal_attack",
+      "effectLabel": "Đòn đánh thường",
+      "effectDescription": "Bọ Lá Tre lao chém bằng chi trước sắc bén hoặc quét lưỡi lá vào mục tiêu.",
+      "sourceStrip": "source_rows_webp/01_normal_attack.webp",
+      "sourceCropFromSheet": {
+        "x": 0,
+        "y": 0,
+        "w": 1448,
+        "h": 364
+      },
+      "sourceStripSize": {
+        "w": 1448,
+        "h": 364
+      },
+      "frameCount": 6,
+      "equalFrameSize": {
+        "w": 271,
+        "h": 331
+      },
+      "rawSeparatedSegmentsFolder": "raw_separated_segments_webp/01_normal_attack",
+      "equalSpacedStripFile": "equal_spaced_strips_webp/01_normal_attack_equal_spaced.webp",
+      "frames": [
+        {
+          "index": 1,
+          "file": "frames_webp/01_normal_attack/01_normal_attack_01.webp",
+          "sourceXBounds": {
+            "x0": 0,
+            "x1": 242
+          },
+          "cropBoxInsideSeparatedSegment": {
+            "left": 6,
+            "top": 40,
+            "right": 242,
+            "bottom": 356
+          },
+          "equalCanvas": {
+            "w": 271,
+            "h": 331
+          },
+          "pastePosition": {
+            "x": 17,
+            "y": 15
+          }
+        },
+        {
+          "index": 2,
+          "file": "frames_webp/01_normal_attack/01_normal_attack_02.webp",
+          "sourceXBounds": {
+            "x0": 242,
+            "x1": 467
+          },
+          "cropBoxInsideSeparatedSegment": {
+            "left": 0,
+            "top": 33,
+            "right": 225,
+            "bottom": 364
+          },
+          "equalCanvas": {
+            "w": 271,
+            "h": 331
+          },
+          "pastePosition": {
+            "x": 23,
+            "y": 0
+          }
+        },
+        {
+          "index": 3,
+          "file": "frames_webp/01_normal_attack/01_normal_attack_03.webp",
+          "sourceXBounds": {
+            "x0": 467,
+            "x1": 738
+          },
+          "cropBoxInsideSeparatedSegment": {
+            "left": 0,
+            "top": 56,
+            "right": 271,
+            "bottom": 364
+          },
+          "equalCanvas": {
+            "w": 271,
+            "h": 331
+          },
+          "pastePosition": {
+            "x": 0,
+            "y": 23
+          }
+        },
+        {
+          "index": 4,
+          "file": "frames_webp/01_normal_attack/01_normal_attack_04.webp",
+          "sourceXBounds": {
+            "x0": 738,
+            "x1": 965
+          },
+          "cropBoxInsideSeparatedSegment": {
+            "left": 0,
+            "top": 43,
+            "right": 227,
+            "bottom": 364
+          },
+          "equalCanvas": {
+            "w": 271,
+            "h": 331
+          },
+          "pastePosition": {
+            "x": 22,
+            "y": 10
+          }
+        },
+        {
+          "index": 5,
+          "file": "frames_webp/01_normal_attack/01_normal_attack_05.webp",
+          "sourceXBounds": {
+            "x0": 965,
+            "x1": 1209
+          },
+          "cropBoxInsideSeparatedSegment": {
+            "left": 0,
+            "top": 50,
+            "right": 244,
+            "bottom": 364
+          },
+          "equalCanvas": {
+            "w": 271,
+            "h": 331
+          },
+          "pastePosition": {
+            "x": 13,
+            "y": 17
+          }
+        },
+        {
+          "index": 6,
+          "file": "frames_webp/01_normal_attack/01_normal_attack_06.webp",
+          "sourceXBounds": {
+            "x0": 1209,
+            "x1": 1448
+          },
+          "cropBoxInsideSeparatedSegment": {
+            "left": 0,
+            "top": 51,
+            "right": 239,
+            "bottom": 364
+          },
+          "equalCanvas": {
+            "w": 271,
+            "h": 331
+          },
+          "pastePosition": {
+            "x": 16,
+            "y": 18
+          }
+        }
+      ]
+    },
+    {
+      "index": 2,
+      "effectId": "skill_luc_diep_doc_cham",
+      "effectLabel": "Lục Diệp Độc Châm",
+      "effectDescription": "Phóng lá tre sắc nhọn như kim độc, gây sát thương Mộc và áp dụng Dính độc.",
+      "sourceStrip": "source_rows_webp/02_skill_luc_diep_doc_cham.webp",
+      "sourceCropFromSheet": {
+        "x": 0,
+        "y": 364,
+        "w": 1448,
+        "h": 344
+      },
+      "sourceStripSize": {
+        "w": 1448,
+        "h": 344
+      },
+      "frameCount": 6,
+      "equalFrameSize": {
+        "w": 289,
+        "h": 318
+      },
+      "rawSeparatedSegmentsFolder": "raw_separated_segments_webp/02_skill_luc_diep_doc_cham",
+      "equalSpacedStripFile": "equal_spaced_strips_webp/02_skill_luc_diep_doc_cham_equal_spaced.webp",
+      "frames": [
+        {
+          "index": 1,
+          "file": "frames_webp/02_skill_luc_diep_doc_cham/02_skill_luc_diep_doc_cham_01.webp",
+          "sourceXBounds": {
+            "x0": 0,
+            "x1": 251
+          },
+          "cropBoxInsideSeparatedSegment": {
+            "left": 1,
+            "top": 26,
+            "right": 251,
+            "bottom": 344
+          },
+          "equalCanvas": {
+            "w": 289,
+            "h": 318
+          },
+          "pastePosition": {
+            "x": 19,
+            "y": 0
+          }
+        },
+        {
+          "index": 2,
+          "file": "frames_webp/02_skill_luc_diep_doc_cham/02_skill_luc_diep_doc_cham_02.webp",
+          "sourceXBounds": {
+            "x0": 251,
+            "x1": 494
+          },
+          "cropBoxInsideSeparatedSegment": {
+            "left": 0,
+            "top": 55,
+            "right": 243,
+            "bottom": 344
+          },
+          "equalCanvas": {
+            "w": 289,
+            "h": 318
+          },
+          "pastePosition": {
+            "x": 23,
+            "y": 29
+          }
+        },
+        {
+          "index": 3,
+          "file": "frames_webp/02_skill_luc_diep_doc_cham/02_skill_luc_diep_doc_cham_03.webp",
+          "sourceXBounds": {
+            "x0": 494,
+            "x1": 766
+          },
+          "cropBoxInsideSeparatedSegment": {
+            "left": 0,
+            "top": 64,
+            "right": 272,
+            "bottom": 328
+          },
+          "equalCanvas": {
+            "w": 289,
+            "h": 318
+          },
+          "pastePosition": {
+            "x": 8,
+            "y": 54
+          }
+        },
+        {
+          "index": 4,
+          "file": "frames_webp/02_skill_luc_diep_doc_cham/02_skill_luc_diep_doc_cham_04.webp",
+          "sourceXBounds": {
+            "x0": 766,
+            "x1": 1055
+          },
+          "cropBoxInsideSeparatedSegment": {
+            "left": 0,
+            "top": 81,
+            "right": 289,
+            "bottom": 344
+          },
+          "equalCanvas": {
+            "w": 289,
+            "h": 318
+          },
+          "pastePosition": {
+            "x": 0,
+            "y": 55
+          }
+        },
+        {
+          "index": 5,
+          "file": "frames_webp/02_skill_luc_diep_doc_cham/02_skill_luc_diep_doc_cham_05.webp",
+          "sourceXBounds": {
+            "x0": 1055,
+            "x1": 1283
+          },
+          "cropBoxInsideSeparatedSegment": {
+            "left": 0,
+            "top": 78,
+            "right": 228,
+            "bottom": 344
+          },
+          "equalCanvas": {
+            "w": 289,
+            "h": 318
+          },
+          "pastePosition": {
+            "x": 30,
+            "y": 52
+          }
+        },
+        {
+          "index": 6,
+          "file": "frames_webp/02_skill_luc_diep_doc_cham/02_skill_luc_diep_doc_cham_06.webp",
+          "sourceXBounds": {
+            "x0": 1283,
+            "x1": 1448
+          },
+          "cropBoxInsideSeparatedSegment": {
+            "left": 0,
+            "top": 58,
+            "right": 165,
+            "bottom": 344
+          },
+          "equalCanvas": {
+            "w": 289,
+            "h": 318
+          },
+          "pastePosition": {
+            "x": 62,
+            "y": 32
+          }
+        }
+      ]
+    },
+    {
+      "index": 3,
+      "effectId": "skill_luc_diep_an_tung",
+      "effectLabel": "Lục Diệp Ẩn Tung",
+      "effectDescription": "Ngụy trang giữa những chiếc lá tre, tăng tỷ lệ Né tránh và hồi phục một phần HP.",
+      "sourceStrip": "source_rows_webp/03_skill_luc_diep_an_tung.webp",
+      "sourceCropFromSheet": {
+        "x": 0,
+        "y": 708,
+        "w": 1448,
+        "h": 378
+      },
+      "sourceStripSize": {
+        "w": 1448,
+        "h": 378
+      },
+      "frameCount": 6,
+      "equalFrameSize": {
+        "w": 254,
+        "h": 327
+      },
+      "rawSeparatedSegmentsFolder": "raw_separated_segments_webp/03_skill_luc_diep_an_tung",
+      "equalSpacedStripFile": "equal_spaced_strips_webp/03_skill_luc_diep_an_tung_equal_spaced.webp",
+      "frames": [
+        {
+          "index": 1,
+          "file": "frames_webp/03_skill_luc_diep_an_tung/03_skill_luc_diep_an_tung_01.webp",
+          "sourceXBounds": {
+            "x0": 0,
+            "x1": 254
+          },
+          "cropBoxInsideSeparatedSegment": {
+            "left": 2,
+            "top": 48,
+            "right": 254,
+            "bottom": 348
+          },
+          "equalCanvas": {
+            "w": 254,
+            "h": 327
+          },
+          "pastePosition": {
+            "x": 1,
+            "y": 27
+          }
+        },
+        {
+          "index": 2,
+          "file": "frames_webp/03_skill_luc_diep_an_tung/03_skill_luc_diep_an_tung_02.webp",
+          "sourceXBounds": {
+            "x0": 254,
+            "x1": 509
+          },
+          "cropBoxInsideSeparatedSegment": {
+            "left": 1,
+            "top": 49,
+            "right": 255,
+            "bottom": 354
+          },
+          "equalCanvas": {
+            "w": 254,
+            "h": 327
+          },
+          "pastePosition": {
+            "x": 0,
+            "y": 22
+          }
+        },
+        {
+          "index": 3,
+          "file": "frames_webp/03_skill_luc_diep_an_tung/03_skill_luc_diep_an_tung_03.webp",
+          "sourceXBounds": {
+            "x0": 509,
+            "x1": 752
+          },
+          "cropBoxInsideSeparatedSegment": {
+            "left": 0,
+            "top": 46,
+            "right": 243,
+            "bottom": 344
+          },
+          "equalCanvas": {
+            "w": 254,
+            "h": 327
+          },
+          "pastePosition": {
+            "x": 5,
+            "y": 29
+          }
+        },
+        {
+          "index": 4,
+          "file": "frames_webp/03_skill_luc_diep_an_tung/03_skill_luc_diep_an_tung_04.webp",
+          "sourceXBounds": {
+            "x0": 752,
+            "x1": 977
+          },
+          "cropBoxInsideSeparatedSegment": {
+            "left": 0,
+            "top": 52,
+            "right": 225,
+            "bottom": 350
+          },
+          "equalCanvas": {
+            "w": 254,
+            "h": 327
+          },
+          "pastePosition": {
+            "x": 14,
+            "y": 29
+          }
+        },
+        {
+          "index": 5,
+          "file": "frames_webp/03_skill_luc_diep_an_tung/03_skill_luc_diep_an_tung_05.webp",
+          "sourceXBounds": {
+            "x0": 977,
+            "x1": 1215
+          },
+          "cropBoxInsideSeparatedSegment": {
+            "left": 0,
+            "top": 32,
+            "right": 238,
+            "bottom": 354
+          },
+          "equalCanvas": {
+            "w": 254,
+            "h": 327
+          },
+          "pastePosition": {
+            "x": 8,
+            "y": 5
+          }
+        },
+        {
+          "index": 6,
+          "file": "frames_webp/03_skill_luc_diep_an_tung/03_skill_luc_diep_an_tung_06.webp",
+          "sourceXBounds": {
+            "x0": 1215,
+            "x1": 1448
+          },
+          "cropBoxInsideSeparatedSegment": {
+            "left": 0,
+            "top": 31,
+            "right": 233,
+            "bottom": 358
+          },
+          "equalCanvas": {
+            "w": 254,
+            "h": 327
+          },
+          "pastePosition": {
+            "x": 10,
+            "y": 0
+          }
+        }
+      ]
+    }
+  ],
+  "rowCount": 3,
+  "frameCountTotal": 18
+}

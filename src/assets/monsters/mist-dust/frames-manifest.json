@@ -1967,182 +1967,164 @@
       }
     },
     {
-      "id": "normal_attack_a",
-      "label": "Đánh thường A",
-      "sourceStrip": "bui_suong/source_rows_webp/12_normal_attack_a.webp",
-      "sourceStripSize": {
-        "w": 1024,
-        "h": 173
+      "index": 1,
+      "effectId": "12_normal_attack_a",
+      "effectLabel": "Đòn đánh thường",
+      "effectDescription": "Bụi Sương phát tán và vung luồng sương lạnh để tấn công mục tiêu.",
+      "sourceStrip": "source_rows_webp/12_normal_attack_a.webp",
+      "sourceCropFromSheet": {
+        "x": 0,
+        "y": 0,
+        "w": 1448,
+        "h": 507
       },
-      "detectedColumnBounds": [
-        0,
-        193,
-        348,
-        501,
-        670,
-        838,
-        1024
-      ],
+      "sourceStripSize": {
+        "w": 1448,
+        "h": 507
+      },
       "frameCount": 6,
       "equalFrameSize": {
-        "w": 177,
-        "h": 149
-      },
-      "independentSegmentGap": 80,
-      "equalSpacedStripFile": "equal_spaced_strips_webp/12_normal_attack_a_equal_spaced.webp",
-      "equalSpacedStripSize": {
-        "w": 1462,
-        "h": 149
+        "w": 275,
+        "h": 378
       },
       "rawSeparatedSegmentsFolder": "raw_separated_segments_webp/12_normal_attack_a",
+      "equalSpacedStripFile": "equal_spaced_strips_webp/12_normal_attack_a_equal_spaced.webp",
       "frames": [
         {
           "index": 1,
-          "name": "normal_attack_a_01",
           "file": "frames_webp/12_normal_attack_a/12_normal_attack_a_01.webp",
           "sourceXBounds": {
             "x0": 0,
-            "x1": 193
+            "x1": 257
           },
           "cropBoxInsideSeparatedSegment": {
-            "left": 16,
-            "top": 0,
-            "right": 193,
-            "bottom": 149
+            "left": 9,
+            "top": 100,
+            "right": 257,
+            "bottom": 478
           },
           "equalCanvas": {
-            "w": 177,
-            "h": 149
+            "w": 275,
+            "h": 378
           },
           "pastePosition": {
-            "x": 0,
+            "x": 13,
             "y": 0
           }
         },
         {
           "index": 2,
-          "name": "normal_attack_a_02",
           "file": "frames_webp/12_normal_attack_a/12_normal_attack_a_02.webp",
           "sourceXBounds": {
-            "x0": 193,
-            "x1": 348
+            "x0": 257,
+            "x1": 492
           },
           "cropBoxInsideSeparatedSegment": {
-            "left": 0,
-            "top": 0,
-            "right": 155,
-            "bottom": 149
+            "left": 2,
+            "top": 117,
+            "right": 235,
+            "bottom": 479
           },
           "equalCanvas": {
-            "w": 177,
-            "h": 149
+            "w": 275,
+            "h": 378
           },
           "pastePosition": {
-            "x": 11,
-            "y": 0
+            "x": 21,
+            "y": 16
           }
         },
         {
           "index": 3,
-          "name": "normal_attack_a_03",
           "file": "frames_webp/12_normal_attack_a/12_normal_attack_a_03.webp",
           "sourceXBounds": {
-            "x0": 348,
-            "x1": 501
+            "x0": 492,
+            "x1": 746
           },
           "cropBoxInsideSeparatedSegment": {
             "left": 0,
-            "top": 0,
-            "right": 153,
-            "bottom": 147
+            "top": 119,
+            "right": 254,
+            "bottom": 478
           },
           "equalCanvas": {
-            "w": 177,
-            "h": 149
+            "w": 275,
+            "h": 378
           },
           "pastePosition": {
-            "x": 12,
-            "y": 2
+            "x": 10,
+            "y": 19
           }
         },
         {
           "index": 4,
-          "name": "normal_attack_a_04",
           "file": "frames_webp/12_normal_attack_a/12_normal_attack_a_04.webp",
           "sourceXBounds": {
-            "x0": 501,
-            "x1": 670
+            "x0": 746,
+            "x1": 1021
           },
           "cropBoxInsideSeparatedSegment": {
-            "left": 2,
-            "top": 0,
-            "right": 169,
-            "bottom": 148
+            "left": 0,
+            "top": 107,
+            "right": 275,
+            "bottom": 470
           },
           "equalCanvas": {
-            "w": 177,
-            "h": 149
+            "w": 275,
+            "h": 378
           },
           "pastePosition": {
-            "x": 5,
-            "y": 1
+            "x": 0,
+            "y": 15
           }
         },
         {
           "index": 5,
-          "name": "normal_attack_a_05",
           "file": "frames_webp/12_normal_attack_a/12_normal_attack_a_05.webp",
           "sourceXBounds": {
-            "x0": 670,
-            "x1": 838
+            "x0": 1021,
+            "x1": 1254
           },
           "cropBoxInsideSeparatedSegment": {
             "left": 0,
-            "top": 1,
-            "right": 168,
-            "bottom": 147
+            "top": 126,
+            "right": 233,
+            "bottom": 478
           },
           "equalCanvas": {
-            "w": 177,
-            "h": 149
+            "w": 275,
+            "h": 378
           },
           "pastePosition": {
-            "x": 4,
-            "y": 3
+            "x": 21,
+            "y": 26
           }
         },
         {
           "index": 6,
-          "name": "normal_attack_a_06",
           "file": "frames_webp/12_normal_attack_a/12_normal_attack_a_06.webp",
           "sourceXBounds": {
-            "x0": 838,
-            "x1": 1024
+            "x0": 1254,
+            "x1": 1448
           },
           "cropBoxInsideSeparatedSegment": {
             "left": 0,
-            "top": 0,
-            "right": 170,
-            "bottom": 147
+            "top": 110,
+            "right": 194,
+            "bottom": 478
           },
           "equalCanvas": {
-            "w": 177,
-            "h": 149
+            "w": 275,
+            "h": 378
           },
           "pastePosition": {
-            "x": 3,
-            "y": 2
+            "x": 40,
+            "y": 10
           }
         }
       ],
-      "index": 12,
-      "sourceSheet": "bảng_sprite_hồn_ma_băng_sương_72_khung.png",
-      "sourceCrop": {
-        "x": 0,
-        "y": 1363,
-        "w": 1024,
-        "h": 173
-      }
+      "id": "normal_attack_a",
+      "label": "Đánh thường A"
     },
     {
       "id": "normal_attack_b",
@@ -3925,182 +3907,164 @@
       }
     },
     {
-      "id": "skill_1",
-      "label": "Sương Mù Xâm Thực",
-      "sourceStrip": "bui_suong/source_rows_webp/23_skill_1.webp",
-      "sourceStripSize": {
-        "w": 1024,
-        "h": 115
+      "index": 2,
+      "effectId": "23_skill_1",
+      "effectLabel": "Sương Mù Xâm Thực",
+      "effectDescription": "Phát tán sương lạnh, gây sát thương Thủy nhẹ và giảm tốc độ hành động của mục tiêu.",
+      "sourceStrip": "source_rows_webp/23_skill_1.webp",
+      "sourceCropFromSheet": {
+        "x": 0,
+        "y": 507,
+        "w": 1448,
+        "h": 579
       },
-      "detectedColumnBounds": [
-        0,
-        196,
-        342,
-        518,
-        660,
-        830,
-        1024
-      ],
+      "sourceStripSize": {
+        "w": 1448,
+        "h": 579
+      },
       "frameCount": 6,
       "equalFrameSize": {
-        "w": 189,
-        "h": 115
-      },
-      "independentSegmentGap": 80,
-      "equalSpacedStripFile": "equal_spaced_strips_webp/23_skill_1_equal_spaced.webp",
-      "equalSpacedStripSize": {
-        "w": 1534,
-        "h": 115
+        "w": 328,
+        "h": 395
       },
       "rawSeparatedSegmentsFolder": "raw_separated_segments_webp/23_skill_1",
+      "equalSpacedStripFile": "equal_spaced_strips_webp/23_skill_1_equal_spaced.webp",
       "frames": [
         {
           "index": 1,
-          "name": "skill_1_01",
           "file": "frames_webp/23_skill_1/23_skill_1_01.webp",
           "sourceXBounds": {
             "x0": 0,
-            "x1": 196
+            "x1": 217
           },
           "cropBoxInsideSeparatedSegment": {
-            "left": 7,
-            "top": 0,
-            "right": 196,
-            "bottom": 115
+            "left": 0,
+            "top": 121,
+            "right": 217,
+            "bottom": 480
           },
           "equalCanvas": {
-            "w": 189,
-            "h": 115
+            "w": 328,
+            "h": 395
           },
           "pastePosition": {
-            "x": 0,
-            "y": 0
+            "x": 55,
+            "y": 36
           }
         },
         {
           "index": 2,
-          "name": "skill_1_02",
           "file": "frames_webp/23_skill_1/23_skill_1_02.webp",
           "sourceXBounds": {
-            "x0": 196,
-            "x1": 342
+            "x0": 217,
+            "x1": 447
           },
           "cropBoxInsideSeparatedSegment": {
             "left": 0,
-            "top": 0,
-            "right": 146,
-            "bottom": 115
+            "top": 85,
+            "right": 230,
+            "bottom": 480
           },
           "equalCanvas": {
-            "w": 189,
-            "h": 115
+            "w": 328,
+            "h": 395
           },
           "pastePosition": {
-            "x": 21,
+            "x": 49,
             "y": 0
           }
         },
         {
           "index": 3,
-          "name": "skill_1_03",
           "file": "frames_webp/23_skill_1/23_skill_1_03.webp",
           "sourceXBounds": {
-            "x0": 342,
-            "x1": 518
+            "x0": 447,
+            "x1": 705
           },
           "cropBoxInsideSeparatedSegment": {
             "left": 0,
-            "top": 0,
-            "right": 176,
-            "bottom": 115
+            "top": 105,
+            "right": 258,
+            "bottom": 480
           },
           "equalCanvas": {
-            "w": 189,
-            "h": 115
+            "w": 328,
+            "h": 395
           },
           "pastePosition": {
-            "x": 6,
-            "y": 0
+            "x": 35,
+            "y": 20
           }
         },
         {
           "index": 4,
-          "name": "skill_1_04",
           "file": "frames_webp/23_skill_1/23_skill_1_04.webp",
           "sourceXBounds": {
-            "x0": 518,
-            "x1": 660
+            "x0": 705,
+            "x1": 1033
           },
           "cropBoxInsideSeparatedSegment": {
             "left": 0,
-            "top": 0,
-            "right": 142,
-            "bottom": 115
+            "top": 118,
+            "right": 328,
+            "bottom": 496
           },
           "equalCanvas": {
-            "w": 189,
-            "h": 115
+            "w": 328,
+            "h": 395
           },
           "pastePosition": {
-            "x": 23,
-            "y": 0
+            "x": 0,
+            "y": 17
           }
         },
         {
           "index": 5,
-          "name": "skill_1_05",
           "file": "frames_webp/23_skill_1/23_skill_1_05.webp",
           "sourceXBounds": {
-            "x0": 660,
-            "x1": 830
+            "x0": 1033,
+            "x1": 1253
           },
           "cropBoxInsideSeparatedSegment": {
             "left": 0,
-            "top": 0,
-            "right": 170,
-            "bottom": 115
+            "top": 125,
+            "right": 220,
+            "bottom": 480
           },
           "equalCanvas": {
-            "w": 189,
-            "h": 115
+            "w": 328,
+            "h": 395
           },
           "pastePosition": {
-            "x": 9,
-            "y": 0
+            "x": 54,
+            "y": 40
           }
         },
         {
           "index": 6,
-          "name": "skill_1_06",
           "file": "frames_webp/23_skill_1/23_skill_1_06.webp",
           "sourceXBounds": {
-            "x0": 830,
-            "x1": 1024
+            "x0": 1253,
+            "x1": 1448
           },
           "cropBoxInsideSeparatedSegment": {
             "left": 0,
-            "top": 0,
-            "right": 187,
-            "bottom": 115
+            "top": 104,
+            "right": 195,
+            "bottom": 481
           },
           "equalCanvas": {
-            "w": 189,
-            "h": 115
+            "w": 328,
+            "h": 395
           },
           "pastePosition": {
-            "x": 1,
-            "y": 0
+            "x": 66,
+            "y": 18
           }
         }
       ],
-      "index": 23,
-      "sourceSheet": "bảng_sprite_hồn_ma_băng_giá.png",
-      "sourceCrop": {
-        "x": 0,
-        "y": 1280,
-        "w": 1024,
-        "h": 115
-      }
+      "id": "skill_1",
+      "label": "Sương Mù Xâm Thực"
     },
     {
       "id": "skill_2",
@@ -4280,5 +4244,6 @@
         "h": 141
       }
     }
-  ]
+  ],
+  "updatedFrom": "pho_linh_quai_skill_frames_webp_v1"
 }

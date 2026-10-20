@@ -796,6 +796,13 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
     const id = this.controller.currentState.monster.id;
     if (!sprite || !keys || !['mist_blob', 'lantern_cat', 'cloud_fox_boss', 'bamboo_mantis'].includes(id)) return;
     normalizeActorSprite(sprite, id as ActorFrameId, keys.displayWidth);
+    // The new Bụi Sương skill frames use a wider effect canvas than the idle
+    // row. Keep that canvas from scaling the whole monster up during a heavy
+    // attack; the animation may still use its natural aspect ratio.
+    if (id === 'mist_blob' && sprite.displayWidth > keys.displayWidth) {
+      const widthRatio = keys.displayWidth / sprite.displayWidth;
+      sprite.setDisplaySize(keys.displayWidth, Math.max(1, Math.round(sprite.displayHeight * widthRatio)));
+    }
   }
 
   private ensureMatch3VfxAnimations(): void {
@@ -1490,6 +1497,8 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
   private onPointerDown(pointer: Phaser.Input.Pointer): void {
     if (this.controller.isLocked || this.controller.currentState.phase !== 'PLAYER_READY') return;
     this.stopMoveHint();
+    this.selectedCell = undefined;
+    this.renderSelection();
     this.pointerStart = this.cellFromPoint(pointer.worldX, pointer.worldY);
   }
 
@@ -1503,27 +1512,15 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
     this.pointerStart = undefined;
     if (!end) return;
 
-    if (start.row === end.row && start.col === end.col) {
-      if (this.selectedCell && this.selectedCell.row === end.row && this.selectedCell.col === end.col) {
-        this.selectedCell = undefined;
-        this.renderSelection();
-        this.statusLabel?.setText('Đã bỏ chọn');
-      } else if (this.selectedCell && areAdjacent(this.selectedCell, end)) {
-        void this.dispatchSwap(this.selectedCell, end);
-      } else {
-        this.selectedCell = end;
-        this.renderSelection();
-        this.statusLabel?.setText(`Đã chọn ${this.gemName(this.gemAt(end))} · Chọn ô kề`);
-      }
-      return;
-    }
     if (areAdjacent(start, end)) {
       void this.dispatchSwap(start, end);
       return;
     }
-    this.selectedCell = end;
-    this.renderSelection();
-    this.statusLabel?.setText(`Đã chọn ${this.gemName(this.gemAt(end))} · Chọn ô kề`);
+    if (start.row === end.row && start.col === end.col) {
+      this.statusLabel?.setText('Vuốt ngọc sang ô kề nhau để đổi');
+    } else {
+      this.statusLabel?.setText('Chỉ vuốt sang ô kề nhau');
+    }
   }
 
   private async dispatchSwap(from: Coord, to: Coord): Promise<void> {
