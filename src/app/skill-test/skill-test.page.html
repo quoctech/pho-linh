@@ -1,0 +1,12 @@
+<ion-content [fullscreen]="true">
+  <div class="skill-test-shell">
+    <div #gameHost class="game-host" aria-label="Màn kiểm tra đòn đánh và kỹ năng"></div>
+    <section class="controls" aria-label="Điều khiển màn test">
+      <div class="control-row"><ion-button [fill]="gender === 'male' ? 'solid' : 'outline'" (click)="selectGender('male')">Nam</ion-button><ion-button [fill]="gender === 'female' ? 'solid' : 'outline'" (click)="selectGender('female')">Nữ</ion-button><ion-button fill="clear" routerLink="/home">Thoát</ion-button></div>
+      <ion-item><ion-label>Quái test</ion-label><ion-select [value]="monsterId" (ionChange)="selectMonster($event.detail.value)">@for (monster of monsters; track monster.id) {<ion-select-option [value]="monster.id">{{ monster.label }}</ion-select-option>}</ion-select></ion-item>
+      <ion-item><ion-label>Ngũ hành</ion-label><ion-select [value]="element" (ionChange)="selectElement($event.detail.value)">@for (item of elements; track item.id) {<ion-select-option [value]="item.id">{{ item.label }}</ion-select-option>}</ion-select></ion-item>
+      <div class="action-grid"><ion-button (click)="action('basicAttack')">Đánh thường</ion-button><ion-button (click)="action('primarySkill')">{{ skills.primarySkillLabel }}</ion-button><ion-button (click)="action('secondarySkill')">{{ skills.secondarySkillLabel }}</ion-button><ion-button color="warning" (click)="action('monsterBasicAttack')">Quái đánh thường</ion-button><ion-button color="warning" (click)="action('monsterSkill')">Quái skill</ion-button><ion-button fill="outline" (click)="reset()">Reset idle</ion-button></div>
+      <p>Quái bất tử · chỉ kiểm tra trình diễn</p>
+    </section>
+  </div>
+</ion-content>

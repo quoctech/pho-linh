@@ -1,4 +1,5 @@
 import { Routes } from '@angular/router';
+import { environment } from '../environments/environment';
 
 export const routes: Routes = [
   {
@@ -13,6 +14,11 @@ export const routes: Routes = [
     path: 'skin-preview',
     loadComponent: () => import('./skin-preview/skin-preview.page').then((m) => m.SkinPreviewPage),
   },
+  ...(!environment.production ? [{
+    path: 'skill-test',
+    canMatch: [() => !environment.production],
+    loadComponent: () => import('./skill-test/skill-test.page').then((m) => m.SkillTestPage),
+  }] : []),
   {
     path: 'hunt',
     loadComponent: () => import('./hunt/hunt.page').then((m) => m.HuntPage),

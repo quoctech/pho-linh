@@ -1,0 +1,10 @@
+:host, ion-content { --background: #171426; }
+.skill-test-shell { min-height: 100dvh; display: flex; flex-direction: column; align-items: center; background: #171426; color: #fff8e8; }
+.game-host { width: min(100vw, 420px); height: min(68dvh, 640px); min-height: 430px; touch-action: none; overflow: hidden; background: #171426; }
+.game-host canvas { display: block; }
+.controls { width: min(100% - 24px, 420px); padding: 8px 0 18px; }
+.control-row, .action-grid { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
+.control-row ion-button { flex: 1; min-width: 76px; }
+ion-item { margin: 4px 0 8px; --background: #28213d; --color: #fff8e8; --border-radius: 10px; }
+.action-grid ion-button { flex: 1 1 45%; min-height: 44px; }
+.controls p { margin: 10px 0 0; color: #b8b0cf; text-align: center; font-size: 12px; }

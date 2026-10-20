@@ -1,0 +1,172 @@
+{
+  "monsterId": "suong_hon",
+  "name": "Sương Hồn — Đòn Đánh Thường",
+  "element": "Thủy",
+  "monsterType": "Quái cấp thấp / oan hồn sương lạnh",
+  "attackType": "basic_attack",
+  "description": "Chuỗi 6 frame đạn băng ma sương của Sương Hồn, lao từ phải sang trái, mang cảm giác lạnh, mù sương và sát thương Thủy nhẹ.",
+  "sourceOriginalFile": "source/sáu_khung_hiệu_ứng_đạn_băng_ma_sương.png",
+  "sourceSize": {
+    "width": 2172,
+    "height": 724
+  },
+  "transparentBackground": true,
+  "compression": "lossless_webp",
+  "frameCount": 6,
+  "detectedCentersX": [
+    219.36029243119265,
+    599.5703826309982,
+    944.2021768045881,
+    1281.155351778656,
+    1644.5235908215718,
+    1996.826437236287
+  ],
+  "detectedBoundsX": [
+    0,
+    368,
+    731,
+    1076,
+    1423,
+    1846,
+    2172
+  ],
+  "standardFrameSize": {
+    "width": 423,
+    "height": 479
+  },
+  "previewFile": "previews/suong_hon_preview_equal_spaced.webp",
+  "frames": [
+    {
+      "index": 1,
+      "file": "frames_webp/suong_hon_01.webp",
+      "sourceXBounds": {
+        "x0": 0,
+        "x1": 368
+      },
+      "cropBoxInsideSegment": {
+        "left": 7,
+        "top": 146,
+        "right": 368,
+        "bottom": 571
+      },
+      "standardFrameSize": {
+        "width": 423,
+        "height": 479
+      },
+      "pastePosition": {
+        "x": 31,
+        "y": 27
+      }
+    },
+    {
+      "index": 2,
+      "file": "frames_webp/suong_hon_02.webp",
+      "sourceXBounds": {
+        "x0": 368,
+        "x1": 731
+      },
+      "cropBoxInsideSegment": {
+        "left": 0,
+        "top": 130,
+        "right": 363,
+        "bottom": 572
+      },
+      "standardFrameSize": {
+        "width": 423,
+        "height": 479
+      },
+      "pastePosition": {
+        "x": 30,
+        "y": 18
+      }
+    },
+    {
+      "index": 3,
+      "file": "frames_webp/suong_hon_03.webp",
+      "sourceXBounds": {
+        "x0": 731,
+        "x1": 1076
+      },
+      "cropBoxInsideSegment": {
+        "left": 0,
+        "top": 140,
+        "right": 345,
+        "bottom": 572
+      },
+      "standardFrameSize": {
+        "width": 423,
+        "height": 479
+      },
+      "pastePosition": {
+        "x": 39,
+        "y": 23
+      }
+    },
+    {
+      "index": 4,
+      "file": "frames_webp/suong_hon_04.webp",
+      "sourceXBounds": {
+        "x0": 1076,
+        "x1": 1423
+      },
+      "cropBoxInsideSegment": {
+        "left": 0,
+        "top": 130,
+        "right": 347,
+        "bottom": 587
+      },
+      "standardFrameSize": {
+        "width": 423,
+        "height": 479
+      },
+      "pastePosition": {
+        "x": 38,
+        "y": 11
+      }
+    },
+    {
+      "index": 5,
+      "file": "frames_webp/suong_hon_05.webp",
+      "sourceXBounds": {
+        "x0": 1423,
+        "x1": 1846
+      },
+      "cropBoxInsideSegment": {
+        "left": 0,
+        "top": 129,
+        "right": 423,
+        "bottom": 608
+      },
+      "standardFrameSize": {
+        "width": 423,
+        "height": 479
+      },
+      "pastePosition": {
+        "x": 0,
+        "y": 0
+      }
+    },
+    {
+      "index": 6,
+      "file": "frames_webp/suong_hon_06.webp",
+      "sourceXBounds": {
+        "x0": 1846,
+        "x1": 2172
+      },
+      "cropBoxInsideSegment": {
+        "left": 0,
+        "top": 131,
+        "right": 323,
+        "bottom": 595
+      },
+      "standardFrameSize": {
+        "width": 423,
+        "height": 479
+      },
+      "pastePosition": {
+        "x": 50,
+        "y": 7
+      }
+    }
+  ]
+}

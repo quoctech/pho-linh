@@ -17,6 +17,6 @@
     @if (save; as current) {<div class="profile"><strong>Cấp {{ current.profile.level }}</strong><span>EXP {{ current.profile.exp }}</span><span>Vàng {{ current.profile.gold }}</span>@if (current.profile.unspentPoints) {<span>+{{ current.profile.unspentPoints }} điểm</span>}</div>}
     <p>Đổi hai viên ngọc kề nhau, đọc telegraph và mở khóa thêm quái.</p>
     <ion-button routerLink="/hunt" routerDirection="forward">Bắt đầu săn quái</ion-button>
-    <div class="links"><ion-button fill="outline" routerLink="/element-selection">Hệ Ngũ Hành</ion-button><ion-button fill="outline" routerLink="/skin-preview">Test skin 5 hệ & quái</ion-button><ion-button fill="outline" routerLink="/character">Nhân vật</ion-button><ion-button fill="outline" routerLink="/inventory">Túi đồ</ion-button><ion-button fill="outline" routerLink="/shop">Cửa hàng</ion-button><ion-button fill="clear" routerLink="/settings">Cài đặt</ion-button></div>
+    <div class="links"><ion-button fill="outline" routerLink="/element-selection">Hệ Ngũ Hành</ion-button><ion-button fill="outline" routerLink="/skin-preview">Test skin 5 hệ & quái</ion-button>@if (isDevelopment) {<ion-button fill="outline" color="tertiary" routerLink="/skill-test">Test đòn đánh & kỹ năng</ion-button>}<ion-button fill="outline" routerLink="/character">Nhân vật</ion-button><ion-button fill="outline" routerLink="/inventory">Túi đồ</ion-button><ion-button fill="outline" routerLink="/shop">Cửa hàng</ion-button><ion-button fill="clear" routerLink="/settings">Cài đặt</ion-button></div>
   </div>
 </ion-content>

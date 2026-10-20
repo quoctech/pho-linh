@@ -94,8 +94,11 @@ describe('hero asset metadata', () => {
         );
         const primary = created.find((animation) => animation.key === heroSkillAnimationKey(element, 'primarySkill'));
         const secondary = created.find((animation) => animation.key === heroSkillAnimationKey(element, 'secondarySkill'));
-        expect(primary?.frames[0]?.key).toBe(actorFrameKey(element, heroSkillRow(element, 'primarySkill'), 0));
-        expect(secondary?.frames[0]?.key).toBe(actorFrameKey(element, heroSkillRow(element, 'secondarySkill'), 0));
+        const skillActor = gender === 'male' ? element : `female_${element}` as ActorFrameId;
+        const primaryRow = gender === 'male' ? heroSkillRow(element, 'primarySkill') : 'skill_1';
+        const secondaryRow = gender === 'male' ? heroSkillRow(element, 'secondarySkill') : 'skill_2';
+        expect(primary?.frames[0]?.key).toBe(actorFrameKey(skillActor, primaryRow, 0));
+        expect(secondary?.frames[0]?.key).toBe(actorFrameKey(skillActor, secondaryRow, 0));
       }
     }
   });

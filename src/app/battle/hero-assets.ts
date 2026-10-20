@@ -267,11 +267,10 @@ export function preloadHeroAssets(scene: Phaser.Scene, gender: HeroGender, eleme
   }
   const femaleActor = femaleActorForElement(element);
   const femaleRows = [...new Set(HERO_ANIMATION_NAMES.map((name) => animations[name].assetId).filter((row): row is string => Boolean(row)))];
-  preloadActorRows(scene, femaleActor, femaleRows);
-  const maleSkillRows = ['basicAttack', 'primarySkill', 'secondarySkill']
-    .map((slot) => slot === 'basicAttack' ? undefined : heroSkillRow(element, slot as MetalSkillAnimationSlot))
-    .filter((row): row is string => Boolean(row));
-  preloadActorRows(scene, element, maleSkillRows);
+  const femaleSkillRows = ['normal_attack_a', 'skill_1', 'skill_2'];
+  // Female skill actions are also sourced from the selected female actor.
+  // Every row is loaded as its separated frame images by preloadActorRows.
+  preloadActorRows(scene, femaleActor, [...new Set([...femaleRows, ...femaleSkillRows])]);
   for (const name of HERO_SFX_NAMES) scene.load.audio(heroSfxKey(gender, name), [`${HERO_ASSET_ROOT}/${gender}/sfx/mp3/${name}.mp3`, `${HERO_ASSET_ROOT}/${gender}/sfx/ogg/${name}.ogg`]);
 }
 
@@ -284,8 +283,11 @@ export function ensureHeroAnimations(scene: Phaser.Scene, gender: HeroGender, el
     if (metadata.assetId) ensureActorAnimation(scene, actor, metadata.assetId, metadata.key, metadata.repeat);
   }
   for (const slot of ['basicAttack', 'primarySkill', 'secondarySkill'] as const) {
-    const skillActor = gender === 'female' && slot === 'basicAttack' ? actor : element;
-    ensureActorAnimation(scene, skillActor, gender === 'female' && slot === 'basicAttack' ? 'normal_attack_a' : heroSkillRow(element, slot), heroSkillAnimationKey(element, slot));
+    const skillActor = actor;
+    const skillRow = gender === 'female'
+      ? (slot === 'basicAttack' ? 'normal_attack_a' : slot === 'primarySkill' ? 'skill_1' : 'skill_2')
+      : heroSkillRow(element, slot);
+    ensureActorAnimation(scene, skillActor, skillRow, heroSkillAnimationKey(element, slot));
   }
   if (gender === 'male') {
     for (const action of actorRows(element)) {

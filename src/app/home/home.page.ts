@@ -3,6 +3,7 @@ import { IonButton, IonContent, IonHeader, IonTitle, IonToolbar } from '@ionic/a
 import type { LocalSaveV1 } from '../../game-core';
 import { GameStorage } from '../state/game-storage.service';
 import { RouterLink } from '@angular/router';
+import { environment } from '../../environments/environment';
 
 @Component({
   selector: 'app-home',
@@ -11,6 +12,7 @@ import { RouterLink } from '@angular/router';
   imports: [IonButton, IonContent, IonHeader, IonTitle, IonToolbar, RouterLink],
 })
 export class HomePage implements OnInit {
+  readonly isDevelopment = !environment.production;
   private readonly storage = inject(GameStorage);
   save?: LocalSaveV1;
   async ngOnInit(): Promise<void> { this.save = await this.storage.load(); }
