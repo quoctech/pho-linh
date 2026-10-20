@@ -1,0 +1,168 @@
+{
+  "skillId": "skill_vu_luu_thuan",
+  "skillLabel": "Vụ Lưu Thuẫn",
+  "description": "Triệu hồi khiên sương bảo vệ bản thân, hồi phục HP và giảm hiệu quả hồi máu của đối thủ.",
+  "sourceStripFile": "skill_vu_luu_thuan.webp",
+  "sourceStripSize": {
+    "w": 2172,
+    "h": 724
+  },
+  "detectedColumnBounds": [
+    0,
+    351,
+    674,
+    1024,
+    1408,
+    1781,
+    2172
+  ],
+  "detectedCentersX": [
+    182.04194862155387,
+    516.2129248845993,
+    852.7446031032157,
+    1215.9658013787162,
+    1595.5938929444933,
+    1977.0836535984752
+  ],
+  "frameCount": 6,
+  "standardFrameSize": {
+    "w": 384,
+    "h": 482
+  },
+  "previewGapPx": 80,
+  "equalSpacedPreviewFile": "skill_vu_luu_thuan_equal_spaced.webp",
+  "frames": [
+    {
+      "index": 1,
+      "file": "frames_webp/skill_vu_luu_thuan_01.webp",
+      "sourceXBounds": {
+        "x0": 0,
+        "x1": 351
+      },
+      "cropBoxInsideSeparatedSegment": {
+        "left": 5,
+        "top": 221,
+        "right": 351,
+        "bottom": 575
+      },
+      "standardFrameSize": {
+        "w": 384,
+        "h": 482
+      },
+      "pastePosition": {
+        "x": 19,
+        "y": 64
+      }
+    },
+    {
+      "index": 2,
+      "file": "frames_webp/skill_vu_luu_thuan_02.webp",
+      "sourceXBounds": {
+        "x0": 351,
+        "x1": 674
+      },
+      "cropBoxInsideSeparatedSegment": {
+        "left": 7,
+        "top": 210,
+        "right": 323,
+        "bottom": 570
+      },
+      "standardFrameSize": {
+        "w": 384,
+        "h": 482
+      },
+      "pastePosition": {
+        "x": 34,
+        "y": 61
+      }
+    },
+    {
+      "index": 3,
+      "file": "frames_webp/skill_vu_luu_thuan_03.webp",
+      "sourceXBounds": {
+        "x0": 674,
+        "x1": 1024
+      },
+      "cropBoxInsideSeparatedSegment": {
+        "left": 0,
+        "top": 197,
+        "right": 350,
+        "bottom": 572
+      },
+      "standardFrameSize": {
+        "w": 384,
+        "h": 482
+      },
+      "pastePosition": {
+        "x": 17,
+        "y": 53
+      }
+    },
+    {
+      "index": 4,
+      "file": "frames_webp/skill_vu_luu_thuan_04.webp",
+      "sourceXBounds": {
+        "x0": 1024,
+        "x1": 1408
+      },
+      "cropBoxInsideSeparatedSegment": {
+        "left": 0,
+        "top": 114,
+        "right": 384,
+        "bottom": 596
+      },
+      "standardFrameSize": {
+        "w": 384,
+        "h": 482
+      },
+      "pastePosition": {
+        "x": 0,
+        "y": 0
+      }
+    },
+    {
+      "index": 5,
+      "file": "frames_webp/skill_vu_luu_thuan_05.webp",
+      "sourceXBounds": {
+        "x0": 1408,
+        "x1": 1781
+      },
+      "cropBoxInsideSeparatedSegment": {
+        "left": 0,
+        "top": 195,
+        "right": 373,
+        "bottom": 589
+      },
+      "standardFrameSize": {
+        "w": 384,
+        "h": 482
+      },
+      "pastePosition": {
+        "x": 5,
+        "y": 44
+      }
+    },
+    {
+      "index": 6,
+      "file": "frames_webp/skill_vu_luu_thuan_06.webp",
+      "sourceXBounds": {
+        "x0": 1781,
+        "x1": 2172
+      },
+      "cropBoxInsideSeparatedSegment": {
+        "left": 11,
+        "top": 200,
+        "right": 385,
+        "bottom": 586
+      },
+      "standardFrameSize": {
+        "w": 384,
+        "h": 482
+      },
+      "pastePosition": {
+        "x": 5,
+        "y": 48
+      }
+    }
+  ]
+}

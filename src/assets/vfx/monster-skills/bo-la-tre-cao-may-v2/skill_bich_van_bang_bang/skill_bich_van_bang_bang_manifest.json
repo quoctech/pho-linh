@@ -1,0 +1,164 @@
+{
+  "skillId": "skill_bich_van_bang_bang",
+  "skillLabel": "Bích Vân Băng Băng",
+  "description": "Phóng băng khí tấn công, gây sát thương Thủy và có xác suất gây Đóng băng.",
+  "sourceStripFile": "skill_bich_van_bang_bang.webp",
+  "sourceStripSize": {
+    "w": 2172,
+    "h": 724
+  },
+  "manualSafeColumnBounds": [
+    0,
+    250,
+    596,
+    930,
+    1290,
+    1800,
+    2172
+  ],
+  "frameCount": 6,
+  "standardFrameSize": {
+    "w": 510,
+    "h": 507
+  },
+  "previewGapPx": 80,
+  "equalSpacedPreviewFile": "skill_bich_van_bang_bang_equal_spaced.webp",
+  "notes": [
+    "Đã sửa thủ công để tránh dính frame giữa các trạng thái của skill Bích Vân Băng Băng.",
+    "Ưu tiên tách độc lập frame, chấp nhận cắt an toàn ở vùng giao nhau của art gốc."
+  ],
+  "frames": [
+    {
+      "index": 1,
+      "file": "frames_webp/skill_bich_van_bang_bang_01.webp",
+      "sourceXBounds": {
+        "x0": 0,
+        "x1": 250
+      },
+      "cropBoxInsideSeparatedSegment": {
+        "left": 60,
+        "top": 125,
+        "right": 250,
+        "bottom": 427
+      },
+      "standardFrameSize": {
+        "w": 510,
+        "h": 507
+      },
+      "pastePosition": {
+        "x": 160,
+        "y": 102
+      }
+    },
+    {
+      "index": 2,
+      "file": "frames_webp/skill_bich_van_bang_bang_02.webp",
+      "sourceXBounds": {
+        "x0": 250,
+        "x1": 596
+      },
+      "cropBoxInsideSeparatedSegment": {
+        "left": 0,
+        "top": 128,
+        "right": 346,
+        "bottom": 528
+      },
+      "standardFrameSize": {
+        "w": 510,
+        "h": 507
+      },
+      "pastePosition": {
+        "x": 82,
+        "y": 53
+      }
+    },
+    {
+      "index": 3,
+      "file": "frames_webp/skill_bich_van_bang_bang_03.webp",
+      "sourceXBounds": {
+        "x0": 596,
+        "x1": 930
+      },
+      "cropBoxInsideSeparatedSegment": {
+        "left": 0,
+        "top": 147,
+        "right": 334,
+        "bottom": 592
+      },
+      "standardFrameSize": {
+        "w": 510,
+        "h": 507
+      },
+      "pastePosition": {
+        "x": 88,
+        "y": 31
+      }
+    },
+    {
+      "index": 4,
+      "file": "frames_webp/skill_bich_van_bang_bang_04.webp",
+      "sourceXBounds": {
+        "x0": 930,
+        "x1": 1290
+      },
+      "cropBoxInsideSeparatedSegment": {
+        "left": 0,
+        "top": 149,
+        "right": 360,
+        "bottom": 613
+      },
+      "standardFrameSize": {
+        "w": 510,
+        "h": 507
+      },
+      "pastePosition": {
+        "x": 75,
+        "y": 21
+      }
+    },
+    {
+      "index": 5,
+      "file": "frames_webp/skill_bich_van_bang_bang_05.webp",
+      "sourceXBounds": {
+        "x0": 1290,
+        "x1": 1800
+      },
+      "cropBoxInsideSeparatedSegment": {
+        "left": 0,
+        "top": 136,
+        "right": 510,
+        "bottom": 643
+      },
+      "standardFrameSize": {
+        "w": 510,
+        "h": 507
+      },
+      "pastePosition": {
+        "x": 0,
+        "y": 0
+      }
+    },
+    {
+      "index": 6,
+      "file": "frames_webp/skill_bich_van_bang_bang_06.webp",
+      "sourceXBounds": {
+        "x0": 1800,
+        "x1": 2172
+      },
+      "cropBoxInsideSeparatedSegment": {
+        "left": 0,
+        "top": 286,
+        "right": 372,
+        "bottom": 643
+      },
+      "standardFrameSize": {
+        "w": 510,
+        "h": 507
+      },
+      "pastePosition": {
+        "x": 69,
+        "y": 75
+      }
+    }
+  ]
+}

@@ -1,0 +1,168 @@
+{
+  "skillId": "skill_van_suong_ao_ao",
+  "skillLabel": "Vân Sương Ảo Ảo",
+  "description": "Tạo ảo ảnh sương mù, tăng tỷ lệ Né tránh và gây trạng thái Mù cho đối thủ.",
+  "sourceStripFile": "skill_van_suong_ao_ao.webp",
+  "sourceStripSize": {
+    "w": 2172,
+    "h": 724
+  },
+  "detectedColumnBounds": [
+    0,
+    290,
+    595,
+    973,
+    1438,
+    1866,
+    2172
+  ],
+  "detectedCentersX": [
+    149.88746031746032,
+    447.1510664006519,
+    796.1818793339701,
+    1217.940898702378,
+    1632.8234790976157,
+    2001.9693900607415
+  ],
+  "frameCount": 6,
+  "standardFrameSize": {
+    "w": 465,
+    "h": 486
+  },
+  "previewGapPx": 80,
+  "equalSpacedPreviewFile": "skill_van_suong_ao_ao_equal_spaced.webp",
+  "frames": [
+    {
+      "index": 1,
+      "file": "frames_webp/skill_van_suong_ao_ao_01.webp",
+      "sourceXBounds": {
+        "x0": 0,
+        "x1": 290
+      },
+      "cropBoxInsideSeparatedSegment": {
+        "left": 12,
+        "top": 350,
+        "right": 290,
+        "bottom": 640
+      },
+      "standardFrameSize": {
+        "w": 465,
+        "h": 486
+      },
+      "pastePosition": {
+        "x": 93,
+        "y": 98
+      }
+    },
+    {
+      "index": 2,
+      "file": "frames_webp/skill_van_suong_ao_ao_02.webp",
+      "sourceXBounds": {
+        "x0": 290,
+        "x1": 595
+      },
+      "cropBoxInsideSeparatedSegment": {
+        "left": 0,
+        "top": 293,
+        "right": 305,
+        "bottom": 629
+      },
+      "standardFrameSize": {
+        "w": 465,
+        "h": 486
+      },
+      "pastePosition": {
+        "x": 80,
+        "y": 75
+      }
+    },
+    {
+      "index": 3,
+      "file": "frames_webp/skill_van_suong_ao_ao_03.webp",
+      "sourceXBounds": {
+        "x0": 595,
+        "x1": 973
+      },
+      "cropBoxInsideSeparatedSegment": {
+        "left": 0,
+        "top": 224,
+        "right": 378,
+        "bottom": 648
+      },
+      "standardFrameSize": {
+        "w": 465,
+        "h": 486
+      },
+      "pastePosition": {
+        "x": 43,
+        "y": 31
+      }
+    },
+    {
+      "index": 4,
+      "file": "frames_webp/skill_van_suong_ao_ao_04.webp",
+      "sourceXBounds": {
+        "x0": 973,
+        "x1": 1438
+      },
+      "cropBoxInsideSeparatedSegment": {
+        "left": 0,
+        "top": 159,
+        "right": 465,
+        "bottom": 645
+      },
+      "standardFrameSize": {
+        "w": 465,
+        "h": 486
+      },
+      "pastePosition": {
+        "x": 0,
+        "y": 0
+      }
+    },
+    {
+      "index": 5,
+      "file": "frames_webp/skill_van_suong_ao_ao_05.webp",
+      "sourceXBounds": {
+        "x0": 1438,
+        "x1": 1866
+      },
+      "cropBoxInsideSeparatedSegment": {
+        "left": 0,
+        "top": 222,
+        "right": 428,
+        "bottom": 647
+      },
+      "standardFrameSize": {
+        "w": 465,
+        "h": 486
+      },
+      "pastePosition": {
+        "x": 18,
+        "y": 30
+      }
+    },
+    {
+      "index": 6,
+      "file": "frames_webp/skill_van_suong_ao_ao_06.webp",
+      "sourceXBounds": {
+        "x0": 1866,
+        "x1": 2172
+      },
+      "cropBoxInsideSeparatedSegment": {
+        "left": 0,
+        "top": 300,
+        "right": 302,
+        "bottom": 645
+      },
+      "standardFrameSize": {
+        "w": 465,
+        "h": 486
+      },
+      "pastePosition": {
+        "x": 81,
+        "y": 70
+      }
+    }
+  ]
+}

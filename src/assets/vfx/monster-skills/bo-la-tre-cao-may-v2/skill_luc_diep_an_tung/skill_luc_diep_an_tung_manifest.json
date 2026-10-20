@@ -1,0 +1,168 @@
+{
+  "skillId": "skill_luc_diep_an_tung",
+  "skillLabel": "Lục Diệp Ẩn Tung",
+  "description": "Ngụy trang giữa những chiếc lá tre, tăng tỷ lệ Né tránh và hồi phục một phần HP.",
+  "sourceStripFile": "skill_luc_diep_an_tung.webp",
+  "sourceStripSize": {
+    "w": 2172,
+    "h": 724
+  },
+  "detectedColumnBounds": [
+    0,
+    326,
+    669,
+    998,
+    1359,
+    1806,
+    2172
+  ],
+  "detectedCentersX": [
+    176.09242577049966,
+    500.1442375320558,
+    836.045005623147,
+    1187.5115921353597,
+    1597.4476235048467,
+    1990.0580258138916
+  ],
+  "frameCount": 6,
+  "standardFrameSize": {
+    "w": 447,
+    "h": 487
+  },
+  "previewGapPx": 80,
+  "equalSpacedPreviewFile": "skill_luc_diep_an_tung_equal_spaced.webp",
+  "frames": [
+    {
+      "index": 1,
+      "file": "frames_webp/skill_luc_diep_an_tung_01.webp",
+      "sourceXBounds": {
+        "x0": 0,
+        "x1": 326
+      },
+      "cropBoxInsideSeparatedSegment": {
+        "left": 27,
+        "top": 199,
+        "right": 326,
+        "bottom": 584
+      },
+      "standardFrameSize": {
+        "w": 447,
+        "h": 487
+      },
+      "pastePosition": {
+        "x": 74,
+        "y": 51
+      }
+    },
+    {
+      "index": 2,
+      "file": "frames_webp/skill_luc_diep_an_tung_02.webp",
+      "sourceXBounds": {
+        "x0": 326,
+        "x1": 669
+      },
+      "cropBoxInsideSeparatedSegment": {
+        "left": 4,
+        "top": 162,
+        "right": 343,
+        "bottom": 603
+      },
+      "standardFrameSize": {
+        "w": 447,
+        "h": 487
+      },
+      "pastePosition": {
+        "x": 54,
+        "y": 23
+      }
+    },
+    {
+      "index": 3,
+      "file": "frames_webp/skill_luc_diep_an_tung_03.webp",
+      "sourceXBounds": {
+        "x0": 669,
+        "x1": 998
+      },
+      "cropBoxInsideSeparatedSegment": {
+        "left": 0,
+        "top": 134,
+        "right": 329,
+        "bottom": 600
+      },
+      "standardFrameSize": {
+        "w": 447,
+        "h": 487
+      },
+      "pastePosition": {
+        "x": 59,
+        "y": 10
+      }
+    },
+    {
+      "index": 4,
+      "file": "frames_webp/skill_luc_diep_an_tung_04.webp",
+      "sourceXBounds": {
+        "x0": 998,
+        "x1": 1359
+      },
+      "cropBoxInsideSeparatedSegment": {
+        "left": 12,
+        "top": 122,
+        "right": 361,
+        "bottom": 609
+      },
+      "standardFrameSize": {
+        "w": 447,
+        "h": 487
+      },
+      "pastePosition": {
+        "x": 49,
+        "y": 0
+      }
+    },
+    {
+      "index": 5,
+      "file": "frames_webp/skill_luc_diep_an_tung_05.webp",
+      "sourceXBounds": {
+        "x0": 1359,
+        "x1": 1806
+      },
+      "cropBoxInsideSeparatedSegment": {
+        "left": 0,
+        "top": 170,
+        "right": 447,
+        "bottom": 602
+      },
+      "standardFrameSize": {
+        "w": 447,
+        "h": 487
+      },
+      "pastePosition": {
+        "x": 0,
+        "y": 27
+      }
+    },
+    {
+      "index": 6,
+      "file": "frames_webp/skill_luc_diep_an_tung_06.webp",
+      "sourceXBounds": {
+        "x0": 1806,
+        "x1": 2172
+      },
+      "cropBoxInsideSeparatedSegment": {
+        "left": 0,
+        "top": 184,
+        "right": 355,
+        "bottom": 603
+      },
+      "standardFrameSize": {
+        "w": 447,
+        "h": 487
+      },
+      "pastePosition": {
+        "x": 46,
+        "y": 34
+      }
+    }
+  ]
+}

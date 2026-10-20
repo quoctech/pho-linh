@@ -1,0 +1,78 @@
+{
+  "project": "PHỐ LINH",
+  "pack": "skill_effects_bo_la_tre_cao_may_webp_v1",
+  "version": "v2_fixed_bich_van_bang_bang",
+  "rules": {
+    "frameIsolation": "Frame trước không dính frame sau.",
+    "standardSizing": "Mỗi skill dùng frame có chiều rộng và chiều cao lớn nhất làm chuẩn cho toàn bộ frame còn lại.",
+    "format": "WebP",
+    "frameCountPerSkill": 6,
+    "previewGapPx": 80
+  },
+  "skills": [
+    {
+      "skillId": "skill_luc_diep_doc_cham",
+      "skillLabel": "Lục Diệp Độc Châm",
+      "description": "Phóng lá tre sắc nhọn như kim độc, gây sát thương Mộc và áp dụng Dính độc.",
+      "folder": "skill_luc_diep_doc_cham",
+      "manifest": "skill_luc_diep_doc_cham/skill_luc_diep_doc_cham_manifest.json",
+      "frameCount": 6,
+      "standardFrameSize": {
+        "w": 409,
+        "h": 505
+      }
+    },
+    {
+      "skillId": "skill_luc_diep_an_tung",
+      "skillLabel": "Lục Diệp Ẩn Tung",
+      "description": "Ngụy trang giữa những chiếc lá tre, tăng tỷ lệ Né tránh và hồi phục một phần HP.",
+      "folder": "skill_luc_diep_an_tung",
+      "manifest": "skill_luc_diep_an_tung/skill_luc_diep_an_tung_manifest.json",
+      "frameCount": 6,
+      "standardFrameSize": {
+        "w": 447,
+        "h": 487
+      }
+    },
+    {
+      "skillId": "skill_van_suong_ao_ao",
+      "skillLabel": "Vân Sương Ảo Ảo",
+      "description": "Tạo ảo ảnh sương mù, tăng tỷ lệ Né tránh và gây trạng thái Mù cho đối thủ.",
+      "folder": "skill_van_suong_ao_ao",
+      "manifest": "skill_van_suong_ao_ao/skill_van_suong_ao_ao_manifest.json",
+      "frameCount": 6,
+      "standardFrameSize": {
+        "w": 465,
+        "h": 486
+      }
+    },
+    {
+      "skillId": "skill_vu_luu_thuan",
+      "skillLabel": "Vụ Lưu Thuẫn",
+      "description": "Triệu hồi khiên sương bảo vệ bản thân, hồi phục HP và giảm hiệu quả hồi máu của đối thủ.",
+      "folder": "skill_vu_luu_thuan",
+      "manifest": "skill_vu_luu_thuan/skill_vu_luu_thuan_manifest.json",
+      "frameCount": 6,
+      "standardFrameSize": {
+        "w": 384,
+        "h": 482
+      }
+    },
+    {
+      "skillId": "skill_bich_van_bang_bang",
+      "skillLabel": "Bích Vân Băng Băng",
+      "description": "Phóng băng khí tấn công, gây sát thương Thủy và có xác suất gây Đóng băng.",
+      "folder": "skill_bich_van_bang_bang",
+      "manifest": "skill_bich_van_bang_bang/skill_bich_van_bang_bang_manifest.json",
+      "frameCount": 6,
+      "standardFrameSize": {
+        "w": 510,
+        "h": 507
+      },
+      "fix": "manual_safe_bounds_v2"
+    }
+  ],
+  "notes": [
+    "Đã sửa riêng skill_bich_van_bang_bang để tách frame độc lập, tránh dính frame khác."
+  ]
+}

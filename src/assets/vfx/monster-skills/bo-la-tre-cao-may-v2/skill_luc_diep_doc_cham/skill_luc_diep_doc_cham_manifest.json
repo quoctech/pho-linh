@@ -1,0 +1,168 @@
+{
+  "skillId": "skill_luc_diep_doc_cham",
+  "skillLabel": "Lục Diệp Độc Châm",
+  "description": "Phóng lá tre sắc nhọn như kim độc, gây sát thương Mộc và áp dụng Dính độc.",
+  "sourceStripFile": "skill_luc_diep_doc_cham.webp",
+  "sourceStripSize": {
+    "w": 2172,
+    "h": 724
+  },
+  "detectedColumnBounds": [
+    0,
+    387,
+    746,
+    1155,
+    1478,
+    1849,
+    2172
+  ],
+  "detectedCentersX": [
+    198.5305666245505,
+    563.2379719679634,
+    935.3508837746194,
+    1319.991223611028,
+    1678.6191212614951,
+    2013.0360037607006
+  ],
+  "frameCount": 6,
+  "standardFrameSize": {
+    "w": 409,
+    "h": 505
+  },
+  "previewGapPx": 80,
+  "equalSpacedPreviewFile": "skill_luc_diep_doc_cham_equal_spaced.webp",
+  "frames": [
+    {
+      "index": 1,
+      "file": "frames_webp/skill_luc_diep_doc_cham_01.webp",
+      "sourceXBounds": {
+        "x0": 0,
+        "x1": 387
+      },
+      "cropBoxInsideSeparatedSegment": {
+        "left": 6,
+        "top": 280,
+        "right": 387,
+        "bottom": 649
+      },
+      "standardFrameSize": {
+        "w": 409,
+        "h": 505
+      },
+      "pastePosition": {
+        "x": 14,
+        "y": 68
+      }
+    },
+    {
+      "index": 2,
+      "file": "frames_webp/skill_luc_diep_doc_cham_02.webp",
+      "sourceXBounds": {
+        "x0": 387,
+        "x1": 746
+      },
+      "cropBoxInsideSeparatedSegment": {
+        "left": 0,
+        "top": 238,
+        "right": 359,
+        "bottom": 654
+      },
+      "standardFrameSize": {
+        "w": 409,
+        "h": 505
+      },
+      "pastePosition": {
+        "x": 25,
+        "y": 44
+      }
+    },
+    {
+      "index": 3,
+      "file": "frames_webp/skill_luc_diep_doc_cham_03.webp",
+      "sourceXBounds": {
+        "x0": 746,
+        "x1": 1155
+      },
+      "cropBoxInsideSeparatedSegment": {
+        "left": 0,
+        "top": 211,
+        "right": 409,
+        "bottom": 625
+      },
+      "standardFrameSize": {
+        "w": 409,
+        "h": 505
+      },
+      "pastePosition": {
+        "x": 0,
+        "y": 45
+      }
+    },
+    {
+      "index": 4,
+      "file": "frames_webp/skill_luc_diep_doc_cham_04.webp",
+      "sourceXBounds": {
+        "x0": 1155,
+        "x1": 1478
+      },
+      "cropBoxInsideSeparatedSegment": {
+        "left": 0,
+        "top": 154,
+        "right": 323,
+        "bottom": 601
+      },
+      "standardFrameSize": {
+        "w": 409,
+        "h": 505
+      },
+      "pastePosition": {
+        "x": 43,
+        "y": 29
+      }
+    },
+    {
+      "index": 5,
+      "file": "frames_webp/skill_luc_diep_doc_cham_05.webp",
+      "sourceXBounds": {
+        "x0": 1478,
+        "x1": 1849
+      },
+      "cropBoxInsideSeparatedSegment": {
+        "left": 0,
+        "top": 161,
+        "right": 371,
+        "bottom": 651
+      },
+      "standardFrameSize": {
+        "w": 409,
+        "h": 505
+      },
+      "pastePosition": {
+        "x": 19,
+        "y": 7
+      }
+    },
+    {
+      "index": 6,
+      "file": "frames_webp/skill_luc_diep_doc_cham_06.webp",
+      "sourceXBounds": {
+        "x0": 1849,
+        "x1": 2172
+      },
+      "cropBoxInsideSeparatedSegment": {
+        "left": 0,
+        "top": 133,
+        "right": 314,
+        "bottom": 638
+      },
+      "standardFrameSize": {
+        "w": 409,
+        "h": 505
+      },
+      "pastePosition": {
+        "x": 47,
+        "y": 0
+      }
+    }
+  ]
+}
