@@ -44,6 +44,7 @@ import {
 } from './hero-status-vfx';
 import { preloadStatusUiAssets, ensureStatusUiAnimations } from './status/status-ui-assets';
 import { StatusUiVfx } from './status/status-ui-vfx';
+import { BattleVfxPool, GemVisualPool, type VfxQualityTier } from './battle-visual-pools';
 import {
   HERO_ASSETS_AVAILABLE,
   HERO_ELEMENT_SPRITE_KEYS,
@@ -162,6 +163,8 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
   private readonly gemSprites = new Map<string, Phaser.GameObjects.Container>();
   private readonly vfxSprites = new Set<Phaser.GameObjects.Sprite>();
   private readonly transientEffects = new Set<Phaser.GameObjects.GameObject>();
+  private gemPool?: GemVisualPool;
+  private battleVfxPool?: BattleVfxPool;
   private selection?: Phaser.GameObjects.Rectangle;
   private selectionRing?: Phaser.GameObjects.Sprite;
   private selectedCell?: Coord;
@@ -237,6 +240,13 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
   private displayedMonsterPoisonPotency?: number;
   private displayedMonsterPoisonTurns?: number;
   private fpsDebugElapsed = 0;
+  private performanceLowFrames = 0;
+  private performanceStableFrames = 0;
+  private performanceTier: VfxQualityTier = 'full';
+  private performanceSampleElapsed = 0;
+  private poolMissesAtSample = 0;
+  private debugMode = false;
+  private particleBudget = 0;
   private lastBoard?: Board;
   private sfxEnabled = true;
   private reducedMotion = false;
@@ -353,7 +363,8 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
     this.controller = this.registry.get('battleController') as BattleController;
     this.sfxEnabled = this.registry.get('sfxEnabled') !== false;
     this.reducedMotion = this.registry.get('reducedMotion') === true;
-    this.renderQuality = this.safeNumber(Number(this.registry.get('renderQuality')), 1);
+    this.renderQuality = this.safeNumber(Number(this.registry.get('renderQuality')), 2);
+    this.debugMode = this.registry.get('debug') === true;
     this.logicalWidth = this.safeNumber(Number(this.registry.get('logicalWidth')), LOGICAL_GAME_WIDTH);
     this.logicalHeight = this.safeNumber(Number(this.registry.get('logicalHeight')), DEFAULT_LOGICAL_GAME_HEIGHT);
     this.layout = createBattleLayout(this.logicalWidth, this.logicalHeight);
@@ -378,6 +389,8 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
     this.createHeroVisual();
     this.createHud();
     this.createMonsterVisual();
+    this.gemPool = new GemVisualPool(this, this.renderQuality, BOARD_SIZE * BOARD_SIZE + 6);
+    this.battleVfxPool = new BattleVfxPool(this);
     // Apply the same idle-calibrated scale before the first visible frame.
     this.normalizeHeroSprite();
     this.statusUi = new StatusUiVfx({
@@ -458,6 +471,7 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
   override update(_time: number, delta: number): void {
     if (!this.controller) return;
     this.updateFpsDebug(delta);
+    this.updatePerformanceTier(delta);
   }
 
   private updateFpsDebug(delta: number): void {
@@ -468,7 +482,34 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
 
     const fps = Math.max(0, Math.round(this.game.loop.actualFps));
     const color = fps >= 50 ? '#49a8ff' : fps >= 30 ? '#f3c64f' : '#ff5d6c';
-    this.fpsDebugLabel.setText(`FPS ${fps}`).setColor(color);
+    this.fpsDebugLabel
+      .setText(`FPS ${fps} · ${this.performanceTier} · T${this.tweens.getTweens().length} V${this.battleVfxPool?.activeCount ?? 0} M${this.poolMissesAtSample}`)
+      .setColor(color);
+  }
+
+  private updatePerformanceTier(delta: number): void {
+    this.performanceSampleElapsed += delta;
+    if (this.performanceSampleElapsed < 250) return;
+    this.performanceSampleElapsed = 0;
+    const fps = Math.max(0, this.game.loop.actualFps);
+    if (fps < 55) {
+      this.performanceLowFrames += 1;
+      this.performanceStableFrames = 0;
+    } else if (fps >= 58) {
+      this.performanceStableFrames += 1;
+      this.performanceLowFrames = 0;
+    } else {
+      this.performanceLowFrames = 0;
+      this.performanceStableFrames = 0;
+    }
+    if (this.performanceLowFrames >= 2 && this.performanceTier !== 'reduced') this.setPerformanceTier('reduced');
+    if (this.performanceStableFrames >= 4 && this.performanceTier !== 'full') this.setPerformanceTier('full');
+    this.poolMissesAtSample = (this.battleVfxPool?.missCount ?? 0);
+  }
+
+  private setPerformanceTier(tier: VfxQualityTier): void {
+    this.performanceTier = tier;
+    this.battleVfxPool?.setQualityTier(tier);
   }
 
   private createBattleBackground(): void {
@@ -582,42 +623,44 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
   }
 
   private createHud(): void {
-    this.fpsDebugLabel = this.add
-      .text(8, 8, 'FPS --', {
-        color: '#49a8ff',
-        fontFamily: 'sans-serif',
-        fontSize: '10px',
-        fontStyle: 'bold',
-      })
-      .setResolution(this.renderQuality)
-      .setOrigin(0, 0)
-      .setDepth(100);
+    if (this.debugMode) {
+      this.fpsDebugLabel = this.add
+        .text(8, 8, 'FPS --', {
+          color: '#49a8ff',
+          fontFamily: 'sans-serif',
+          fontSize: '10px',
+          fontStyle: 'bold',
+        })
+        .setResolution(this.renderQuality)
+        .setOrigin(0, 0)
+        .setDepth(100);
+    }
     this.turnLabel = this.add
-      .text(180, 16, '0/24', { color: '#fff8e8', fontFamily: 'sans-serif', fontSize: '15px', fontStyle: 'bold' })
+      .text(180, 100, '0/24', { color: '#fff8e8', fontFamily: 'sans-serif', fontSize: '15px', fontStyle: 'bold' })
       .setResolution(this.renderQuality)
       .setOrigin(0.5, 0.5);
     this.countdownLabel = this.add
-      .text(180, 35, '', { color: '#f3c64f', fontFamily: 'sans-serif', fontSize: '12px', fontStyle: 'bold' })
+      .text(180, 118, '', { color: '#f3c64f', fontFamily: 'sans-serif', fontSize: '12px', fontStyle: 'bold' })
       .setResolution(this.renderQuality)
       .setOrigin(0.5, 0.5);
 
     this.add
-      .rectangle(this.layout.playerStatusBounds.left, 47, this.layout.statusBarWidth, 16, 0x211a34, 0.94)
+      .rectangle(this.layout.playerStatusBounds.left, 14, this.layout.statusBarWidth, 16, 0x211a34, 0.94)
       .setOrigin(0, 0.5)
       .setStrokeStyle(1, 0x66567f, 0.9)
       .setDepth(8);
     this.add
-      .text(this.layout.playerStatusBounds.left + 7, 47, 'Nhân vật', { color: '#eee5ff', fontSize: '9px', fontStyle: 'bold' })
+      .text(this.layout.playerStatusBounds.left + 7, 14, 'Nhân vật', { color: '#eee5ff', fontSize: '9px', fontStyle: 'bold' })
       .setResolution(this.renderQuality)
       .setOrigin(0, 0.5)
       .setDepth(9);
     this.add
-      .rectangle(this.layout.monsterStatusBounds.left, 47, this.layout.statusBarWidth, 16, 0x211a34, 0.94)
+      .rectangle(this.layout.monsterStatusBounds.left, 14, this.layout.statusBarWidth, 16, 0x211a34, 0.94)
       .setOrigin(0, 0.5)
       .setStrokeStyle(1, 0x66567f, 0.9)
       .setDepth(8);
     this.add
-      .text(this.layout.monsterStatusBounds.right - 7, 47, this.controller.currentState.monster.name, { color: '#eee5ff', fontSize: '9px', fontStyle: 'bold' })
+      .text(this.layout.monsterStatusBounds.right - 7, 14, this.controller.currentState.monster.name, { color: '#eee5ff', fontSize: '9px', fontStyle: 'bold' })
       .setResolution(this.renderQuality)
       .setOrigin(1, 0.5)
       .setDepth(9);
@@ -807,21 +850,18 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
     depth = 12,
   ): void {
     if (!this.textures.exists(key) || !this.anims.exists(key)) return;
-    const fx = this.add
-      .sprite(x, y, key)
-      .setOrigin(0.5)
-      .setDisplaySize(displayWidth, displayHeight)
-      .setBlendMode(Phaser.BlendModes.ADD)
-      .setDepth(depth)
-      .play(key);
+    const fx = this.battleVfxPool?.acquireSpriteVfx(key);
+    if (!fx) return;
+    fx.setPosition(x, y).setOrigin(0.5).setDisplaySize(displayWidth, displayHeight).setDepth(depth).play(key);
     this.vfxSprites.add(fx);
     fx.once(Phaser.Animations.Events.ANIMATION_COMPLETE, () => {
       this.vfxSprites.delete(fx);
-      fx.destroy();
+      this.battleVfxPool?.release(fx);
     });
   }
 
   private animateGemsCleared(coords: readonly Coord[]): void {
+    this.particleBudget = 16;
     for (const coord of coords) {
       const point = this.boardPoint(coord);
       const gem = this.gemSprites.get(`${coord.row}:${coord.col}`);
@@ -845,6 +885,11 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
             alpha: 0,
             duration: 150,
             ease: 'Back.In',
+            onComplete: () => {
+              const key = `${coord.row}:${coord.col}`;
+              if (this.gemSprites.get(key) === gem) this.gemSprites.delete(key);
+              this.gemPool?.release(gem);
+            },
           });
         },
       });
@@ -889,31 +934,28 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
   }
 
   private spawnGemFlash(x: number, y: number, color: number): void {
-    const flash = this.add
-      .circle(x, y, 20, color, 0.82)
-      .setDepth(14)
-      .setBlendMode(Phaser.BlendModes.ADD);
-    this.transientEffects.add(flash);
+    const flash = this.battleVfxPool?.acquireFlash();
+    if (!flash) return;
+    flash.setPosition(x, y).setFillStyle(color, 0.82).setDepth(14);
     this.tweens.add({
       targets: flash,
       scale: 1.2,
       alpha: 0,
       duration: 120,
       ease: 'Quad.Out',
-      onComplete: () => this.destroyTransientEffect(flash),
+      onComplete: () => this.battleVfxPool?.release(flash),
     });
   }
 
   private spawnGemParticles(x: number, y: number, color: number): void {
-    const particleCount = 4;
+    const particleCount = this.performanceTier === 'full' ? Math.min(2, this.particleBudget) : 0;
+    this.particleBudget -= particleCount;
     for (let index = 0; index < particleCount; index += 1) {
       const angle = (Math.PI * 2 * index) / particleCount + Phaser.Math.FloatBetween(-0.18, 0.18);
       const distance = Phaser.Math.Between(16, 30);
-      const particle = this.add
-        .circle(x, y, Phaser.Math.FloatBetween(1.5, 2.5), color, 0.95)
-        .setDepth(14)
-        .setBlendMode(Phaser.BlendModes.ADD);
-      this.transientEffects.add(particle);
+      const particle = this.battleVfxPool?.acquireParticle();
+      if (!particle) continue;
+      particle.setPosition(x, y).setRadius(Phaser.Math.FloatBetween(1.5, 2.5)).setFillStyle(color, 0.95).setDepth(14);
       this.tweens.add({
         targets: particle,
         x: x + Math.cos(angle) * distance,
@@ -922,7 +964,7 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
         alpha: 0,
         duration: Phaser.Math.Between(220, 300),
         ease: 'Cubic.Out',
-        onComplete: () => this.destroyTransientEffect(particle),
+        onComplete: () => this.battleVfxPool?.release(particle),
       });
     }
   }
@@ -1301,9 +1343,12 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
         const x = this.boardLeft + col * this.cellSize + this.cellSize / 2;
         const y = this.boardTop + row * this.cellSize + this.cellSize / 2;
         const current = this.gemSprites.get(key);
+        if (current && this.lastBoard?.[row]?.[col] === board[row][col] && current.visible && current.alpha > 0.05) {
+          continue;
+        }
         if (!current || current.getData('gemType') !== board[row][col]) {
-          current?.destroy(true);
-          this.gemSprites.set(key, this.createGem(x, y, board[row][col]));
+          if (current) this.gemPool?.release(current);
+          this.gemSprites.set(key, this.gemPool?.acquire(board[row][col], x, y) ?? this.createGem(x, y, board[row][col]));
         } else {
           this.tweens.killTweensOf(current);
           current.setPosition(x, y).setScale(1).setAlpha(1).setVisible(true);
@@ -1317,21 +1362,25 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
   private animateBoardFall(board: ReadonlyArray<ReadonlyArray<GemType | undefined>>): void {
     const nextSprites = new Map<string, Phaser.GameObjects.Container>();
     const claimed = new Set<Phaser.GameObjects.Container>();
-    const candidates = [...this.gemSprites.values()]
-      .filter((gem) => gem.active && gem.visible && gem.alpha > 0.05 && gem.scale > 0.05);
+    const candidatesBySource = new Map<string, Phaser.GameObjects.Container[]>();
+    for (const gem of this.gemSprites.values()) {
+      if (!gem.active || !gem.visible || gem.alpha <= 0.05 || gem.scale <= 0.05) continue;
+      const sourceCol = Math.round((gem.x - this.boardLeft - this.cellSize / 2) / this.cellSize);
+      const bucketKey = `${sourceCol}:${String(gem.getData('gemType'))}`;
+      const bucket = candidatesBySource.get(bucketKey);
+      if (bucket) bucket.push(gem);
+      else candidatesBySource.set(bucketKey, [gem]);
+    }
 
     for (let row = 0; row < BOARD_SIZE; row += 1) {
       for (let col = 0; col < BOARD_SIZE; col += 1) {
         const gemType = board[row][col];
         if (!gemType) continue;
         const target = this.boardPoint({ row, col });
-        const candidate = candidates
-          .filter((gem) => {
-            const sourceCol = Math.round((gem.x - this.boardLeft - this.cellSize / 2) / this.cellSize);
-            return !claimed.has(gem) && sourceCol === col && gem.getData('gemType') === gemType;
-          })
-          .sort((first, second) => Math.abs(first.y - target.y) - Math.abs(second.y - target.y))[0];
-        const visual = candidate ?? this.createGem(target.x, target.y - this.cellSize, gemType);
+        const candidate = candidatesBySource.get(`${col}:${gemType}`)?.pop();
+        const visual = candidate
+          ?? this.gemPool?.acquire(gemType, target.x, target.y - this.cellSize)
+          ?? this.createGem(target.x, target.y - this.cellSize, gemType);
         claimed.add(visual);
         this.tweens.killTweensOf(visual);
         visual.setVisible(true).setAlpha(1).setScale(1);
@@ -1347,7 +1396,7 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
     }
 
     for (const visual of this.gemSprites.values()) {
-      if (!claimed.has(visual)) visual.destroy(true);
+      if (!claimed.has(visual)) this.gemPool?.release(visual);
     }
     this.gemSprites.clear();
     for (const [key, visual] of nextSprites) this.gemSprites.set(key, visual);
@@ -1364,8 +1413,12 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
         const current = this.gemSprites.get(key);
         let visual = current;
         if (!visual || visual.getData('gemType') !== board[row][col]) {
-          current?.destroy(true);
-          visual = this.createGem(target.x, this.boardTop - (BOARD_SIZE - row + 1) * this.cellSize, board[row][col]);
+          if (current) this.gemPool?.release(current);
+          visual = this.gemPool?.acquire(
+            board[row][col],
+            target.x,
+            this.boardTop - (BOARD_SIZE - row + 1) * this.cellSize,
+          ) ?? this.createGem(target.x, this.boardTop - (BOARD_SIZE - row + 1) * this.cellSize, board[row][col]);
           landingPoints.push({ row, col });
         }
         this.tweens.killTweensOf(visual);
@@ -1381,7 +1434,7 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
       }
     }
     for (const [key, visual] of this.gemSprites) {
-      if (!nextSprites.has(key)) visual.destroy(true);
+      if (!nextSprites.has(key)) this.gemPool?.release(visual);
     }
     this.gemSprites.clear();
     for (const [key, visual] of nextSprites) this.gemSprites.set(key, visual);
@@ -1391,7 +1444,8 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
   }
 
   private scheduleLandingImpacts(coords: readonly Coord[]): void {
-    for (const coord of coords.slice(0, 6)) {
+    const impactLimit = this.performanceTier === 'full' ? 6 : 3;
+    for (const coord of coords.slice(0, impactLimit)) {
       this.time.delayedCall(GEM_REFILL_DURATION, () => {
         const point = this.boardPoint(coord);
         this.spawnVfx(VFX_SHEET_KEYS.impact, point.x, point.y, 50, 13);
@@ -2858,10 +2912,14 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
     this.hideMonsterMove();
     this.selectionRing?.destroy();
     this.selectionRing = undefined;
-    for (const fx of this.vfxSprites) fx.destroy();
+    for (const fx of this.vfxSprites) this.battleVfxPool?.release(fx);
     this.vfxSprites.clear();
     for (const effect of this.transientEffects) effect.destroy();
     this.transientEffects.clear();
     this.gemSprites.clear();
+    this.battleVfxPool?.destroy();
+    this.battleVfxPool = undefined;
+    this.gemPool?.destroy();
+    this.gemPool = undefined;
   }
 }
