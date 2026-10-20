@@ -1,22 +1,22 @@
-<ion-header [translucent]="true">
-  <ion-toolbar>
-    <ion-title>Phố Linh</ion-title>
-  </ion-toolbar>
-</ion-header>
-
 <ion-content [fullscreen]="true">
-  <ion-header collapse="condense">
-    <ion-toolbar>
-      <ion-title size="large">Phố Linh</ion-title>
-    </ion-toolbar>
-  </ion-header>
+  <main class="home-screen">
+    <header class="topbar"><div class="brand-mark"><span class="brand-seal">✦</span><div><strong>PHỐ LINH</strong><small>OFFLINE RPG · M2</small></div></div><ion-button class="settings-button" fill="clear" routerLink="/settings" aria-label="Cài đặt">⚙</ion-button></header>
 
-  <div id="container">
-    <span class="eyebrow">OFFLINE RPG · M2</span>
-    <h1>Săn ngọc giữa Phố Linh</h1>
-    @if (save; as current) {<div class="profile"><strong>Cấp {{ current.profile.level }}</strong><span>EXP {{ current.profile.exp }}</span><span>Vàng {{ current.profile.gold }}</span>@if (current.profile.unspentPoints) {<span>+{{ current.profile.unspentPoints }} điểm</span>}</div>}
-    <p>Đổi hai viên ngọc kề nhau, đọc telegraph và mở khóa thêm quái.</p>
-    <ion-button routerLink="/hunt" routerDirection="forward">Bắt đầu săn quái</ion-button>
-    <div class="links"><ion-button fill="outline" routerLink="/element-selection">Hệ Ngũ Hành</ion-button><ion-button fill="outline" routerLink="/skin-preview">Test skin 5 hệ & quái</ion-button>@if (isDevelopment) {<ion-button fill="outline" color="tertiary" routerLink="/skill-test">Test đòn đánh & kỹ năng</ion-button>}<ion-button fill="outline" routerLink="/character">Nhân vật</ion-button><ion-button fill="outline" routerLink="/inventory">Túi đồ</ion-button><ion-button fill="outline" routerLink="/shop">Cửa hàng</ion-button><ion-button fill="clear" routerLink="/settings">Cài đặt</ion-button></div>
-  </div>
+    <section class="hero-copy"><p class="eyebrow">ĐÊM XUỐNG TRÊN LINH GIỚI</p><h1>Thức tỉnh<br><em>ngũ hành.</em></h1><p class="intro">Đổi ngọc, đọc telegraph và săn những linh quái đang ẩn mình trong Phố Linh.</p></section>
+
+    @if (save; as current) {
+      <section class="profile-card">
+        <div class="avatar-orb">{{ current.settings.element === 'metal' ? '金' : current.settings.element === 'wood' ? '木' : current.settings.element === 'water' ? '水' : current.settings.element === 'fire' ? '火' : '土' }}</div>
+        <div class="profile-main"><span class="profile-label">LỮ KHÁCH</span><strong>Cấp {{ current.profile.level }}</strong><div class="xp-track"><span [style.width.%]="(current.profile.exp % 100)"></span></div><small>{{ current.profile.exp }} EXP</small></div>
+        <div class="profile-stats"><span>◈ {{ current.profile.gold }}</span>@if (current.profile.unspentPoints) {<b>+{{ current.profile.unspentPoints }}</b>}</div>
+      </section>
+    }
+
+    <a class="hunt-cta" routerLink="/hunt" routerDirection="forward"><span class="cta-icon">⚔</span><span><small>HÀNH TRÌNH MỚI</small><strong>Bắt đầu săn quái</strong></span><b>→</b></a>
+
+    <section class="section-block"><div class="section-heading"><span>KHÁM PHÁ</span><i></i></div><div class="menu-grid"><a class="menu-card element-card" routerLink="/element-selection"><span class="card-icon">☯</span><strong>Ngũ hành</strong><small>Chọn sức mạnh</small></a><a class="menu-card" routerLink="/character"><span class="card-icon">♙</span><strong>Nhân vật</strong><small>Nâng cấp chiến lực</small></a><a class="menu-card" routerLink="/inventory"><span class="card-icon">▣</span><strong>Túi đồ</strong><small>Vật phẩm của bạn</small></a><a class="menu-card" routerLink="/shop"><span class="card-icon">◇</span><strong>Cửa hàng</strong><small>Đổi vàng lấy đồ</small></a></div></section>
+
+    @if (isDevelopment) {<section class="dev-panel"><div><span class="dev-dot"></span><strong>DEV MODE</strong><small>Phòng kiểm thử đang mở</small></div><a routerLink="/skill-test">Đòn đánh & kỹ năng <b>→</b></a><a routerLink="/skin-preview">Skin & quái <b>→</b></a></section>}
+    <p class="footer-note">Một thế giới nhỏ, rất nhiều linh hồn.</p>
+  </main>
 </ion-content>

@@ -10,7 +10,7 @@ export class SettingsPage implements OnInit {
   private readonly cdr = inject(ChangeDetectorRef);
   save?: LocalSaveV1;
   async ngOnInit(): Promise<void> { this.save = await this.storage.load(); this.cdr.markForCheck(); }
-  async toggle(key: 'music' | 'sfx' | 'reducedMotion', value: boolean): Promise<void> { if (this.save) { this.save = await this.storage.update((save) => ({ ...save, settings: { ...save.settings, [key]: value } })); this.cdr.markForCheck(); } }
+  async toggle(key: 'music' | 'sfx' | 'reducedMotion' | 'devMode', value: boolean): Promise<void> { if (this.save) { this.save = await this.storage.update((save) => ({ ...save, settings: { ...save.settings, [key]: value } })); this.cdr.markForCheck(); } }
   async setGender(value: unknown): Promise<void> {
     if (value !== 'male' && value !== 'female') return;
     if (this.save) {

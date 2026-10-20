@@ -1,5 +1,7 @@
 import { Routes } from '@angular/router';
+import { inject } from '@angular/core';
 import { environment } from '../environments/environment';
+import { GameStorage } from './state/game-storage.service';
 
 export const routes: Routes = [
   {
@@ -12,11 +14,12 @@ export const routes: Routes = [
   },
   {
     path: 'skin-preview',
+    canMatch: [() => !environment.production && inject(GameStorage).load().then((save) => save.settings.devMode)],
     loadComponent: () => import('./skin-preview/skin-preview.page').then((m) => m.SkinPreviewPage),
   },
   ...(!environment.production ? [{
     path: 'skill-test',
-    canMatch: [() => !environment.production],
+    canMatch: [() => !environment.production && inject(GameStorage).load().then((save) => save.settings.devMode)],
     loadComponent: () => import('./skill-test/skill-test.page').then((m) => m.SkillTestPage),
   }] : []),
   {

@@ -308,6 +308,7 @@ export interface GameSettings {
   readonly music: boolean;
   readonly sfx: boolean;
   readonly reducedMotion: boolean;
+  readonly devMode: boolean;
   readonly gender: 'male' | 'female';
   readonly element: ElementId;
 }

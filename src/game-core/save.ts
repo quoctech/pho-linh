@@ -8,6 +8,7 @@ export const DEFAULT_SETTINGS: GameSettings = {
   music: true,
   sfx: true,
   reducedMotion: false,
+  devMode: false,
   gender: 'male',
   element: 'metal',
 };
