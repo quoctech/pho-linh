@@ -18,10 +18,11 @@ import { BattleController } from './battle.controller';
 import { GameStorage } from '../state/game-storage.service';
 
 const GAME_WIDTH = 360;
-// Use an integer render multiplier. A fractional multiplier (for example 1.25
-// on a DPR 2 screen) forces the browser to resample the canvas and makes the
-// gem textures and HUD look soft.
-const MAX_RENDER_QUALITY = 2;
+// Use an integer render multiplier that tracks the device pixel ratio. Keeping
+// the canvas at least 2x avoids a soft browser upscale on normal phones, while
+// the 3x cap prevents very high-DPR devices from allocating an oversized
+// backing buffer.
+const MAX_RENDER_QUALITY = 3;
 
 @Component({
   selector: 'app-battle',
@@ -150,7 +151,8 @@ export class BattlePage implements AfterViewInit, OnDestroy {
       // Keep a 2x backing buffer even on DPR-1 screens. The separated actor
       // frames are downscaled in battle; a 1x canvas would throw away detail
       // before the browser presents the canvas.
-      const renderQuality = MAX_RENDER_QUALITY;
+      const devicePixelRatio = typeof window === 'undefined' ? 1 : window.devicePixelRatio || 1;
+      const renderQuality = Math.min(MAX_RENDER_QUALITY, Math.max(2, Math.ceil(devicePixelRatio)));
 
       this.zone.runOutsideAngular(() => {
         this.game = new PhaserRuntime.Game({

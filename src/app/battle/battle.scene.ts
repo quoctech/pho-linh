@@ -14,22 +14,14 @@ import {
 } from '../../game-core';
 import { BattleController, type BattleEventPlayer } from './battle.controller';
 import {
-  LANTERN_CAT_ATTACK_FX_KEY,
-  LANTERN_CAT_CAST_FX_KEY,
   LANTERN_CAT_SPRITE_KEYS,
-  LANTERN_SFX_KEYS,
-  LANTERN_SKILL_VFX_KEYS,
   ensureLanternCatAnimations,
-  ensureLanternCatSkillAnimations,
-  preloadLanternCatAssets,
   preloadLanternCatSprites,
 } from './monsters/lantern-cat/lantern-cat-assets';
 import { LanternCatVfx } from './monsters/lantern-cat/lantern-cat-vfx';
 import {
-  MIST_DUST_SFX_KEYS,
   MIST_DUST_SPRITE_KEYS,
   ensureMistDustAnimations,
-  preloadMistDustAssets,
   preloadMistDustSprites,
 } from './monsters/mist-dust/mist-dust-assets';
 import { createBattleLayout, type BattleLayout } from './battle-layout';
@@ -98,6 +90,7 @@ interface MonsterSpriteKeys {
   readonly antiHeal?: string;
   readonly dodge?: string;
   readonly stunned?: string;
+  readonly projectile?: string;
   readonly frameWidth: number;
   readonly frameHeight: number;
   readonly displayWidth: number;
@@ -147,18 +140,6 @@ const SKILL_VFX_KEYS = {
   spark: 'fx-cloudbreaker-spark',
 } as const;
 const SFX_KEYS = {
-  mistAttack: MIST_DUST_SFX_KEYS.attack,
-  mistHit: MIST_DUST_SFX_KEYS.hit,
-  mistProjectile: MIST_DUST_SFX_KEYS.projectile,
-  mistCast: MIST_DUST_SFX_KEYS.cast,
-  mistDeath: MIST_DUST_SFX_KEYS.death,
-  mistEnergy: MIST_DUST_SFX_KEYS.energy,
-  mistHeal: MIST_DUST_SFX_KEYS.heal,
-  mistHighHp: MIST_DUST_SFX_KEYS.highHp,
-  mistLowHp: MIST_DUST_SFX_KEYS.lowHp,
-  mistShield: MIST_DUST_SFX_KEYS.shield,
-  mistPoison: MIST_DUST_SFX_KEYS.poison,
-  ...LANTERN_SFX_KEYS,
   skillCast: 'sfx-cloudbreaker-cast',
   skillRelease: 'sfx-cloudbreaker-release',
   skillImpact: 'sfx-cloudbreaker-impact',
@@ -333,8 +314,6 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
       battleController?.currentState.monster.id ?? 'mist_blob',
     );
     preloadStatusUiAssets(this, false, preloadMonsterStatusOverlays);
-    preloadLanternCatAssets(this);
-    preloadMistDustAssets(this);
     const sfxPath = 'assets/audio/combat';
     const sfxFiles: Readonly<Record<string, string>> = {
       [SFX_KEYS.skillCast]: 'cloudbreaker-cast.mp3',
@@ -351,12 +330,6 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
       preloadMistDustSprites(this);
     } else if (monsterId === 'lantern_cat') {
       preloadLanternCatSprites(this);
-    }
-    if (monsterId === 'mist_blob') {
-      this.load.spritesheet('mist-dust-hit-impact', 'assets/monsters/mist-dust/combat/attack-impact/mist-dust-hit-impact-sheet.png', {
-        frameWidth: 384,
-        frameHeight: 384,
-      });
     }
   }
 
@@ -381,7 +354,6 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
     this.ensureSkillVfxAnimations();
     ensureStatusUiAnimations(this);
     ensureLanternCatAnimations(this);
-    ensureLanternCatSkillAnimations(this);
     ensureMistDustAnimations(this);
     ensureHeroAnimations(this, this.heroGender, this.heroElement);
     ensureElementSkillAnimations(this, this.heroElement);
@@ -417,15 +389,7 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
     this.lanternCatVfx = new LanternCatVfx({
       scene: this,
       reducedMotion: this.reducedMotion,
-      transientEffects: this.transientEffects,
-      playSfx: this.playSfx.bind(this),
       combatPoint: this.combatPoint.bind(this),
-      getHeroPosition: () => ({
-        x: this.heroVisual?.x ?? this.heroPosition.x,
-        y: this.heroVisual?.y ?? this.heroPosition.y,
-      }),
-      getPlayerStunIcon: () => this.playerStunIcon,
-      spawnVfxSized: this.spawnVfxSized.bind(this),
       spawnCombatImpact: this.spawnCombatImpact.bind(this),
       flashHero: this.flashHero.bind(this),
       playHeroAnimation: this.playHeroAnimation.bind(this),
@@ -639,14 +603,6 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
       .setResolution(this.renderQuality)
       .setOrigin(1, 0.5)
       .setDepth(9);
-    if (this.textures.exists(LANTERN_SKILL_VFX_KEYS.stunIcon)) {
-      this.playerStunIcon = this.add
-        .image(this.heroPosition.x, this.heroPosition.y + this.layout.heroStunY, LANTERN_SKILL_VFX_KEYS.stunIcon)
-        .setDisplaySize(28, 28)
-        .setBlendMode(Phaser.BlendModes.ADD)
-        .setDepth(18)
-        .setVisible(false);
-    }
     this.telegraphLabel = this.add
       .text(this.layout.hudLeft + 4, this.layout.telegraphY, '', {
         color: '#f3c64f',
@@ -678,13 +634,12 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
     const idleTexture = monsterId === 'mist_blob' || monsterId === 'lantern_cat' ? actorFrameKey(monsterId, 'idle', 0) : '';
     if (spriteKeys && this.textures.exists(idleTexture)) {
       this.ensureMonsterAnimations(spriteKeys);
-      if (this.controller.currentState.monster.id === 'mist_blob' && this.textures.exists('mist-dust-hit-impact')) {
-        this.createMonsterAnimation('mist-dust-hit-impact', 'mist-dust-hit-impact', 12, 0);
-      }
       const sprite = this.add.sprite(0, 0, idleTexture)
         .setOrigin(0.5, spriteKeys.originY)
         .setAlpha(1)
-        .setFlipX(true)
+        // The v2 Miêu Đèn frames already face left. Keep the legacy monster
+        // flip for Bụi Sương, but don't mirror Miêu Đèn back to the right.
+        .setFlipX(monsterId !== 'lantern_cat')
         .play(spriteKeys.idle);
       sprite.on('animationupdate', () => this.normalizeMonsterSprite(sprite));
       this.normalizeMonsterSprite(sprite);
@@ -1192,18 +1147,7 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
     if (!this.usesMonsterStatusSheets() || this.heroIntroIdle) return;
     const hpBand = getHeroHpBand(snapshot.currentHp, snapshot.maxHp);
     if (this.monsterHpBand && hpBand !== this.monsterHpBand) {
-      if (hpBand === 'low') {
-        this.playSfx(
-          this.controller.currentState.monster.id === 'lantern_cat' ? SFX_KEYS.lanternLowHp : SFX_KEYS.mistLowHp,
-          0.45,
-        );
-      }
-      if (hpBand === 'high') {
-        this.playSfx(
-          this.controller.currentState.monster.id === 'lantern_cat' ? SFX_KEYS.lanternHighHp : SFX_KEYS.mistHighHp,
-          0.45,
-        );
-      }
+      // Monster V2 has no dedicated audio; the visual status animation remains.
     }
     this.monsterHpBand = hpBand;
     const nextStatus = getHeroPersistentStatus(snapshot);
@@ -1628,12 +1572,6 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
             const target = this.combatPoint('monster');
             this.spawnCombatImpact(target.x, target.y, 0x9ed8ff, 48);
             if (!isSkillAttack) this.playHeroSfx('attack_impact', 0.5);
-            this.playSfx(
-              this.controller.currentState.monster.id === 'lantern_cat'
-                ? SFX_KEYS.lanternHit
-                : SFX_KEYS.mistHit,
-              0.52,
-            );
             this.playMonsterAnimation('hit');
             this.flashMonster(0xffe7a6);
             this.shakeMonster();
@@ -1675,7 +1613,7 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
         const matchLabel = matchCount >= 3 ? `X${matchCount} · ` : '';
         this.playHeroAttackSfx();
         const playDodge = () => {
-          this.playMonsterEffectAnimation('dodge', 0.5);
+          this.playMonsterEffectAnimation('dodge');
         };
         if (!this.playElementSkillAnimation('basicAttack', playDodge, 375)) {
           this.playHeroAnimation('attack');
@@ -1707,7 +1645,7 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
             this.playHeroSfx('heal', 0.5);
           }
           this.playHealEffect(healTarget);
-          if (healTarget === 'monster') this.playMonsterEffectAnimation('heal', 0.5);
+          if (healTarget === 'monster') this.playMonsterEffectAnimation('heal');
         } else {
           this.statusLabel?.setText(healTarget === 'monster' ? 'HP quái đã đầy' : 'HP đã đầy');
         }
@@ -1730,12 +1668,6 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
           this.playShieldGainEffect(shieldTarget);
           if (shieldTarget === 'player') this.playHeroSfx('shield', 0.5);
           if (shieldTarget === 'monster' && this.usesMonsterStatusSheets()) {
-            this.playSfx(
-              this.controller.currentState.monster.id === 'lantern_cat'
-                ? SFX_KEYS.lanternDefend
-                : SFX_KEYS.mistShield,
-              0.5,
-            );
             this.playMonsterAnimation('defend');
           }
         }
@@ -1756,14 +1688,6 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
         this.floatNumber(`+${amount}`, energyPoint.x, energyPoint.y - 50, '#ffe28c');
         if (amount > 0) {
           this.playEnergyGainEffect(energyTarget);
-          if (energyTarget === 'monster' && this.usesMonsterStatusSheets()) {
-            this.playSfx(
-              this.controller.currentState.monster.id === 'lantern_cat'
-                ? SFX_KEYS.lanternEnergy
-                : SFX_KEYS.mistEnergy,
-              0.5,
-            );
-          }
         }
         this.refreshDisplayedBars();
         break;
@@ -1778,7 +1702,6 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
         this.countdownLabel?.setColor('#ff7a80').setText('Tuyệt kỹ');
         this.telegraphLabel?.setText('⚡ Long Miêu Liên Kích');
         this.statusLabel?.setText('Miêu Đèn ra skill');
-        this.playSfx(SFX_KEYS.lanternLongCharge, 0.62);
         this.playMonsterAnimation('specialAttack');
         this.flashMonster(0xd8c2ff);
         this.lanternCatVfx?.playLongMieuLienKich();
@@ -1826,17 +1749,8 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
           this.playHeroSfx('poisoned', 0.5);
           const monsterActionId = String(event.payload['actionId'] ?? '');
           if (event.payload['actor'] === 'monster') {
-            if (this.controller.currentState.monster.id === 'lantern_cat') {
-              this.playSfx(SFX_KEYS.lanternPoisonCast, 0.56);
-            } else if (this.controller.currentState.monster.id === 'mist_blob') {
-              this.playSfx(SFX_KEYS.mistCast, 0.52);
-              this.playSfx(SFX_KEYS.mistPoison, 0.44);
-            }
             if (monsterActionId !== this.lastMonsterActionVisualId) this.playMonsterAnimation('poisonCast');
             this.time.delayedCall(260, () => {
-              if (this.controller.currentState.monster.id === 'lantern_cat') {
-                this.playSfx(SFX_KEYS.lanternPoisonProjectile, 0.48);
-              }
               this.spawnMonsterProjectile(() => {
                 this.playPoisonEffect();
                 this.playHeroAnimation('hit');
@@ -1858,14 +1772,6 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
           );
           this.displayedMonsterPoisonTurns = turns;
           this.statusLabel?.setText(`NHIỄM ĐỘC! ${this.controller.currentState.monster.name} · ${turns} lượt`);
-          if (this.usesMonsterStatusSheets()) {
-            this.playSfx(
-              this.controller.currentState.monster.id === 'lantern_cat'
-                ? SFX_KEYS.lanternPoisonCast
-                : SFX_KEYS.mistPoison,
-              0.52,
-            );
-          }
           this.playPoisonProjectile();
           this.refreshDisplayedBars();
         }
@@ -1925,27 +1831,12 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
         const monsterAction = String(event.payload['action'] ?? 'basic');
         const isPoisonAction = monsterAction === 'poison';
         const monsterId = this.controller.currentState.monster.id;
-        if (!isPoisonAction) {
-          if (monsterId === 'mist_blob') {
-            this.playSfx(SFX_KEYS.mistAttack, 0.5);
-          } else if (monsterId === 'lantern_cat') {
-            this.playSfx(SFX_KEYS.lanternAttack, 0.56);
-          }
-        }
         this.lastMonsterActionVisualId = String(event.payload['actionId'] ?? '');
         this.playMonsterAnimation(isPoisonAction ? 'poisonCast' : monsterAction === 'heavy' ? 'heavyAttack' : 'attack');
         // Let the attack pose read first; the projectile launches from the
         // monster's extended strike instead of appearing at the same moment.
         if (!isPoisonAction) this.time.delayedCall(260, () => {
-          if (monsterId === 'mist_blob') {
-            this.playSfx(SFX_KEYS.mistProjectile, 0.42);
-          }
           this.spawnMonsterProjectile(() => {
-            if (monsterId === 'lantern_cat') {
-              this.playSfx(SFX_KEYS.lanternAttackImpact, 0.56);
-            } else if (monsterId === 'mist_blob') {
-              this.playSfx(SFX_KEYS.mistHit, 0.52);
-            }
             this.playHeroHitSfx();
             this.playHeroAnimation('hit');
             this.flashHero(0xff7a80);
@@ -1960,11 +1851,6 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
         this.countdownLabel?.setColor('#f3c64f').setText(shieldGained > 0 ? 'Quái tạo khiên' : 'Quái phòng thủ');
         this.telegraphLabel?.setText(`◈ ${this.monsterActionText('guard')}`);
         this.statusLabel?.setText(shieldGained > 0 ? `Khiên +${shieldGained}` : 'Phòng thủ +1 lượt');
-        if (this.controller.currentState.monster.id === 'lantern_cat') {
-          this.playSfx(SFX_KEYS.lanternDefend, 0.54);
-        } else if (this.controller.currentState.monster.id === 'mist_blob') {
-          this.playSfx(SFX_KEYS.mistShield, 0.5);
-        }
         this.playMonsterAnimation('defend');
         this.showMonsterGuardEffect();
         this.tweenMonsterTelegraph();
@@ -1986,11 +1872,6 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
         this.setPlayerControlsEnabled(false);
         this.playerStunIcon?.setVisible(false);
         this.hideMonsterGuardEffect();
-        if (this.controller.currentState.monster.id === 'lantern_cat') {
-          this.playSfx(SFX_KEYS.lanternDeath, 0.58);
-        } else if (this.controller.currentState.monster.id === 'mist_blob') {
-          this.playSfx(SFX_KEYS.mistDeath, 0.58);
-        }
         this.playMonsterAnimation('death');
         this.flashMonster(0xffe7a6);
         break;
@@ -2085,7 +1966,6 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
 
   private playMonsterEffectAnimation(
     action: 'heal' | 'antiHeal' | 'dodge' | 'stunned',
-    volume: number,
   ): void {
     if (!this.usesMonsterStatusSheets()) return;
     const sprite = this.monsterSprite;
@@ -2095,7 +1975,6 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
     const animationToken = ++this.monsterAnimationToken;
     this.monsterTransientAnimation = action;
     this.monsterCurrentAnimationKey = animationKey;
-    this.playSfx(volume > 0 ? this.monsterEffectSfxKey(action) : '', volume);
     sprite.stop();
     sprite.setAlpha(1);
     sprite.play(animationKey);
@@ -2105,19 +1984,6 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
       this.monsterTransientAnimation = undefined;
       this.playMonsterPersistentAnimation(this.monsterPersistentStatus);
     });
-  }
-
-  private monsterEffectSfxKey(action: 'heal' | 'antiHeal' | 'dodge' | 'stunned'): string {
-    if (this.controller.currentState.monster.id === 'lantern_cat') {
-      if (action === 'heal') return SFX_KEYS.lanternHeal;
-      if (action === 'antiHeal') return SFX_KEYS.lanternAntiHeal;
-      if (action === 'dodge') return SFX_KEYS.lanternDodge;
-      return SFX_KEYS.lanternStun;
-    }
-    if (action === 'heal') return SFX_KEYS.mistHeal;
-    if (action === 'antiHeal') return MIST_DUST_SFX_KEYS.antiHeal;
-    if (action === 'dodge') return MIST_DUST_SFX_KEYS.dodge;
-    return MIST_DUST_SFX_KEYS.stun;
   }
 
   private playElementSkillAnimation(
@@ -2323,17 +2189,20 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
     };
     const color = poison ? 0xd5aaff : this.controller.currentState.monster.id === 'lantern_cat' ? 0xffd45e : 0x8ff3ff;
     const monsterId = this.controller.currentState.monster.id;
-    const textureKey = poison && monsterId === 'lantern_cat' && this.textures.exists(LANTERN_CAT_CAST_FX_KEY)
-      ? LANTERN_CAT_CAST_FX_KEY
-      : !poison && monsterId === 'lantern_cat' && this.textures.exists(LANTERN_CAT_ATTACK_FX_KEY)
-        ? LANTERN_CAT_ATTACK_FX_KEY
-        : !poison && monsterId === 'mist_blob' && this.textures.exists('mist-dust-hit-impact')
-          ? 'mist-dust-hit-impact'
-          : undefined;
+    const textureKey = this.monsterSpriteKeys()?.projectile;
+    const projectileFrameKey = monsterId === 'mist_blob' || monsterId === 'lantern_cat'
+      ? actorFrameKey(monsterId, 'element_projectile', 0)
+      : undefined;
+    const hasProjectileAnimation = Boolean(
+      textureKey
+      && projectileFrameKey
+      && this.textures.exists(projectileFrameKey)
+      && this.anims.exists(textureKey),
+    );
     this.spawnTravelTrail(start, target, color, poison ? 360 : 420);
-    const projectile = textureKey
+    const projectile = hasProjectileAnimation && textureKey && projectileFrameKey
       ? this.add
-        .sprite(start.x, start.y, textureKey, 0)
+        .sprite(start.x, start.y, projectileFrameKey, 0)
         .setOrigin(0.5)
         .setDisplaySize(62, 62)
         .setBlendMode(Phaser.BlendModes.ADD)
@@ -2351,12 +2220,11 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
       x: target.x,
       y: target.y,
       scale: poison ? 0.7 : 1.35,
-      rotation: textureKey ? projectile.rotation + Math.PI * 0.7 : 0,
+      rotation: hasProjectileAnimation ? projectile.rotation + Math.PI * 0.7 : 0,
       duration: poison ? 360 : 420,
       ease: 'Cubic.In',
       onComplete: () => {
         this.destroyTransientEffect(projectile);
-        if (textureKey) this.spawnVfx(textureKey, target.x, target.y, 76, 14);
         this.spawnCombatImpact(target.x, target.y, color, poison ? 58 : 56);
         onImpact?.();
       },

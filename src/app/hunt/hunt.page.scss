@@ -70,7 +70,10 @@ h1 {
   height: auto;
   max-height: 180px;
   object-fit: contain;
-  image-rendering: crisp-edges;
+  // These WebP frames are painted illustrations, not pixel art. Let the
+  // browser use its high-quality resampler so transparent edges stay smooth
+  // when the card is displayed on a high-DPI screen.
+  image-rendering: auto;
   filter: drop-shadow(0 12px 16px rgb(0 0 0 / 35%));
 }
 
