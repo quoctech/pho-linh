@@ -19,7 +19,9 @@ describe('static skill icon assets', () => {
   });
   it('keeps static icon size and state feedback independent', () => {
     expect(getElementSkillVisualState('primarySkill', true, 100, 100)).toEqual({ active: true, locked: false, animate: false });
-    expect(getElementSkillVisualState('secondarySkill', true, 100, 100)).toEqual({ active: false, locked: true, animate: false });
+    expect(getElementSkillVisualState('secondarySkill', true, 100, 100)).toEqual({ active: true, locked: false, animate: false });
+    expect(getElementSkillVisualState('secondarySkill', true, 60, 60)).toEqual({ active: true, locked: false, animate: false });
+    expect(getElementSkillVisualState('secondarySkill', true, 59, 60)).toEqual({ active: false, locked: true, animate: false });
     expect(fitSkillIconDisplaySize(165, 148)).toEqual({ width: 48, height: 43 });
     expect(fitSkillIconDisplaySize(165, 132)).toEqual({ width: 48, height: 38 });
   });

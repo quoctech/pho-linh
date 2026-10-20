@@ -6,7 +6,7 @@ import { applyMonsterAttackDamage, matchDamageMultiplier } from './monsters/mons
 import { clampPlayerState, createPlayerBattleState } from './player';
 import { createInitialState, resolveSwap } from './resolve';
 import { nextInt } from './rng';
-import { CHARACTER_DATA, COMBAT_DATA, MONSTER_COMBAT_BALANCE } from './game-data';
+import { CHARACTER_DATA, COMBAT_DATA, MONSTER_COMBAT_BALANCE, type PlayerSkillData } from './game-data';
 import { elementalModifier, elementRelationship } from './elements';
 
 import {
@@ -84,6 +84,7 @@ export function createBattleState(
     player: player ?? createPlayerBattleState(),
     playerSkipTurns: 0,
     monsterActionDelay: 0,
+    damageTakenStreak: 0,
     monster: createMonsterBattleState(monsterId),
     telegraph: `${createMonsterBattleState(monsterId).name} chuẩn bị hành động`,
     terminalReason: undefined,
@@ -427,6 +428,52 @@ function applyDamageToMonster(
   };
 }
 
+function applyDirectHpDamageToMonster(
+  monster: BattleState['monster'],
+  amount: number,
+): { readonly monster: BattleState['monster']; readonly absorbed: number; readonly hpDamage: number } {
+  const hpDamage = Number.isFinite(amount) ? Math.max(1, Math.round(amount)) : 1;
+  return {
+    absorbed: 0,
+    hpDamage,
+    monster: { ...monster, currentHp: Math.max(0, monster.currentHp - hpDamage) },
+  };
+}
+
+function applyMonsterDefenseReduction(
+  monster: BattleState['monster'],
+  percent: number,
+  turns: number,
+): BattleState['monster'] {
+  const reduction = Math.max(0, Math.min(1, percent));
+  const duration = Math.max(0, Math.floor(turns));
+  return {
+    ...monster,
+    defense: Math.max(0, Math.round(monster.baseDefense * (1 - reduction))),
+    defenseReductionPercent: reduction,
+    defenseReductionTurns: duration,
+  };
+}
+
+function consumeMonsterDefenseReduction(monster: BattleState['monster']): BattleState['monster'] {
+  if (monster.defenseReductionTurns <= 0) return monster;
+  const remaining = monster.defenseReductionTurns - 1;
+  return remaining > 0
+    ? { ...monster, defenseReductionTurns: remaining }
+    : { ...monster, defense: monster.baseDefense, defenseReductionTurns: 0, defenseReductionPercent: 0 };
+}
+
+function playerDirectAttackStreak(
+  player: PlayerBattleState,
+  targetId: string,
+): PlayerBattleState {
+  return {
+    ...player,
+    attackStreakTargetId: targetId,
+    attackStreak: player.attackStreakTargetId === targetId ? player.attackStreak + 1 : 1,
+  };
+}
+
 function applyGemEffects(
   state: BattleState,
   baseEvents: readonly GameEvent[],
@@ -441,7 +488,7 @@ function applyGemEffects(
   const events: GameEvent[] = [];
   let sequence = startSequence;
 
-  // Balance V2: hệ số hiệu quả ngọc theo tương khắc Ngũ Hành và tham số nội tại nghề.
+  // Balance V3: hệ số hiệu quả ngọc theo tương khắc Ngũ Hành và tham số nội tại nghề.
   // Tính một lần cho cả lượt; game-core quyết định, UI chỉ đọc event.
   const combat = CHARACTER_DATA.combat;
   const passive = CHARACTER_DATA.passives[player.element];
@@ -470,6 +517,10 @@ function applyGemEffects(
     );
     sequence += 1;
 
+    if ((counts['attack'] ?? 0) <= 0) {
+      player = { ...player, attackStreakTargetId: undefined, attackStreak: 0 };
+    }
+
     for (const gem of GEM_TYPES) {
       const count = counts[gem] ?? 0;
       if (count <= 0) {
@@ -477,6 +528,16 @@ function applyGemEffects(
       }
 
       if (gem === 'attack') {
+        player = playerDirectAttackStreak(player, monster.id);
+        const isCriticalEligible = player.attackStreak >= 2;
+        let isCritical = false;
+        let criticalRoll: number | undefined;
+        if (isCriticalEligible) {
+          const roll = nextInt(rngState, 100);
+          rngState = roll.state;
+          criticalRoll = roll.value;
+          isCritical = roll.value < (passive?.criticalChanceBonus ?? 0) * 100;
+        }
         if (monster.id === 'mist_blob') {
           const dodgeRoll = nextInt(rngState, 100);
           rngState = dodgeRoll.state;
@@ -497,25 +558,13 @@ function applyGemEffects(
             continue;
           }
         }
-        // HỎA — Liệt Diễm Chi Tâm: thiêu đốt điểm khiên của quái trước khi đánh.
-        if (passive?.burnMonsterShield && monster.shield > 0) {
-          const burned = monster.shield;
-          monster = { ...monster, shield: 0 };
-          events.push(
-            event(state, actionId, sequence, 'PASSIVE_TRIGGERED', {
-              passiveId: 'fire_burn_shield',
-              element: 'fire',
-              amount: burned,
-              target: 'monster',
-              label: `${monster.name} bị thiêu rụi khiên`,
-            }),
-          );
-          sequence += 1;
-        }
         const agiMultiplier = cascade >= 2 ? 1 + player.stats.agiBonus : 1;
-        const fireDamageMultiplier = 1 + (passive?.bonusDamageFactor ?? 0);
-        const raw = player.stats.atk * count * combat.attackTileFactor * damageMod * fireDamageMultiplier;
-        const requested = Math.max(1, Math.round(raw * multiplier * agiMultiplier) - monster.defense);
+        const raw = player.stats.atk * count * combat.attackTileFactor * damageMod * multiplier * agiMultiplier;
+        const criticalMultiplier = isCritical ? 1 + (passive?.criticalDamageBonus ?? 0) : 1;
+        const burningBonus = player.element === 'fire' && monster.burningTurns > 0
+          ? passive?.burnDamageBonus ?? 0
+          : 0;
+        const requested = Math.max(1, Math.round(raw * criticalMultiplier + burningBonus) - monster.defense);
         const damage = applyDamageToMonster(monster, requested);
         monster = damage.monster;
         events.push(
@@ -524,6 +573,11 @@ function applyGemEffects(
             source: 'attack_gems',
             amount: damage.hpDamage,
             requested,
+            critical: isCritical,
+            criticalChance: isCriticalEligible ? passive?.criticalChanceBonus ?? 0 : 0,
+            criticalRoll,
+            criticalMultiplier,
+            burningBonus,
             shieldAbsorbed: damage.absorbed,
             shieldRemaining: monster.shield,
             shieldBroken: damage.absorbed > 0 && monster.shield === 0,
@@ -536,35 +590,34 @@ function applyGemEffects(
           }),
         );
         sequence += 1;
-
-        // KIM — Kiếm Tâm Bất Diệt: ăn ngọc đỏ có cơ hội tích thêm nộ.
-        if (passive?.energyBonusChance && passive.energyBonusAmount) {
-          const roll = nextInt(rngState, 100);
-          rngState = roll.state;
-          if (roll.value < passive.energyBonusChance * 100) {
-            const gained = Math.min(config.energyCap - player.energy, passive.energyBonusAmount);
-            if (gained > 0) {
-              player = clampPlayerState({ ...player, energy: player.energy + passive.energyBonusAmount });
-              events.push(
-                event(state, actionId, sequence, 'PASSIVE_TRIGGERED', {
-                  passiveId: 'metal_bonus_energy',
-                  element: 'metal',
-                  amount: gained,
-                  roll: roll.value,
-                  target: 'player',
-                  label: 'Kiếm Tâm Bất Diệt — tích thêm nộ',
-                }),
-              );
-              sequence += 1;
-            }
-          }
+        if (isCritical) {
+          events.push(event(state, actionId, sequence, 'PASSIVE_TRIGGERED', {
+            passiveId: 'metal_critical',
+            element: 'metal',
+            amount: criticalMultiplier,
+            streak: player.attackStreak,
+            target: 'monster',
+            label: 'Kiếm Tâm Bất Diệt — chí mạng',
+          }));
+          sequence += 1;
+        }
+        if (player.element === 'fire' && monster.currentHp > 0) {
+          const turns = passive?.burningTurns ?? 3;
+          const potency = Math.max(1, Math.round(player.stats.atk * (passive?.burningAtkFactor ?? 0.1)));
+          monster = { ...monster, burningPotency: potency, burningTurns: turns };
+          events.push(event(state, actionId, sequence, 'BURNING_APPLIED', {
+            actor: 'player', amount: potency, turns, target: 'monster', source: 'attack_gems',
+          }));
+          sequence += 1;
         }
       }
 
       if (gem === 'heal') {
-        const amount = Math.round(player.stats.maxHp * combat.heal.maxHpFactor * count * supportMod * multiplier);
+        const healMultiplier = player.element === 'wood' && monster.poisonTurns > 0 && monster.poisonPotency > 0
+          ? passive?.healMultiplierWhenPoisoned ?? 1
+          : 1;
+        const amount = Math.round(player.stats.maxHp * combat.heal.maxHpFactor * count * supportMod * multiplier * healMultiplier);
         const healed = Math.min(player.stats.maxHp - player.currentHp, amount);
-        const overflow = amount - healed;
         player = clampPlayerState({ ...player, currentHp: player.currentHp + amount });
         events.push(
           event(state, actionId, sequence, 'HEAL_APPLIED', {
@@ -573,27 +626,18 @@ function applyGemEffects(
             requested: amount,
             capped: healed < amount,
             elementalModifier: supportMod,
+            passiveMultiplier: healMultiplier,
             target: 'player',
           }),
         );
         sequence += 1;
 
-        // MỘC — Sinh Cơ Bất Tận: máu hồi dư khi đã đầy chuyển thành khiên.
-        if (passive?.healOverflowToShield && overflow > 0) {
-          const bonusShield = Math.max(0, Math.min(shieldCap - player.shield, overflow));
-          if (bonusShield > 0) {
-            player = clampPlayerState({ ...player, shield: player.shield + bonusShield });
-            events.push(
-              event(state, actionId, sequence, 'PASSIVE_TRIGGERED', {
-                passiveId: 'wood_overflow_shield',
-                element: 'wood',
-                amount: bonusShield,
-                target: 'player',
-                label: 'Sinh Cơ Bất Tận — máu dư hóa khiên',
-              }),
-            );
-            sequence += 1;
-          }
+        if (healMultiplier > 1) {
+          events.push(event(state, actionId, sequence, 'PASSIVE_TRIGGERED', {
+            passiveId: 'wood_healing', element: 'wood', amount: healMultiplier, target: 'player',
+            label: 'Sinh Cơ Bất Tận — hồi phục tăng 40%',
+          }));
+          sequence += 1;
         }
       }
 
@@ -612,22 +656,6 @@ function applyGemEffects(
         );
         sequence += 1;
 
-        // THỦY — Hàn Tức Ngưng Kết: match-4/5 khiên làm hoãn đòn đánh của quái.
-        if (passive?.shieldDelayMinMatch && count >= passive.shieldDelayMinMatch) {
-          const delay = passive.monsterDelayTurns ?? 1;
-          monsterActionDelay += delay;
-          events.push(
-            event(state, actionId, sequence, 'PASSIVE_TRIGGERED', {
-              passiveId: 'water_delay_monster',
-              element: 'water',
-              amount: delay,
-              matchCount: count,
-              target: 'monster',
-              label: `Hàn Tức Ngưng Kết — hoãn đòn quái ${delay} lượt`,
-            }),
-          );
-          sequence += 1;
-        }
       }
 
       if (gem === 'energy') {
@@ -646,33 +674,16 @@ function applyGemEffects(
         );
         sequence += 1;
 
-        // THỔ — Bất Động Như Sơn: nhận thêm khiên theo lượng nộ vừa tích.
-        if (passive?.energyToShieldFactor && gained > 0) {
-          const bonusShield = Math.max(0, Math.min(shieldCap - player.shield, Math.round(gained * passive.energyToShieldFactor)));
-          if (bonusShield > 0) {
-            player = clampPlayerState({ ...player, shield: player.shield + bonusShield });
-            events.push(
-              event(state, actionId, sequence, 'PASSIVE_TRIGGERED', {
-                passiveId: 'earth_energy_shield',
-                element: 'earth',
-                amount: bonusShield,
-                target: 'player',
-                label: 'Bất Động Như Sơn — nộ hóa khiên',
-              }),
-            );
-            sequence += 1;
-          }
-        }
       }
 
       if (gem === 'poison') {
         // V2: độc theo tầng — mỗi nhóm ngọc tím cộng một tầng (tối đa poisonMaxStacks),
         // mỗi tầng gây ATK × poisonAtkFactor mỗi lượt, duration reset về poison.turns
-        // (+poisonBonusTurns nếu là MỘC). poisonPotency lưu tổng sát thương/lượt.
+        // poisonPotency lưu tổng sát thương/lượt.
         const perStack = Math.max(0, Math.round(player.stats.atk * combat.poisonAtkFactor * damageMod * multiplier));
         const stacks = Math.min(combat.poisonMaxStacks, monster.poisonStacks + 1);
         const potency = stacks * perStack;
-        const turns = combat.poison.turns + (passive?.poisonBonusTurns ?? 0);
+        const turns = combat.poison.turns;
         monster = { ...monster, poisonStacks: stacks, poisonPotency: potency, poisonTurns: turns };
         events.push(
           event(state, actionId, sequence, 'POISON_APPLIED', {
@@ -717,7 +728,8 @@ function resolveMonsterTurn(
   config: BattleConfig,
 ): { readonly state: BattleState; readonly events: GameEvent[] } {
   let player = clampPlayerState(state.player);
-  let monster = { ...state.monster, defense: state.monster.baseDefense };
+  let monster = { ...state.monster };
+  let damageTakenStreak = 0;
   const events: GameEvent[] = [];
   let sequence = startSequence;
 
@@ -794,6 +806,35 @@ function resolveMonsterTurn(
     }
   }
 
+  if (monster.burningTurns > 0 && monster.burningPotency > 0) {
+    const burnDamage = monster.burningPotency;
+    const remainingTurns = monster.burningTurns - 1;
+    monster = {
+      ...monster,
+      currentHp: Math.max(0, monster.currentHp - burnDamage),
+      burningTurns: remainingTurns,
+      burningPotency: remainingTurns > 0 ? monster.burningPotency : 0,
+    };
+    events.push(event(state, actionId, sequence, 'BURNING_TICKED', {
+      actor: 'player', amount: burnDamage, remainingTurns, target: 'monster', source: 'fire_passive',
+    }));
+    sequence += 1;
+    if (monster.currentHp <= 0) {
+      return {
+        state: appendOutcome({ ...state, player, monster }, events, actionId, sequence, 'VICTORY', 'monster_defeated_by_burning'),
+        events,
+      };
+    }
+  }
+
+  if (monster.controlTurns > 0) {
+    events.push(event(state, actionId, sequence++, 'MONSTER_ACTION_SKIPPED', {
+      actor: 'monster', action: monster.controlEffect ?? 'stun', reason: monster.controlEffect ?? 'control',
+      label: `${monster.name} bị ${monster.controlEffect === 'freeze' ? 'đóng băng' : 'choáng'} — mất lượt`, target: 'monster',
+    }));
+    return finishMonsterTurn({ ...state, player, monster: { ...monster, controlTurns: monster.controlTurns - 1, controlEffect: monster.controlTurns > 1 ? monster.controlEffect : undefined }, damageTakenStreak: 0 }, actionId, sequence, events, config);
+  }
+
   // THỦY — Hàn Tức Ngưng Kết: quái bị hoãn, bỏ qua toàn bộ hành động tấn công lượt này
   // (độc vẫn tick ở trên). Trừ một lượt hoãn rồi chuyển sang telegraph lượt kế.
   if (state.monsterActionDelay > 0) {
@@ -808,7 +849,7 @@ function resolveMonsterTurn(
     );
     sequence += 1;
     return finishMonsterTurn(
-      { ...state, player, monster, monsterActionDelay: state.monsterActionDelay - 1 },
+      { ...state, player, monster, monsterActionDelay: state.monsterActionDelay - 1, damageTakenStreak: 0 },
       actionId,
       sequence,
       events,
@@ -918,8 +959,34 @@ function resolveMonsterTurn(
         1,
         Math.round(baseDamage) - Math.floor(player.stats.defense * MONSTER_COMBAT_BALANCE.defenseMitigationMultiplier),
       );
-      const damage = applyMonsterAttackDamage(player, incoming);
+      const nextDamageStreak = state.damageTakenStreak + 1;
+      const waterReduction = player.element === 'water' && nextDamageStreak >= (CHARACTER_DATA.passives.water.damageStreakMin ?? 3)
+        ? 1 - (CHARACTER_DATA.passives.water.damageReduction ?? 0)
+        : 1;
+      const earthReduction = player.element === 'earth' && player.shield > 0
+        ? 1 - (CHARACTER_DATA.passives.earth.shieldDamageReduction ?? 0)
+        : 1;
+      const activeReduction = player.damageReductionTurns > 0 ? 1 - player.damageReductionPercent : 1;
+      const damageMultiplier = waterReduction * earthReduction * activeReduction;
+      damageTakenStreak = nextDamageStreak;
+      if (damageMultiplier < 1) {
+        events.push(event(state, actionId, sequence, 'PASSIVE_TRIGGERED', {
+          passiveId: player.element === 'water' ? 'water_damage_reduction' : 'earth_shield_resistance',
+          element: player.element,
+          multiplier: damageMultiplier,
+          streak: nextDamageStreak,
+          target: 'player',
+        }));
+        sequence += 1;
+      }
+      const damage = applyMonsterAttackDamage(player, incoming, damageMultiplier);
       player = damage.player;
+      if (player.reflectDamageRatio > 0 && damage.incoming > 0) {
+        const reflected = Math.max(1, Math.round(damage.incoming * player.reflectDamageRatio));
+        const reflectedDamage = applyDamageToMonster(monster, reflected);
+        monster = reflectedDamage.monster;
+        events.push(event(state, actionId, sequence++, 'DAMAGE_REFLECTED', { actor: 'player', amount: reflectedDamage.hpDamage, shieldAbsorbed: reflectedDamage.absorbed, target: 'monster', source: 'earth_reflect' }));
+      }
       events.push(
         event(state, actionId, sequence, 'MONSTER_ATTACKED', {
           actor: 'monster',
@@ -930,9 +997,10 @@ function resolveMonsterTurn(
             : attackAction === 'poison'
               ? `${monster.name} gieo độc`
               : `${monster.name} tấn công`,
-          amount: incoming,
+          amount: damage.incoming,
+          rawIncoming: incoming,
           baseDamage,
-          hpDamage: Math.max(0, incoming - damage.absorbed),
+          hpDamage: Math.max(0, damage.incoming - damage.absorbed),
           shieldAbsorbed: damage.absorbed,
           shieldRemaining: player.shield,
           shieldBroken: damage.absorbed > 0 && player.shield === 0,
@@ -994,7 +1062,7 @@ function resolveMonsterTurn(
   }
 
   return finishMonsterTurn(
-    { ...state, player, monster },
+    { ...state, player, monster, damageTakenStreak },
     actionId,
     sequence,
     events,
@@ -1009,6 +1077,14 @@ function finishMonsterTurn(
   events: GameEvent[],
   config: BattleConfig,
 ): { readonly state: BattleState; readonly events: GameEvent[] } {
+  const nextPlayer = clampPlayerState({
+    ...state.player,
+    damageReductionTurns: Math.max(0, state.player.damageReductionTurns - 1),
+    damageReductionPercent: state.player.damageReductionTurns > 1 ? state.player.damageReductionPercent : 0,
+    controlImmunityTurns: Math.max(0, state.player.controlImmunityTurns - 1),
+    reflectDamageRatio: state.player.damageReductionTurns > 1 ? state.player.reflectDamageRatio : 0,
+  });
+  state = { ...state, player: nextPlayer };
   if (state.player.currentHp <= 0) {
     return {
       state: appendOutcome(state, events, actionId, sequence, 'DEFEAT', 'player_hp_zero'),
@@ -1090,7 +1166,15 @@ function chooseMonsterAction(
   return 'basic';
 }
 
-function resolveSkill(
+function playerSkillData(element: PlayerBattleState['element'], skillId: string): PlayerSkillData | undefined {
+  if (skillId === 'cloud_break_lantern') return CHARACTER_DATA.skills.cloud_break_lantern;
+  const elementSkill = CHARACTER_DATA.elementSkills[element];
+  if (elementSkill?.primarySkillId === skillId) return elementSkill.primarySkill;
+  return elementSkill?.secondarySkillId === skillId ? elementSkill.secondarySkill : undefined;
+}
+
+/** Common resolver for every element primary skill. Only data changes per element. */
+function resolvePlayerSkill(
   state: BattleState,
   action: SkillAction,
   config: BattleConfig,
@@ -1098,53 +1182,147 @@ function resolveSkill(
   if (state.phase !== 'PLAYER_READY') {
     return reject(state, action, 'phase-locked');
   }
-  if (action.skillId !== 'cloud_break_lantern') {
+  const playerState = clampPlayerState(state.player);
+  const skillConfig = playerSkillData(playerState.element, action.skillId);
+  if (!skillConfig) {
     return reject(state, action, 'unknown-skill');
   }
-  const skillConfig = CHARACTER_DATA.skills.cloud_break_lantern;
-  const playerState = clampPlayerState(state.player);
   if (playerState.energy < skillConfig.energyCost) {
     return reject(state, action, 'not-enough-energy');
   }
 
-  const requestedDamage = Math.max(
-    1,
-    Math.round(
-      CHARACTER_DATA.skills.cloud_break_lantern.baseDamage
-      + playerState.stats.skillPower * CHARACTER_DATA.skills.cloud_break_lantern.skillPowerMultiplier,
-    ) - Math.floor(state.monster.defense * CHARACTER_DATA.skills.cloud_break_lantern.defenseMultiplier),
-  );
-  const damage = applyDamageToMonster(state.monster, requestedDamage);
+  const passive = CHARACTER_DATA.passives[playerState.element];
+  const nextStreak = playerState.attackStreakTargetId === state.monster.id ? playerState.attackStreak + 1 : 1;
+  let rngState = state.rngState;
+  let critical = false;
+  let criticalRoll: number | undefined;
+  if (nextStreak >= 2) {
+    const roll = nextInt(rngState, 100);
+    rngState = roll.state;
+    criticalRoll = roll.value;
+    critical = roll.value < (passive?.criticalChanceBonus ?? 0) * 100;
+  }
+  const baseRaw = skillConfig.attackMultiplier !== undefined
+    ? playerState.stats.atk * skillConfig.attackMultiplier
+    : skillConfig.baseDamage + playerState.stats.skillPower * skillConfig.skillPowerMultiplier;
+  const criticalMultiplier = critical ? 1 + (passive?.criticalDamageBonus ?? 0) : 1;
+  const burningBonus = playerState.element === 'fire' && state.monster.burningTurns > 0
+    ? passive?.burnDamageBonus ?? 0
+    : 0;
+  const requestedDamage = skillConfig.fixedDamage !== undefined
+    ? skillConfig.fixedDamage
+    : skillConfig.attackMultiplier !== undefined
+    ? Math.max(1, Math.round(baseRaw * criticalMultiplier + burningBonus))
+    : Math.max(
+      1,
+      Math.round(baseRaw * criticalMultiplier + burningBonus)
+        - Math.floor(state.monster.defense * skillConfig.defenseMultiplier),
+    );
+  let monster = state.monster;
+  let player: PlayerBattleState = {
+    ...playerState,
+    energy: Math.max(0, playerState.energy - skillConfig.energyCost),
+    attackStreakTargetId: state.monster.id,
+    attackStreak: nextStreak,
+  };
   const events: GameEvent[] = [
     event(state, action.actionId, 0, 'SKILL_USED', {
       skillId: action.skillId,
       energySpent: skillConfig.energyCost,
     }),
-    event(state, action.actionId, 1, 'DAMAGE_APPLIED', {
-      actor: 'player',
-      source: action.skillId,
-      amount: damage.hpDamage,
-      requested: requestedDamage,
-      shieldAbsorbed: damage.absorbed,
-      shieldRemaining: damage.monster.shield,
-      shieldBroken: damage.absorbed > 0 && damage.monster.shield === 0,
-      target: 'monster',
-    }),
   ];
-  const monster = damage.monster;
-  const player = { ...playerState, energy: Math.max(0, playerState.energy - skillConfig.energyCost) };
+  let sequence = 1;
+  const hitCount = Math.max(1, skillConfig.hitCount ?? 1);
+  for (let hit = 0; hit < hitCount; hit += 1) {
+    let damage: { monster: typeof monster; hpDamage: number; absorbed: number };
+    if (skillConfig.fixedDamage !== undefined) {
+      const amount = skillConfig.fixedDamage;
+      const absorbed = Math.min(monster.shield, amount);
+      damage = monster.shield > 0
+        ? { monster: { ...monster, shield: monster.shield - absorbed }, absorbed, hpDamage: 0 }
+        : { monster: { ...monster, currentHp: Math.max(0, monster.currentHp - amount) }, absorbed: 0, hpDamage: amount };
+    } else {
+      const vulnerability = monster.damageTakenBonusTurns > 0 ? 1 + monster.damageTakenBonus : 1;
+      const hitDamage = Math.max(1, Math.round(requestedDamage * vulnerability));
+      damage = skillConfig.bypassShield
+        ? applyDirectHpDamageToMonster(monster, hitDamage)
+        : applyDamageToMonster(monster, hitDamage);
+    }
+    monster = damage.monster;
+    events.push(event(state, action.actionId, sequence, 'DAMAGE_APPLIED', {
+      actor: 'player', source: action.skillId, amount: damage.hpDamage,
+      requested: skillConfig.fixedDamage ?? requestedDamage, shieldAbsorbed: damage.absorbed,
+      shieldRemaining: monster.shield, shieldBroken: damage.absorbed > 0 && monster.shield === 0,
+      critical, criticalChance: nextStreak >= 2 ? passive?.criticalChanceBonus ?? 0 : 0,
+      criticalRoll, criticalMultiplier, burningBonus, attackMultiplier: skillConfig.attackMultiplier,
+      bypassShield: skillConfig.bypassShield === true, hitIndex: hit + 1, hitCount, target: 'monster',
+    }));
+    sequence += 1;
+  }
+  if (critical) events.push(event(state, action.actionId, sequence++, 'PASSIVE_TRIGGERED', {
+    passiveId: 'metal_critical', element: 'metal', amount: criticalMultiplier, streak: nextStreak,
+    target: 'monster', label: 'Kiếm Tâm Bất Diệt — chí mạng',
+  }));
+  if (playerState.element === 'fire' && monster.currentHp > 0) {
+    const turns = passive?.burningTurns ?? 3;
+    const potency = Math.max(1, Math.round(playerState.stats.atk * (passive?.burningAtkFactor ?? 0.1)));
+    monster = { ...monster, burningPotency: potency, burningTurns: turns };
+    events.push(event(state, action.actionId, sequence++, 'BURNING_APPLIED', {
+      actor: 'player', amount: potency, turns, target: 'monster', source: action.skillId,
+    }));
+  }
+  if (skillConfig.defenseReduction && skillConfig.defenseReductionTurns) {
+    monster = applyMonsterDefenseReduction(monster, skillConfig.defenseReduction, skillConfig.defenseReductionTurns);
+    events.push(event(state, action.actionId, sequence++, 'DEFENSE_REDUCED', {
+      actor: 'player',
+      amount: skillConfig.defenseReduction,
+      turns: skillConfig.defenseReductionTurns,
+      defense: monster.defense,
+      target: 'monster',
+      source: action.skillId,
+    }));
+  }
+  if (skillConfig.energySteal) {
+    const stolen = Math.min(monster.energy, skillConfig.energySteal);
+    monster = { ...monster, energy: monster.energy - stolen };
+    player = clampPlayerState({ ...player, energy: player.energy + stolen });
+    events.push(event(state, action.actionId, sequence++, 'ENERGY_STOLEN', { actor: 'player', amount: stolen, target: 'monster', source: action.skillId }));
+  }
+  if (skillConfig.poisonAtkFactor) {
+    const potency = Math.max(1, Math.round(playerState.stats.atk * skillConfig.poisonAtkFactor));
+    monster = { ...monster, poisonPotency: potency, poisonTurns: skillConfig.poisonTurns ?? 3, poisonStacks: 1 };
+    events.push(event(state, action.actionId, sequence++, 'POISON_APPLIED', { actor: 'player', amount: potency, turns: monster.poisonTurns, target: 'monster', source: action.skillId }));
+  }
+  if (skillConfig.controlEffect && (skillConfig.controlChance ?? 0) > 0) {
+    const controlRoll = nextInt(rngState, 100);
+    rngState = controlRoll.state;
+    if (controlRoll.value < (skillConfig.controlChance ?? 0) * 100) {
+      monster = { ...monster, controlEffect: skillConfig.controlEffect, controlTurns: skillConfig.controlTurns ?? 1 };
+      events.push(event(state, action.actionId, sequence++, 'CONTROL_APPLIED', { actor: 'player', effect: skillConfig.controlEffect, turns: monster.controlTurns, target: 'monster', source: action.skillId }));
+    }
+  }
+  if (skillConfig.damageTakenBonus) {
+    monster = { ...monster, damageTakenBonus: skillConfig.damageTakenBonus, damageTakenBonusTurns: skillConfig.damageTakenBonusTurns ?? 2 };
+    events.push(event(state, action.actionId, sequence++, 'DAMAGE_VULNERABILITY_APPLIED', { actor: 'player', amount: skillConfig.damageTakenBonus, turns: monster.damageTakenBonusTurns, target: 'monster', source: action.skillId }));
+  }
+  if (skillConfig.selfShieldDefenseMultiplier || skillConfig.selfDamageReduction || skillConfig.controlImmunityTurns || skillConfig.reflectDamageRatio) {
+    const shieldAmount = Math.round(player.stats.defense * (skillConfig.selfShieldDefenseMultiplier ?? 0));
+    player = clampPlayerState({ ...player, shield: player.shield + shieldAmount, damageReductionPercent: skillConfig.selfDamageReduction ?? 0, damageReductionTurns: skillConfig.selfDamageReductionTurns ?? 0, controlImmunityTurns: skillConfig.controlImmunityTurns ?? 0, reflectDamageRatio: skillConfig.reflectDamageRatio ?? 0 });
+    events.push(event(state, action.actionId, sequence++, 'SHIELD_GAINED', { actor: 'player', amount: shieldAmount, target: 'player', source: action.skillId }));
+  }
   if (monster.currentHp <= 0) {
     return {
       accepted: true,
       events: [
         ...events,
-        event(state, action.actionId, 2, 'BATTLE_WON', {
+          event(state, action.actionId, sequence, 'BATTLE_WON', {
           result: 'VICTORY',
           reason: 'monster_defeated_by_skill',
         }),
       ],
       nextState: {
         ...state,
+        rngState,
         player,
         monster,
         phase: 'VICTORY',
@@ -1159,12 +1337,13 @@ function resolveSkill(
       ...state,
       player,
       monster,
+      rngState,
       turn: state.turn + 1,
       phase: 'MONSTER_TURN',
       actionLog: [...state.actionLog, action],
     },
     action.actionId,
-    2,
+    sequence,
     config,
   );
   return {
@@ -1191,7 +1370,7 @@ export function resolveBattleAction(
   const playerSkipTurns = Number.isFinite(state.playerSkipTurns)
     ? Math.max(0, Math.min(1, state.playerSkipTurns))
     : 0;
-  // monsterActionDelay và poisonStacks là field state V2 mới; snapshot activeBattle cũ
+  // Các field passive mới của Balance V3 có thể vắng mặt trong snapshot cũ.
   // không có nên chuẩn hóa về 0 để tránh undefined/NaN khi khôi phục save cũ.
   const monsterActionDelay = Number.isFinite(state.monsterActionDelay)
     ? Math.max(0, Math.floor(state.monsterActionDelay))
@@ -1199,11 +1378,46 @@ export function resolveBattleAction(
   const monsterPoisonStacks = Number.isFinite(state.monster.poisonStacks)
     ? Math.max(0, Math.floor(state.monster.poisonStacks))
     : 0;
+  const monsterBurningTurns = Number.isFinite(state.monster.burningTurns)
+    ? Math.max(0, Math.floor(state.monster.burningTurns))
+    : 0;
+  const monsterBurningPotency = Number.isFinite(state.monster.burningPotency)
+    ? Math.max(0, state.monster.burningPotency)
+    : 0;
+  const monsterControlTurns = Number.isFinite(state.monster.controlTurns) ? Math.max(0, Math.floor(state.monster.controlTurns)) : 0;
+  const monsterDamageTakenBonus = Number.isFinite(state.monster.damageTakenBonus) ? Math.max(0, Math.min(1, state.monster.damageTakenBonus)) : 0;
+  const monsterDamageTakenBonusTurns = Number.isFinite(state.monster.damageTakenBonusTurns) ? Math.max(0, Math.floor(state.monster.damageTakenBonusTurns)) : 0;
+  const monsterDefenseReductionTurns = Number.isFinite(state.monster.defenseReductionTurns)
+    ? Math.max(0, Math.floor(state.monster.defenseReductionTurns))
+    : 0;
+  const monsterDefenseReductionPercent = Number.isFinite(state.monster.defenseReductionPercent)
+    ? Math.max(0, Math.min(1, state.monster.defenseReductionPercent))
+    : 0;
+  const damageTakenStreak = Number.isFinite(state.damageTakenStreak)
+    ? Math.max(0, Math.floor(state.damageTakenStreak))
+    : 0;
+  const attackStreak = Number.isFinite(state.player.attackStreak)
+    ? Math.max(0, Math.floor(state.player.attackStreak))
+    : 0;
   state = {
     ...state,
     playerSkipTurns,
     monsterActionDelay,
-    monster: { ...state.monster, shield: monsterShield, energy: monsterEnergy, poisonStacks: monsterPoisonStacks },
+    damageTakenStreak,
+    player: { ...state.player, attackStreak, attackStreakTargetId: state.player.attackStreakTargetId },
+    monster: {
+      ...state.monster,
+      shield: monsterShield,
+      energy: monsterEnergy,
+      poisonStacks: monsterPoisonStacks,
+      burningTurns: monsterBurningTurns,
+      burningPotency: monsterBurningPotency,
+      defenseReductionTurns: monsterDefenseReductionTurns,
+      defenseReductionPercent: monsterDefenseReductionPercent,
+      controlTurns: monsterControlTurns,
+      damageTakenBonus: monsterDamageTakenBonus,
+      damageTakenBonusTurns: monsterDamageTakenBonusTurns,
+    },
   };
 
   if (action.kind === 'abandon') {
@@ -1238,7 +1452,7 @@ export function resolveBattleAction(
   }
 
   if (action.kind === 'skill') {
-    return resolveSkill(state, action, config);
+    return resolvePlayerSkill(state, action, config);
   }
 
   if (state.phase !== 'PLAYER_READY') {
@@ -1278,7 +1492,7 @@ export function resolveBattleAction(
   }
 
   const monsterTurn = resolveMonsterSequence(
-    { ...effects.state, phase: 'MONSTER_TURN' },
+    { ...effects.state, monster: consumeMonsterDefenseReduction(effects.state.monster), phase: 'MONSTER_TURN' },
     action.actionId,
     effects.nextSequence,
     config,

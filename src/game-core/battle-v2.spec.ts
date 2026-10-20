@@ -1,4 +1,5 @@
 import {
+  CHARACTER_DATA,
   createBattleState,
   createPlayerBattleState,
   equipmentBonuses,
@@ -26,6 +27,7 @@ interface SetupOptions {
   readonly monsterId?: string;
   readonly monster?: Partial<BattleState['monster']>;
   readonly player?: Partial<BattleState['player']>;
+  readonly battle?: Partial<BattleState>;
   readonly seed?: number;
 }
 
@@ -45,6 +47,7 @@ function setup(options: SetupOptions): BattleState {
     board,
     monster: { ...initial.monster, currentHp: 999, ...options.monster },
     player: { ...initial.player, ...options.player },
+    ...options.battle,
   };
 }
 
@@ -56,7 +59,71 @@ function firstEvent(events: readonly GameEvent[], predicate: (event: GameEvent) 
   return events.find(predicate);
 }
 
-describe('Balance V2 combat core', () => {
+describe('Balance V3 combat core', () => {
+  it('resolves every element primary skill through the common player skill flow', () => {
+    for (const element of ['metal', 'wood', 'water', 'fire', 'earth'] as const) {
+      const state = setup({
+        topRow: ['attack', 'heal', 'attack', 'attack', 'shield', 'energy'],
+        playerElement: element,
+        player: { energy: 100 },
+        monster: { currentHp: 999 },
+      });
+      const elementSkills = CHARACTER_DATA.elementSkills[element];
+      for (const [slot, skillId] of [
+        ['primary', elementSkills.primarySkillId],
+        ['secondary', elementSkills.secondarySkillId],
+      ] as const) {
+        const result = resolveBattleAction({ ...state, player: { ...state.player, energy: 100 } }, {
+          kind: 'skill', skillId, actionId: `${slot}-${element}`,
+        });
+
+        expect(result.accepted, `${element}-${slot}`).toBe(true);
+        expect(result.events.some((event) => event.type === 'SKILL_USED' && event.payload['skillId'] === skillId)).toBe(true);
+        expect(result.events.some((event) => event.type === 'DAMAGE_APPLIED' && event.payload['source'] === skillId)).toBe(true);
+      }
+    }
+  });
+
+  it('KIM — Vạn Kiếm Quy Tông tiêu 60 nộ và bị khiên hấp thụ trước HP', () => {
+    const state = setup({
+      topRow: ['attack', 'heal', 'attack', 'attack', 'shield', 'energy'],
+      playerElement: 'metal',
+      player: { energy: 60 },
+      monster: { currentHp: 999, shield: 50, defense: 10, baseDefense: 10 },
+    });
+    const result = resolveBattleAction(state, {
+      kind: 'skill', skillId: CHARACTER_DATA.elementSkills['metal'].secondarySkillId, actionId: 'metal-secondary-cost',
+    });
+    const damage = firstEvent(result.events, (event) => event.type === 'DAMAGE_APPLIED' && event.payload['source'] === 'van_kiem_quy_tong');
+
+    expect(result.accepted).toBe(true);
+    expect(damage?.payload['requested']).toBe(30); // 25 ATK × 120%
+    expect(damage?.payload['shieldAbsorbed']).toBe(30);
+    expect(damage?.payload['amount']).toBe(0);
+    expect(result.events.find((event) => event.type === 'SKILL_USED')?.payload['energySpent']).toBe(60);
+  });
+
+  it('KIM — Kim Quang Phá Giáp xuyên khiên và giảm 30% DEF trong 2 lượt', () => {
+    const state = setup({
+      topRow: ['attack', 'heal', 'attack', 'attack', 'shield', 'energy'],
+      playerElement: 'metal',
+      player: { energy: 100 },
+      monster: { currentHp: 999, shield: 50, defense: 10, baseDefense: 10 },
+    });
+    const result = resolveBattleAction(state, {
+      kind: 'skill', skillId: CHARACTER_DATA.elementSkills['metal'].primarySkillId, actionId: 'metal-primary-effect',
+    });
+    const damage = firstEvent(result.events, (event) => event.type === 'DAMAGE_APPLIED' && event.payload['source'] === 'kim_quang_pha_giap');
+
+    expect(result.accepted).toBe(true);
+    expect(damage?.payload['requested']).toBe(45); // 25 ATK × 180%
+    expect(damage?.payload['shieldAbsorbed']).toBe(0);
+    expect(damage?.payload['amount']).toBe(45);
+    expect(result.events.some((event) => event.type === 'DEFENSE_REDUCED' && event.payload['turns'] === 2)).toBe(true);
+    expect(result.nextState.monster.defense).toBe(7);
+    expect(result.nextState.monster.defenseReductionTurns).toBe(2);
+  });
+
   it('tính sát thương ngọc đỏ theo ATK × số ô × 0.4 (quan hệ hòa)', () => {
     // metal vs earth = hòa; dùng bamboo_mantis (không có cơ chế né) với DEF 0.
     const result = swap(
@@ -145,9 +212,9 @@ describe('Balance V2 combat core', () => {
     expect(poison?.payload['turns']).toBe(3);
   });
 
-  it('tạo cùng event log cho cùng seed và cùng action (balanceVersion 2)', () => {
+  it('tạo cùng event log cho cùng seed và cùng action (balanceVersion 3)', () => {
     const base = setup({ topRow: ['attack', 'heal', 'attack', 'attack', 'shield', 'energy'], seed: 321 });
-    expect(base.balanceVersion).toBe(2);
+    expect(base.balanceVersion).toBe(3);
     const a = swap(base, 'replay');
     const b = swap(base, 'replay');
     expect(a.events).toEqual(b.events);
@@ -155,72 +222,62 @@ describe('Balance V2 combat core', () => {
   });
 });
 
-describe('Balance V2 nội tại nghề', () => {
-  it('KIM — Kiếm Tâm Bất Diệt: ăn ngọc đỏ đôi khi tích thêm nộ', () => {
-    const triggered = Array.from({ length: 80 }, (_, index) =>
-      swap(
-        setup({
-          topRow: ['attack', 'heal', 'attack', 'attack', 'shield', 'energy'],
-          playerElement: 'metal',
-          monsterId: 'bamboo_mantis',
-          monster: { element: 'earth', defense: 0, baseDefense: 0 },
-          seed: index + 1,
-        }),
-        `kim-${index}`,
-      ),
-    ).filter((result) => result.events.some((e) => e.type === 'PASSIVE_TRIGGERED' && e.payload['passiveId'] === 'metal_bonus_energy'));
-    expect(triggered.length).toBeGreaterThan(0);
+describe('Balance V3 nội tại nghề', () => {
+  it('KIM — streak attack kích hoạt crit +40% damage', () => {
+    const result = Array.from({ length: 100 }, (_, index) => swap(setup({
+      topRow: ['attack', 'heal', 'attack', 'attack', 'shield', 'energy'],
+      playerElement: 'metal', monsterId: 'bamboo_mantis',
+      monster: { element: 'earth', defense: 0, baseDefense: 0 },
+      player: { attackStreakTargetId: 'bamboo_mantis', attackStreak: 1 }, seed: index + 1,
+    }), `kim-crit-${index}`)).find((candidate) => candidate.events.some((event) => event.type === 'DAMAGE_APPLIED' && event.payload['critical'] === true))!;
+    const damage = firstEvent(result.events, (e) => e.type === 'DAMAGE_APPLIED' && e.payload['source'] === 'attack_gems');
+    expect(damage?.payload['critical']).toBe(true);
+    expect(damage?.payload['amount']).toBe(42);
+    expect(result.events.some((e) => e.type === 'PASSIVE_TRIGGERED' && e.payload['passiveId'] === 'metal_critical')).toBe(true);
   });
 
-  it('MỘC — Sinh Cơ Bất Tận: độc kéo dài thêm 1 lượt và máu dư hóa khiên', () => {
-    const poison = swap(
-      setup({ topRow: ['poison', 'attack', 'poison', 'poison', 'heal', 'shield'], playerElement: 'wood' }),
-      'moc-poison',
-    );
-    expect(firstEvent(poison.events, (e) => e.type === 'POISON_APPLIED' && e.payload['target'] === 'monster')?.payload['turns']).toBe(4);
-
-    const overflow = swap(
-      setup({ topRow: ['heal', 'attack', 'heal', 'heal', 'shield', 'energy'], playerElement: 'wood' }),
-      'moc-overflow',
-    );
-    // Người chơi đầy máu sẵn (currentHp = maxHp) nên toàn bộ phần hồi tràn sang khiên.
-    const shieldPassive = firstEvent(overflow.events, (e) => e.type === 'PASSIVE_TRIGGERED' && e.payload['passiveId'] === 'wood_overflow_shield');
-    expect(shieldPassive?.payload['amount']).toBe(45);
+  it('MỘC — hồi HP tăng 40% khi quái đang dính độc', () => {
+    const result = swap(setup({
+      topRow: ['heal', 'attack', 'heal', 'heal', 'shield', 'energy'],
+      playerElement: 'wood', player: { currentHp: 100 },
+      monster: { poisonPotency: 6, poisonTurns: 2 },
+    }), 'moc-heal');
+    expect(firstEvent(result.events, (e) => e.type === 'HEAL_APPLIED' && e.payload['target'] === 'player')?.payload['amount']).toBe(63);
+    expect(result.events.some((e) => e.type === 'PASSIVE_TRIGGERED' && e.payload['passiveId'] === 'wood_healing')).toBe(true);
   });
 
-  it('THỦY — Hàn Tức Ngưng Kết: khiên match-4 làm quái hoãn lượt đánh', () => {
-    const result = swap(
-      setup({ topRow: ['shield', 'attack', 'shield', 'shield', 'shield', 'energy'], playerElement: 'water' }),
-      'thuy-delay',
-    );
-    expect(result.events.some((e) => e.type === 'PASSIVE_TRIGGERED' && e.payload['passiveId'] === 'water_delay_monster')).toBe(true);
-    expect(result.events.some((e) => e.type === 'MONSTER_ACTION_DELAYED')).toBe(true);
-    expect(result.events.some((e) => e.type === 'MONSTER_ATTACKED')).toBe(false);
+  it('THỦY — từ lần nhận damage thứ ba liên tiếp giảm 25%', () => {
+    const result = swap(setup({
+      topRow: ['attack', 'heal', 'attack', 'attack', 'shield', 'energy'],
+      playerElement: 'water', monsterId: 'mist_blob',
+      monster: { nextAction: 'basic' },
+      player: { shield: 100 },
+      battle: { damageTakenStreak: 2 },
+    }), 'thuy-reduction');
+    expect(result.events.some((e) => e.type === 'PASSIVE_TRIGGERED' && e.payload['passiveId'] === 'water_damage_reduction')).toBe(true);
+    expect(result.events.find((e) => e.type === 'MONSTER_ATTACKED')?.payload['amount']).toBe(37);
   });
 
-  it('HỎA — Liệt Diễm Chi Tâm: thiêu rụi khiên quái khi đánh thường', () => {
-    const result = swap(
-      setup({
-        topRow: ['attack', 'heal', 'attack', 'attack', 'shield', 'energy'],
-        playerElement: 'fire',
-        monsterId: 'bamboo_mantis',
-        monster: { element: 'earth', defense: 0, baseDefense: 0, shield: 20 },
-      }),
-      'hoa-burn',
-    );
-    const burn = firstEvent(result.events, (e) => e.type === 'PASSIVE_TRIGGERED' && e.payload['passiveId'] === 'fire_burn_shield');
-    expect(burn?.payload['amount']).toBe(20);
-    // +20% sát thương: 25 × 3 × 0.4 × 1.0(hòa) × 1.2 = 36.
-    expect(firstEvent(result.events, (e) => e.type === 'DAMAGE_APPLIED' && e.payload['source'] === 'attack_gems')?.payload['amount']).toBe(36);
+  it('HỎA — target đang burning nhận +20 damage và burning được reset', () => {
+    const result = swap(setup({
+      topRow: ['attack', 'heal', 'attack', 'attack', 'shield', 'energy'],
+      playerElement: 'fire', monsterId: 'bamboo_mantis',
+      monster: { element: 'earth', defense: 0, baseDefense: 0, burningPotency: 1, burningTurns: 2 },
+    }), 'hoa-burning');
+    const damage = firstEvent(result.events, (e) => e.type === 'DAMAGE_APPLIED' && e.payload['source'] === 'attack_gems');
+    expect(damage?.payload['burningBonus']).toBe(20);
+    expect(damage?.payload['amount']).toBe(50);
+    expect(result.events.some((e) => e.type === 'BURNING_APPLIED')).toBe(true);
   });
 
-  it('THỔ — Bất Động Như Sơn: nộ chuyển hóa một phần thành khiên', () => {
-    const result = swap(
-      setup({ topRow: ['energy', 'attack', 'energy', 'energy', 'heal', 'shield'], playerElement: 'earth' }),
-      'tho-shield',
-    );
-    // earth vs water = khắc → nộ 18; khiên thưởng = round(18 × 0.5) = 9.
-    const shieldPassive = firstEvent(result.events, (e) => e.type === 'PASSIVE_TRIGGERED' && e.payload['passiveId'] === 'earth_energy_shield');
-    expect(shieldPassive?.payload['amount']).toBe(9);
+  it('THỔ — khi đang có khiên, incoming damage giảm 10%', () => {
+    const result = swap(setup({
+      topRow: ['attack', 'heal', 'attack', 'attack', 'shield', 'energy'],
+      playerElement: 'earth', monsterId: 'mist_blob',
+      monster: { nextAction: 'basic' },
+      player: { shield: 100 },
+    }), 'tho-resist');
+    expect(result.events.some((e) => e.type === 'PASSIVE_TRIGGERED' && e.payload['passiveId'] === 'earth_shield_resistance')).toBe(true);
+    expect(result.events.find((e) => e.type === 'MONSTER_ATTACKED')?.payload['amount']).toBe(44);
   });
 });

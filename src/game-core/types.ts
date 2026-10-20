@@ -105,7 +105,7 @@ export interface EquipmentSlots {
 
 export interface PlayerBattleState {
   readonly level: number;
-  /** Hệ Ngũ Hành của nhân vật; quyết định tương khắc và nội tại nghề (Balance V2). */
+  /** Hệ Ngũ Hành của nhân vật; quyết định tương khắc và nội tại nghề (Balance V3). */
   readonly element: ElementId;
   readonly attributes: Attributes;
   readonly stats: DerivedStats;
@@ -116,12 +116,19 @@ export interface PlayerBattleState {
   readonly poisonTurns: number;
   /** Số tầng độc đang chịu (mô hình độc theo tầng V2, tối đa poisonMaxStacks). */
   readonly poisonStacks: number;
+  readonly damageReductionTurns: number;
+  readonly damageReductionPercent: number;
+  readonly controlImmunityTurns: number;
+  readonly reflectDamageRatio: number;
+  /** Direct attack streak used by the Metal passive. */
+  readonly attackStreakTargetId?: string;
+  readonly attackStreak: number;
 }
 
 export interface MonsterDefinition {
   readonly id: string;
   readonly name: string;
-  /** Hệ Ngũ Hành của quái (Balance V2); thiếu field => coi như hòa/neutral. */
+  /** Hệ Ngũ Hành của quái (Balance V3); thiếu field => coi như hòa/neutral. */
   readonly element?: ElementId;
   readonly level: number;
   readonly maxHp: number;
@@ -160,10 +167,19 @@ export interface MonsterBattleState extends MonsterDefinition {
   readonly currentHp: number;
   readonly energy: number;
   readonly shield: number;
+  readonly defenseReductionTurns: number;
+  readonly defenseReductionPercent: number;
   readonly poisonPotency: number;
   readonly poisonTurns: number;
   /** Số tầng độc đang chịu (mô hình độc theo tầng V2). */
   readonly poisonStacks: number;
+  /** Burning state applied by the Fire hero passive. */
+  readonly burningPotency: number;
+  readonly burningTurns: number;
+  readonly controlEffect?: 'stun' | 'freeze';
+  readonly controlTurns: number;
+  readonly damageTakenBonus: number;
+  readonly damageTakenBonusTurns: number;
   readonly nextAction: 'basic' | 'guard' | 'heavy' | 'energy' | 'poison' | 'telegraph' | 'long_mieu_lien_kich';
   readonly phase: 1 | 2;
   readonly actionCount: number;
@@ -180,7 +196,7 @@ export interface BattleConfig {
 
 export interface SkillAction {
   readonly kind: 'skill';
-  readonly skillId: 'cloud_break_lantern';
+  readonly skillId: string;
   readonly actionId: string;
 }
 
@@ -207,8 +223,10 @@ export interface BattleState {
   readonly phase: BattlePhase;
   readonly player: PlayerBattleState;
   readonly playerSkipTurns: number;
-  /** Số lượt hành động tấn công của quái đang bị hoãn (nội tại THỦY, Balance V2). */
+  /** Số lượt hành động tấn công của quái đang bị hoãn (legacy field). */
   readonly monsterActionDelay: number;
+  /** Consecutive monster damage events received by the player. */
+  readonly damageTakenStreak: number;
   readonly monster: MonsterBattleState;
   readonly telegraph: string;
   readonly terminalReason?: string;
@@ -264,14 +282,21 @@ export interface GameEvent {
     | 'MONSTER_ACTION_SKIPPED'
     | 'POISON_APPLIED'
     | 'POISON_TICKED'
+    | 'BURNING_APPLIED'
+    | 'BURNING_TICKED'
     | 'MONSTER_TELEGRAPH'
     | 'MONSTER_ATTACKED'
     | 'MONSTER_GUARDED'
     | 'MONSTER_SKILL_USED'
     | 'MONSTER_ACTION_DELAYED'
     | 'PASSIVE_TRIGGERED'
+    | 'DEFENSE_REDUCED'
     | 'PLAYER_TURN_SKIPPED'
     | 'SKILL_USED'
+    | 'ENERGY_STOLEN'
+    | 'CONTROL_APPLIED'
+    | 'DAMAGE_VULNERABILITY_APPLIED'
+    | 'DAMAGE_REFLECTED'
     | 'TURN_STARTED'
     | 'BATTLE_WON'
     | 'BATTLE_LOST'

@@ -52,6 +52,12 @@ export function createPlayerBattleState(
     poisonPotency: 0,
     poisonTurns: 0,
     poisonStacks: 0,
+    damageReductionTurns: 0,
+    damageReductionPercent: 0,
+    controlImmunityTurns: 0,
+    reflectDamageRatio: 0,
+    attackStreakTargetId: undefined,
+    attackStreak: 0,
   };
 }
 
@@ -76,6 +82,12 @@ export function clampPlayerState(player: PlayerBattleState): PlayerBattleState {
     poisonPotency: safeNonNegative(player.poisonPotency, 0),
     poisonTurns: Math.max(0, Math.floor(safeNonNegative(player.poisonTurns, 0))),
     poisonStacks: Math.max(0, Math.floor(safeNonNegative(player.poisonStacks, 0))),
+    damageReductionTurns: Math.max(0, Math.floor(safeNonNegative(player.damageReductionTurns, 0))),
+    damageReductionPercent: Math.max(0, Math.min(1, safeNonNegative(player.damageReductionPercent, 0))),
+    controlImmunityTurns: Math.max(0, Math.floor(safeNonNegative(player.controlImmunityTurns, 0))),
+    reflectDamageRatio: Math.max(0, Math.min(1, safeNonNegative(player.reflectDamageRatio, 0))),
+    attackStreakTargetId: typeof player.attackStreakTargetId === 'string' ? player.attackStreakTargetId : undefined,
+    attackStreak: Math.max(0, Math.floor(safeNonNegative(player.attackStreak, 0))),
   };
 }
 

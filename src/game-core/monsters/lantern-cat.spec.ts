@@ -143,7 +143,7 @@ describe('Miêu Đèn behavior', () => {
     expect(chooseLanternCatAction(2, 100, 100)).toBe('long_mieu_lien_kich');
   });
 
-  it('deals direct HP damage, drains player energy and leaves ten energy', () => {
+  it('absorbs Long Miêu Liên Kích with shield, drains player energy and leaves ten energy', () => {
     const initial = createBattleState(23, 'lantern_cat');
     const state = {
       ...initial,
@@ -168,8 +168,8 @@ describe('Miêu Đèn behavior', () => {
     });
 
     expect(result.events.some((event) => event.type === 'MONSTER_SKILL_USED')).toBe(true);
-    expect(result.state.player.currentHp).toBe(270);
-    expect(result.state.player.shield).toBe(100);
+    expect(result.state.player.currentHp).toBe(300);
+    expect(result.state.player.shield).toBe(70);
     expect(result.state.player.energy).toBe(40);
     expect(result.state.playerSkipTurns).toBe(1);
     expect(result.state.monster.energy).toBe(10);

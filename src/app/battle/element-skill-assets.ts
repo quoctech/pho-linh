@@ -13,8 +13,8 @@ export function fitSkillIconDisplaySize(sourceWidth: number, sourceHeight: numbe
   return { width: Math.max(1, Math.round(sourceWidth * scale)), height: Math.max(1, Math.round(sourceHeight * scale)) };
 }
 export function getElementSkillVisualState(slot: ElementActiveSkillSlot, canAct: boolean, energy: number, energyCost: number): ElementSkillVisualState {
-  const active = slot === 'primarySkill' && canAct && Number.isFinite(energy) && energy >= energyCost;
-  return { active, locked: slot === 'secondarySkill', animate: false };
+  const active = canAct && Number.isFinite(energy) && energy >= energyCost;
+  return { active, locked: !active, animate: false };
 }
 
 export interface ElementSkillConfig {

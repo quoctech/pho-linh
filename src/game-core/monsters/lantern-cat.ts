@@ -51,7 +51,6 @@ export function resolveLanternCatTurn(context: LanternCatTurnContext): LanternCa
   let player = clampPlayerState(context.state.player);
   let monster: MonsterBattleState = {
     ...context.state.monster,
-    defense: context.state.monster.baseDefense,
   };
   const events: GameEvent[] = [];
   let sequence = context.startSequence;
@@ -70,19 +69,16 @@ export function resolveLanternCatTurn(context: LanternCatTurnContext): LanternCa
     );
     const monsterEnergyBefore = monster.energy;
     const monsterEnergyAfter = Math.min(context.config.energyCap, MONSTER_COMBAT_BALANCE.lanternCatSkill.energyRestored);
-    player = clampPlayerState({
-      ...player,
-      currentHp: player.currentHp - damage,
-      energy: player.energy - energyDrained,
-    });
+    const damageMultiplier = player.damageReductionTurns > 0 ? 1 - player.damageReductionPercent : 1;
+    const damageResult = applyMonsterAttackDamage(player, damage, damageMultiplier);
+    player = clampPlayerState({ ...damageResult.player, energy: player.energy - energyDrained });
     monster = { ...monster, energy: monsterEnergyAfter };
     events.push(context.createEvent(sequence, 'MONSTER_SKILL_USED', {
       actor: 'monster',
       actionId: `${context.actionId}:monster:${monster.actionCount}:long-mieu-lien-kich`,
       skillId: 'lantern_cat_long_mieu_lien_kich',
       label: `${monster.name} dùng Long Miêu Liên Kích`,
-      damage,
-      shieldBypassed: true,
+      damage: damageResult.incoming,
       energyBefore: monsterEnergyBefore,
       energySpent: Math.max(0, monsterEnergyBefore - monsterEnergyAfter),
       energyRestored: monsterEnergyAfter,
@@ -97,12 +93,12 @@ export function resolveLanternCatTurn(context: LanternCatTurnContext): LanternCa
       actor: 'monster',
       source: 'lantern_cat_long_mieu_lien_kich',
       actionId: `${context.actionId}:monster:${monster.actionCount}:long-mieu-lien-kich`,
-      amount: damage,
-      requested: damage,
-      hpDamage: damage,
-      shieldAbsorbed: 0,
+      amount: damageResult.incoming,
+      requested: damageResult.incoming,
+      hpDamage: damageResult.incoming - damageResult.absorbed,
+      shieldAbsorbed: damageResult.absorbed,
       shieldRemaining: player.shield,
-      shieldBypassed: true,
+      shieldBroken: damageResult.absorbed > 0 && player.shield === 0,
       target: 'player',
       lethal: player.currentHp <= 0,
     }));
@@ -111,7 +107,7 @@ export function resolveLanternCatTurn(context: LanternCatTurnContext): LanternCa
       state: {
         ...context.state,
         player,
-        playerSkipTurns: 1,
+        playerSkipTurns: player.controlImmunityTurns > 0 ? 0 : 1,
         monster,
       },
       events,

@@ -9,7 +9,7 @@
       "id": "kim_kiem_tam_bat_diet",
       "element": "Kim",
       "name": "Kiếm Tâm Bất Diệt",
-      "description": "Tăng tỷ lệ chí mạng khi liên tục tấn công cùng một mục tiêu.",
+      "description": "Từ đòn thứ hai liên tiếp, có 40% chí mạng và tăng 40% sát thương.",
       "file": "icons_webp/kim_kiem_tam_bat_diet.webp",
       "size": {
         "width": 296,
@@ -30,7 +30,7 @@
       "id": "moc_sinh_co_bat_tan",
       "element": "Mộc",
       "name": "Sinh Cơ Bất Tận",
-      "description": "Tăng hiệu quả hồi phục khi trên chiến trường có mục tiêu đang Dính độc.",
+      "description": "Tăng 40% hồi phục khi quái đang Dính độc.",
       "file": "icons_webp/moc_sinh_co_bat_tan.webp",
       "size": {
         "width": 296,
@@ -51,7 +51,7 @@
       "id": "thuy_han_tuc_ngung_ket",
       "element": "Thủy",
       "name": "Hàn Tức Ngưng Kết",
-      "description": "Tăng hiệu quả khống chế lên mục tiêu đã bị Làm chậm.",
+      "description": "Giảm 25% sát thương từ hit thứ ba liên tiếp.",
       "file": "icons_webp/thuy_han_tuc_ngung_ket.webp",
       "size": {
         "width": 296,
@@ -72,7 +72,7 @@
       "id": "hoa_liet_diem_chi_tam",
       "element": "Hỏa",
       "name": "Liệt Diễm Chi Tâm",
-      "description": "Tăng sát thương lên mục tiêu đang Thiêu đốt.",
+      "description": "Thiêu đốt mục tiêu và cộng 20 sát thương khi mục tiêu đang cháy.",
       "file": "icons_webp/hoa_liet_diem_chi_tam.webp",
       "size": {
         "width": 296,
@@ -93,7 +93,7 @@
       "id": "tho_bat_dong_nhu_son",
       "element": "Thổ",
       "name": "Bất Động Như Sơn",
-      "description": "Tăng khả năng chống chịu khi đang có Khiên.",
+      "description": "Giảm 10% sát thương khi đang có Khiên.",
       "file": "icons_webp/tho_bat_dong_nhu_son.webp",
       "size": {
         "width": 296,

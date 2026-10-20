@@ -1,6 +1,6 @@
 import { elementalModifier, elementRelationship } from './elements';
 
-describe('Ngũ Hành (Balance V2)', () => {
+describe('Ngũ Hành (Balance V3)', () => {
   it('xác định quan hệ tương khắc theo vòng Kim→Mộc→Thổ→Thủy→Hỏa→Kim', () => {
     // Mỗi hệ khắc hệ đứng sau nó trong vòng.
     expect(elementRelationship('metal', 'wood')).toBe('counter');

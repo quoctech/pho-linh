@@ -11,12 +11,14 @@ export function matchDamageMultiplier(matchCount: number): number {
 export function applyMonsterAttackDamage(
   player: PlayerBattleState,
   amount: number,
-): { readonly player: PlayerBattleState; readonly absorbed: number } {
-  const incoming = Number.isFinite(amount) ? Math.max(1, amount) : 1;
+  damageMultiplier = 1,
+): { readonly player: PlayerBattleState; readonly absorbed: number; readonly incoming: number } {
+  const incoming = Number.isFinite(amount) ? Math.max(1, Math.round(amount * damageMultiplier)) : 1;
   const safePlayer = clampPlayerState(player);
   const absorbed = Math.min(safePlayer.shield, incoming);
   return {
     absorbed,
+    incoming,
     player: clampPlayerState({
       ...safePlayer,
       shield: safePlayer.shield - absorbed,

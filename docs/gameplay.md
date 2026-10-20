@@ -7,7 +7,7 @@
 > **Nền tảng MVP:** Android offline-first (Ionic 9 + Angular + Phaser 4 + Capacitor 8 + TypeScript)  
 > **Tương lai:** JohnCMS/PHP + MySQL; Node.js + Socket.IO cho matchmaking và PvP. **Không nằm trong MVP offline.**
 
-> **Balance V2:** Đặc tả mới về năm ngọc, Ngũ Hành, nội tại nghề, trọng số và công thức combat nằm tại [`GAMEPLAY_BALANCE_V2.md`](./gameplay-balance-v2.md). Tài liệu đó là nguồn thiết kế cho đợt triển khai kế tiếp và **chưa thay đổi runtime hiện tại**; các công thức cũ trong tài liệu này được xem là baseline legacy cho đến khi V2 được code và test.
+> **Balance V3:** Đặc tả runtime hiện tại về năm ngọc, Ngũ Hành, nội tại nghề, critical, burning và công thức combat nằm tại [`GAMEPLAY_BALANCE_V2.md`](./gameplay-balance-v2.md). Các công thức cũ trong tài liệu này chỉ là baseline legacy.
 
 ---
 
@@ -206,7 +206,7 @@ Danh sách VFX/animation chuẩn cho hero và quái nằm tại [`GAME_DESIGN.md
 | Action | Player/monster attack hoặc skill event | `normal_attack`, `normal_attack_fx`, `attack_projectile`, `cast`, `cast_impact` |
 | Reaction | Damage, dodge, death, skipped turn | `hit`, `dodge`, `death`, `stunned` |
 | Recovery/debuff | Heal, anti-heal, poison apply/tick | `heal`, `anti_heal`, `poison_cast`, `poison_projectile`, `poisoned` |
-| Future control/status | Freeze, burn, lightning, skill lock, armor break event | `frozen`, `burning`, `lightning_struck`, `skill_locked`, `armor_break` |
+| Combat status | Freeze, burning, lightning, skill lock, armor break event | `frozen`, `burning`, `lightning_struck`, `skill_locked`, `armor_break` |
 
 Nguyên tắc bắt buộc:
 
@@ -334,16 +334,24 @@ Monster abilities có hệ số riêng; damage không được âm. Đây là c�
 6. Kiểm tra HP người chơi ≤ 0 → thua; sau đó tăng lượt.
 7. Nếu vượt giới hạn lượt và quái chưa chết → thua (MVP), hiển thị gợi ý nâng cấp.
 
-### 11.8. Tuyệt kỹ MVP
+### 11.8. Kỹ năng nguyên tố trong PK với quái
 
-**Tên:** Đèn Phá Mây (tên làm việc). Khi energy ≥100, người chơi có thể kích hoạt ở **đầu một lượt của mình**, không tiêu hao swap; energy về 0.
+Khi đủ `energyCost` riêng, người chơi có thể kích hoạt kỹ năng tương ứng ở đầu lượt của mình, không tiêu hao swap. Cả năm hệ dùng cùng một battle resolver:
+
+| Hệ | Kỹ năng 1 | Kỹ năng 2 |
+|---|---|---|
+| Kim | Vạn Kiếm Quy Tông — 60, 120% ATK, chịu khiên | Kim Quang Phá Giáp — 100, 180% ATK xuyên khiên, giảm DEF 30%/2 lượt |
+| Mộc | Thanh Đằng Trói Hồn — 50, 80% ATK, hút 15 năng lượng | Vạn Diệp Độc Chú — 90, 90% ATK, độc 20% ATK/lượt ×3 |
+| Thủy | Hàn Triều Phá Không — 50, trừ 22 khiên hoặc HP | Băng Phong Thiên Lý — 100, 110% ATK, đóng băng 1 lượt |
+| Hỏa | Hỏa Vũ Liên Châu — 60, 3 × 40% ATK | Phần Thiên Xạ Nhật — 100, 150% ATK, tăng sát thương nhận 15%/2 lượt |
+| Thổ | Sơn Nhạc Trấn Địa — 65, 70% ATK, 40% choáng 1 lượt | Huyền Nham Hộ Thể — 80, khiên 200% DEF, giảm 25%, miễn khống chế, phản 35% |
 
 ```text
-skillDamage = round(50 + SKILL_POWER × 4)
-actual = max(1, skillDamage - floor(monsterDEF × 0.5))
+skillDamage = round(ATK × attackMultiplier) hoặc hiệu ứng fixedDamage
+actual = commonResolver(skillConfig, shield, status, monster)
 ```
 
-Chỉ có **một tuyệt kỹ** ở M2. M3 thêm tối đa ba kỹ năng có vai trò rõ: tấn công/bảo hộ/giải hiệu ứng.
+Kỹ năng chính và kỹ năng phụ đều mở khi đủ `energyCost` riêng của skill, dùng chung resolver và mỗi kỹ năng có ID/VFX riêng. Giữ nộ dưới cost tương ứng thì nút hiển thị trạng thái chờ; giữ nút 2 giây sẽ mở tooltip đầy đủ thông tin kỹ năng.
 
 ### 11.9. Tuyệt kỹ riêng của Miêu Đèn
 

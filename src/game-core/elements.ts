@@ -2,7 +2,7 @@ import { COMBAT_DATA, type ElementCategory, type ElementRelationship } from './g
 import type { ElementId } from './types';
 
 /**
- * Ngũ Hành (Balance V2) — quan hệ tương khắc giữa hệ nhân vật và hệ quái.
+ * Ngũ Hành (Balance V3) — quan hệ tương khắc giữa hệ nhân vật và hệ quái.
  *
  * Vòng tương khắc nằm trong `combat.json` (`elements.cycle`): mỗi phần tử KHẮC
  * phần tử đứng ngay sau nó, vòng lại đầu danh sách. Hàm thuần, không side-effect;

@@ -243,6 +243,7 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
   private skillTooltipLabel?: Phaser.GameObjects.Text;
   private skillLongPressTimer?: Phaser.Time.TimerEvent;
   private skillLongPressTriggered = false;
+  private skillPressSlot?: ElementActiveSkillSlot;
   private skillTooltipHideTimer?: Phaser.Time.TimerEvent;
   private abandonButtonBackground?: Phaser.GameObjects.Rectangle;
   private abandonButton?: Phaser.GameObjects.Text;
@@ -466,6 +467,9 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
     });
     this.createBoardFrame();
     this.createControls();
+    this.input.on('pointerdown', this.onSceneSkillPointerDown, this);
+    this.input.on('pointerup', this.onSceneSkillPointerUp, this);
+    this.input.on('pointercancel', this.onSceneSkillPointerCancel, this);
     this.lanternCatVfx = new LanternCatVfx({
       scene: this,
       reducedMotion: this.reducedMotion,
@@ -1210,27 +1214,22 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
       const iconFrames = elementSkillIconFrameKeys(this.heroElement, slot);
       const icon = this.add
         .image(point.x, point.y - 2, iconFrames[0])
-        .setDepth(2);
+        .setDepth(2)
+        .setInteractive({ useHandCursor: true });
       const iconSize = fitSkillIconDisplaySize(icon.frame.realWidth, icon.frame.realHeight);
       icon.setDisplaySize(iconSize.width, iconSize.height);
       const lockLabel = this.add
-        .text(point.x, point.y + 2, slot === 'secondarySkill' ? 'KHÓA' : '', {
+        .text(point.x, point.y + 2, '', {
           color: '#e5d9ff', fontFamily: 'sans-serif', fontSize: '7px', fontStyle: 'bold',
           stroke: '#171426', strokeThickness: 2,
         })
         .setResolution(this.renderQuality)
         .setOrigin(0.5)
         .setDepth(4)
-        .setVisible(slot === 'secondarySkill');
+        .setVisible(false);
       this.skillButtons.push(button);
       this.skillIcons.push(icon);
       this.skillLockLabels.push(lockLabel);
-      if (slot === 'primarySkill') {
-        button.on('pointerdown', this.onSkillPointerDown, this);
-        button.on('pointerup', this.onSkillPointerUp, this);
-        button.on('pointerout', this.onSkillPointerCancel, this);
-        button.on('pointerupoutside', this.onSkillPointerCancel, this);
-      }
     });
     this.skillTooltip = this.add
       .container(Math.max(79, Math.min(this.logicalWidth - 79, this.layout.skillButtons[0].x)), this.layout.skillButtons[0].y - 58)
@@ -1476,26 +1475,34 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
 
   private updateSkillButtons(state: BattleState): void {
     const canAct = state.phase === 'PLAYER_READY';
+    const elementSkills = CHARACTER_DATA.elementSkills[this.heroElement];
+    const primaryConfig = elementSkills.primarySkill;
+    const secondaryConfig = elementSkills.secondarySkill;
     const primaryState = getElementSkillVisualState(
-      'primarySkill', canAct, state.player.energy, CHARACTER_DATA.skills.cloud_break_lantern.energyCost,
+      'primarySkill', canAct, state.player.energy, primaryConfig.energyCost,
     );
     const secondaryState = getElementSkillVisualState(
-      'secondarySkill', canAct, state.player.energy, CHARACTER_DATA.skills.cloud_break_lantern.energyCost,
+      'secondarySkill', canAct, state.player.energy, secondaryConfig.energyCost,
     );
     const primaryButton = this.skillButtons[0];
     const primaryIcon = this.skillIcons[0];
     if (primaryButton && primaryIcon) {
-      primaryButton.setAlpha(0);
+      // Keep the transparent rectangle in the input hit-test tree. Its fill
+      // is already transparent; alpha 0 makes Phaser skip pointer hits on
+      // some mobile render/input paths.
+      primaryButton.setAlpha(1);
       primaryIcon.setAlpha(primaryState.active ? 1 : 0.55);
       this.setSkillIconMotion(primaryIcon, 'primarySkill', primaryState.animate);
     }
     const secondaryButton = this.skillButtons[1];
     const secondaryIcon = this.skillIcons[1];
     if (secondaryButton && secondaryIcon) {
-      secondaryButton.setAlpha(0);
+      secondaryButton.setAlpha(1);
       secondaryIcon.setAlpha(secondaryState.locked ? 0.42 : 1);
       this.setSkillIconMotion(secondaryIcon, 'secondarySkill', secondaryState.animate);
     }
+    const secondaryLockLabel = this.skillLockLabels[1];
+    secondaryLockLabel?.setVisible(secondaryState.locked);
     this.setPlayerControlsEnabled(canAct);
   }
 
@@ -1510,19 +1517,31 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
     icon.setDisplaySize(iconSize.width, iconSize.height).clearTint();
   }
 
-  private showSkillTooltip(): void {
+  private showSkillTooltip(slot: ElementActiveSkillSlot = 'primarySkill'): void {
     const state = this.controller.currentState;
     const skillPower = state.player.stats.skillPower;
-    const skillDamage = Math.max(
-      1,
-      Math.round(
-        CHARACTER_DATA.skills.cloud_break_lantern.baseDamage
-        + skillPower * CHARACTER_DATA.skills.cloud_break_lantern.skillPowerMultiplier,
-      ) - Math.floor(state.monster.defense * CHARACTER_DATA.skills.cloud_break_lantern.defenseMultiplier),
-    );
-    const skillEnergyCost = CHARACTER_DATA.skills.cloud_break_lantern.energyCost;
+    const elementSkill = CHARACTER_DATA.elementSkills[this.heroElement];
+    const skillConfig = slot === 'primarySkill' ? elementSkill.primarySkill : elementSkill.secondarySkill;
+    const skillLabel = slot === 'primarySkill' ? elementSkill.primarySkillLabel : elementSkill.secondarySkillLabel;
+    const skillDamage = skillConfig.attackMultiplier !== undefined
+      ? Math.max(1, Math.round(state.player.stats.atk * skillConfig.attackMultiplier))
+      : Math.max(
+        1,
+        Math.round(skillConfig.baseDamage + skillPower * skillConfig.skillPowerMultiplier)
+          - Math.floor(state.monster.defense * skillConfig.defenseMultiplier),
+      );
+    const skillEnergyCost = skillConfig.energyCost;
+    const effects: string[] = [];
+    if (skillConfig.fixedDamage !== undefined) effects.push(`Trừ ${skillConfig.fixedDamage} khiên/HP`);
+    if (skillConfig.energySteal) effects.push(`Hút ${skillConfig.energySteal} năng lượng`);
+    if (skillConfig.poisonAtkFactor) effects.push(`Độc ${skillConfig.poisonAtkFactor * 100}% ATK · ${skillConfig.poisonTurns} lượt`);
+    if (skillConfig.hitCount) effects.push(`${skillConfig.hitCount} đòn × ${skillConfig.attackMultiplier! * 100}% ATK`);
+    if (skillConfig.controlEffect) effects.push(`${skillConfig.controlEffect === 'freeze' ? 'Đóng băng' : 'Choáng'} · ${skillConfig.controlChance! * 100}%`);
+    if (skillConfig.damageTakenBonus) effects.push(`Mục tiêu nhận thêm ${skillConfig.damageTakenBonus * 100}% sát thương · ${skillConfig.damageTakenBonusTurns} lượt`);
+    if (skillConfig.defenseReduction) effects.push(`Giảm DEF ${skillConfig.defenseReduction * 100}% · ${skillConfig.defenseReductionTurns} lượt`);
+    if (skillConfig.selfShieldDefenseMultiplier) effects.push(`Khiên ${skillConfig.selfShieldDefenseMultiplier * 100}% DEF · giảm nhận ${skillConfig.selfDamageReduction! * 100}% · phản ${skillConfig.reflectDamageRatio! * 100}%`);
     this.skillTooltipLabel?.setText(
-      `${ELEMENT_SKILL_CONFIG[this.heroElement].primarySkillLabel}\n⚡${state.player.energy}/${DEFAULT_BATTLE_CONFIG.energyCap} · Cần ${skillEnergyCost}\nSP ${skillPower} · Sát thương ${skillDamage}`,
+      `${skillLabel}\n⚡${state.player.energy}/${DEFAULT_BATTLE_CONFIG.energyCap} · Cần ${skillEnergyCost}\nSát thương: ${skillDamage}${skillConfig.bypassShield ? ' · Xuyên khiên' : ''}\n${skillConfig.attackMultiplier !== undefined ? `ATK ×${skillConfig.attackMultiplier}` : `SP ×${skillConfig.skillPowerMultiplier} · DEF ×${skillConfig.defenseMultiplier}`}${effects.length ? `\n${effects.join('\n')}` : ''}`,
     );
     this.skillTooltip?.setVisible(true).setAlpha(1);
     this.skillTooltipHideTimer?.remove(false);
@@ -1532,20 +1551,75 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
     });
   }
 
-  private onSkillPointerDown(): void {
+  private onSkillPointerDown(pointer?: Phaser.Input.Pointer): void {
     this.skillLongPressTriggered = false;
     this.skillLongPressTimer?.remove(false);
-    this.skillLongPressTimer = this.time.delayedCall(450, () => {
+    void pointer;
+    this.skillLongPressTimer = this.time.delayedCall(2000, () => {
       this.skillLongPressTriggered = true;
-      this.showSkillTooltip();
+      this.showSkillTooltip('primarySkill');
       this.skillLongPressTimer = undefined;
     });
+  }
+
+  private skillSlotAtPointer(pointer: Phaser.Input.Pointer): ElementActiveSkillSlot | undefined {
+    const size = this.layout.skillButtonSize / 2;
+    const coordinates = [[pointer.worldX, pointer.worldY], [pointer.x, pointer.y]] as const;
+    for (const [x, y] of coordinates) {
+      for (const [index, slot] of (['primarySkill', 'secondarySkill'] as const).entries()) {
+        const point = this.layout.skillButtons[index];
+        if (Math.abs(x - point.x) <= size && Math.abs(y - point.y) <= size) return slot;
+      }
+    }
+    return undefined;
+  }
+
+  private onSceneSkillPointerDown(pointer: Phaser.Input.Pointer): void {
+    const slot = this.skillSlotAtPointer(pointer);
+    if (!slot) return;
+    this.skillPressSlot = slot;
+    if (slot === 'primarySkill') this.onSkillPointerDown(pointer);
+    else this.onSecondarySkillPointerDown(pointer);
+  }
+
+  private onSceneSkillPointerUp(pointer: Phaser.Input.Pointer): void {
+    if (!this.skillPressSlot) return;
+    const slot = this.skillPressSlot;
+    this.skillPressSlot = undefined;
+    // A pointer-up outside the icon still completes the mobile long-press;
+    // dispatchSkill itself remains guarded by the current phase/cost.
+    void pointer;
+    if (slot === 'primarySkill') this.onSkillPointerUp();
+    else this.onSecondarySkillPointerUp();
+  }
+
+  private onSceneSkillPointerCancel(): void {
+    this.skillPressSlot = undefined;
+    this.onSkillPointerCancel();
   }
 
   private onSkillPointerUp(): void {
     this.skillLongPressTimer?.remove(false);
     this.skillLongPressTimer = undefined;
-    if (!this.skillLongPressTriggered) void this.dispatchSkill();
+    if (!this.skillLongPressTriggered) void this.dispatchSkill('primarySkill');
+    this.skillLongPressTriggered = false;
+  }
+
+  private onSecondarySkillPointerDown(pointer?: Phaser.Input.Pointer): void {
+    this.skillLongPressTriggered = false;
+    this.skillLongPressTimer?.remove(false);
+    void pointer;
+    this.skillLongPressTimer = this.time.delayedCall(2000, () => {
+      this.skillLongPressTriggered = true;
+      this.showSkillTooltip('secondarySkill');
+      this.skillLongPressTimer = undefined;
+    });
+  }
+
+  private onSecondarySkillPointerUp(): void {
+    this.skillLongPressTimer?.remove(false);
+    this.skillLongPressTimer = undefined;
+    if (!this.skillLongPressTriggered) void this.dispatchSkill('secondarySkill');
     this.skillLongPressTriggered = false;
   }
 
@@ -1562,7 +1636,13 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
         const x = this.boardLeft + col * this.cellSize + this.cellSize / 2;
         const y = this.boardTop + row * this.cellSize + this.cellSize / 2;
         const current = this.gemSprites.get(key);
-        if (current && this.lastBoard?.[row]?.[col] === board[row][col] && current.visible && current.alpha > 0.05) {
+        // Board snapshots are emitted several times during one resolve. Keep
+        // the existing visual by identity whenever the gem type at this cell
+        // is unchanged. Do not use visible/alpha as a cache key: a gem can be
+        // mid-clear/fall animation while the logical board is already stable,
+        // and re-acquiring it would make unrelated cells flicker and churn the
+        // pool.
+        if (current && current.active && current.getData('gemType') === board[row][col]) {
           continue;
         }
         if (!current || current.getData('gemType') !== board[row][col]) {
@@ -1582,8 +1662,21 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
     const nextSprites = new Map<string, Phaser.GameObjects.Container>();
     const claimed = new Set<Phaser.GameObjects.Container>();
     const candidatesBySource = new Map<string, Phaser.GameObjects.Container[]>();
+    // Preserve exact cell ownership first. This matters for columns that did
+    // not participate in the clear: they must not be removed from the pool or
+    // have their animation restarted just because a new fall snapshot arrived.
+    for (let row = 0; row < BOARD_SIZE; row += 1) {
+      for (let col = 0; col < BOARD_SIZE; col += 1) {
+        const key = `${row}:${col}`;
+        const current = this.gemSprites.get(key);
+        if (!current || !board[row][col] || current.getData('gemType') !== board[row][col]
+          || !current.visible || current.alpha <= 0.05 || current.scale <= 0.05) continue;
+        nextSprites.set(key, current);
+        claimed.add(current);
+      }
+    }
     for (const gem of this.gemSprites.values()) {
-      if (!gem.active || !gem.visible || gem.alpha <= 0.05 || gem.scale <= 0.05) continue;
+      if (claimed.has(gem) || !gem.active || !gem.visible || gem.alpha <= 0.05 || gem.scale <= 0.05) continue;
       const sourceCol = Math.round((gem.x - this.boardLeft - this.cellSize / 2) / this.cellSize);
       const bucketKey = `${sourceCol}:${String(gem.getData('gemType'))}`;
       const bucket = candidatesBySource.get(bucketKey);
@@ -1595,6 +1688,9 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
       for (let col = 0; col < BOARD_SIZE; col += 1) {
         const gemType = board[row][col];
         if (!gemType) continue;
+        const key = `${row}:${col}`;
+        const exact = nextSprites.get(key);
+        if (exact) continue;
         const target = this.boardPoint({ row, col });
         const candidate = candidatesBySource.get(`${col}:${gemType}`)?.pop();
         const visual = candidate
@@ -1604,13 +1700,17 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
         this.tweens.killTweensOf(visual);
         visual.setVisible(true).setAlpha(1).setScale(1);
         nextSprites.set(`${row}:${col}`, visual);
-        this.tweens.add({
-          targets: visual,
-          x: target.x,
-          y: target.y,
-          duration: GEM_FALL_DURATION,
-          ease: 'Cubic.Out',
-        });
+        if (Math.abs(visual.x - target.x) > 1 || Math.abs(visual.y - target.y) > 1) {
+          this.tweens.add({
+            targets: visual,
+            x: target.x,
+            y: target.y,
+            duration: GEM_FALL_DURATION,
+            ease: 'Cubic.Out',
+          });
+        } else {
+          visual.setPosition(target.x, target.y);
+        }
       }
     }
 
@@ -1640,16 +1740,21 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
           ) ?? this.createGem(target.x, this.boardTop - (BOARD_SIZE - row + 1) * this.cellSize, board[row][col]);
           landingPoints.push({ row, col });
         }
-        this.tweens.killTweensOf(visual);
-        visual.setVisible(true).setAlpha(1).setScale(1);
+        const isNewLanding = !current || current.getData('gemType') !== board[row][col];
+        if (isNewLanding) {
+          this.tweens.killTweensOf(visual);
+          visual.setVisible(true).setAlpha(1).setScale(1);
+        }
         nextSprites.set(key, visual);
-        this.tweens.add({
-          targets: visual,
-          x: target.x,
-          y: target.y,
-          duration: GEM_REFILL_DURATION,
-          ease: 'Cubic.Out',
-        });
+        if (isNewLanding) {
+          this.tweens.add({
+            targets: visual,
+            x: target.x,
+            y: target.y,
+            duration: GEM_REFILL_DURATION,
+            ease: 'Cubic.Out',
+          });
+        }
       }
     }
     for (const [key, visual] of this.gemSprites) {
@@ -1767,16 +1872,18 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
     this.syncTurnTimer();
   }
 
-  private async dispatchSkill(): Promise<void> {
-    if (!this.canPlayerAct() || this.controller.currentState.player.energy < CHARACTER_DATA.skills.cloud_break_lantern.energyCost) return;
+  private async dispatchSkill(slot: ElementActiveSkillSlot = 'primarySkill'): Promise<void> {
+    const elementSkill = CHARACTER_DATA.elementSkills[this.heroElement];
+    const skillConfig = slot === 'primarySkill' ? elementSkill.primarySkill : elementSkill.secondarySkill;
+    if (!this.canPlayerAct() || this.controller.currentState.player.energy < skillConfig.energyCost) return;
     this.stopTurnTimer();
     this.setPlayerControlsEnabled(false);
     await this.controller.dispatch({
       kind: 'skill',
-      skillId: 'cloud_break_lantern',
+      skillId: slot === 'primarySkill' ? elementSkill.primarySkillId : elementSkill.secondarySkillId,
       actionId: `skill-${this.controller.currentState.turn + 1}`,
     });
-    this.syncTurnTimer();
+    this.syncTurnTimer(true);
   }
 
   private async dispatchAbandon(): Promise<void> {
@@ -1861,7 +1968,10 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
           this.floatNumber(`-${amount} HP`, 80, 59, '#ff9aa4');
           this.shakePlayerBar();
         } else if (event.payload['target'] === 'monster') {
-          const isSkillAttack = event.payload['source'] === 'cloud_break_lantern';
+          const elementSkills = CHARACTER_DATA.elementSkills[this.heroElement];
+          const isSkillAttack = event.payload['source'] === elementSkills.primarySkillId
+            || event.payload['source'] === elementSkills.secondarySkillId
+            || event.payload['source'] === 'cloud_break_lantern';
           const monsterShieldAbsorbed = this.safeNumber(Number(event.payload['shieldAbsorbed'] ?? 0));
           const monsterShieldBroken = Boolean(event.payload['shieldBroken'])
             || (monsterShieldAbsorbed > 0 && this.safeNumber(Number(event.payload['shieldRemaining'] ?? 0)) === 0);
@@ -1896,18 +2006,39 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
           this.showComboLabel(matchCount);
           this.statusLabel?.setText(
             amount > 0
-              ? `Bạn tấn công quái · -${amount} HP${monsterShieldAbsorbed > 0 ? ` · khiên -${monsterShieldAbsorbed}` : ''}`
+              ? `Bạn tấn công quái${event.payload['critical'] === true ? ' · CHÍ MẠNG' : ''} · -${amount} HP${monsterShieldAbsorbed > 0 ? ` · khiên -${monsterShieldAbsorbed}` : ''}`
               : `Đòn đánh bị khiên quái hấp thụ -${monsterShieldAbsorbed}`,
           );
+          const critical = event.payload['critical'] === true;
           this.floatNumber(
-            amount > 0 ? `${matchLabel}-${amount} HP` : `${matchLabel}-${monsterShieldAbsorbed} khiên`,
+            amount > 0 ? `${critical ? '✦ CRIT · ' : ''}${matchLabel}-${amount} HP` : `${matchLabel}-${monsterShieldAbsorbed} khiên`,
             this.monsterPosition.x,
             104,
-            amount > 0 ? '#ff9aa4' : '#9dceff',
+            amount > 0 ? (critical ? '#ffd54f' : '#ff9aa4') : '#9dceff',
           );
           if (monsterShieldBroken) this.playShieldBreakEffect('monster');
         }
         this.refreshDisplayedBars();
+        break;
+      case 'BURNING_APPLIED':
+        if (event.payload['target'] !== 'monster') break;
+        this.statusLabel?.setText(`🔥 ${this.controller.currentState.monster.name} bị Thiêu đốt · ${Number(event.payload['turns'] ?? 0)} lượt`);
+        this.floatNumber(`🔥 THIÊU ĐỐT`, this.monsterPosition.x, 104, '#ff9a4d', 700);
+        this.flashMonster(0xff7a45);
+        break;
+      case 'BURNING_TICKED':
+        if (event.payload['target'] !== 'monster') break;
+        this.displayedMonsterHp = Math.max(0, (this.displayedMonsterHp ?? this.controller.currentState.monster.currentHp) - amount);
+        this.statusLabel?.setText(`🔥 Thiêu đốt gây ${amount} sát thương lên quái`);
+        this.floatNumber(`🔥 -${amount} HP`, this.monsterPosition.x, 104, '#ff9a4d');
+        this.flashMonster(0xff7a45);
+        this.refreshDisplayedBars();
+        break;
+      case 'DEFENSE_REDUCED':
+        if (event.payload['target'] !== 'monster') break;
+        this.statusLabel?.setText(`🛡 Giảm phòng thủ quái ${Math.round(Number(event.payload['amount'] ?? 0) * 100)}% · ${Number(event.payload['turns'] ?? 0)} lượt`);
+        this.floatNumber(`🛡 DEF -${Math.round(Number(event.payload['amount'] ?? 0) * 100)}%`, this.monsterPosition.x, 104, '#b9a7ff');
+        this.flashMonster(0x9c7cff);
         break;
       case 'MONSTER_DODGED': {
         const matchCount = this.safeNumber(Number(event.payload['matchCount'] ?? 0));
@@ -2152,11 +2283,15 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
             ? `${this.controller.currentState.monster.name} gây ${hpDamage} sát thương${shieldAbsorbed > 0 ? ` · khiên -${shieldAbsorbed}` : ''}`
             : `${this.controller.currentState.monster.name} đánh vào khiên -${shieldAbsorbed}`,
         );
+        const playerImpact = this.combatPoint('player');
+        const impactText = shieldAbsorbed > 0
+          ? `${attackMatchLabel}-${shieldAbsorbed} khiên${hpDamage > 0 ? ` · -${hpDamage} HP` : ''}`
+          : `${attackMatchLabel}-${hpDamage} HP`;
         this.floatNumber(
-          hpDamage > 0 ? `${attackMatchLabel}-${hpDamage} HP` : `${attackMatchLabel}-${shieldAbsorbed} khiên`,
-          80,
-          59,
-          hpDamage > 0 ? '#ff9aa4' : '#9dceff',
+          impactText,
+          playerImpact.x,
+          playerImpact.y - 56,
+          shieldAbsorbed > 0 ? '#9dceff' : '#ff9aa4',
         );
         if (shieldBroken) this.playShieldBreakEffect();
         const monsterAction = String(event.payload['action'] ?? 'basic');
@@ -2190,15 +2325,22 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
         this.tweenMonsterTelegraph();
         break;
       case 'SKILL_USED':
-        this.statusLabel?.setText(`${ELEMENT_SKILL_CONFIG[this.heroElement].primarySkillLabel}!`);
+        {
+        const skillId = String(event.payload['skillId'] ?? '');
+        const elementSkills = CHARACTER_DATA.elementSkills[this.heroElement];
+        const isSecondary = skillId === elementSkills.secondarySkillId;
+        const skillLabel = isSecondary ? elementSkills.secondarySkillLabel : elementSkills.primarySkillLabel;
+        const skillSlot: ElementSkillSlot = isSecondary ? 'secondarySkill' : 'primarySkill';
+        this.statusLabel?.setText(`${skillLabel}!`);
         this.playSfx(SFX_KEYS.skillCast, 0.48);
         this.playHeroSfx('cast_charge', 0.52);
         this.flashMonster(0xcda8ff);
-        if (!this.playElementSkillAnimation('primarySkill')) this.playHeroAnimation('cast');
-        if (!this.playHeroSkillEffect(ELEMENT_SKILL_CONFIG[this.heroElement].primarySkillId)) {
+        if (!this.playElementSkillAnimation(skillSlot)) this.playHeroAnimation('cast');
+        if (!this.playHeroSkillEffect(skillId)) {
           this.playCloudbreakerEffect();
         }
         break;
+        }
       case 'BATTLE_WON':
         this.statusLabel?.setText('Chiến thắng!');
         this.setPlayerControlsEnabled(false);
@@ -2961,7 +3103,7 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
     return `Quái chuẩn bị ${withoutName}`;
   }
 
-  private syncTurnTimer(): void {
+  private syncTurnTimer(preserveStatus = false): void {
     if (this.controller.currentState.phase !== 'PLAYER_READY' || this.controller.isLocked) {
       this.stopTurnTimer();
       this.setPlayerTurnHighlight(false);
@@ -2974,7 +3116,7 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
     this.remainingSeconds = DEFAULT_BATTLE_CONFIG.playerTurnSeconds;
     this.updateCountdownLabel();
     this.setPlayerTurnHighlight(true);
-    this.statusLabel?.setText('TỚI LƯỢT BẠN · Đổi 2 ô kề nhau');
+    if (!preserveStatus) this.statusLabel?.setText('TỚI LƯỢT BẠN · Đổi 2 ô kề nhau');
     this.setPlayerControlsEnabled(true);
     this.turnTimer = this.time.addEvent({
       delay: 1000,
@@ -3132,8 +3274,14 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
   }
 
   private setPlayerControlsEnabled(enabled: boolean): void {
-    const primaryButton = this.skillButtons[0];
-    if (primaryButton?.input) primaryButton.input.enabled = enabled;
+    for (const [index, skillButton] of this.skillButtons.entries()) {
+      // Skill inputs stay enabled even when the skill is energy-locked or the
+      // turn is processing, so a 2s hold can always open its tooltip. A short
+      // press is still guarded by dispatchSkill/canPlayerAct.
+      if (skillButton.input) skillButton.input.enabled = true;
+      const skillIcon = this.skillIcons[index];
+      if (skillIcon?.input) skillIcon.input.enabled = true;
+    }
     if (this.abandonButton?.input) {
       this.abandonButton.input.enabled = enabled;
     }

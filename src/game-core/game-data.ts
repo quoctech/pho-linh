@@ -8,6 +8,33 @@ export type ElementRelationship = 'counter' | 'neutral' | 'countered';
 /** Nhóm hiệu quả ngọc chịu ảnh hưởng của modifier Ngũ Hành. */
 export type ElementCategory = 'damage' | 'support' | 'energy';
 
+export interface PlayerSkillData {
+  readonly energyCost: number;
+  readonly baseDamage: number;
+  readonly skillPowerMultiplier: number;
+  readonly defenseMultiplier: number;
+  readonly attackMultiplier?: number;
+  readonly bypassShield?: boolean;
+  readonly defenseReduction?: number;
+  readonly defenseReductionTurns?: number;
+  readonly fixedDamage?: number;
+  readonly fixedDamageTarget?: 'shield_or_hp';
+  readonly hitCount?: number;
+  readonly energySteal?: number;
+  readonly poisonAtkFactor?: number;
+  readonly poisonTurns?: number;
+  readonly damageTakenBonus?: number;
+  readonly damageTakenBonusTurns?: number;
+  readonly controlEffect?: 'stun' | 'freeze';
+  readonly controlChance?: number;
+  readonly controlTurns?: number;
+  readonly selfShieldDefenseMultiplier?: number;
+  readonly selfDamageReduction?: number;
+  readonly selfDamageReductionTurns?: number;
+  readonly controlImmunityTurns?: number;
+  readonly reflectDamageRatio?: number;
+}
+
 export interface CharacterData {
   readonly schemaVersion: number;
   readonly id: string;
@@ -57,17 +84,17 @@ export interface CharacterData {
       readonly energy: { readonly perGem: number };
     };
   };
-  /** Tham số nội tại nghề theo hệ nhân vật (Balance V2). */
+  /** Tham số nội tại nghề theo hệ nhân vật (Balance V3). */
   readonly passives: Readonly<Record<ElementId, {
-    readonly energyBonusChance?: number;
-    readonly energyBonusAmount?: number;
-    readonly poisonBonusTurns?: number;
-    readonly healOverflowToShield?: boolean;
-    readonly shieldDelayMinMatch?: number;
-    readonly monsterDelayTurns?: number;
-    readonly bonusDamageFactor?: number;
-    readonly burnMonsterShield?: boolean;
-    readonly energyToShieldFactor?: number;
+    readonly criticalChanceBonus?: number;
+    readonly criticalDamageBonus?: number;
+    readonly healMultiplierWhenPoisoned?: number;
+    readonly damageReduction?: number;
+    readonly damageStreakMin?: number;
+    readonly burnDamageBonus?: number;
+    readonly burningTurns?: number;
+    readonly burningAtkFactor?: number;
+    readonly shieldDamageReduction?: number;
   }>>;
   readonly skills: {
     readonly cloud_break_lantern: {
@@ -83,10 +110,12 @@ export interface CharacterData {
     readonly primarySkillLabel: string;
     readonly primarySkillIcon: string;
     readonly primarySkillFolder: string;
+    readonly primarySkill: PlayerSkillData;
     readonly secondarySkillId: string;
     readonly secondarySkillLabel: string;
     readonly secondarySkillIcon: string;
     readonly secondarySkillFolder: string;
+    readonly secondarySkill: PlayerSkillData;
   }>>;
 }
 

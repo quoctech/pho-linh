@@ -80,23 +80,23 @@
   },
   "passives": {
     "metal": {
-      "energyBonusChance": 0.25,
-      "energyBonusAmount": 5
+      "criticalChanceBonus": 0.4,
+      "criticalDamageBonus": 0.4
     },
     "wood": {
-      "poisonBonusTurns": 1,
-      "healOverflowToShield": true
+      "healMultiplierWhenPoisoned": 1.4
     },
     "water": {
-      "shieldDelayMinMatch": 4,
-      "monsterDelayTurns": 1
+      "damageReduction": 0.25,
+      "damageStreakMin": 3
     },
     "fire": {
-      "bonusDamageFactor": 0.2,
-      "burnMonsterShield": true
+      "burnDamageBonus": 20,
+      "burningTurns": 3,
+      "burningAtkFactor": 0.1
     },
     "earth": {
-      "energyToShieldFactor": 0.5
+      "shieldDamageReduction": 0.1
     }
   },
   "skills": {
@@ -114,6 +114,8 @@
       "primarySkillLabel": "Kim Quang Phá Giáp",
       "primarySkillIcon": "kim_kim_quang_pha_giap",
       "primarySkillFolder": "kim_quang_pha_giap",
+      "primarySkill": { "energyCost": 100, "baseDamage": 0, "skillPowerMultiplier": 0, "defenseMultiplier": 0, "attackMultiplier": 1.8, "bypassShield": true, "defenseReduction": 0.3, "defenseReductionTurns": 2 },
+      "secondarySkill": { "energyCost": 60, "baseDamage": 0, "skillPowerMultiplier": 0, "defenseMultiplier": 0, "attackMultiplier": 1.2 },
       "secondarySkillId": "van_kiem_quy_tong",
       "secondarySkillLabel": "Vạn Kiếm Quy Tông",
       "secondarySkillIcon": "kim_van_kiem_quy_tong",
@@ -125,6 +127,8 @@
       "primarySkillLabel": "Thanh Đằng Trói Hồn",
       "primarySkillIcon": "moc_thanh_dang_troi_hon",
       "primarySkillFolder": "skill_1",
+      "primarySkill": { "energyCost": 50, "baseDamage": 0, "skillPowerMultiplier": 0, "defenseMultiplier": 0, "attackMultiplier": 0.8, "energySteal": 15 },
+      "secondarySkill": { "energyCost": 90, "baseDamage": 0, "skillPowerMultiplier": 0, "defenseMultiplier": 0, "attackMultiplier": 0.9, "poisonAtkFactor": 0.2, "poisonTurns": 3 },
       "secondarySkillId": "thanh_moc_hoi_xuan",
       "secondarySkillLabel": "Vạn Diệp Độc Chú",
       "secondarySkillIcon": "moc_van_diep_doc_chu",
@@ -136,6 +140,8 @@
       "primarySkillLabel": "Hàn Triều Phá Không",
       "primarySkillIcon": "thuy_han_trieu_pha_khong",
       "primarySkillFolder": "skill_1",
+      "primarySkill": { "energyCost": 50, "baseDamage": 0, "skillPowerMultiplier": 0, "defenseMultiplier": 0, "fixedDamage": 22, "fixedDamageTarget": "shield_or_hp" },
+      "secondarySkill": { "energyCost": 100, "baseDamage": 0, "skillPowerMultiplier": 0, "defenseMultiplier": 0, "attackMultiplier": 1.1, "controlEffect": "freeze", "controlChance": 1, "controlTurns": 1 },
       "secondarySkillId": "thuy_linh_ho_the",
       "secondarySkillLabel": "Băng Phong Thiên Lý",
       "secondarySkillIcon": "thuy_bang_phong_thien_ly",
@@ -147,6 +153,8 @@
       "primarySkillLabel": "Hỏa Vũ Liên Châu",
       "primarySkillIcon": "hoa_hoa_vu_lien_chau",
       "primarySkillFolder": "skill_1",
+      "primarySkill": { "energyCost": 60, "baseDamage": 0, "skillPowerMultiplier": 0, "defenseMultiplier": 0, "attackMultiplier": 0.4, "hitCount": 3 },
+      "secondarySkill": { "energyCost": 100, "baseDamage": 0, "skillPowerMultiplier": 0, "defenseMultiplier": 0, "attackMultiplier": 1.5, "damageTakenBonus": 0.15, "damageTakenBonusTurns": 2 },
       "secondarySkillId": "phan_thien_hoa_vu",
       "secondarySkillLabel": "Phần Thiên Xạ Nhật",
       "secondarySkillIcon": "hoa_phan_thien_xa_nhat",
@@ -158,6 +166,8 @@
       "primarySkillLabel": "Sơn Nhạc Trấn Địa",
       "primarySkillIcon": "tho_son_nhac_tran_dia",
       "primarySkillFolder": "skill_1",
+      "primarySkill": { "energyCost": 65, "baseDamage": 0, "skillPowerMultiplier": 0, "defenseMultiplier": 0, "attackMultiplier": 0.7, "controlEffect": "stun", "controlChance": 0.4, "controlTurns": 1 },
+      "secondarySkill": { "energyCost": 80, "baseDamage": 0, "skillPowerMultiplier": 0, "defenseMultiplier": 0, "selfShieldDefenseMultiplier": 2, "selfDamageReduction": 0.25, "selfDamageReductionTurns": 2, "controlImmunityTurns": 2, "reflectDamageRatio": 0.35 },
       "secondarySkillId": "dia_sat_phan_chan",
       "secondarySkillLabel": "Huyền Nham Hộ Thể",
       "secondarySkillIcon": "tho_huyen_nham_ho_the",

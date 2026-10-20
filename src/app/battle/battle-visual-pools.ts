@@ -26,6 +26,7 @@ const GEM_COLORS: Record<GemType, number> = {
 export class GemVisualPool {
   private readonly free: Phaser.GameObjects.Container[] = [];
   private readonly all: Phaser.GameObjects.Container[] = [];
+  private readonly leased = new Set<Phaser.GameObjects.Container>();
   private readonly icons = new Map<Phaser.GameObjects.Container, Phaser.GameObjects.Image>();
 
   constructor(private readonly scene: Phaser.Scene, private readonly renderQuality: number, size = 42) {
@@ -34,6 +35,7 @@ export class GemVisualPool {
 
   acquire(type: GemType, x: number, y: number): Phaser.GameObjects.Container {
     const gem = this.free.pop() ?? this.createGem();
+    this.leased.add(gem);
     this.syncType(gem, type);
     this.scene.tweens.killTweensOf(gem);
     gem.setPosition(x, y).setScale(1).setAlpha(1).setVisible(true).setRotation(0);
@@ -42,7 +44,7 @@ export class GemVisualPool {
   }
 
   release(gem: Phaser.GameObjects.Container): void {
-    if (!gem.active || this.free.includes(gem)) return;
+    if (!gem.active || !this.leased.delete(gem)) return;
     this.scene.tweens.killTweensOf(gem);
     gem.setVisible(false).setAlpha(0).setScale(1).setRotation(0).setPosition(-100, -100);
     this.free.push(gem);
@@ -64,9 +66,13 @@ export class GemVisualPool {
   get freeCount(): number { return this.free.length; }
 
   destroy(): void {
-    for (const gem of this.all) gem.destroy(true);
+    for (const gem of this.all) {
+      this.scene.tweens.killTweensOf(gem);
+      gem.destroy(true);
+    }
     this.free.length = 0;
     this.all.length = 0;
+    this.leased.clear();
     this.icons.clear();
   }
 
@@ -159,7 +165,10 @@ export class BattleVfxPool {
   }
 
   destroy(): void {
-    for (const effect of [...this.flashes, ...this.particles, ...[...this.sprites.values()].flat()]) effect.destroy();
+    for (const effect of [...this.flashes, ...this.particles, ...[...this.sprites.values()].flat()]) {
+      this.scene.tweens.killTweensOf(effect);
+      effect.destroy();
+    }
     this.flashes.length = 0;
     this.particles.length = 0;
     this.sprites.clear();

@@ -41,7 +41,7 @@ Ba kết quả quan trọng hơn số lượng màn hình:
 
 **Ưu tiên cứng:** Match-3 → săn quái → EXP/cộng điểm → lưu offline → trang bị/boss → polishing → backend/cộng đồng → PK realtime.
 
-**Balance gate mới:** [`GAMEPLAY_BALANCE_V2.md`](./gameplay-balance-v2.md) (Ngũ Hành, nội tại nghề, trọng số ngọc, công thức mới) **đã triển khai trong runtime** (`balanceVersion = 2`) kèm test deterministic. Còn lại: UI HUD cho hệ/nội tại, mô phỏng nhiều seed và playtest Android để tinh chỉnh số liệu trước khi khóa cân bằng.
+**Balance gate mới:** [`GAMEPLAY_BALANCE_V2.md`](./gameplay-balance-v2.md) (Ngũ Hành, nội tại nghề, critical, burning, trọng số ngọc, công thức mới) **đã triển khai trong runtime** (`balanceVersion = 3`) kèm test deterministic. Còn lại: mô phỏng nhiều seed và playtest Android để tinh chỉnh số liệu trước khi khóa cân bằng.
 
 Học từ **Tiny Harvest** về vòng lặp ngắn, mở khóa dần và phần thưởng có ý nghĩa; **không sao chép** tài sản, nội dung hay biến Phố Linh thành game nông trại.
 
@@ -171,8 +171,8 @@ Người test trả lời được "Vì sao tôi thắng/thua?", hành động t
 - [x] Lưu offline với schema `saveVersion`, migration, validation và reward journal/idempotency. (Đã làm)
 - [x] SFX adapter fallback, cài đặt nhạc/SFX/reduced motion và nút bỏ trận. (Đã làm)
 - [ ] Onboarding theo ngữ cảnh.
-- [x] Balance V2: Ngũ Hành, nội tại nghề, trọng số ngọc và công thức combat đã vào `game-core` (`balanceVersion = 2`) với test tự động theo [`GAMEPLAY_BALANCE_V2.md`](./gameplay-balance-v2.md). (Đã làm)
-- [ ] Balance V2 — còn lại: UI telegraph/HUD cho hệ & nội tại, mô phỏng nhiều seed và playtest Android để tinh chỉnh số liệu.
+- [x] Balance V3: Ngũ Hành, nội tại nghề, critical, burning, trọng số ngọc và công thức combat đã vào `game-core` (`balanceVersion = 3`) với test tự động theo [`GAMEPLAY_BALANCE_V2.md`](./gameplay-balance-v2.md). (Đã làm)
+- [ ] Balance V3 — còn lại: mô phỏng nhiều seed và playtest Android để tinh chỉnh số liệu.
 - [ ] Thu thập số liệu playtest trên thiết bị, không phụ thuộc dịch vụ bên ngoài.
 
 ### 6.2. Deliverables
