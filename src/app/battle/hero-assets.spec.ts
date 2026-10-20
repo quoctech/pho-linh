@@ -35,21 +35,25 @@ import {
 import { ACTOR_FRAME_RATE, actorDisplaySize, actorFrameKey, actorRow, actorRows, type ActorFrameId } from './actor-frame-assets';
 
 describe('hero asset metadata', () => {
-  it('shares the canonical basic attack row and actor across genders for every element', () => {
+  it('maps basic attack to the configured actor and row for every gender and element', () => {
     for (const element of ['metal', 'wood', 'water', 'fire', 'earth'] as const) {
-      const expectedRow = element === 'metal' ? 'normal_attack' : 'normal_attack_a';
-      expect(heroBasicAttackRow(element)).toBe(expectedRow);
-      expect(heroSkillRow(element, 'basicAttack')).toBe(expectedRow);
+      const maleRow = element === 'metal' ? 'normal_attack' : 'normal_attack_a';
+      const femaleRow = HERO_FEMALE_ELEMENT_RUNTIME_MAPPING['normal_attack'];
+      expect(heroBasicAttackRow(element)).toBe(maleRow);
+      expect(heroSkillRow(element, 'basicAttack')).toBe(maleRow);
       expect(heroSkillAnimationKey(element, 'basicAttack')).toBe(`hero-duo-v21-${element}-basicAttack`);
       expect(heroActorForAnimation('male', element, 'normal_attack')).toBe(element);
-      expect(heroActorForAnimation('female', element, 'normal_attack')).toBe(element);
+      expect(heroActorForAnimation('female', element, 'normal_attack')).toBe(`female_${element}`);
+      expect(heroAnimationTextureKey('male', 'normal_attack', 0, element)).toBe(
+        actorFrameKey(element, maleRow, 0),
+      );
       expect(heroAnimationTextureKey('female', 'normal_attack', 0, element)).toBe(
-        actorFrameKey(element, expectedRow, 0),
+        actorFrameKey(`female_${element}` as ActorFrameId, femaleRow, 0),
       );
     }
   });
 
-  it('preloads the canonical basic attack frames for female heroes', () => {
+  it('preloads gender-specific basic attack frames', () => {
     for (const element of ['metal', 'wood', 'water', 'fire', 'earth'] as const) {
       const loadedImages: string[] = [];
       const scene = {
@@ -62,10 +66,10 @@ describe('hero asset metadata', () => {
 
       preloadHeroAssets(scene, 'female', element);
 
-      const sharedRow = actorRow(element, heroBasicAttackRow(element));
+      const maleRow = actorRow(element, heroBasicAttackRow(element));
       const femaleRow = actorRow(`female_${element}` as ActorFrameId, HERO_FEMALE_ELEMENT_RUNTIME_MAPPING['normal_attack']);
-      expect(sharedRow?.frames.every((frame) => loadedImages.includes(`${HERO_ELEMENT_ASSET_ROOTS[element]}/${frame.file}`))).toBe(true);
-      expect(femaleRow?.frames.some((frame) => loadedImages.includes(`${HERO_FEMALE_ELEMENT_ASSET_ROOTS[element]}/${frame.file}`))).toBe(false);
+      expect(femaleRow?.frames.every((frame) => loadedImages.includes(`${HERO_FEMALE_ELEMENT_ASSET_ROOTS[element]}/${frame.file}`))).toBe(true);
+      expect(maleRow?.frames.some((frame) => loadedImages.includes(`${HERO_ELEMENT_ASSET_ROOTS[element]}/${frame.file}`))).toBe(false);
     }
   });
 
@@ -83,8 +87,10 @@ describe('hero asset metadata', () => {
         ensureHeroAnimations(scene, gender, element);
 
         const basic = created.find((animation) => animation.key === heroSkillAnimationKey(element, 'basicAttack'));
+        const expectedActor = gender === 'male' ? element : `female_${element}` as ActorFrameId;
+        const expectedRow = gender === 'male' ? heroBasicAttackRow(element) : HERO_FEMALE_ELEMENT_RUNTIME_MAPPING['normal_attack'];
         expect(basic?.frames.map((frame) => frame.key)).toEqual(
-          Array.from({ length: HERO_METAL_FRAME_COUNT }, (_, index) => actorFrameKey(element, heroBasicAttackRow(element), index)),
+          Array.from({ length: HERO_METAL_FRAME_COUNT }, (_, index) => actorFrameKey(expectedActor, expectedRow, index)),
         );
         const primary = created.find((animation) => animation.key === heroSkillAnimationKey(element, 'primarySkill'));
         const secondary = created.find((animation) => animation.key === heroSkillAnimationKey(element, 'secondarySkill'));
@@ -181,15 +187,9 @@ describe('hero asset metadata', () => {
     }
     const femaleIdleWidth = HERO_FEMALE_ELEMENT_ANIMATION_METADATA.metal.idle.frameWidth;
     for (const animation of HERO_ANIMATION_NAMES) {
-      const usesSharedBasicAttack = animation === 'normal_attack';
-      const metadata = usesSharedBasicAttack
-        ? HERO_ELEMENT_ANIMATION_METADATA.metal[animation]
-        : HERO_FEMALE_ELEMENT_ANIMATION_METADATA.metal[animation];
-      const idleWidth = usesSharedBasicAttack
-        ? HERO_ELEMENT_ANIMATION_METADATA.metal.idle.frameWidth
-        : femaleIdleWidth;
-      expect(heroDisplaySize('female', animation).width).toBeCloseTo(metadata.frameWidth * HERO_METAL_DISPLAY_WIDTH / idleWidth);
-      expect(heroDisplaySize('female', animation).height).toBeCloseTo(metadata.frameHeight * HERO_METAL_DISPLAY_WIDTH / idleWidth);
+      const metadata = HERO_FEMALE_ELEMENT_ANIMATION_METADATA.metal[animation];
+      expect(heroDisplaySize('female', animation).width).toBeCloseTo(metadata.frameWidth * HERO_METAL_DISPLAY_WIDTH / femaleIdleWidth);
+      expect(heroDisplaySize('female', animation).height).toBeCloseTo(metadata.frameHeight * HERO_METAL_DISPLAY_WIDTH / femaleIdleWidth);
     }
   });
 

@@ -152,19 +152,16 @@ export function heroBasicAttackRow(element: HeroElement): string {
 
 /** Returns the actor whose frame geometry should be used for a runtime animation. */
 export function heroActorForAnimation(gender: HeroGender, element: HeroElement, animation: HeroAnimationName): ActorFrameId {
-  return animation === 'normal_attack' ? element : gender === 'male' ? element : femaleActorForElement(element);
+  return gender === 'male' ? element : femaleActorForElement(element);
 }
 
 export function heroAnimationTextureKey(gender: HeroGender, name: HeroAnimationName, frame = 0, element: HeroElement = 'metal'): string {
-  const metadata = name === 'normal_attack'
+  const metadata = gender === 'male'
     ? HERO_ELEMENT_ANIMATION_METADATA[element]?.[name]
-    : gender === 'male'
-      ? HERO_ELEMENT_ANIMATION_METADATA[element]?.[name]
-      : HERO_FEMALE_ELEMENT_ANIMATION_METADATA[element]?.[name];
+    : HERO_FEMALE_ELEMENT_ANIMATION_METADATA[element]?.[name];
   if (metadata?.assetId) {
     const actor = heroActorForAnimation(gender, element, name);
-    const row = name === 'normal_attack' ? heroBasicAttackRow(element) : metadata.assetId;
-    return actorFrameKey(actor, row, frame);
+    return actorFrameKey(actor, metadata.assetId, frame);
   }
   return metadata?.textureKey ?? '';
 }
@@ -238,7 +235,7 @@ function createHeroSpriteKeys(gender: HeroGender, element: HeroElement = 'metal'
   const metadata = gender === 'male' ? HERO_ELEMENT_ANIMATION_METADATA[element] : HERO_FEMALE_ELEMENT_ANIMATION_METADATA[element];
   const key = (name: HeroAnimationName): string => metadata[name].key;
   return {
-    idle: key('idle'), attack: heroSkillAnimationKey(element, 'basicAttack'), attackFx: gender === 'male' ? '' : key('normal_attack_fx'), projectile: gender === 'male' ? '' : key('attack_projectile'), cast: key('cast'), castImpact: gender === 'male' ? '' : key('cast_impact'), heal: key('heal'), antiHeal: key('anti_heal'), hit: key('hit'), death: key('death'), highHp: key('high_hp'), energy: key('energy'), lowHp: key('low_hp'), poisoned: key('poisoned'), stunned: `${HERO_RUNTIME_KEY_PREFIX}-${element}-${gender}-stunned-event`, shield: key('shield'), dodge: key('dodge'), poisonCast: key('poison_cast'), frozen: key('frozen'), burning: key('burning'), lightningStruck: key('lightning_struck'), skillLocked: key('skill_locked'), armorBreak: key('armor_break'), frameWidth: gender === 'male' ? metadata.idle.frameWidth : HERO_ACTION_FRAME_WIDTH, frameHeight: gender === 'male' ? metadata.idle.frameHeight : HERO_ACTION_FRAME_HEIGHT, displayWidth: HERO_DISPLAY_WIDTH, displayHeight: HERO_DISPLAY_HEIGHT, originY: HERO_DISPLAY_ORIGIN_Y,
+    idle: key('idle'), attack: gender === 'male' ? heroSkillAnimationKey(element, 'basicAttack') : key('normal_attack'), attackFx: gender === 'male' ? '' : key('normal_attack_fx'), projectile: gender === 'male' ? '' : key('attack_projectile'), cast: key('cast'), castImpact: gender === 'male' ? '' : key('cast_impact'), heal: key('heal'), antiHeal: key('anti_heal'), hit: key('hit'), death: key('death'), highHp: key('high_hp'), energy: key('energy'), lowHp: key('low_hp'), poisoned: key('poisoned'), stunned: `${HERO_RUNTIME_KEY_PREFIX}-${element}-${gender}-stunned-event`, shield: key('shield'), dodge: key('dodge'), poisonCast: key('poison_cast'), frozen: key('frozen'), burning: key('burning'), lightningStruck: key('lightning_struck'), skillLocked: key('skill_locked'), armorBreak: key('armor_break'), frameWidth: gender === 'male' ? metadata.idle.frameWidth : HERO_ACTION_FRAME_WIDTH, frameHeight: gender === 'male' ? metadata.idle.frameHeight : HERO_ACTION_FRAME_HEIGHT, displayWidth: HERO_DISPLAY_WIDTH, displayHeight: HERO_DISPLAY_HEIGHT, originY: HERO_DISPLAY_ORIGIN_Y,
   };
 }
 export const HERO_SPRITE_KEYS: Readonly<Record<HeroGender, HeroSpriteKeys>> = { male: createHeroSpriteKeys('male'), female: createHeroSpriteKeys('female') };
@@ -249,13 +246,10 @@ export const HERO_FEMALE_ELEMENT_SPRITE_KEYS: Readonly<Record<HeroElement, HeroS
   (['metal', 'wood', 'water', 'fire', 'earth'] as const).map((element) => [element, createHeroSpriteKeys('female', element)]),
 ) as Record<HeroElement, HeroSpriteKeys>;
 export function heroDisplaySize(gender: HeroGender, animation: HeroAnimationName, element: HeroElement = 'metal'): HeroDisplaySize {
-  const sharedBasicAttack = animation === 'normal_attack';
-  const metadata = sharedBasicAttack
+  const metadata = gender === 'male'
     ? HERO_ELEMENT_ANIMATION_METADATA[element][animation]
-    : gender === 'male'
-      ? HERO_ELEMENT_ANIMATION_METADATA[element][animation]
-      : HERO_FEMALE_ELEMENT_ANIMATION_METADATA[element][animation];
-  const idleWidth = sharedBasicAttack || gender === 'male'
+    : HERO_FEMALE_ELEMENT_ANIMATION_METADATA[element][animation];
+  const idleWidth = gender === 'male'
     ? HERO_ELEMENT_ANIMATION_METADATA[element].idle.frameWidth
     : HERO_FEMALE_ELEMENT_ANIMATION_METADATA[element].idle.frameWidth;
   if (!metadata.frameWidth || !metadata.frameHeight || !idleWidth) return { width: HERO_DISPLAY_WIDTH, height: HERO_DISPLAY_HEIGHT };
@@ -272,13 +266,10 @@ export function preloadHeroAssets(scene: Phaser.Scene, gender: HeroGender, eleme
     return;
   }
   const femaleActor = femaleActorForElement(element);
-  const femaleRows = [...new Set(HERO_ANIMATION_NAMES
-    .filter((name) => name !== 'normal_attack')
-    .map((name) => animations[name].assetId)
-    .filter((row): row is string => Boolean(row)))];
+  const femaleRows = [...new Set(HERO_ANIMATION_NAMES.map((name) => animations[name].assetId).filter((row): row is string => Boolean(row)))];
   preloadActorRows(scene, femaleActor, femaleRows);
   const maleSkillRows = ['basicAttack', 'primarySkill', 'secondarySkill']
-    .map((slot) => heroSkillRow(element, slot as MetalSkillAnimationSlot))
+    .map((slot) => slot === 'basicAttack' ? undefined : heroSkillRow(element, slot as MetalSkillAnimationSlot))
     .filter((row): row is string => Boolean(row));
   preloadActorRows(scene, element, maleSkillRows);
   for (const name of HERO_SFX_NAMES) scene.load.audio(heroSfxKey(gender, name), [`${HERO_ASSET_ROOT}/${gender}/sfx/mp3/${name}.mp3`, `${HERO_ASSET_ROOT}/${gender}/sfx/ogg/${name}.ogg`]);
@@ -289,12 +280,12 @@ export function ensureHeroAnimations(scene: Phaser.Scene, gender: HeroGender, el
   const animations = gender === 'male' ? HERO_ELEMENT_ANIMATION_METADATA[element] : HERO_FEMALE_ELEMENT_ANIMATION_METADATA[element];
   const actor = gender === 'male' ? element : femaleActorForElement(element);
   for (const name of HERO_ANIMATION_NAMES) {
-    if (gender === 'female' && name === 'normal_attack') continue;
     const metadata = animations[name];
     if (metadata.assetId) ensureActorAnimation(scene, actor, metadata.assetId, metadata.key, metadata.repeat);
   }
   for (const slot of ['basicAttack', 'primarySkill', 'secondarySkill'] as const) {
-    ensureActorAnimation(scene, element, heroSkillRow(element, slot), heroSkillAnimationKey(element, slot));
+    const skillActor = gender === 'female' && slot === 'basicAttack' ? actor : element;
+    ensureActorAnimation(scene, skillActor, gender === 'female' && slot === 'basicAttack' ? 'normal_attack_a' : heroSkillRow(element, slot), heroSkillAnimationKey(element, slot));
   }
   if (gender === 'male') {
     for (const action of actorRows(element)) {

@@ -1,0 +1,172 @@
+{
+  "assetId": "basic_attack_thuy_thuong_v2",
+  "name": "Đòn Đánh Thường — Hệ Thủy",
+  "element": "thuy",
+  "weapon": "Thương",
+  "theme": "Xanh dương băng lam",
+  "description": "6 frame mũi thương nước băng, xuyên kích nhanh, sắc và lạnh.",
+  "sourceOriginalFile": "source/chuỗi_sáu_đòn_thương_nước_băng.png",
+  "sourceSize": {
+    "width": 1916,
+    "height": 821
+  },
+  "transparentBackground": true,
+  "compression": "lossless_webp",
+  "frameCount": 6,
+  "detectedCentersX": [
+    130.01315457253952,
+    457.343716505895,
+    817.271027637546,
+    1163.4392765125256,
+    1502.9373539036933,
+    1775.956024741547
+  ],
+  "detectedBoundsX": [
+    0,
+    304,
+    644,
+    982,
+    1350,
+    1715,
+    1916
+  ],
+  "standardFrameSize": {
+    "width": 368,
+    "height": 524
+  },
+  "previewFile": "previews/basic_attack_thuy_thuong_v2_preview_equal_spaced.webp",
+  "frames": [
+    {
+      "index": 1,
+      "file": "frames_webp/basic_attack_thuy_thuong_v2_01.webp",
+      "sourceXBounds": {
+        "x0": 0,
+        "x1": 304
+      },
+      "cropBoxInsideSegment": {
+        "left": 0,
+        "top": 273,
+        "right": 304,
+        "bottom": 549
+      },
+      "standardFrameSize": {
+        "width": 368,
+        "height": 524
+      },
+      "pastePosition": {
+        "x": 32,
+        "y": 124
+      }
+    },
+    {
+      "index": 2,
+      "file": "frames_webp/basic_attack_thuy_thuong_v2_02.webp",
+      "sourceXBounds": {
+        "x0": 304,
+        "x1": 644
+      },
+      "cropBoxInsideSegment": {
+        "left": 0,
+        "top": 288,
+        "right": 340,
+        "bottom": 578
+      },
+      "standardFrameSize": {
+        "width": 368,
+        "height": 524
+      },
+      "pastePosition": {
+        "x": 14,
+        "y": 117
+      }
+    },
+    {
+      "index": 3,
+      "file": "frames_webp/basic_attack_thuy_thuong_v2_03.webp",
+      "sourceXBounds": {
+        "x0": 644,
+        "x1": 982
+      },
+      "cropBoxInsideSegment": {
+        "left": 0,
+        "top": 214,
+        "right": 338,
+        "bottom": 609
+      },
+      "standardFrameSize": {
+        "width": 368,
+        "height": 524
+      },
+      "pastePosition": {
+        "x": 15,
+        "y": 64
+      }
+    },
+    {
+      "index": 4,
+      "file": "frames_webp/basic_attack_thuy_thuong_v2_04.webp",
+      "sourceXBounds": {
+        "x0": 982,
+        "x1": 1350
+      },
+      "cropBoxInsideSegment": {
+        "left": 0,
+        "top": 132,
+        "right": 368,
+        "bottom": 656
+      },
+      "standardFrameSize": {
+        "width": 368,
+        "height": 524
+      },
+      "pastePosition": {
+        "x": 0,
+        "y": 0
+      }
+    },
+    {
+      "index": 5,
+      "file": "frames_webp/basic_attack_thuy_thuong_v2_05.webp",
+      "sourceXBounds": {
+        "x0": 1350,
+        "x1": 1715
+      },
+      "cropBoxInsideSegment": {
+        "left": 0,
+        "top": 248,
+        "right": 365,
+        "bottom": 612
+      },
+      "standardFrameSize": {
+        "width": 368,
+        "height": 524
+      },
+      "pastePosition": {
+        "x": 1,
+        "y": 80
+      }
+    },
+    {
+      "index": 6,
+      "file": "frames_webp/basic_attack_thuy_thuong_v2_06.webp",
+      "sourceXBounds": {
+        "x0": 1715,
+        "x1": 1916
+      },
+      "cropBoxInsideSegment": {
+        "left": 0,
+        "top": 297,
+        "right": 201,
+        "bottom": 574
+      },
+      "standardFrameSize": {
+        "width": 368,
+        "height": 524
+      },
+      "pastePosition": {
+        "x": 83,
+        "y": 123
+      }
+    }
+  ]
+}

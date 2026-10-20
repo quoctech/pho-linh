@@ -1,0 +1,172 @@
+{
+  "assetId": "basic_attack_hoa_cung_v2",
+  "name": "Đòn Đánh Thường — Hệ Hỏa",
+  "element": "hoa",
+  "weapon": "Cung",
+  "theme": "Đỏ lửa",
+  "description": "6 frame hỏa tiễn rực lửa, bắn nhanh từ cung, có quầng bùng cháy.",
+  "sourceOriginalFile": "source/bộ_khung_hiệu_ứng_mũi_tên_lửa_phiêu_tưởng.png",
+  "sourceSize": {
+    "width": 1916,
+    "height": 821
+  },
+  "transparentBackground": true,
+  "compression": "lossless_webp",
+  "frameCount": 6,
+  "detectedCentersX": [
+    163.23501737236714,
+    487.8140281654669,
+    833.8152220833807,
+    1164.163672055716,
+    1514.6824936571222,
+    1786.5340071018848
+  ],
+  "detectedBoundsX": [
+    0,
+    350,
+    668,
+    874,
+    1389,
+    1675,
+    1916
+  ],
+  "standardFrameSize": {
+    "width": 515,
+    "height": 389
+  },
+  "previewFile": "previews/basic_attack_hoa_cung_v2_preview_equal_spaced.webp",
+  "frames": [
+    {
+      "index": 1,
+      "file": "frames_webp/basic_attack_hoa_cung_v2_01.webp",
+      "sourceXBounds": {
+        "x0": 0,
+        "x1": 350
+      },
+      "cropBoxInsideSegment": {
+        "left": 3,
+        "top": 236,
+        "right": 350,
+        "bottom": 591
+      },
+      "standardFrameSize": {
+        "width": 515,
+        "height": 389
+      },
+      "pastePosition": {
+        "x": 84,
+        "y": 17
+      }
+    },
+    {
+      "index": 2,
+      "file": "frames_webp/basic_attack_hoa_cung_v2_02.webp",
+      "sourceXBounds": {
+        "x0": 350,
+        "x1": 668
+      },
+      "cropBoxInsideSegment": {
+        "left": 0,
+        "top": 256,
+        "right": 318,
+        "bottom": 543
+      },
+      "standardFrameSize": {
+        "width": 515,
+        "height": 389
+      },
+      "pastePosition": {
+        "x": 98,
+        "y": 51
+      }
+    },
+    {
+      "index": 3,
+      "file": "frames_webp/basic_attack_hoa_cung_v2_03.webp",
+      "sourceXBounds": {
+        "x0": 668,
+        "x1": 874
+      },
+      "cropBoxInsideSegment": {
+        "left": 0,
+        "top": 302,
+        "right": 206,
+        "bottom": 540
+      },
+      "standardFrameSize": {
+        "width": 515,
+        "height": 389
+      },
+      "pastePosition": {
+        "x": 154,
+        "y": 75
+      }
+    },
+    {
+      "index": 4,
+      "file": "frames_webp/basic_attack_hoa_cung_v2_04.webp",
+      "sourceXBounds": {
+        "x0": 874,
+        "x1": 1389
+      },
+      "cropBoxInsideSegment": {
+        "left": 0,
+        "top": 222,
+        "right": 515,
+        "bottom": 611
+      },
+      "standardFrameSize": {
+        "width": 515,
+        "height": 389
+      },
+      "pastePosition": {
+        "x": 0,
+        "y": 0
+      }
+    },
+    {
+      "index": 5,
+      "file": "frames_webp/basic_attack_hoa_cung_v2_05.webp",
+      "sourceXBounds": {
+        "x0": 1389,
+        "x1": 1675
+      },
+      "cropBoxInsideSegment": {
+        "left": 0,
+        "top": 218,
+        "right": 286,
+        "bottom": 607
+      },
+      "standardFrameSize": {
+        "width": 515,
+        "height": 389
+      },
+      "pastePosition": {
+        "x": 114,
+        "y": 0
+      }
+    },
+    {
+      "index": 6,
+      "file": "frames_webp/basic_attack_hoa_cung_v2_06.webp",
+      "sourceXBounds": {
+        "x0": 1675,
+        "x1": 1916
+      },
+      "cropBoxInsideSegment": {
+        "left": 0,
+        "top": 256,
+        "right": 233,
+        "bottom": 595
+      },
+      "standardFrameSize": {
+        "width": 515,
+        "height": 389
+      },
+      "pastePosition": {
+        "x": 141,
+        "y": 25
+      }
+    }
+  ]
+}

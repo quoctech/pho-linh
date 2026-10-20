@@ -1,0 +1,80 @@
+{
+  "project": "PHO_LINH",
+  "package": "basic_attack_5elements_redesign_frames_webp_v1",
+  "version": "1.0.0",
+  "format": "webp",
+  "compression": "lossless",
+  "transparentBackground": true,
+  "elements": [
+    {
+      "assetId": "basic_attack_kim_kiem_v2",
+      "name": "Đòn Đánh Thường — Hệ Kim",
+      "element": "kim",
+      "weapon": "Kiếm",
+      "theme": "Trắng bạc",
+      "folder": "basic_attack_kim_kiem_v2",
+      "manifest": "basic_attack_kim_kiem_v2/basic_attack_kim_kiem_v2_manifest.json",
+      "standardFrameSize": {
+        "width": 395,
+        "height": 483
+      },
+      "frameCount": 6
+    },
+    {
+      "assetId": "basic_attack_moc_gay_v2",
+      "name": "Đòn Đánh Thường — Hệ Mộc",
+      "element": "moc",
+      "weapon": "Gậy",
+      "theme": "Xanh lá",
+      "folder": "basic_attack_moc_gay_v2",
+      "manifest": "basic_attack_moc_gay_v2/basic_attack_moc_gay_v2_manifest.json",
+      "standardFrameSize": {
+        "width": 387,
+        "height": 534
+      },
+      "frameCount": 6
+    },
+    {
+      "assetId": "basic_attack_thuy_thuong_v2",
+      "name": "Đòn Đánh Thường — Hệ Thủy",
+      "element": "thuy",
+      "weapon": "Thương",
+      "theme": "Xanh dương băng lam",
+      "folder": "basic_attack_thuy_thuong_v2",
+      "manifest": "basic_attack_thuy_thuong_v2/basic_attack_thuy_thuong_v2_manifest.json",
+      "standardFrameSize": {
+        "width": 368,
+        "height": 524
+      },
+      "frameCount": 6
+    },
+    {
+      "assetId": "basic_attack_hoa_cung_v2",
+      "name": "Đòn Đánh Thường — Hệ Hỏa",
+      "element": "hoa",
+      "weapon": "Cung",
+      "theme": "Đỏ lửa",
+      "folder": "basic_attack_hoa_cung_v2",
+      "manifest": "basic_attack_hoa_cung_v2/basic_attack_hoa_cung_v2_manifest.json",
+      "standardFrameSize": {
+        "width": 515,
+        "height": 389
+      },
+      "frameCount": 6
+    },
+    {
+      "assetId": "basic_attack_tho_dao_v2",
+      "name": "Đòn Đánh Thường — Hệ Thổ",
+      "element": "tho",
+      "weapon": "Đao",
+      "theme": "Vàng đen / đất đá",
+      "folder": "basic_attack_tho_dao_v2",
+      "manifest": "basic_attack_tho_dao_v2/basic_attack_tho_dao_v2_manifest.json",
+      "standardFrameSize": {
+        "width": 387,
+        "height": 441
+      },
+      "frameCount": 6
+    }
+  ]
+}

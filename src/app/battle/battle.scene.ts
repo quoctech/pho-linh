@@ -89,6 +89,12 @@ import {
   preloadHeroSkillEffects,
   fitHeroSkillEffectDisplaySize,
 } from './hero-skill-effect-assets';
+import {
+  basicAttackEffectForElement,
+  ensureBasicAttackEffectAnimations,
+  fitBasicAttackEffectDisplaySize,
+  preloadBasicAttackEffects,
+} from './basic-attack-effect-assets';
 
 const GEM_TYPES: readonly GemType[] = ['attack', 'heal', 'shield', 'energy', 'poison'];
 const BOARD_SIZE = 6;
@@ -295,6 +301,7 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
     this.heroElement = heroElement;
     this.heroSpriteKeys = heroGender === 'male' ? HERO_ELEMENT_SPRITE_KEYS[heroElement] : HERO_FEMALE_ELEMENT_SPRITE_KEYS[heroElement];
     preloadHeroAssets(this, heroGender, heroElement);
+    preloadBasicAttackEffects(this, heroElement);
     preloadElementSkillAssets(this, heroElement);
     preloadHeroSkillEffects(this, 'metal');
     preloadHeroSkillEffects(this, 'wood');
@@ -407,6 +414,7 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
     ensureBambooMantisAnimations(this);
     ensureMonsterSkillEffectAnimations(this, this.controller.currentState.monster.id as ActorFrameId);
     ensureHeroAnimations(this, this.heroGender, this.heroElement);
+    ensureBasicAttackEffectAnimations(this, this.heroElement);
     ensureElementSkillAnimations(this, this.heroElement);
     ensureHeroSkillEffectAnimations(this, 'metal');
     ensureHeroSkillEffectAnimations(this, 'wood');
@@ -1805,6 +1813,7 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
             if (this.heroSkillAnimationKey === primarySkillKey) onHeroImpact();
             else this.playHeroCastImpact(onHeroImpact);
           } else {
+            this.playBasicAttackEffect();
             const playedElementAttack = this.playElementSkillAnimation('basicAttack', onHeroImpact, 375);
             if (!playedElementAttack) {
               this.playHeroAnimation('attack');
@@ -1840,6 +1849,7 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
         const playDodge = () => {
           this.playMonsterEffectAnimation('dodge');
         };
+        this.playBasicAttackEffect();
         if (!this.playElementSkillAnimation('basicAttack', playDodge, 375)) {
           this.playHeroAnimation('attack');
           this.spawnHeroSwordProjectile(playDodge);
@@ -2605,6 +2615,55 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
     this.vfxSprites.add(sprite);
     sprite.once(Phaser.Animations.Events.ANIMATION_COMPLETE, finish);
     return true;
+  }
+
+  private playBasicAttackEffect(): void {
+    const effect = basicAttackEffectForElement(this.heroElement);
+    if (!this.battleVfxPool || !this.anims.exists(effect.animationKey)) return;
+    const sprite = this.battleVfxPool.acquireSpriteVfx(effect.textureKeys[0]);
+    if (!sprite) return;
+    const start = this.combatPoint('player');
+    const target = this.combatPoint('monster');
+    const launch = { x: start.x + 18, y: start.y - 16 };
+    const impact = { x: target.x - 18, y: target.y - 8 };
+    const displaySize = fitBasicAttackEffectDisplaySize(effect);
+    const travelDuration = this.reducedMotion ? 220 : 360;
+    let released = false;
+    let animationDone = false;
+    let travelDone = false;
+    const finish = (): void => {
+      if (released || !animationDone || !travelDone) return;
+      released = true;
+      this.vfxSprites.delete(sprite);
+      this.battleVfxPool?.release(sprite);
+    };
+    sprite
+      .setPosition(launch.x, launch.y)
+      .setOrigin(0.5)
+      .setDisplaySize(displaySize.width, displaySize.height)
+      .setRotation(Phaser.Math.Angle.Between(launch.x, launch.y, impact.x, impact.y))
+      .setDepth(16)
+      .setAlpha(1)
+      .setVisible(true)
+      .setBlendMode(Phaser.BlendModes.ADD)
+      .play(effect.animationKey);
+    sprite.anims.timeScale = this.reducedMotion ? 1.8 : 1;
+    this.vfxSprites.add(sprite);
+    sprite.once(Phaser.Animations.Events.ANIMATION_COMPLETE, () => {
+      animationDone = true;
+      finish();
+    });
+    this.tweens.add({
+      targets: sprite,
+      x: impact.x,
+      y: impact.y,
+      duration: travelDuration,
+      ease: 'Cubic.Out',
+      onComplete: () => {
+        travelDone = true;
+        finish();
+      },
+    });
   }
 
   private playCloudbreakerEffect(): void {

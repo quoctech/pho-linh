@@ -1,0 +1,172 @@
+{
+  "assetId": "basic_attack_kim_kiem_v2",
+  "name": "Đòn Đánh Thường — Hệ Kim",
+  "element": "kim",
+  "weapon": "Kiếm",
+  "theme": "Trắng bạc",
+  "description": "6 frame kiếm khí trắng bạc, sắc gọn, cảm giác chém bằng kiếm hệ Kim.",
+  "sourceOriginalFile": "source/dải_hiệu_ứng_trảm_kích_bạc_bóng.png",
+  "sourceSize": {
+    "width": 1916,
+    "height": 821
+  },
+  "transparentBackground": true,
+  "compression": "lossless_webp",
+  "frameCount": 6,
+  "detectedCentersX": [
+    164.4339930996913,
+    500.9778772822998,
+    839.0015395045338,
+    1166.663953898624,
+    1550.3126691836444,
+    1818.9823417549578
+  ],
+  "detectedBoundsX": [
+    0,
+    269,
+    664,
+    1009,
+    1356,
+    1709,
+    1916
+  ],
+  "standardFrameSize": {
+    "width": 395,
+    "height": 483
+  },
+  "previewFile": "previews/basic_attack_kim_kiem_v2_preview_equal_spaced.webp",
+  "frames": [
+    {
+      "index": 1,
+      "file": "frames_webp/basic_attack_kim_kiem_v2_01.webp",
+      "sourceXBounds": {
+        "x0": 0,
+        "x1": 269
+      },
+      "cropBoxInsideSegment": {
+        "left": 2,
+        "top": 231,
+        "right": 269,
+        "bottom": 569
+      },
+      "standardFrameSize": {
+        "width": 395,
+        "height": 483
+      },
+      "pastePosition": {
+        "x": 64,
+        "y": 72
+      }
+    },
+    {
+      "index": 2,
+      "file": "frames_webp/basic_attack_kim_kiem_v2_02.webp",
+      "sourceXBounds": {
+        "x0": 269,
+        "x1": 664
+      },
+      "cropBoxInsideSegment": {
+        "left": 0,
+        "top": 186,
+        "right": 395,
+        "bottom": 608
+      },
+      "standardFrameSize": {
+        "width": 395,
+        "height": 483
+      },
+      "pastePosition": {
+        "x": 0,
+        "y": 30
+      }
+    },
+    {
+      "index": 3,
+      "file": "frames_webp/basic_attack_kim_kiem_v2_03.webp",
+      "sourceXBounds": {
+        "x0": 664,
+        "x1": 1009
+      },
+      "cropBoxInsideSegment": {
+        "left": 0,
+        "top": 183,
+        "right": 345,
+        "bottom": 659
+      },
+      "standardFrameSize": {
+        "width": 395,
+        "height": 483
+      },
+      "pastePosition": {
+        "x": 25,
+        "y": 3
+      }
+    },
+    {
+      "index": 4,
+      "file": "frames_webp/basic_attack_kim_kiem_v2_04.webp",
+      "sourceXBounds": {
+        "x0": 1009,
+        "x1": 1356
+      },
+      "cropBoxInsideSegment": {
+        "left": 0,
+        "top": 175,
+        "right": 347,
+        "bottom": 658
+      },
+      "standardFrameSize": {
+        "width": 395,
+        "height": 483
+      },
+      "pastePosition": {
+        "x": 24,
+        "y": 0
+      }
+    },
+    {
+      "index": 5,
+      "file": "frames_webp/basic_attack_kim_kiem_v2_05.webp",
+      "sourceXBounds": {
+        "x0": 1356,
+        "x1": 1709
+      },
+      "cropBoxInsideSegment": {
+        "left": 0,
+        "top": 213,
+        "right": 353,
+        "bottom": 601
+      },
+      "standardFrameSize": {
+        "width": 395,
+        "height": 483
+      },
+      "pastePosition": {
+        "x": 21,
+        "y": 47
+      }
+    },
+    {
+      "index": 6,
+      "file": "frames_webp/basic_attack_kim_kiem_v2_06.webp",
+      "sourceXBounds": {
+        "x0": 1709,
+        "x1": 1916
+      },
+      "cropBoxInsideSegment": {
+        "left": 8,
+        "top": 257,
+        "right": 204,
+        "bottom": 605
+      },
+      "standardFrameSize": {
+        "width": 395,
+        "height": 483
+      },
+      "pastePosition": {
+        "x": 99,
+        "y": 67
+      }
+    }
+  ]
+}
