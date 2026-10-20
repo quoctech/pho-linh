@@ -657,9 +657,9 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
       const sprite = this.add.sprite(0, 0, idleTexture)
         .setOrigin(0.5, spriteKeys.originY)
         .setAlpha(1)
-        // The v2 Miêu Đèn frames already face left. Keep the legacy monster
-        // flip for Bụi Sương, but don't mirror Miêu Đèn back to the right.
-        .setFlipX(monsterId !== 'lantern_cat')
+        // The v3 Cáo Mây frames already face left. Keep the legacy mirror for
+        // Bụi Sương only; don't mirror the new left-facing actors.
+        .setFlipX(monsterId === 'mist_blob')
         .play(spriteKeys.idle);
       sprite.on('animationupdate', () => this.normalizeMonsterSprite(sprite));
       this.normalizeMonsterSprite(sprite);
