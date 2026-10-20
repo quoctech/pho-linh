@@ -366,7 +366,7 @@ playerSkipTurns = 1
 
 Danh mục dưới đây là nội dung kỹ năng đã được đặt tên trong quá trình thiết kế. Đây là **content design**, chưa phải contract gameplay đã triển khai; tên, hệ, hiệu ứng và thông số cần được chốt trước khi cập nhật `monsters.json`, game-core hoặc runtime battle.
 
-#### Bụi Sương
+#### Sương Hồn
 
 Quái cấp thấp · Hệ Thủy (đề xuất)
 
@@ -413,7 +413,7 @@ Quái cấp cao · Hệ Thủy (đề xuất)
 
 | Quái | Kỹ năng đã đặt tên | Tình trạng |
 |---|---:|---|
-| Bụi Sương | 1 đề xuất | Chưa chốt |
+| Sương Hồn | 1 đề xuất | Chưa chốt |
 | Miêu Đèn | 1 | Thiếu kỹ năng 2 |
 | Bọ Lá Tre | 2 | Đủ |
 | Cáo Mây | 3 | Đủ, nếu cho phép 3 kỹ năng |
@@ -461,13 +461,13 @@ Người chơi có thể xem chi tiết trước trận: HP, ATK, DEF, cơ chế
 
 | ID | Quái | Cấp gợi ý | HP | ATK | DEF | Hành vi | EXP | Vàng |
 |---|---|---:|---:|---:|---:|---|---:|---:|
-| `mist_blob` | Bụi Sương | 1 | 270 | 55 | 0 | basic | 35 | 12 |
+| `mist_blob` | Sương Hồn | 1 | 270 | 55 | 0 | basic | 35 | 12 |
 | `lantern_cat` | Miêu Đèn | 2 | 280 | 26 | 5 | basic, guard | 55 | 20 |
 | `bamboo_mantis` | Bọ Lá Tre | 3 | 400 | 32 | 8 | basic, heavy | 75 | 28 |
 | `cloud_fox_boss` | Cáo Mây | 4 (boss) | 760 | 36 | 10 | basic, guard, heavy | 160 | 65 |
 
-- Người chơi bắt đầu với Bụi Sương; thắng 2 lần mở Miêu Đèn; thắng Miêu Đèn mở Bọ Lá Tre; thắng Bọ Lá Tre mở boss.
-- Bụi Sương có khiên tối đa 50 và 25% tỷ lệ né đòn đánh thường từ ngọc công; skill không bị né.
+- Người chơi bắt đầu với Sương Hồn; thắng 2 lần mở Miêu Đèn; thắng Miêu Đèn mở Bọ Lá Tre; thắng Bọ Lá Tre mở boss.
+- Sương Hồn có khiên tối đa 50 và 25% tỷ lệ né đòn đánh thường từ ngọc công; skill không bị né.
 - Thua trận không mất EXP/vàng/túi đồ. Cho nút **Thử lại** và gợi ý ("Cộng VIT để sống lâu hơn", "Dùng ngọc xanh trước đòn mạnh").
 - Boss đầu có 2 trạng thái: trên 50% HP (basic/guard); ≤50% HP (heavy 2 lượt một lần). Trạng thái được hiển thị rõ.
 
@@ -1034,7 +1034,7 @@ Không đổi balance giữa một trận đang diễn ra; `balanceVersion` đư
 ## Phụ lục — Mẫu một trận đầu tiên
 
 **Người chơi:** Level 1, STR/VIT/AGI/INT = 5/5/5/5, MAX_HP = 300, ATK = 25, DEF = 10, SKILL_POWER = 20.  
-**Quái:** Bụi Sương, HP=270, ATK=55, DEF=0, khiên tối đa 50, né 25% đòn đánh thường.
+**Quái:** Sương Hồn, HP=270, ATK=55, DEF=0, khiên tối đa 50, né 25% đòn đánh thường.
 
 1. Lượt 1: match 3 đỏ → nếu không né, `round(3×25/3)−0 = 25 damage`; nếu né thì không mất HP/khiên. Khi quái phản công, sát thương là `55−floor(10×0.6)=49`.
 2. Lượt 2: match 3 xanh dương → khiên `round(3×(8+5×0.5))=32`; quái đánh 49, khiên hấp thụ tối đa 32 rồi phần còn lại trừ HP.

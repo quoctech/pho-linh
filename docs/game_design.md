@@ -517,7 +517,7 @@ Sử dụng Phaser tween; game-core quyết định thứ tự events và kết 
 
 | ID | Ý tưởng visual | Distinct cue | Hành vi |
 |---|---|---|---|
-| `mist_blob` — Bụi Sương | Đám sương cuộn có mắt và lõi sáng | Chuyển động mềm | Basic |
+| `mist_blob` — Sương Hồn | Đám sương cuộn có mắt và lõi sáng | Chuyển động mềm | Basic |
 | `lantern_cat` — Miêu Đèn | Linh miêu mang hoa văn ánh đèn | Mắt/vệt sáng đèn | Guard |
 | `bamboo_mantis` — Bọ Lá Tre | Côn trùng lá có chi cong | Silhouette lá/chi gấp | Heavy |
 | `cloud_fox_boss` — Cáo Mây | Cáo lớn vệt mây, đuôi như dải đèn | Hai phase ánh sáng | Basic/Guard/Heavy |
@@ -669,7 +669,7 @@ silhouette, controlled painterly lighting, full body character concept,
 neutral background, no text, no logos, not chibi, not sci-fi, no robot.
 ```
 
-**B. Quái Bụi Sương**
+**B. Quái Sương Hồn**
 
 ```text
 Original friendly mysterious mist creature for a 2D fantasy mobile RPG,

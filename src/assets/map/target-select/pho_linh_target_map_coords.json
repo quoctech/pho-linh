@@ -1,0 +1,190 @@
+{
+  "project": "PHO_LINH",
+  "assetType": "target_select_map",
+  "version": "1.0.0",
+  "engine": "Phaser 4",
+  "image": {
+    "file": "pho_linh_target_map.webp",
+    "width": 941,
+    "height": 1672,
+    "format": "webp"
+  },
+  "coordinateSystem": {
+    "origin": "top-left",
+    "xAxis": "left_to_right",
+    "yAxis": "top_to_bottom",
+    "unit": "px",
+    "normalizedRange": [
+      0,
+      1
+    ]
+  },
+  "nodes": [
+    {
+      "id": "stage_01",
+      "name": "Thiên Nguyệt Đài",
+      "x": 616,
+      "y": 247,
+      "normalizedX": 0.654623,
+      "normalizedY": 0.147727,
+      "platformRadius": 74,
+      "iconAnchor": "center",
+      "labelOffset": {
+        "x": 0,
+        "y": -96
+      },
+      "recommendedIconSize": {
+        "w": 72,
+        "h": 72
+      },
+      "theme": "kim",
+      "zIndex": 10
+    },
+    {
+      "id": "stage_02",
+      "name": "U Minh Đài",
+      "x": 261,
+      "y": 489,
+      "normalizedX": 0.277364,
+      "normalizedY": 0.292464,
+      "platformRadius": 76,
+      "iconAnchor": "center",
+      "labelOffset": {
+        "x": 0,
+        "y": -98
+      },
+      "recommendedIconSize": {
+        "w": 72,
+        "h": 72
+      },
+      "theme": "u_vu",
+      "zIndex": 10
+    },
+    {
+      "id": "stage_03",
+      "name": "Xích Viêm Đài",
+      "x": 753,
+      "y": 622,
+      "normalizedX": 0.800213,
+      "normalizedY": 0.37201,
+      "platformRadius": 78,
+      "iconAnchor": "center",
+      "labelOffset": {
+        "x": 0,
+        "y": -100
+      },
+      "recommendedIconSize": {
+        "w": 72,
+        "h": 72
+      },
+      "theme": "hoa",
+      "zIndex": 10
+    },
+    {
+      "id": "stage_04",
+      "name": "Thanh Trúc Đài",
+      "x": 291,
+      "y": 906,
+      "normalizedX": 0.309245,
+      "normalizedY": 0.541866,
+      "platformRadius": 82,
+      "iconAnchor": "center",
+      "labelOffset": {
+        "x": 0,
+        "y": -102
+      },
+      "recommendedIconSize": {
+        "w": 72,
+        "h": 72
+      },
+      "theme": "moc",
+      "zIndex": 10
+    },
+    {
+      "id": "stage_05",
+      "name": "Băng Tinh Đài",
+      "x": 764,
+      "y": 1138,
+      "normalizedX": 0.811903,
+      "normalizedY": 0.680622,
+      "platformRadius": 77,
+      "iconAnchor": "center",
+      "labelOffset": {
+        "x": 0,
+        "y": -100
+      },
+      "recommendedIconSize": {
+        "w": 72,
+        "h": 72
+      },
+      "theme": "thuy",
+      "zIndex": 10
+    },
+    {
+      "id": "stage_06",
+      "name": "Tử Cấm Đài",
+      "x": 401,
+      "y": 1488,
+      "normalizedX": 0.426143,
+      "normalizedY": 0.889952,
+      "platformRadius": 87,
+      "iconAnchor": "center",
+      "labelOffset": {
+        "x": 0,
+        "y": -108
+      },
+      "recommendedIconSize": {
+        "w": 72,
+        "h": 72
+      },
+      "theme": "am",
+      "zIndex": 10
+    }
+  ],
+  "routes": [
+    [
+      "stage_01",
+      "stage_02"
+    ],
+    [
+      "stage_01",
+      "stage_03"
+    ],
+    [
+      "stage_02",
+      "stage_04"
+    ],
+    [
+      "stage_03",
+      "stage_04"
+    ],
+    [
+      "stage_03",
+      "stage_05"
+    ],
+    [
+      "stage_04",
+      "stage_06"
+    ],
+    [
+      "stage_05",
+      "stage_06"
+    ]
+  ],
+  "usageHints": {
+    "defaultIconOrigin": {
+      "x": 0.5,
+      "y": 0.5
+    },
+    "defaultLabelOrigin": {
+      "x": 0.5,
+      "y": 0.5
+    },
+    "recommendedScaleMode": "fit",
+    "notes": [
+      "Đặt icon quái tại (x, y) của từng node.",
+      "Có thể dùng labelOffset để đặt tên quái hoặc level badge.",
+      "Nếu game scale theo màn hình, có thể dùng normalizedX / normalizedY để nội suy lại vị trí."
+    ]
+  }
+}

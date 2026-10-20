@@ -1,77 +1,139 @@
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit, inject } from '@angular/core';
+import { AfterViewInit, ChangeDetectionStrategy, ChangeDetectorRef, Component, ElementRef, NgZone, OnDestroy, OnInit, ViewChild, inject } from '@angular/core';
 import { Router } from '@angular/router';
-import {
-  IonButton,
-  IonCard,
-  IonCardContent,
-  IonCardHeader,
-  IonCardSubtitle,
-  IonContent,
-  IonSpinner,
-} from '@ionic/angular';
+import { IonContent, IonSpinner } from '@ionic/angular';
+import type Phaser from 'phaser';
 import { ALL_MONSTERS_TEMPORARILY_UNLOCKED, MONSTER_DEFINITIONS, type LocalSaveV1, type MonsterDefinition } from '../../game-core';
 import { GameStorage } from '../state/game-storage.service';
+import { TargetMapScene } from './target-map/target-map-scene';
+import type { TargetMapSceneConfig } from './target-map/target-map-assets';
+
+const TARGET_MAP_WIDTH = 941;
+const TARGET_MAP_HEIGHT = 1672;
 
 @Component({
   selector: 'app-hunt',
   templateUrl: './hunt.page.html',
   styleUrls: ['./hunt.page.scss'],
-  imports: [
-    IonButton,
-    IonCard,
-    IonCardContent,
-    IonCardHeader,
-    IonCardSubtitle,
-    IonContent,
-    IonSpinner,
-  ],
+  imports: [IonContent, IonSpinner],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class HuntPage implements OnInit {
+export class HuntPage implements OnInit, AfterViewInit, OnDestroy {
+  @ViewChild('gameHost', { static: true }) private readonly gameHost!: ElementRef<HTMLDivElement>;
+
   private readonly storage = inject(GameStorage);
   private readonly router = inject(Router);
+  private readonly zone = inject(NgZone);
   private readonly cdr = inject(ChangeDetectorRef);
+  private game?: Phaser.Game;
+  private viewReady = false;
+  private visible = false;
+  private startToken = 0;
+
+  readonly monsters: readonly MonsterDefinition[] = Object.values(MONSTER_DEFINITIONS);
   save?: LocalSaveV1;
   isLoading = true;
-  readonly monsters: readonly MonsterDefinition[] = Object.values(MONSTER_DEFINITIONS);
-  private readonly monsterImages: Readonly<Record<string, string>> = {
-    mist_blob: 'assets/monsters/mist-dust/frames_webp/01_idle/01_idle_01.webp',
-    lantern_cat: 'assets/monsters/mieu-den/frames_webp/01_idle/01_idle_01.webp',
-    cloud_fox_boss: 'assets/monsters/cloud-fox/frames_webp/01_idle/01_idle_01.webp',
-    bamboo_mantis: 'assets/monsters/bamboo-mantis/frames_webp/01_idle/01_idle_01.webp',
-  };
+  loadError = false;
+
   async ngOnInit(): Promise<void> {
     try {
       this.save = await this.storage.load();
+    } catch {
+      this.loadError = true;
     } finally {
+      if (this.loadError) this.isLoading = false;
+      this.cdr.markForCheck();
+      void this.startGameIfReady();
+    }
+  }
+
+  ngAfterViewInit(): void {
+    this.viewReady = true;
+    void this.startGameIfReady();
+  }
+
+  ionViewDidEnter(): void {
+    this.visible = true;
+    void this.startGameIfReady();
+  }
+
+  ionViewDidLeave(): void {
+    this.visible = false;
+    this.stopGame();
+  }
+
+  ngOnDestroy(): void {
+    this.visible = false;
+    this.stopGame();
+  }
+
+  isUnlocked(monster: MonsterDefinition): boolean {
+    return ALL_MONSTERS_TEMPORARILY_UNLOCKED || (this.save?.monsterProgress[monster.id]?.unlocked ?? monster.id === 'mist_blob');
+  }
+
+  async hunt(monsterId: string): Promise<void> {
+    const monster = MONSTER_DEFINITIONS[monsterId];
+    if (!monster || !this.isUnlocked(monster)) return;
+    await this.router.navigate(['/battle', monster.id]);
+  }
+
+  private async startGameIfReady(): Promise<void> {
+    if (!this.viewReady || !this.visible || this.game || !this.save || this.loadError) return;
+    const token = ++this.startToken;
+
+    try {
+      const [{ default: PhaserRuntime }] = await Promise.all([import('phaser')]);
+      if (!this.visible || token !== this.startToken || this.game) return;
+
+      const unlockedMonsterIds = new Set(this.monsters.filter((monster) => this.isUnlocked(monster)).map((monster) => monster.id));
+      const mapConfig: TargetMapSceneConfig = {
+        monsters: this.monsters,
+        unlockedMonsterIds,
+        onMonsterSelected: (monsterId) => this.zone.run(() => void this.hunt(monsterId)),
+        onReady: () => this.zone.run(() => {
+          this.isLoading = false;
+          this.cdr.markForCheck();
+        }),
+      };
+
+      this.zone.runOutsideAngular(() => {
+        this.game = new PhaserRuntime.Game({
+          type: PhaserRuntime.AUTO,
+          parent: this.gameHost.nativeElement,
+          width: TARGET_MAP_WIDTH,
+          height: TARGET_MAP_HEIGHT,
+          backgroundColor: '#171426',
+          antialias: false,
+          antialiasGL: false,
+          pixelArt: true,
+          roundPixels: true,
+          render: {
+            antialias: false,
+            antialiasGL: false,
+            pixelArt: true,
+            roundPixels: true,
+            powerPreference: 'high-performance',
+            preserveDrawingBuffer: false,
+          },
+          scale: {
+            mode: PhaserRuntime.Scale.FIT,
+            autoCenter: PhaserRuntime.Scale.CENTER_BOTH,
+          },
+          callbacks: {
+            preBoot: (game) => game.registry.set('targetMapConfig', mapConfig),
+          },
+          scene: [TargetMapScene],
+        });
+      });
+    } catch {
+      this.loadError = true;
       this.isLoading = false;
       this.cdr.markForCheck();
     }
   }
-  isUnlocked(monster: MonsterDefinition): boolean {
-    return ALL_MONSTERS_TEMPORARILY_UNLOCKED || (this.save?.monsterProgress[monster.id]?.unlocked ?? monster.id === 'mist_blob');
-  }
-  unlockText(monster: MonsterDefinition): string { const req = monster.unlockRequirement; return req ? `Thắng ${req.wins} trận ${MONSTER_DEFINITIONS[req.monsterId].name}` : 'Mở sẵn'; }
-  behaviorText(behavior: string): string {
-    return { basic: 'đánh thường', guard: 'phòng thủ', heavy: 'đòn nặng', poison: 'gieo độc' }[behavior] ?? behavior;
-  }
-  monsterImage(monster: MonsterDefinition): string | undefined { return this.monsterImages[monster.id]; }
-  monsterIcon(monster: MonsterDefinition): string {
-    return monster.id === 'cloud_fox_boss' ? '☁' : monster.id === 'lantern_cat' ? '◉' : monster.id === 'bamboo_mantis' ? '✦' : '○';
-  }
-  shieldCap(monster: MonsterDefinition): number { return monster.shieldCap ?? Math.round(monster.maxHp * 0.5); }
-  tacticText(monster: MonsterDefinition): string {
-    const { attack, defense, heal, shield, poison } = monster.tactics;
-    return `Ưu tiên · Công ${attack} · Thủ ${defense} · Hồi ${heal} · Khiên ${shield} · Độc ${poison}`;
-  }
-  async hunt(monster: MonsterDefinition): Promise<void> { if (this.isUnlocked(monster)) await this.router.navigate(['/battle', monster.id]); }
 
-  ionViewWillLeave(): void {
-    this.blurFocusedElement();
-  }
-
-  private blurFocusedElement(): void {
-    const active = document.activeElement;
-    if (active instanceof HTMLElement) active.blur();
+  private stopGame(): void {
+    this.startToken += 1;
+    this.game?.destroy(true);
+    this.game = undefined;
   }
 }

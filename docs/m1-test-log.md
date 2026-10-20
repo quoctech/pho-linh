@@ -1,7 +1,7 @@
 # M1 — Test Log
 
 **Milestone:** Vertical slice săn quái
-**Scope:** Home → Hunt → Battle → Result → Retry, Bụi Sương, combat gem effects, skill, terminal state và checkpoint offline.
+**Scope:** Home → Hunt → Battle → Result → Retry, Sương Hồn, combat gem effects, skill, terminal state và checkpoint offline.
 
 ## Automated checks
 
@@ -14,7 +14,7 @@
 
 ## Manual acceptance checklist
 
-- [ ] Mở `/home`, vào `/hunt`, chọn **Bụi Sương**.
+- [ ] Mở `/home`, vào `/hunt`, chọn **Sương Hồn**.
 - [ ] Swap hợp lệ gây damage; gem hồi HP, tạo khiên, nạp energy và gây độc có feedback.
 - [ ] Quái phản công sau mỗi lượt; telegraph và thanh HP cập nhật rõ.
 - [ ] Đủ energy dùng **Đèn Phá Mây**; skill có thể kết liễu trước đòn phản công.
