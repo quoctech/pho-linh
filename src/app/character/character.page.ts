@@ -3,6 +3,7 @@ import { RouterLink } from '@angular/router';
 import { IonButton, IonContent, IonHeader, IonItem, IonLabel, IonList, IonTitle, IonToolbar } from '@ionic/angular';
 import { commitAttributeAllocation, computeProfileStats, getExpRequired, previewAttributeAllocation, type Attributes, type LocalSaveV1, type PlayerProfile } from '../../game-core';
 import { GameStorage } from '../state/game-storage.service';
+import { passiveIconForElement, passiveIconPath } from './passive-icon-assets';
 
 @Component({
   selector: 'app-character', templateUrl: './character.page.html', styleUrls: ['./character.page.scss'],
@@ -26,6 +27,16 @@ export class CharacterPage implements OnInit {
     return this.save?.settings.gender === 'female'
       ? 'assets/hero-swordmistress/portrait/hero-female-portrait.webp'
       : undefined;
+  }
+
+  get passiveIcon() {
+    const element = this.save?.settings.element;
+    return element ? passiveIconForElement(element) : undefined;
+  }
+
+  get passiveIconSrc(): string | undefined {
+    const element = this.save?.settings.element;
+    return element ? passiveIconPath(element) : undefined;
   }
 
   async ngOnInit(): Promise<void> { this.save = await this.storage.load(); this.cdr.markForCheck(); }

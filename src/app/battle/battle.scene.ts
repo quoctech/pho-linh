@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import { actorFrameKey, femaleActorForElement, normalizeActorSprite, type ActorFrameId } from './actor-frame-assets';
+import { actorFrameKey, normalizeActorSprite, type ActorFrameId } from './actor-frame-assets';
 import {
   areAdjacent,
   CHARACTER_DATA,
@@ -60,6 +60,7 @@ import {
   HERO_DISPLAY_HEIGHT,
   HERO_DISPLAY_WIDTH,
   HERO_DISPLAY_ORIGIN_Y,
+  heroActorForAnimation,
   heroAnimationTextureKey,
   heroSkillAnimationKey,
   ensureHeroAnimations,
@@ -845,7 +846,11 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
     if (sprite === this.heroSprite) {
       normalizeActorSprite(
         sprite,
-        this.heroGender === 'male' ? this.heroElement : femaleActorForElement(this.heroElement),
+        heroActorForAnimation(
+          this.heroGender,
+          this.heroElement,
+          this.heroTransientAnimation === 'attack' ? 'normal_attack' : 'idle',
+        ),
         this.monsterSpriteKeys()?.displayWidth ?? HERO_DISPLAY_WIDTH,
       );
       return;

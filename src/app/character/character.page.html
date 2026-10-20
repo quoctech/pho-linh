@@ -10,6 +10,18 @@
         }
         <div><p class="eyebrow">PHIẾU NHÂN VẬT · HỆ {{ current.settings.element === 'metal' ? 'KIM' : current.settings.element.toUpperCase() }}</p><h1>Cấp {{ current.profile.level }}</h1></div>
       </div>
+      @if (passiveIcon; as passive) {
+        <section class="passive-card" aria-labelledby="passive-title">
+          @if (passiveIconSrc; as iconSrc) {
+            <img class="passive-icon" [src]="iconSrc" [alt]="passive.label" />
+          }
+          <div>
+            <p class="eyebrow">NỘI TẠI HỆ</p>
+            <h2 id="passive-title">{{ passive.label }}</h2>
+            <p>{{ passive.description }}</p>
+          </div>
+        </section>
+      }
       <p>EXP {{ current.profile.exp }} / {{ expRequired }} · Điểm chưa dùng <strong>{{ current.profile.unspentPoints }}</strong></p>
       <div class="exp"><span [style.width.%]="current.profile.exp / expRequired * 100"></span></div>
       <div class="power">POWER <strong>{{ stats?.power }}</strong></div>

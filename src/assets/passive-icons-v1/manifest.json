@@ -1,0 +1,114 @@
+{
+  "project": "PHO_LINH",
+  "assetType": "passive_icons",
+  "version": "1.0.0",
+  "sourceImage": "ngũ_hành_kỹ_năng_huyền_ảo.png",
+  "format": "webp",
+  "icons": [
+    {
+      "id": "kim_kiem_tam_bat_diet",
+      "element": "Kim",
+      "name": "Kiếm Tâm Bất Diệt",
+      "description": "Tăng tỷ lệ chí mạng khi liên tục tấn công cùng một mục tiêu.",
+      "file": "icons_webp/kim_kiem_tam_bat_diet.webp",
+      "size": {
+        "width": 296,
+        "height": 352
+      },
+      "sourceCropBox": {
+        "left": 15,
+        "top": 287,
+        "right": 311,
+        "bottom": 639
+      },
+      "pastePosition": {
+        "x": 0,
+        "y": 0
+      }
+    },
+    {
+      "id": "moc_sinh_co_bat_tan",
+      "element": "Mộc",
+      "name": "Sinh Cơ Bất Tận",
+      "description": "Tăng hiệu quả hồi phục khi trên chiến trường có mục tiêu đang Dính độc.",
+      "file": "icons_webp/moc_sinh_co_bat_tan.webp",
+      "size": {
+        "width": 296,
+        "height": 352
+      },
+      "sourceCropBox": {
+        "left": 309,
+        "top": 311,
+        "right": 580,
+        "bottom": 617
+      },
+      "pastePosition": {
+        "x": 12,
+        "y": 23
+      }
+    },
+    {
+      "id": "thuy_han_tuc_ngung_ket",
+      "element": "Thủy",
+      "name": "Hàn Tức Ngưng Kết",
+      "description": "Tăng hiệu quả khống chế lên mục tiêu đã bị Làm chậm.",
+      "file": "icons_webp/thuy_han_tuc_ngung_ket.webp",
+      "size": {
+        "width": 296,
+        "height": 352
+      },
+      "sourceCropBox": {
+        "left": 583,
+        "top": 287,
+        "right": 865,
+        "bottom": 639
+      },
+      "pastePosition": {
+        "x": 7,
+        "y": 0
+      }
+    },
+    {
+      "id": "hoa_liet_diem_chi_tam",
+      "element": "Hỏa",
+      "name": "Liệt Diễm Chi Tâm",
+      "description": "Tăng sát thương lên mục tiêu đang Thiêu đốt.",
+      "file": "icons_webp/hoa_liet_diem_chi_tam.webp",
+      "size": {
+        "width": 296,
+        "height": 352
+      },
+      "sourceCropBox": {
+        "left": 859,
+        "top": 287,
+        "right": 1142,
+        "bottom": 639
+      },
+      "pastePosition": {
+        "x": 6,
+        "y": 0
+      }
+    },
+    {
+      "id": "tho_bat_dong_nhu_son",
+      "element": "Thổ",
+      "name": "Bất Động Như Sơn",
+      "description": "Tăng khả năng chống chịu khi đang có Khiên.",
+      "file": "icons_webp/tho_bat_dong_nhu_son.webp",
+      "size": {
+        "width": 296,
+        "height": 352
+      },
+      "sourceCropBox": {
+        "left": 1140,
+        "top": 287,
+        "right": 1426,
+        "bottom": 639
+      },
+      "pastePosition": {
+        "x": 5,
+        "y": 0
+      }
+    }
+  ]
+}
