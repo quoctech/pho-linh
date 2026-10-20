@@ -915,7 +915,7 @@ function chooseMonsterAction(
   const definition = MONSTER_DEFINITIONS[monster.id];
   if (!definition) return 'basic';
   if (monster.id === 'mist_blob') {
-    // Bụi Sương is intentionally simple for the early game: alternate a
+    // Sương Hồn is intentionally simple for the early game: alternate a
     // readable normal attack with a poison cast. It has no heavy/guard turn.
     return actionCount % 2 === 1 ? 'poison' : 'basic';
   }

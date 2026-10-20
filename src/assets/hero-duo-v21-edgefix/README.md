@@ -19,4 +19,4 @@ Không thể phục hồi chính xác nội dung không tồn tại trong ảnh 
 
 Loader hiện bỏ qua toàn bộ asset nam và ẩn nhân vật nam trong thời gian chờ bộ 2.5D. Các animation/SFX interface vẫn được giữ để gắn pack mới sau này.
 
-Kích thước hiển thị hero được khóa theo đúng `displayWidth/displayHeight` của quái đang xuất hiện (`84×84` với Bụi Sương, `92×92` với Miêu Đèn); hiệu ứng chỉ đổi frame, không được scale hero. Sheet runtime hit/dodge đã được chuẩn hóa về ô `480×540` để không méo hoặc làm nhân vật thu/phình khi chuyển trạng thái.
+Kích thước hiển thị hero được khóa theo đúng `displayWidth/displayHeight` của quái đang xuất hiện (`84×84` với Sương Hồn, `92×92` với Miêu Đèn); hiệu ứng chỉ đổi frame, không được scale hero. Sheet runtime hit/dodge đã được chuẩn hóa về ô `480×540` để không méo hoặc làm nhân vật thu/phình khi chuyển trạng thái.

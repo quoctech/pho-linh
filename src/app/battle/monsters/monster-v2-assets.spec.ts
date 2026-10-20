@@ -9,7 +9,7 @@ import { BAMBOO_MANTIS_SPRITE_KEYS } from './bamboo-mantis/bamboo-mantis-assets'
 import { CLOUD_FOX_SPRITE_KEYS } from './cloud-fox/cloud-fox-assets';
 
 describe('monster V2 frame mapping', () => {
-  it('uses the new skill and projectile rows for Bụi Sương', () => {
+  it('uses the new skill and projectile rows for Sương Hồn', () => {
     expect(actorRows('mist_blob')).toHaveLength(24);
     expect(MIST_DUST_SPRITE_KEYS.defend).toBe(actorAnimationKey('mist_blob', 'skill_2'));
     expect(MIST_DUST_SPRITE_KEYS.poisonCast).toBe(actorAnimationKey('mist_blob', 'skill_1'));

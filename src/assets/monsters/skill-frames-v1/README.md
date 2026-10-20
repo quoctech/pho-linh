@@ -1,6 +1,6 @@
 # PHỐ LINH — Quái: đòn đánh thường & skill — Frame WebP
 
-Gói này gồm frame WebP đã cắt chuẩn cho 4 quái: **Bụi Sương, Miêu Đèn, Bọ Lá Tre, Cáo Mây**.
+Gói này gồm frame WebP đã cắt chuẩn cho 4 quái: **Sương Hồn, Miêu Đèn, Bọ Lá Tre, Cáo Mây**.
 
 ## Đảm bảo kỹ thuật
 
@@ -11,8 +11,8 @@ Gói này gồm frame WebP đã cắt chuẩn cho 4 quái: **Bụi Sương, Miê
 
 ## Entity và skill
 
-### Bụi Sương
-- `01_normal_attack` — **Đòn đánh thường**: Bụi Sương phát tán và vung luồng sương lạnh để tấn công mục tiêu.
+### Sương Hồn
+- `01_normal_attack` — **Đòn đánh thường**: Sương Hồn phát tán và vung luồng sương lạnh để tấn công mục tiêu.
 - `02_skill_suong_mu_xam_thuc` — **Sương Mù Xâm Thực**: Phát tán sương lạnh, gây sát thương Thủy nhẹ và giảm tốc độ hành động của mục tiêu.
 
 ### Miêu Đèn

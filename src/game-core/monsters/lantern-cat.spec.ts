@@ -28,7 +28,7 @@ describe('Miêu Đèn behavior', () => {
     ]);
   });
 
-  it('resolves guard without borrowing Bụi Sương actions', () => {
+  it('resolves guard without borrowing Sương Hồn actions', () => {
     const initial = createBattleState(21, 'lantern_cat');
     const state = {
       ...initial,

@@ -53,7 +53,7 @@ describe('M1 battle core', () => {
     expect(stats.agiBonus).toBe(0.025);
   });
 
-  it('uses the balanced Bụi Sương combat stats', () => {
+  it('uses the balanced Sương Hồn combat stats', () => {
     const monster = createBattleState(100).monster;
 
     expect(monster.maxHp).toBe(270);
@@ -188,7 +188,7 @@ describe('M1 battle core', () => {
     expect(result.nextState.monster.currentHp).toBe(999 - playerDamage - poisonDamage);
   });
 
-  it('lets Bụi Sương choose a deterministic legal swap and attacks by action, not by attack gems', () => {
+  it('lets Sương Hồn choose a deterministic legal swap and attacks by action, not by attack gems', () => {
     const state = createBattleState(120);
     const result = resolveBattleAction(state, {
       kind: 'timeout',
@@ -218,7 +218,7 @@ describe('M1 battle core', () => {
     expect(result.events.find((event) => event.type === 'GEMS_CLEARED')?.payload['actor']).toBe('monster');
   });
 
-  it('uses Bụi Sương basic and poison action cycle', () => {
+  it('uses Sương Hồn basic and poison action cycle', () => {
     let state = createBattleState(120);
     const results = [0, 1, 2].map((index) => {
       const result = resolveBattleAction(state, {
@@ -239,7 +239,7 @@ describe('M1 battle core', () => {
     expect(results[2].nextState.monster.nextAction).toBe('poison');
   });
 
-  it('lets Bụi Sương deterministically dodge some normal attack matches', () => {
+  it('lets Sương Hồn deterministically dodge some normal attack matches', () => {
     const outcomes = Array.from({ length: 100 }, (_, index) => resolveGemMatch('attack', {}, index + 1));
     const dodged = outcomes.filter((result) => result.events.some((event) => event.type === 'MONSTER_DODGED'));
     const hit = outcomes.filter((result) => result.events.some((event) =>

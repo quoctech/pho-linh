@@ -1,4 +1,4 @@
-# PHỐ LINH — Bụi Sương — Frame độc lập WebP (V2)
+# PHỐ LINH — Sương Hồn — Frame độc lập WebP (V2)
 
 - 24 strip / 24 hiệu ứng
 - 144 frame riêng

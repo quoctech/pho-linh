@@ -747,7 +747,7 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
         .setOrigin(0.5, spriteKeys.originY)
         .setAlpha(1)
         // The v3 Cáo Mây frames already face left. Keep the legacy mirror for
-        // Bụi Sương only; don't mirror the new left-facing actors.
+        // Sương Hồn only; don't mirror the new left-facing actors.
         .setFlipX(monsterId === 'mist_blob')
         .play(spriteKeys.idle);
       sprite.on('animationupdate', () => this.normalizeMonsterSprite(sprite));
@@ -842,7 +842,7 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
     const id = this.controller.currentState.monster.id;
     if (!sprite || !keys || !['mist_blob', 'lantern_cat', 'cloud_fox_boss', 'bamboo_mantis'].includes(id)) return;
     normalizeActorSprite(sprite, id as ActorFrameId, keys.displayWidth);
-    // The new Bụi Sương skill frames use a wider effect canvas than the idle
+    // The new Sương Hồn skill frames use a wider effect canvas than the idle
     // row. Keep that canvas from scaling the whole monster up during a heavy
     // attack; the animation may still use its natural aspect ratio.
     if (id === 'mist_blob' && sprite.displayWidth > keys.displayWidth) {
@@ -1817,7 +1817,7 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
           this.spawnHeroSwordProjectile(playDodge);
         }
         this.showComboLabel(matchCount);
-        this.statusLabel?.setText('Bụi Sương né đòn');
+        this.statusLabel?.setText('Sương Hồn né đòn');
         this.floatNumber(`${matchLabel}NÉ!`, this.monsterPosition.x, 104, '#d8f4ff');
         break;
       }

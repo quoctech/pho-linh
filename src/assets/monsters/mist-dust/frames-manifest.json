@@ -1,6 +1,6 @@
 {
   "key": "bui_suong",
-  "name": "Bụi Sương",
+  "name": "Sương Hồn",
   "sourceSheets": [
     "bảng_sprite_hồn_ma_băng_sương_72_khung.png",
     "bảng_sprite_hồn_ma_băng_giá.png"
@@ -1970,7 +1970,7 @@
       "index": 1,
       "effectId": "12_normal_attack_a",
       "effectLabel": "Đòn đánh thường",
-      "effectDescription": "Bụi Sương phát tán và vung luồng sương lạnh để tấn công mục tiêu.",
+      "effectDescription": "Sương Hồn phát tán và vung luồng sương lạnh để tấn công mục tiêu.",
       "sourceStrip": "source_rows_webp/12_normal_attack_a.webp",
       "sourceCropFromSheet": {
         "x": 0,
