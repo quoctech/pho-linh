@@ -13,7 +13,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { IonContent, IonProgressBar, IonSpinner } from '@ionic/angular';
 import { StatusBar } from '@capacitor/status-bar';
 import type Phaser from 'phaser';
-import { ALL_MONSTERS_TEMPORARILY_UNLOCKED, applyBattleReward, createBattleState, createPlayerBattleState, equipmentBonuses, type BattleState, type LocalSaveV1 } from '../../game-core';
+import { ALL_MONSTERS_TEMPORARILY_UNLOCKED, applyBattleReward, createBattleState, createPlayerBattleState, equipmentBonuses, isResumableBattle, type BattleState, type LocalSaveV1 } from '../../game-core';
 import { BattleController } from './battle.controller';
 import { GameStorage } from '../state/game-storage.service';
 
@@ -112,7 +112,14 @@ export class BattlePage implements AfterViewInit, OnDestroy {
     }
     this.saveSnapshot = save;
     let restored = save.activeBattle;
-    if (restored && (restored.monster.id !== monsterId || this.isTerminal(restored.phase))) restored = undefined;
+    // Bỏ trận dở khác quái, đã kết thúc, khác bộ cân bằng (chỉ số cũ) hoặc khác hệ nhân vật hiện tại.
+    if (
+      restored
+      && (restored.monster.id !== monsterId
+        || this.isTerminal(restored.phase)
+        || !isResumableBattle(restored)
+        || restored.player.element !== save.settings.element)
+    ) restored = undefined;
     const initial = restored ?? createBattleState(
       Date.now() >>> 0,
       monsterId,

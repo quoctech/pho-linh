@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import type { ElementId, MonsterDefinition } from '../../../game-core';
+import { MONSTER_DATA, type ElementId, type MonsterDefinition } from '../../../game-core';
 import targetMapCoords from '../../../assets/map/target-select/pho_linh_target_map_coords.json';
 
 export const TARGET_MAP_IMAGE_KEY = 'pho-linh-target-map';
@@ -70,63 +70,24 @@ export const TARGET_MAP_MONSTER_PLACEMENTS: readonly TargetMapMonsterPlacement[]
   { monsterId: 'cloud_fox_boss', nodeId: 'stage_05', element: 'water', theme: 'thuy' },
 ];
 
-const TARGET_MAP_MONSTER_INFO: Readonly<Record<string, TargetMapMonsterInfo>> = {
-  mist_blob: {
-    monsterId: 'mist_blob',
-    elementLabel: 'Thủy',
-    skills: [{
-      id: 'skill_suong_mu_xam_thuc',
-      name: 'Sương Mù Xâm Thực',
-      description: 'Phát tán sương lạnh, gây sát thương Thủy nhẹ và giảm tốc độ hành động của mục tiêu.',
-    }],
-  },
-  lantern_cat: {
-    monsterId: 'lantern_cat',
-    elementLabel: 'Hỏa',
-    skills: [{
-      id: 'skill_long_mieu_lien_kich',
-      name: 'Long Miêu Liên Kích',
-      description: 'Tung nhiều đòn tấn công liên tiếp bằng móng vuốt, gây sát thương dồn lên một mục tiêu.',
-    }],
-  },
-  bamboo_mantis: {
-    monsterId: 'bamboo_mantis',
-    elementLabel: 'Mộc',
-    skills: [
-      {
-        id: 'skill_luc_diep_doc_cham',
-        name: 'Lục Diệp Độc Châm',
-        description: 'Phóng lá tre sắc nhọn như kim độc, gây sát thương Mộc và áp dụng Dính độc.',
-      },
-      {
-        id: 'skill_luc_diep_an_tung',
-        name: 'Lục Diệp Ẩn Tung',
-        description: 'Ngụy trang trong lá tre, tăng Né tránh và hồi phục một phần HP.',
-      },
-    ],
-  },
-  cloud_fox_boss: {
-    monsterId: 'cloud_fox_boss',
-    elementLabel: 'Thủy',
-    skills: [
-      {
-        id: 'skill_van_suong_ao_ao',
-        name: 'Vân Sương Ảo Ảo',
-        description: 'Tạo ảo ảnh sương mù, tăng Né tránh và gây Mù cho đối thủ.',
-      },
-      {
-        id: 'skill_vu_luu_thuan',
-        name: 'Vụ Lưu Thuẫn',
-        description: 'Tạo khiên sương, hồi HP và giảm hiệu quả hồi máu của đối thủ.',
-      },
-      {
-        id: 'skill_bich_van_bang_bang',
-        name: 'Bích Vân Băng Băng',
-        description: 'Phóng băng khí tấn công, gây sát thương Thủy và có xác suất Đóng băng.',
-      },
-    ],
-  },
+const TARGET_MAP_ELEMENT_LABELS: Readonly<Record<string, string>> = {
+  mist_blob: 'Thủy',
+  lantern_cat: 'Hỏa',
+  bamboo_mantis: 'Mộc',
+  cloud_fox_boss: 'Thủy',
 };
+
+/** Tên và mô tả skill đọc từ monsters.json (skills[].vfxId là id asset của skill). */
+function monsterInfoFromData(monsterId: string): TargetMapMonsterInfo | undefined {
+  const elementLabel = TARGET_MAP_ELEMENT_LABELS[monsterId];
+  const definition = MONSTER_DATA.definitions[monsterId];
+  if (!elementLabel || !definition) return undefined;
+  return {
+    monsterId,
+    elementLabel,
+    skills: (definition.skills ?? []).map((skill) => ({ id: skill.vfxId, name: skill.name, description: skill.description })),
+  };
+}
 
 const MONSTER_IDLE_ASSETS: Readonly<Record<string, string>> = {
   mist_blob: 'assets/monsters/mist-dust/frames_webp/01_idle/01_idle_01.webp',
@@ -152,7 +113,7 @@ export function targetMapThemeColor(theme: TargetMapTheme): number {
 }
 
 export function targetMapMonsterInfo(monsterId: string): TargetMapMonsterInfo | undefined {
-  return TARGET_MAP_MONSTER_INFO[monsterId];
+  return monsterInfoFromData(monsterId);
 }
 
 export function targetMapMonsterDisplaySize(

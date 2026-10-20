@@ -27,4 +27,13 @@ describe('ElementSelectionPage', () => {
     expect(component.elements.map((element) => element.id)).toEqual(['metal', 'wood', 'water', 'fire', 'earth']);
     expect(component.elements.filter((element) => element.available).map((element) => element.id)).toEqual(['metal', 'wood', 'water', 'fire', 'earth']);
   });
+
+  it('previews an element without saving and reads counters from the element cycle', () => {
+    component.select(component.elements[3]);
+    expect(component.previewId).toBe('fire');
+    expect(component.save?.settings.element).toBe('metal');
+    expect(component.counters.strong.id).toBe('metal');
+    expect(component.counters.weak.id).toBe('water');
+    expect(component.statBars[0].value).toBe('8.500');
+  });
 });

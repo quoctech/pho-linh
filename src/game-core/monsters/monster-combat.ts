@@ -1,4 +1,6 @@
+import { applyDefense, dodgeChanceFromAgi } from '../combat-formulas';
 import { clampPlayerState } from '../player';
+import { nextInt } from '../rng';
 import { CHARACTER_DATA, MONSTER_COMBAT_BALANCE } from '../game-data';
 import type { GameEvent, MonsterBattleState, PlayerBattleState } from '../types';
 
@@ -17,7 +19,7 @@ export function matchDamageMultiplier(matchCount: number): number {
 /** DEF hiệu lực = DEF gốc × (1 − giảm DEF đang áp) + DEF cộng từ guard đang áp. */
 export function recomputeMonsterDefense(monster: MonsterBattleState): MonsterBattleState {
   const reduction = monster.defenseReductionTurns > 0 ? monster.defenseReductionPercent : 0;
-  const guardBonus = monster.guardTurns > 0 ? MONSTER_COMBAT_BALANCE.guardDefenseBonus : 0;
+  const guardBonus = monster.guardTurns > 0 ? Math.round(monster.baseDefense * MONSTER_COMBAT_BALANCE.guardDefenseRatio) : 0;
   return {
     ...monster,
     defense: Math.max(0, Math.round(monster.baseDefense * (1 - reduction))) + guardBonus,
@@ -26,6 +28,22 @@ export function recomputeMonsterDefense(monster: MonsterBattleState): MonsterBat
 
 export function applyMonsterGuard(monster: MonsterBattleState): MonsterBattleState {
   return recomputeMonsterDefense({ ...monster, guardTurns: MONSTER_COMBAT_BALANCE.guardTurns });
+}
+
+/** Sát thương quái sau DEF nhân vật (Balance V6: giảm % = DEF / (DEF + 1900)). */
+export function monsterAttackIncoming(player: PlayerBattleState, rawDamage: number): number {
+  return applyDefense(rawDamage, player.stats.defense);
+}
+
+/** Né của nhân vật theo AGI; chỉ áp cho đòn thường/nặng của quái (skill quái luôn trúng). */
+export function rollPlayerDodge(
+  player: PlayerBattleState,
+  rngState: number,
+): { readonly dodged: boolean; readonly chance: number; readonly roll: number; readonly rngState: number } {
+  const chance = dodgeChanceFromAgi(player.stats.agi);
+  if (chance <= 0) return { dodged: false, chance, roll: 100, rngState };
+  const roll = nextInt(rngState, 1000);
+  return { dodged: roll.value < chance * 1000, chance, roll: roll.value, rngState: roll.state };
 }
 
 export function applyMonsterAttackDamage(
@@ -61,8 +79,8 @@ export interface IncomingMonsterDamageResult {
 }
 
 /**
- * Pipeline chung cho mọi đòn quái đánh vào người chơi:
- * nội tại Thủy (chuỗi nhận đòn) × nội tại Thổ (đang có khiên) × giảm sát thương chủ động
+ * Pipeline chung cho mọi đòn quái đánh vào người chơi (sau khi đã trừ DEF):
+ * nội tại Thổ (đang có khiên) × giảm sát thương chủ động
  * (Huyền Nham Hộ Thể) → khiên hấp thụ → HP. Phản đòn chạy riêng qua `reflectMonsterDamage`
  * để caller phát event theo đúng thứ tự sau MONSTER_ATTACKED.
  */
@@ -77,20 +95,16 @@ export function resolveIncomingMonsterDamage(
   const events: GameEvent[] = [];
   let sequence = startSequence;
   const nextStreak = damageTakenStreak + 1;
-  const waterPassive = CHARACTER_DATA.passives.water;
-  const waterReduction = player.element === 'water' && nextStreak >= (waterPassive.damageStreakMin ?? 3)
-    ? 1 - (waterPassive.damageReduction ?? 0)
-    : 1;
   const earthReduction = player.element === 'earth' && player.shield > 0
     ? 1 - (CHARACTER_DATA.passives.earth.shieldDamageReduction ?? 0)
     : 1;
   const activeReduction = player.damageReductionTurns > 0 ? 1 - player.damageReductionPercent : 1;
-  const damageMultiplier = waterReduction * earthReduction * activeReduction;
-  if (waterReduction < 1 || earthReduction < 1) {
+  const damageMultiplier = earthReduction * activeReduction;
+  if (earthReduction < 1) {
     events.push(createEvent(sequence++, 'PASSIVE_TRIGGERED', {
-      passiveId: waterReduction < 1 ? 'water_damage_reduction' : 'earth_shield_resistance',
+      passiveId: 'earth_shield_resistance',
       element: player.element,
-      multiplier: waterReduction * earthReduction,
+      multiplier: earthReduction,
       streak: nextStreak,
       target: 'player',
     }));

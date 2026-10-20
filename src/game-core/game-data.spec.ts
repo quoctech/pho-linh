@@ -10,7 +10,16 @@ describe('local game data contract', () => {
   it('keeps character formulas and combat limits in JSON data', () => {
     expect(CHARACTER_DATA.schemaVersion).toBe(1);
     expect(CHARACTER_DATA.baseAttributes).toEqual({ str: 5, vit: 5, agi: 5, int: 5 });
-    expect(CHARACTER_DATA.derivedStats.maxHp.vitPerPoint).toBe(20);
+    expect(CHARACTER_DATA.derivedStats.maxHp.vitPerPoint).toBe(200);
+    expect(CHARACTER_DATA.elementBaseStats).toEqual({
+      metal: { maxHp: 9000, atk: 1250, defense: 400, agi: 180 },
+      wood: { maxHp: 11000, atk: 950, defense: 500, agi: 120 },
+      water: { maxHp: 10000, atk: 1000, defense: 550, agi: 150 },
+      fire: { maxHp: 8500, atk: 1300, defense: 350, agi: 220 },
+      earth: { maxHp: 13000, atk: 750, defense: 800, agi: 60 },
+    });
+    expect(CHARACTER_DATA.combat.dodge.agiOffset).toBe(1900);
+    expect(CHARACTER_DATA.combat.defenseMitigation.defOffset).toBe(1900);
     expect(CHARACTER_DATA.skills.cloud_break_lantern.baseDamage).toBe(50);
     expect(Object.keys(CHARACTER_DATA.elementSkills)).toEqual(['metal', 'wood', 'water', 'fire', 'earth']);
     expect(CHARACTER_DATA.elementSkills['fire'].primarySkillLabel).toBe('Hỏa Vũ Liên Châu');
@@ -28,18 +37,24 @@ describe('local game data contract', () => {
     ]);
     expect(MONSTER_DEFINITIONS).toEqual(MONSTER_DATA.definitions);
     expect(MONSTER_COMBAT_BALANCE.heavyDamageMultiplier).toBe(1.7);
-    expect(MONSTER_DEFINITIONS['mist_blob'].dodgeChance).toBe(0.25);
+    const stats = Object.values(MONSTER_DEFINITIONS).map((monster) => [monster.id, monster.maxHp, monster.attack, monster.defense, monster.agi]);
+    expect(stats).toEqual([
+      ['mist_blob', 10500, 950, 600, 150],
+      ['lantern_cat', 7800, 1350, 320, 300],
+      ['bamboo_mantis', 11500, 850, 450, 250],
+      ['cloud_fox_boss', 8800, 1100, 400, 380],
+    ]);
   });
 
   it('keeps the match-3 and battle config in the shared combat JSON', () => {
     expect(COMBAT_DATA.match3.gemTypes).toEqual(['attack', 'heal', 'shield', 'energy', 'poison']);
-    expect(COMBAT_DATA.match3.balanceVersion).toBe(4);
-    expect(COMBAT_DATA.battle.maxTurns).toBe(24);
+    expect(COMBAT_DATA.match3.balanceVersion).toBe(6);
+    expect(COMBAT_DATA.battle.maxTurns).toBe(0); // tạm bỏ giới hạn lượt
   });
 
   it('exposes Balance V3 gem weights, energy table and elemental modifiers', () => {
     expect(COMBAT_DATA.match3.gemWeights).toEqual({ attack: 25, poison: 20, energy: 20, heal: 18, shield: 17 });
-    expect(COMBAT_DATA.energyByMatchLength).toEqual({ '3': 15, '4': 25, '5': 40, '6': 50 });
+    expect(COMBAT_DATA.energyByMatchLength).toEqual({ '3': 15, '4': 25, '5': 40 });
     expect(COMBAT_DATA.elements.cycle).toEqual(['metal', 'wood', 'earth', 'water', 'fire']);
     expect(COMBAT_DATA.elements.modifier.damage).toEqual({ counter: 1.3, neutral: 1.0, countered: 0.8 });
     expect(COMBAT_DATA.elements.modifier.support).toEqual({ counter: 1.0, neutral: 1.0, countered: 0.8 });
@@ -55,8 +70,12 @@ describe('local game data contract', () => {
     expect(CHARACTER_DATA.passives.metal.criticalChanceBonus).toBe(0.4);
     expect(CHARACTER_DATA.passives.metal.criticalDamageBonus).toBe(0.4);
     expect(CHARACTER_DATA.passives.wood.healMultiplierWhenPoisoned).toBe(1.4);
-    expect(CHARACTER_DATA.passives.water.damageReduction).toBe(0.25);
-    expect(CHARACTER_DATA.passives.fire.burnDamageBonus).toBe(20);
+    expect(CHARACTER_DATA.passives.metal.yellowBreakChance).toBe(0.25);
+    expect(CHARACTER_DATA.passives.wood.poisonExtraTurns).toBe(1);
+    expect(CHARACTER_DATA.passives.water.shieldMatchMin).toBe(4);
+    expect(CHARACTER_DATA.passives.fire.redDamageBonus).toBe(0.2);
+    expect(CHARACTER_DATA.passives.fire.burningDamageBonus).toBe(0.2);
+    expect(CHARACTER_DATA.passives.earth.energyToShieldRatio).toBe(0.5);
     expect(CHARACTER_DATA.passives.fire.burningTurns).toBe(3);
     expect(CHARACTER_DATA.passives.earth.shieldDamageReduction).toBe(0.1);
   });

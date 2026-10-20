@@ -17,27 +17,119 @@
     "minimumExpRequired": 50,
     "attributePointsPerLevel": 3
   },
+  "devTools": {
+    "pointSteps": [1, 10],
+    "levelSteps": [1, 5],
+    "goldStep": 1000,
+    "maxLevel": 99
+  },
+  "elementProfiles": {
+    "metal": {
+      "elementLabel": "Kim",
+      "className": "Kiếm Tông",
+      "hanzi": "金",
+      "weapon": "Kiếm trắng bạc",
+      "role": "Sát thủ · Bùng nổ · Xuyên giáp",
+      "intro": "Kiếm khách theo đuổi một đường kiếm thẳng tắp: dồn sát thương liên tục vào một mục tiêu và phá giáp để kết liễu.",
+      "boardPassive": {
+        "name": "Kiếm Khí Hút Nộ",
+        "description": "Ăn ngọc Đỏ có 25% cơ hội phá thêm 1 ngọc Vàng kề bên, nhận ngay +15 Nộ."
+      },
+      "classPassive": {
+        "name": "Kiếm Tâm Bất Diệt",
+        "description": "Từ đòn trực tiếp thứ hai liên tiếp vào cùng mục tiêu: 40% chí mạng, chí mạng tăng 40% sát thương."
+      }
+    },
+    "wood": {
+      "elementLabel": "Mộc",
+      "className": "Linh Mộc Sư",
+      "hanzi": "木",
+      "weapon": "Pháp trượng gỗ linh",
+      "role": "Độc tố · Khống chế · Hồi phục",
+      "intro": "Pháp sư của rừng thiêng: gieo độc kéo dài, hút năng lượng đối thủ và sống dai nhờ hồi phục.",
+      "boardPassive": {
+        "name": "Rễ Độc Trường Sinh",
+        "description": "Ngọc Tím duy trì Độc thêm 1 lượt. Hồi máu dư từ ngọc Xanh lá khi đầy HP chuyển thành Khiên."
+      },
+      "classPassive": {
+        "name": "Sinh Cơ Bất Tận",
+        "description": "Khi quái đang Dính độc, mọi hồi phục của nhân vật tăng 40%."
+      }
+    },
+    "water": {
+      "elementLabel": "Thủy",
+      "className": "Hàn Thủy Thương",
+      "hanzi": "水",
+      "weapon": "Trường thương xanh lam",
+      "role": "Phá khiên · Đóng băng · Kiểm soát",
+      "intro": "Thương thủ băng giá: phá vỡ lớp khiên, làm chậm và đóng băng đối thủ để nắm nhịp trận.",
+      "boardPassive": {
+        "name": "Hàn Triều Hộ Thể",
+        "description": "Match 4–5 ngọc Xanh dương: Khiên nhận được ×1,5 và quái bị hoãn đòn đánh ở lượt kế tiếp (bị Làm chậm)."
+      },
+      "classPassive": {
+        "name": "Hàn Tức Ngưng Kết",
+        "description": "Quái đang bị Làm chậm thì Băng Phong Thiên Lý đóng băng thêm 1 lượt."
+      }
+    },
+    "fire": {
+      "elementLabel": "Hỏa",
+      "className": "Viêm Vũ Cung",
+      "hanzi": "火",
+      "weapon": "Cung hỏa diễm",
+      "role": "Bộc phát · Liên kích · Thiêu đốt",
+      "intro": "Cung thủ lửa: liên kích nhanh, thiêu đốt mục tiêu và xuyên thẳng qua khiên.",
+      "boardPassive": {
+        "name": "Hỏa Tiễn Xuyên Giáp",
+        "description": "Ngọc Đỏ tăng 20% sát thương, xuyên khiên đánh thẳng vào HP và gây Thiêu đốt."
+      },
+      "classPassive": {
+        "name": "Liệt Diễm Chi Tâm",
+        "description": "Mục tiêu đang Thiêu đốt nhận thêm 20% sát thương từ ngọc và kỹ năng."
+      }
+    },
+    "earth": {
+      "elementLabel": "Thổ",
+      "className": "Huyền Thổ Vệ",
+      "hanzi": "土",
+      "weapon": "Đại đao vàng đen",
+      "role": "Tanker · Tạo khiên · Choáng · Phản kích",
+      "intro": "Hộ vệ đất đá: máu trâu, giáp dày, biến Nộ thành Khiên và phản đòn kẻ địch.",
+      "boardPassive": {
+        "name": "Thổ Nộ Hóa Giáp",
+        "description": "Ăn ngọc Vàng nhận thêm Khiên bằng 50% số Nộ vừa tích × 30 (15 Nộ → 225 Khiên)."
+      },
+      "classPassive": {
+        "name": "Bất Động Như Sơn",
+        "description": "Khi đang có Khiên, mọi sát thương nhận vào giảm 10%."
+      }
+    }
+  },
+  "elementBaseStats": {
+    "metal": {"maxHp": 9000, "atk": 1250, "defense": 400, "agi": 180},
+    "wood": {"maxHp": 11000, "atk": 950, "defense": 500, "agi": 120},
+    "water": {"maxHp": 10000, "atk": 1000, "defense": 550, "agi": 150},
+    "fire": {"maxHp": 8500, "atk": 1300, "defense": 350, "agi": 220},
+    "earth": {"maxHp": 13000, "atk": 750, "defense": 800, "agi": 60}
+  },
   "derivedStats": {
     "maxHp": {
-      "base": 200,
-      "vitPerPoint": 20
+      "vitPerPoint": 200
     },
     "atk": {
-      "base": 10,
-      "strPerPoint": 3
+      "strPerPoint": 25
     },
     "defense": {
-      "base": 0,
-      "vitPerPoint": 2
+      "vitPerPoint": 10
+    },
+    "agi": {
+      "agiPerPoint": 5
     },
     "skillPower": {
       "base": 5,
       "intPerPoint": 3
     },
-    "agiBonus": {
-      "agiPerPoint": 0.005,
-      "cap": 0.2
-    },
+    "equipmentScale": 25,
     "power": {
       "maxHpDivisor": 10,
       "atkMultiplier": 4,
@@ -64,13 +156,19 @@
     "poison": {
       "turns": 3
     },
+    "dodge": {
+      "agiOffset": 1900,
+      "maxChance": 0.9
+    },
+    "defenseMitigation": {
+      "defOffset": 1900
+    },
     "monsterGems": {
       "heal": {
-        "base": 8,
-        "levelMultiplier": 2
+        "maxHpRatioPerGem": 0.03
       },
       "shield": {
-        "base": 8,
+        "base": 240,
         "defMultiplier": 0.5
       },
       "energy": {
@@ -81,22 +179,33 @@
   "passives": {
     "metal": {
       "criticalChanceBonus": 0.4,
-      "criticalDamageBonus": 0.4
+      "criticalDamageBonus": 0.4,
+      "yellowBreakChance": 0.25,
+      "yellowBreakEnergy": 15
     },
     "wood": {
-      "healMultiplierWhenPoisoned": 1.4
+      "healMultiplierWhenPoisoned": 1.4,
+      "poisonExtraTurns": 1,
+      "overhealToShield": true
     },
     "water": {
-      "damageReduction": 0.25,
-      "damageStreakMin": 3
+      "shieldMatchMin": 4,
+      "shieldBonusRatio": 0.5,
+      "delayMonsterAttackTurns": 1,
+      "freezeExtraTurnsWhenDelayed": 1,
+      "slowedTurnsAfterDelay": 2
     },
     "fire": {
-      "burnDamageBonus": 20,
+      "redDamageBonus": 0.2,
+      "redPierceShield": true,
+      "burningDamageBonus": 0.2,
       "burningTurns": 3,
       "burningAtkFactor": 0.1
     },
     "earth": {
-      "shieldDamageReduction": 0.1
+      "shieldDamageReduction": 0.1,
+      "energyToShieldRatio": 0.5,
+      "energyToShieldScale": 30
     }
   },
   "skills": {
@@ -140,7 +249,7 @@
       "primarySkillLabel": "Hàn Triều Phá Không",
       "primarySkillIcon": "thuy_han_trieu_pha_khong",
       "primarySkillFolder": "skill_1",
-      "primarySkill": { "energyCost": 50, "baseDamage": 0, "skillPowerMultiplier": 0, "defenseMultiplier": 0, "fixedDamage": 22, "fixedDamageTarget": "shield_or_hp" },
+      "primarySkill": { "energyCost": 50, "baseDamage": 0, "skillPowerMultiplier": 0, "defenseMultiplier": 0, "fixedDamage": 660, "fixedDamageTarget": "shield_or_hp" },
       "secondarySkill": { "energyCost": 100, "baseDamage": 0, "skillPowerMultiplier": 0, "defenseMultiplier": 0, "attackMultiplier": 1.1, "controlEffect": "freeze", "controlChance": 1, "controlTurns": 1 },
       "secondarySkillId": "thuy_linh_ho_the",
       "secondarySkillLabel": "Băng Phong Thiên Lý",

@@ -1,5 +1,5 @@
-import { createDefaultSave, migrateSave } from './save';
-import { applyBattleReward, commitAttributeAllocation, getExpRequired } from './progression';
+import { createDefaultSave, isResumableBattle, migrateSave } from './save';
+import { applyBattleReward, commitAttributeAllocation, devGrantAttributePoints, devGrantGold, devGrantLevels, devSetLevel, getExpRequired, resetAttributePoints, spentAttributePoints } from './progression';
 import { createBattleState } from './battle';
 
 describe('M2 progression and save', () => {
@@ -25,6 +25,16 @@ describe('M2 progression and save', () => {
     expect(migrateSave({ schemaVersion: 1 }, battle).activeBattle?.battleId).toBe(battle.battleId);
   });
 
+  it('drops an unfinished battle saved with an older balance version (old 300 HP stats)', () => {
+    const current = createBattleState(4);
+    const stale = { ...current, balanceVersion: 5, player: { ...current.player, currentHp: 300, stats: { ...current.player.stats, maxHp: 300 } } };
+    expect(isResumableBattle(current)).toBe(true);
+    expect(isResumableBattle(stale)).toBe(false);
+    expect(migrateSave({ ...createDefaultSave(), activeBattle: stale }).activeBattle).toBeUndefined();
+    expect(migrateSave({ ...createDefaultSave(), activeBattle: current }).activeBattle?.battleId).toBe(current.battleId);
+    expect(current.player.stats.maxHp).toBe(9000);
+  });
+
   it('keeps old settings valid and defaults the new gender choice to male', () => {
     const save = createDefaultSave();
     const oldSave = { ...save, settings: { music: true, sfx: false, reducedMotion: false } };
@@ -41,5 +51,27 @@ describe('M2 progression and save', () => {
     expect(committed.unspentPoints).toBe(0);
     expect(committed.attributes.str + committed.attributes.vit).toBe(13);
     expect(getExpRequired(2)).toBe(150);
+  });
+});
+
+describe('công cụ cân bằng offline (Dev mode)', () => {
+  it('cấp điểm, lên cấp, tẩy điểm và đặt cấp theo đúng số điểm mỗi cấp', () => {
+    const base = createDefaultSave().profile;
+    const withPoints = devGrantAttributePoints(base, 10);
+    expect(withPoints.unspentPoints).toBe(10);
+
+    const spent = commitAttributeAllocation(withPoints, { str: 4, vit: 6 });
+    expect(spentAttributePoints(spent)).toBe(10);
+    expect(resetAttributePoints(spent)).toMatchObject({ unspentPoints: 10, attributes: { str: 5, vit: 5, agi: 5, int: 5 } });
+
+    const leveled = devGrantLevels(spent, 5);
+    expect(leveled.level).toBe(6);
+    expect(leveled.unspentPoints).toBe(15); // 5 cấp × 3 điểm, giữ điểm đã cộng
+    expect(spentAttributePoints(leveled)).toBe(10);
+
+    const level20 = devSetLevel(leveled, 20);
+    expect(level20).toMatchObject({ level: 20, exp: 0, unspentPoints: 57, attributes: { str: 5, vit: 5, agi: 5, int: 5 } });
+    expect(devSetLevel(base, 500).level).toBe(99);
+    expect(devGrantGold(base, 1000).gold).toBe(1000);
   });
 });

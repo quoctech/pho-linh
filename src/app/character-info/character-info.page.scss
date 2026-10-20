@@ -1,0 +1,52 @@
+:host { --ink:#fff8e8; --muted:#aaa4bd; --panel:rgba(36,29,61,.78); --gold:#d8bd78; display:block; }
+ion-content { --background:#100d20; }
+.info-screen { min-height:100%; padding:20px max(16px,calc((100% - 520px)/2)) 28px; color:var(--ink); background:radial-gradient(circle at 80% 6%,color-mix(in srgb,var(--element-color) 22%,transparent),transparent 36%),#100d20; }
+.topbar { display:flex; align-items:center; gap:12px; margin-bottom:16px; }
+.back { display:grid; place-items:center; flex:0 0 38px; height:38px; border:1px solid rgba(236,220,255,.18); border-radius:12px; color:var(--ink); font-size:20px; text-decoration:none; background:var(--panel); }
+.eyebrow { margin:0 0 4px; color:#f3c64f; font-size:10px; font-weight:700; letter-spacing:.2em; }
+h1 { margin:0; font:700 26px/1.1 Georgia,serif; }
+
+.element-tabs { display:grid; grid-template-columns:repeat(5,1fr); gap:6px; margin-bottom:14px; }
+.tab { display:flex; flex-direction:column; align-items:center; gap:2px; min-width:0; padding:8px 2px; border:1px solid rgba(236,220,255,.14); border-radius:12px; color:var(--muted); font-size:12px; background:rgba(34,28,56,.66); }
+.tab .tab-hanzi { color:var(--tab-color); font:20px Georgia,serif; }
+.tab small { color:#72dda2; font-size:9px; }
+.tab.active { border-color:var(--tab-color); color:var(--ink); background:linear-gradient(160deg,color-mix(in srgb,var(--tab-color) 26%,#2c2248),#1d1733); }
+
+.hero-card { display:flex; flex-wrap:wrap; gap:14px; margin-bottom:18px; padding:14px; border:1px solid color-mix(in srgb,var(--element-color) 45%,transparent); border-radius:18px; background:var(--panel); }
+.portrait { flex:0 0 112px; height:150px; display:grid; place-items:end center; overflow:hidden; border-radius:14px; background:radial-gradient(circle at 50% 70%,color-mix(in srgb,var(--element-color) 35%,transparent),transparent 70%),#181329; }
+.portrait img { max-width:118%; max-height:118%; object-fit:contain; }
+.hero-copy { flex:1 1 180px; min-width:0; }
+.hanzi { color:var(--element-color); font:28px Georgia,serif; }
+.hero-copy h2 { margin:2px 0 4px; font:700 22px Georgia,serif; }
+.element-line { margin:0; color:var(--gold); font-size:12px; }
+.role { margin:6px 0; color:var(--ink); font-size:12px; font-weight:700; }
+.intro { margin:0; color:var(--muted); font-size:12px; line-height:1.5; }
+
+.block { margin-bottom:18px; }
+.heading { display:flex; align-items:center; gap:10px; margin:0 4px 10px; }
+.heading span { color:var(--muted); font-size:9px; letter-spacing:.18em; }
+.heading i { flex:1; height:1px; background:rgba(255,255,255,.12); }
+.heading small { color:var(--gold); font-size:10px; }
+
+.stat-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+.stat { padding:11px 12px; border:1px solid rgba(236,220,255,.12); border-radius:12px; background:rgba(34,28,56,.66); }
+.stat:last-child { grid-column:1 / -1; }
+.stat small { display:block; color:var(--muted); font-size:10px; }
+.stat strong { display:block; margin-top:4px; font:700 17px Georgia,serif; }
+.stat em { display:block; margin-top:3px; color:#72dda2; font-size:10px; font-style:normal; }
+.note { margin:8px 4px 0; color:#68627c; font-size:10px; }
+
+.passive, .skill { display:flex; gap:12px; margin-bottom:8px; padding:12px; border:1px solid rgba(236,220,255,.12); border-radius:14px; background:rgba(34,28,56,.66); }
+.passive small, .skill-title small { color:var(--gold); font-size:9px; letter-spacing:.14em; text-transform:uppercase; }
+.passive h3, .skill h3 { margin:3px 0 4px; font:700 15px Georgia,serif; }
+.passive p { margin:0; color:var(--muted); font-size:12px; line-height:1.5; }
+.passive-badge { display:grid; place-items:center; flex:0 0 44px; height:52px; border:1px solid color-mix(in srgb,var(--element-color) 60%,transparent); border-radius:12px; color:var(--element-color); font-size:22px; background:#181329; }
+.passive-icon { flex:0 0 44px; width:44px; height:52px; object-fit:contain; }
+
+.skill-icon { flex:0 0 56px; width:56px; height:56px; object-fit:contain; border-radius:12px; background:#181329; }
+.skill-copy { flex:1; min-width:0; }
+.skill-title { display:flex; justify-content:space-between; align-items:center; }
+.cost { color:#f3c64f; font-size:11px; font-weight:700; }
+.skill ul { margin:0; padding-left:16px; color:var(--ink); font-size:12px; line-height:1.55; }
+.preview { margin:6px 0 0; color:#9dceff; font-size:11px; }
+

@@ -66,7 +66,9 @@ export interface DerivedStats {
   readonly atk: number;
   readonly defense: number;
   readonly skillPower: number;
-  readonly agiBonus: number;
+  /** Linh hoạt; tỉ lệ né = AGI / (AGI + agiOffset). */
+  readonly agi: number;
+  readonly dodgeChance: number;
   readonly power: number;
 }
 
@@ -78,7 +80,7 @@ export interface EquipmentBonuses {
   readonly atk?: number;
   readonly defense?: number;
   readonly skillPower?: number;
-  readonly agiBonus?: number;
+  readonly agi?: number;
 }
 
 export interface ItemTemplate {
@@ -120,6 +122,12 @@ export interface PlayerBattleState {
   readonly damageReductionPercent: number;
   readonly controlImmunityTurns: number;
   readonly reflectDamageRatio: number;
+  /** Thiêu đốt do quái gây (Long Miêu Liên Kích): mất HP mỗi đầu lượt quái. */
+  readonly burningPotency: number;
+  readonly burningTurns: number;
+  /** Giảm hồi máu (Vụ Lưu Thuẫn), đếm theo hành động của người chơi. */
+  readonly healReduction: number;
+  readonly healReductionTurns: number;
   /** Direct attack streak used by the Metal passive. */
   readonly attackStreakTargetId?: string;
   readonly attackStreak: number;
@@ -134,8 +142,8 @@ export interface MonsterDefinition {
   readonly maxHp: number;
   readonly attack: number;
   readonly defense: number;
-  /** Chance for a monster-specific normal attack dodge mechanic. */
-  readonly dodgeChance?: number;
+  /** Linh hoạt (Balance V6); tỉ lệ né đòn ngọc đỏ = AGI / (AGI + agiOffset). */
+  readonly agi?: number;
   /** Optional absolute shield cap; otherwise the battle config ratio is used. */
   readonly shieldCap?: number;
   readonly behaviorId: 'basic' | 'guard' | 'heavy' | 'boss';
@@ -145,6 +153,44 @@ export interface MonsterDefinition {
   readonly dropPool?: readonly string[];
   readonly expReward: number;
   readonly goldReward: number;
+  /** Skill tự động của quái (Balance V5), dữ liệu trong monsters.json. */
+  readonly skills?: readonly MonsterSkillData[];
+}
+
+/**
+ * Skill quái. Quái tự dùng khi đủ `energyCost` và thỏa điều kiện HP (`hpAbove`: HP > ngưỡng,
+ * `hpBelow`: HP < ngưỡng); nhiều skill hợp lệ thì chọn `priority` cao nhất. Skill thay hành động lượt đó.
+ */
+export interface MonsterSkillData {
+  readonly id: string;
+  readonly name: string;
+  /** Id thư mục VFX/asset của skill. */
+  readonly vfxId: string;
+  readonly description: string;
+  readonly energyCost: number;
+  readonly priority: number;
+  readonly hpAbove?: number;
+  readonly hpBelow?: number;
+  /** Sát thương = baseDamage + ATK × attackMultiplier, rồi đi pipeline giảm sát thương/khiên của nhân vật. */
+  readonly baseDamage?: number;
+  readonly attackMultiplier?: number;
+  /** Né tránh cộng thêm; hết theo số lần bị roll né (charges) hoặc số hành động của người chơi (turns). */
+  readonly dodgeBonus?: number;
+  readonly dodgeCharges?: number;
+  readonly dodgeTurns?: number;
+  /** Hồi HP theo % maxHP: hồi ngay khi dùng và mỗi đầu lượt quái cho tới hết healTurns. */
+  readonly healMaxHpRatio?: number;
+  readonly healTurns?: number;
+  readonly selfShield?: number;
+  readonly playerBurnMaxHpRatio?: number;
+  readonly playerBurnTurns?: number;
+  readonly playerPoisonAtkRatio?: number;
+  readonly playerPoisonTurns?: number;
+  readonly playerControl?: 'stun' | 'freeze';
+  readonly playerControlChance?: number;
+  readonly playerControlTurns?: number;
+  readonly playerHealReduction?: number;
+  readonly playerHealReductionTurns?: number;
 }
 
 export interface MonsterTactics {
@@ -184,7 +230,19 @@ export interface MonsterBattleState extends MonsterDefinition {
   readonly damageTakenBonusTurns: number;
   /** Số hành động của người chơi mà DEF cộng từ guard còn hiệu lực. */
   readonly guardTurns: number;
-  readonly nextAction: 'basic' | 'guard' | 'heavy' | 'energy' | 'poison' | 'telegraph' | 'long_mieu_lien_kich';
+  /** Né cộng thêm từ skill quái; còn hiệu lực khi charges > 0 hoặc turns > 0. */
+  readonly dodgeBonus: number;
+  readonly dodgeBonusCharges: number;
+  readonly dodgeBonusTurns: number;
+  /** Hồi máu theo lượt (Lục Diệp Ẩn Tung), tick đầu lượt quái. */
+  readonly healPerTurn: number;
+  readonly healTurns: number;
+  /** Quái vừa bị hoãn đòn (Thủy) — "Làm chậm" cho Hàn Tức Ngưng Kết; đếm theo hành động người chơi. */
+  readonly slowedTurns: number;
+  /** Skill dự kiến dùng ở lượt tới khi nextAction = 'skill'. */
+  readonly nextSkillId?: string;
+  /** 'long_mieu_lien_kich' chỉ còn để đọc snapshot cũ; core coi như 'skill'. */
+  readonly nextAction: 'basic' | 'guard' | 'heavy' | 'energy' | 'poison' | 'telegraph' | 'skill' | 'long_mieu_lien_kich';
   readonly phase: 1 | 2;
   readonly actionCount: number;
 }
@@ -227,6 +285,8 @@ export interface BattleState {
   readonly phase: BattlePhase;
   readonly player: PlayerBattleState;
   readonly playerSkipTurns: number;
+  /** Hiệu ứng khiến nhân vật mất lượt, để UI hiện Choáng hay Đóng băng. */
+  readonly playerSkipEffect?: 'stun' | 'freeze';
   /** Số lượt hành động tấn công của quái đang bị hoãn (legacy field). */
   readonly monsterActionDelay: number;
   /** Consecutive monster damage events received by the player. */
@@ -280,6 +340,7 @@ export interface GameEvent {
     | 'GEMS_EFFECT_APPLIED'
     | 'DAMAGE_APPLIED'
     | 'MONSTER_DODGED'
+    | 'PLAYER_DODGED'
     | 'HEAL_APPLIED'
     | 'SHIELD_GAINED'
     | 'ENERGY_GAINED'
@@ -301,6 +362,8 @@ export interface GameEvent {
     | 'CONTROL_APPLIED'
     | 'DAMAGE_VULNERABILITY_APPLIED'
     | 'DAMAGE_REFLECTED'
+    | 'MONSTER_BUFF_APPLIED'
+    | 'HEAL_REDUCTION_APPLIED'
     | 'TURN_STARTED'
     | 'BATTLE_WON'
     | 'BATTLE_LOST'

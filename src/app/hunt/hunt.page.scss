@@ -91,3 +91,18 @@
   color: #b8b0cf;
   line-height: 1.5;
 }
+
+.home-back {
+  position: absolute;
+  top: calc(12px + env(safe-area-inset-top));
+  right: 12px; /* góc trái là tiêu đề "CHỌN BOSS" của bản đồ Phaser */
+  z-index: 5;
+  padding: 9px 14px;
+  border: 1px solid rgba(236, 220, 255, .28);
+  border-radius: 12px;
+  color: #fff8e8;
+  font-size: 13px;
+  font-weight: 700;
+  background: rgba(23, 20, 38, .82);
+  box-shadow: 0 6px 16px rgba(10, 8, 19, .45);
+}

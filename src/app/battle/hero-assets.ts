@@ -28,7 +28,7 @@ export type HeroSfxName =
   | 'cast_release' | 'cast_impact';
 
 export type HeroTransientAnimation =
-  | 'attack' | 'cast' | 'hit' | 'death' | 'stunned' | 'heal' | 'antiHeal' | 'dodge' | 'poisonCast';
+  | 'attack' | 'cast' | 'hit' | 'death' | 'stunned' | 'heal' | 'antiHeal' | 'dodge' | 'poisonCast' | 'frozen' | 'burning';
 
 export interface HeroAnimationMetadata {
   readonly key: string;

@@ -35,3 +35,6 @@
 /* @import "@ionic/angular/css/palettes/dark.always.css"; */
 /* @import "@ionic/angular/css/palettes/dark.class.css"; */
 @import '@ionic/angular/css/palettes/dark.system.css';
+
+/* Home: thẻ cuối lẻ trong lưới khám phá trải hết hàng (đặt ở global vì home.page.scss chạm ngân sách 4 kB). */
+app-home .menu-grid > .menu-card:last-child:nth-child(odd) { grid-column: 1 / -1; min-height: 72px; }

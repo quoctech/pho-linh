@@ -35,10 +35,28 @@ export interface PlayerSkillData {
   readonly reflectDamageRatio?: number;
 }
 
+export interface ElementProfileData {
+  readonly elementLabel: string;
+  readonly className: string;
+  readonly hanzi: string;
+  readonly weapon: string;
+  readonly role: string;
+  readonly intro: string;
+  readonly boardPassive: { readonly name: string; readonly description: string };
+  readonly classPassive: { readonly name: string; readonly description: string };
+}
+
 export interface CharacterData {
   readonly schemaVersion: number;
   readonly id: string;
   readonly baseAttributes: Attributes;
+  /** Công cụ test cân bằng offline (chỉ hiện khi bật Dev mode). */
+  readonly devTools: {
+    readonly pointSteps: readonly number[];
+    readonly levelSteps: readonly number[];
+    readonly goldStep: number;
+    readonly maxLevel: number;
+  };
   readonly progression: {
     readonly startingLevel: number;
     readonly startingExp: number;
@@ -49,12 +67,23 @@ export interface CharacterData {
     readonly minimumExpRequired: number;
     readonly attributePointsPerLevel: number;
   };
+  /** Văn bản giới thiệu nhân vật theo hệ cho màn Thông số (tên lớp, vai trò, nội tại). */
+  readonly elementProfiles: Readonly<Record<ElementId, ElementProfileData>>;
+  /** Chỉ số Lv1 theo hệ (Balance V6). */
+  readonly elementBaseStats: Readonly<Record<ElementId, {
+    readonly maxHp: number;
+    readonly atk: number;
+    readonly defense: number;
+    readonly agi: number;
+  }>>;
+  /** Điểm thuộc tính vượt `baseAttributes` cộng thêm vào base theo hệ; trang bị nhân `equipmentScale`. */
   readonly derivedStats: {
-    readonly maxHp: { readonly base: number; readonly vitPerPoint: number };
-    readonly atk: { readonly base: number; readonly strPerPoint: number };
-    readonly defense: { readonly base: number; readonly vitPerPoint: number };
+    readonly maxHp: { readonly vitPerPoint: number };
+    readonly atk: { readonly strPerPoint: number };
+    readonly defense: { readonly vitPerPoint: number };
+    readonly agi: { readonly agiPerPoint: number };
     readonly skillPower: { readonly base: number; readonly intPerPoint: number };
-    readonly agiBonus: { readonly agiPerPoint: number; readonly cap: number };
+    readonly equipmentScale: number;
     readonly power: {
       readonly maxHpDivisor: number;
       readonly atkMultiplier: number;
@@ -77,24 +106,41 @@ export interface CharacterData {
     readonly heal: { readonly maxHpFactor: number };
     readonly shield: { readonly defFactor: number };
     readonly poison: { readonly turns: number };
+    /** Tỉ lệ né = AGI / (AGI + agiOffset), tối đa maxChance. Dùng chung cho nhân vật và quái. */
+    readonly dodge: { readonly agiOffset: number; readonly maxChance: number };
+    /** Giảm sát thương nhận = DEF / (DEF + defOffset). Dùng chung cho mọi đòn. */
+    readonly defenseMitigation: { readonly defOffset: number };
     /** Hằng số riêng cho hiệu ứng ngọc do quái tự match (không dùng công thức player V2). */
     readonly monsterGems: {
-      readonly heal: { readonly base: number; readonly levelMultiplier: number };
+      readonly heal: { readonly maxHpRatioPerGem: number };
       readonly shield: { readonly base: number; readonly defMultiplier: number };
       readonly energy: { readonly perGem: number };
     };
   };
   /** Tham số nội tại nghề theo hệ nhân vật (Balance V3). */
   readonly passives: Readonly<Record<ElementId, {
+    // Nội tại nghề (3.x)
     readonly criticalChanceBonus?: number;
     readonly criticalDamageBonus?: number;
     readonly healMultiplierWhenPoisoned?: number;
-    readonly damageReduction?: number;
-    readonly damageStreakMin?: number;
-    readonly burnDamageBonus?: number;
+    readonly burningDamageBonus?: number;
     readonly burningTurns?: number;
     readonly burningAtkFactor?: number;
     readonly shieldDamageReduction?: number;
+    readonly freezeExtraTurnsWhenDelayed?: number;
+    readonly slowedTurnsAfterDelay?: number;
+    // Nội tại bàn cờ (2.2)
+    readonly yellowBreakChance?: number;
+    readonly yellowBreakEnergy?: number;
+    readonly poisonExtraTurns?: number;
+    readonly overhealToShield?: boolean;
+    readonly shieldMatchMin?: number;
+    readonly shieldBonusRatio?: number;
+    readonly delayMonsterAttackTurns?: number;
+    readonly redDamageBonus?: number;
+    readonly redPierceShield?: boolean;
+    readonly energyToShieldRatio?: number;
+    readonly energyToShieldScale?: number;
   }>>;
   readonly skills: {
     readonly cloud_break_lantern: {
@@ -124,8 +170,8 @@ export interface MonsterCombatBalance {
   readonly tacticDefenseRatio: number;
   readonly thinkingSeconds: { readonly minimum: number; readonly steps: number; readonly step: number };
   readonly heavyDamageMultiplier: number;
-  readonly defenseMitigationMultiplier: number;
-  readonly guardDefenseBonus: number;
+  /** Guard cộng thêm DEF = baseDefense × tỉ lệ. */
+  readonly guardDefenseRatio: number;
   /** Số hành động của người chơi mà DEF cộng từ guard còn hiệu lực. */
   readonly guardTurns: number;
   /** Hệ số sát thương quái theo số ngọc đỏ quái match (khóa 3..6, ≥6 dùng khóa 6). */
@@ -133,14 +179,9 @@ export interface MonsterCombatBalance {
   readonly mistGuardShield: number;
   readonly playerEnergyOnMonsterAttack: number;
   readonly monsterEnergyOnAttack: number;
-  readonly poisonPotencyMultiplier: number;
+  /** Độc quái gieo lên nhân vật mỗi lượt = ATK quái × tỉ lệ. */
+  readonly poisonAtkRatio: number;
   readonly poisonTurns: number;
-  readonly lanternCatSkill: {
-    readonly maxHpDamageRatio: number;
-    readonly playerEnergyDrainRatio: number;
-    readonly energyRestored: number;
-    readonly stunTurns: number;
-  };
 }
 
 export interface MonsterData {
@@ -171,6 +212,7 @@ export interface CombatData {
     readonly modifier: Readonly<Record<ElementCategory, Readonly<Record<ElementRelationship, number>>>>;
   };
   readonly battle: {
+    /** Giới hạn lượt mỗi trận; 0 = không giới hạn. */
     readonly maxTurns: number;
     readonly playerTurnSeconds: number;
   };

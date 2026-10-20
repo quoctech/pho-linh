@@ -1,19 +1,23 @@
 import { DEFAULT_BATTLE_CONFIG } from './config';
 import { findLegalMoves, findMatches, reshuffleBoard, swapCells } from './board';
 import { createMonsterBattleState, MONSTER_DEFINITIONS } from './monsters/monster-definitions';
+import { monsterDodgeChance, resolveMonsterSkill, selectMonsterSkill } from './monsters/monster-skills';
 import { chooseLanternCatAction, resolveLanternCatTurn } from './monsters/lantern-cat';
 import {
   applyMonsterGuard,
   matchDamageMultiplier,
+  monsterAttackIncoming,
   recomputeMonsterDefense,
   reflectMonsterDamage,
   resolveIncomingMonsterDamage,
+  rollPlayerDodge,
 } from './monsters/monster-combat';
 import { clampPlayerState, createPlayerBattleState } from './player';
 import { createInitialState, resolveSwap } from './resolve';
 import { nextInt } from './rng';
 import { CHARACTER_DATA, COMBAT_DATA, MONSTER_COMBAT_BALANCE, type PlayerSkillData } from './game-data';
 import { elementalModifier, elementRelationship } from './elements';
+import { applyDefense } from './combat-formulas';
 
 import {
   GEM_TYPES,
@@ -113,12 +117,13 @@ function comboMultiplier(cascade: number, config: BattleConfig): number {
 }
 
 /**
- * V2: nộ nhận theo độ dài match ngọc vàng (3→15, 4→25, 5→40, 6→50), không nhân cascade.
- * `count` là tổng ô vàng bị clear trong bước resolve; với match thẳng đây là độ dài line.
+ * V6: nộ nhận theo độ dài match ngọc vàng (3→15, 4→25, ≥5→40), không nhân cascade.
+ * `count` là tổng ô vàng bị clear trong bước resolve; dài hơn mốc lớn nhất dùng mốc lớn nhất.
  */
 function playerEnergyGain(count: number): number {
   if (count < 3) return 0;
-  const key = String(Math.min(6, count));
+  const lengths = Object.keys(COMBAT_DATA.energyByMatchLength).map(Number).filter(Number.isFinite);
+  const key = String(Math.min(Math.max(...lengths), count));
   return COMBAT_DATA.energyByMatchLength[key] ?? 0;
 }
 
@@ -268,7 +273,7 @@ function applyMonsterGemEffects(
     const healCount = counts['heal'] ?? 0;
     if (healCount > 0) {
       const monsterHeal = CHARACTER_DATA.combat.monsterGems.heal;
-      const requested = Math.round(healCount * (monsterHeal.base + monster.level * monsterHeal.levelMultiplier) * multiplier);
+      const requested = Math.round(healCount * monster.maxHp * monsterHeal.maxHpRatioPerGem * multiplier);
       const amount = Math.min(monster.maxHp - monster.currentHp, requested);
       monster = { ...monster, currentHp: Math.min(monster.maxHp, monster.currentHp + requested) };
       events.push(event(state, actionId, sequence, 'HEAL_APPLIED', {
@@ -406,20 +411,26 @@ function resolveSkippedPlayerTurn(
   actionId: string,
   config: BattleConfig,
 ): { readonly state: BattleState; readonly events: GameEvent[] } {
+  const effect = state.playerSkipEffect ?? 'stun';
+  const remainingTurns = Math.max(0, state.playerSkipTurns - 1);
   const events: GameEvent[] = [
     event(state, actionId, 0, 'PLAYER_TURN_SKIPPED', {
       actor: 'monster',
-      source: 'lantern_cat_long_mieu_lien_kich',
+      effect,
       turns: 1,
-      remainingTurns: Math.max(0, state.playerSkipTurns - 1),
-      label: 'Nhân vật bị choáng — mất lượt',
+      remainingTurns,
+      label: effect === 'freeze' ? 'Nhân vật bị đóng băng — mất lượt' : 'Nhân vật bị choáng — mất lượt',
     }),
   ];
+  // Lượt bị mất vẫn là một hành động của người chơi: debuff đếm theo hành động cũng trôi.
   const nextState = {
     ...state,
+    player: tickPlayerDebuffs(state.player),
+    monster: tickMonsterDebuffs(state.monster),
     turn: state.turn + 1,
     phase: 'MONSTER_TURN' as const,
-    playerSkipTurns: Math.max(0, state.playerSkipTurns - 1),
+    playerSkipTurns: remainingTurns,
+    playerSkipEffect: remainingTurns > 0 ? state.playerSkipEffect : undefined,
   };
   const nextMonsterTurn = resolveMonsterSequence(nextState, `${actionId}:monster`, 1, config);
   return {
@@ -512,7 +523,27 @@ function tickMonsterDebuffs(monster: BattleState['monster']): BattleState['monst
     damageTakenBonusTurns,
     damageTakenBonus: damageTakenBonusTurns > 0 ? monster.damageTakenBonus : 0,
     guardTurns: Math.max(0, monster.guardTurns - 1),
+    slowedTurns: Math.max(0, monster.slowedTurns - 1),
+    ...tickMonsterDodgeTurns(monster),
   });
+}
+
+function tickMonsterDodgeTurns(monster: BattleState['monster']): Pick<BattleState['monster'], 'dodgeBonus' | 'dodgeBonusTurns'> {
+  const dodgeBonusTurns = Math.max(0, monster.dodgeBonusTurns - 1);
+  return {
+    dodgeBonusTurns,
+    dodgeBonus: dodgeBonusTurns > 0 || monster.dodgeBonusCharges > 0 ? monster.dodgeBonus : 0,
+  };
+}
+
+/** Debuff lên nhân vật đếm theo hành động của người chơi (anti-heal của Vụ Lưu Thuẫn). */
+function tickPlayerDebuffs(player: PlayerBattleState): PlayerBattleState {
+  const healReductionTurns = Math.max(0, player.healReductionTurns - 1);
+  return {
+    ...player,
+    healReductionTurns,
+    healReduction: healReductionTurns > 0 ? player.healReduction : 0,
+  };
 }
 
 /** Thiêu đốt của Phần Thiên Xạ Nhật: nhân direct damage (ngọc đỏ, skill) sau khi trừ DEF. */
@@ -531,6 +562,40 @@ function playerDirectAttackStreak(
     attackStreakTargetId: targetId,
     attackStreak: player.attackStreakTargetId === targetId ? player.attackStreak + 1 : 1,
   };
+}
+
+/** Nội tại nghề Hỏa (V6): mục tiêu đang Thiêu đốt nhận thêm `burningDamageBonus` (ngọc + skill). */
+function burningDamageMultiplier(player: PlayerBattleState, monster: MonsterBattleState): number {
+  return player.element === 'fire' && monster.burningTurns > 0
+    ? 1 + (CHARACTER_DATA.passives.fire.burningDamageBonus ?? 0)
+    : 1;
+}
+
+/** THỔ bàn cờ: nộ vừa tích từ ngọc vàng → Khiên = nộ × 0.5 × scale. Trả về sequence kế tiếp. */
+function applyEarthEnergyShield(
+  state: BattleState,
+  actionId: string,
+  sequence: number,
+  events: GameEvent[],
+  energyGained: number,
+  shieldCap: number,
+  getPlayer: () => PlayerBattleState,
+  setPlayer: (player: PlayerBattleState) => void,
+): number {
+  const player = getPlayer();
+  const passive = CHARACTER_DATA.passives.earth;
+  if (player.element !== 'earth' || energyGained <= 0 || !passive.energyToShieldRatio) return sequence;
+  const requested = Math.round(energyGained * passive.energyToShieldRatio * (passive.energyToShieldScale ?? 1));
+  const gained = Math.max(0, Math.min(shieldCap - player.shield, requested));
+  setPlayer(clampPlayerState({ ...player, shield: player.shield + gained }));
+  events.push(event(state, actionId, sequence, 'SHIELD_GAINED', {
+    actor: 'player', amount: gained, requested, target: 'player', source: 'earth_energy_shield',
+  }));
+  events.push(event(state, actionId, sequence + 1, 'PASSIVE_TRIGGERED', {
+    passiveId: 'earth_energy_shield', element: 'earth', amount: gained, energy: energyGained,
+    target: 'player', label: 'Huyền Thổ — nộ hóa Khiên',
+  }));
+  return sequence + 2;
 }
 
 function applyGemEffects(
@@ -597,18 +662,30 @@ function applyGemEffects(
           criticalRoll = roll.value;
           isCritical = roll.value < (passive?.criticalChanceBonus ?? 0) * 100;
         }
-        if (monster.id === 'mist_blob') {
-          const dodgeRoll = nextInt(rngState, 100);
+        // Né chỉ áp cho đòn ngọc đỏ: né gốc của quái + buff né từ skill quái (V5).
+        const dodgeChance = monsterDodgeChance(monster);
+        if (dodgeChance > 0) {
+          const dodgeRoll = nextInt(rngState, 1000);
           rngState = dodgeRoll.state;
-          const dodgeChance = monster.dodgeChance ?? 0;
-          if (dodgeRoll.value < dodgeChance * 100) {
+          const buffCharged = monster.dodgeBonusCharges > 0;
+          if (buffCharged) {
+            const charges = monster.dodgeBonusCharges - 1;
+            monster = {
+              ...monster,
+              dodgeBonusCharges: charges,
+              dodgeBonus: charges > 0 || monster.dodgeBonusTurns > 0 ? monster.dodgeBonus : 0,
+            };
+          }
+          if (dodgeRoll.value < dodgeChance * 1000) {
             events.push(
               event(state, actionId, sequence, 'MONSTER_DODGED', {
                 actor: 'monster',
-                source: 'mist_dust_normal_attack_dodge',
+                source: buffCharged || monster.dodgeBonusTurns > 0 ? 'monster_dodge_buff' : 'monster_dodge',
                 chance: dodgeChance,
                 roll: dodgeRoll.value,
                 matchCount: count,
+                remainingCharges: monster.dodgeBonusCharges,
+                remainingTurns: monster.dodgeBonusTurns,
                 target: 'monster',
                 label: `${monster.name} né đòn đánh thường`,
               }),
@@ -617,17 +694,18 @@ function applyGemEffects(
             continue;
           }
         }
-        const agiMultiplier = cascade >= 2 ? 1 + player.stats.agiBonus : 1;
-        const raw = player.stats.atk * count * combat.attackTileFactor * damageMod * multiplier * agiMultiplier;
+        const raw = player.stats.atk * count * combat.attackTileFactor * damageMod * multiplier;
         const criticalMultiplier = isCritical ? 1 + (passive?.criticalDamageBonus ?? 0) : 1;
-        const burningBonus = player.element === 'fire' && monster.burningTurns > 0
-          ? passive?.burnDamageBonus ?? 0
-          : 0;
+        // HỎA bàn cờ: ngọc đỏ +20% và xuyên khiên; nội tại nghề: +20% vào mục tiêu đang Thiêu đốt.
+        const isFire = player.element === 'fire';
+        const fireMultiplier = isFire ? 1 + (passive?.redDamageBonus ?? 0) : 1;
+        const burningMultiplier = burningDamageMultiplier(player, monster);
+        const pierceShield = isFire && passive?.redPierceShield === true;
         const requested = applyDamageTakenBonus(
           monster,
-          Math.max(1, Math.round(raw * criticalMultiplier + burningBonus) - monster.defense),
+          applyDefense(raw * criticalMultiplier * fireMultiplier * burningMultiplier, monster.defense),
         );
-        const damage = applyDamageToMonster(monster, requested);
+        const damage = pierceShield ? applyDirectHpDamageToMonster(monster, requested) : applyDamageToMonster(monster, requested);
         monster = damage.monster;
         events.push(
           event(state, actionId, sequence, 'DAMAGE_APPLIED', {
@@ -639,7 +717,9 @@ function applyGemEffects(
             criticalChance: isCriticalEligible ? passive?.criticalChanceBonus ?? 0 : 0,
             criticalRoll,
             criticalMultiplier,
-            burningBonus,
+            fireMultiplier,
+            burningMultiplier,
+            pierceShield,
             shieldAbsorbed: damage.absorbed,
             shieldRemaining: monster.shield,
             shieldBroken: damage.absorbed > 0 && monster.shield === 0,
@@ -678,7 +758,11 @@ function applyGemEffects(
         const healMultiplier = player.element === 'wood' && monster.poisonTurns > 0 && monster.poisonPotency > 0
           ? passive?.healMultiplierWhenPoisoned ?? 1
           : 1;
-        const amount = Math.round(player.stats.maxHp * combat.heal.maxHpFactor * count * supportMod * multiplier * healMultiplier);
+        // Vụ Lưu Thuẫn: giảm hồi máu của nhân vật khi còn lượt.
+        const healReductionMultiplier = player.healReductionTurns > 0 ? 1 - player.healReduction : 1;
+        const amount = Math.round(
+          player.stats.maxHp * combat.heal.maxHpFactor * count * supportMod * multiplier * healMultiplier * healReductionMultiplier,
+        );
         const healed = Math.min(player.stats.maxHp - player.currentHp, amount);
         player = clampPlayerState({ ...player, currentHp: player.currentHp + amount });
         events.push(
@@ -687,6 +771,7 @@ function applyGemEffects(
             amount: healed,
             requested: amount,
             capped: healed < amount,
+            healReduction: healReductionMultiplier < 1 ? player.healReduction : 0,
             elementalModifier: supportMod,
             passiveMultiplier: healMultiplier,
             target: 'player',
@@ -701,10 +786,30 @@ function applyGemEffects(
           }));
           sequence += 1;
         }
+
+        // MỘC bàn cờ: lượng hồi dư khi đầy HP chuyển thành Khiên.
+        const overheal = amount - healed;
+        if (player.element === 'wood' && passive?.overhealToShield && overheal > 0) {
+          const gained = Math.max(0, Math.min(shieldCap - player.shield, overheal));
+          player = clampPlayerState({ ...player, shield: player.shield + gained });
+          events.push(event(state, actionId, sequence, 'SHIELD_GAINED', {
+            actor: 'player', amount: gained, requested: overheal, target: 'player', source: 'wood_overheal',
+          }));
+          sequence += 1;
+          events.push(event(state, actionId, sequence, 'PASSIVE_TRIGGERED', {
+            passiveId: 'wood_overheal_shield', element: 'wood', amount: gained, target: 'player',
+            label: 'Linh Mộc — hồi dư hóa Khiên',
+          }));
+          sequence += 1;
+        }
       }
 
       if (gem === 'shield') {
-        const amount = Math.round(player.stats.defense * combat.shield.defFactor * count * supportMod * multiplier);
+        // THỦY bàn cờ: match khiên dòng ≥4 → khiên ×1.5 và hoãn đòn đánh của quái lượt kế.
+        const longestShieldLine = value<Readonly<Record<string, number>>>(source.payload, 'longestLineByGem', {})['shield'] ?? 0;
+        const waterLongMatch = player.element === 'water' && longestShieldLine >= (passive?.shieldMatchMin ?? Infinity);
+        const waterMultiplier = waterLongMatch ? 1 + (passive?.shieldBonusRatio ?? 0) : 1;
+        const amount = Math.round(player.stats.defense * combat.shield.defFactor * count * supportMod * multiplier * waterMultiplier);
         const gained = Math.min(shieldCap - player.shield, amount);
         player = clampPlayerState({ ...player, shield: player.shield + gained });
         events.push(
@@ -713,11 +818,19 @@ function applyGemEffects(
             amount: gained,
             requested: amount,
             elementalModifier: supportMod,
+            passiveMultiplier: waterMultiplier,
             target: 'player',
           }),
         );
         sequence += 1;
-
+        if (waterLongMatch) {
+          monsterActionDelay = Math.max(monsterActionDelay, passive?.delayMonsterAttackTurns ?? 1);
+          events.push(event(state, actionId, sequence, 'PASSIVE_TRIGGERED', {
+            passiveId: 'water_shield_delay', element: 'water', amount: waterMultiplier, matchLength: longestShieldLine,
+            delay: monsterActionDelay, target: 'monster', label: 'Hàn Thủy — khiên tăng, quái bị hoãn đòn',
+          }));
+          sequence += 1;
+        }
       }
 
       if (gem === 'energy') {
@@ -735,7 +848,7 @@ function applyGemEffects(
           }),
         );
         sequence += 1;
-
+        sequence = applyEarthEnergyShield(state, actionId, sequence, events, gained, shieldCap, () => player, (next) => { player = next; });
       }
 
       if (gem === 'poison') {
@@ -745,7 +858,9 @@ function applyGemEffects(
         const perStack = Math.max(0, Math.round(player.stats.atk * combat.poisonAtkFactor * damageMod * multiplier));
         const stacks = Math.min(combat.poisonMaxStacks, monster.poisonStacks + 1);
         const potency = stacks * perStack + monster.skillPoisonPotency;
-        const turns = Math.max(monster.poisonTurns, combat.poison.turns);
+        // MỘC bàn cờ: ngọc tím duy trì độc thêm +1 lượt.
+        const baseTurns = combat.poison.turns + (player.element === 'wood' ? passive?.poisonExtraTurns ?? 0 : 0);
+        const turns = Math.max(monster.poisonTurns, baseTurns);
         monster = { ...monster, poisonStacks: stacks, poisonPotency: potency, poisonTurns: turns };
         events.push(
           event(state, actionId, sequence, 'POISON_APPLIED', {
@@ -760,6 +875,24 @@ function applyGemEffects(
         );
         sequence += 1;
       }
+    }
+
+    // KIM bàn cờ: ngọc vàng bị phá thêm khi ăn ngọc đỏ (resolve.ts quyết định ô bị phá).
+    const bonusEnergyGems = value<readonly unknown[]>(source.payload, 'bonusCoordinates', []).length;
+    if (bonusEnergyGems > 0) {
+      const amount = Math.round(bonusEnergyGems * (passive?.yellowBreakEnergy ?? 0) * energyMod);
+      const gained = Math.min(config.energyCap - player.energy, amount);
+      player = clampPlayerState({ ...player, energy: player.energy + amount });
+      events.push(event(state, actionId, sequence, 'ENERGY_GAINED', {
+        actor: 'player', amount: gained, requested: amount, gems: bonusEnergyGems, target: 'player', source: 'metal_passive',
+      }));
+      sequence += 1;
+      events.push(event(state, actionId, sequence, 'PASSIVE_TRIGGERED', {
+        passiveId: 'metal_yellow_break', element: 'metal', amount: gained, gems: bonusEnergyGems,
+        coordinates: value<readonly unknown[]>(source.payload, 'bonusCoordinates', []),
+        target: 'player', label: 'Kiếm Tông — phá ngọc vàng, tích nộ',
+      }));
+      sequence += 1;
     }
 
     if (monster.currentHp <= 0) {
@@ -908,6 +1041,45 @@ function tickTurnStartDoTs(
     }
   }
 
+  // Thiêu đốt lên nhân vật (Long Miêu Liên Kích).
+  if (player.burningTurns > 0 && player.burningPotency > 0) {
+    const burnDamage = player.burningPotency;
+    const remainingTurns = player.burningTurns - 1;
+    player = clampPlayerState({
+      ...player,
+      currentHp: player.currentHp - burnDamage,
+      burningTurns: remainingTurns,
+      burningPotency: remainingTurns > 0 ? player.burningPotency : 0,
+    });
+    events.push(event(state, actionId, sequence, 'BURNING_TICKED', {
+      actor: 'monster', amount: burnDamage, remainingTurns, target: 'player', source: 'monster_burning',
+    }));
+    sequence += 1;
+    if (player.currentHp <= 0) {
+      return { player, monster, events, nextSequence: sequence, terminal: {
+        state: appendOutcome({ ...state, player, monster }, events, actionId, sequence, 'DEFEAT', 'player_defeated_by_burning'),
+        events,
+      } };
+    }
+  }
+
+  // Hồi máu theo lượt của quái (Lục Diệp Ẩn Tung).
+  if (monster.healTurns > 0 && monster.healPerTurn > 0) {
+    const perTurn = monster.healPerTurn;
+    const healed = Math.min(monster.maxHp - monster.currentHp, perTurn);
+    const remainingTurns = monster.healTurns - 1;
+    monster = {
+      ...monster,
+      currentHp: monster.currentHp + healed,
+      healTurns: remainingTurns,
+      healPerTurn: remainingTurns > 0 ? monster.healPerTurn : 0,
+    };
+    events.push(event(state, actionId, sequence, 'HEAL_APPLIED', {
+      actor: 'monster', amount: healed, requested: perTurn, remainingTurns, target: 'monster', source: 'monster_heal_over_time',
+    }));
+    sequence += 1;
+  }
+
   return { player, monster, events, nextSequence: sequence };
 }
 
@@ -921,6 +1093,7 @@ function resolveMonsterAction(
   let player = dots.player;
   let monster = dots.monster;
   let damageTakenStreak = 0;
+  let rngState = state.rngState;
   const events = dots.events;
   let sequence = dots.nextSequence;
 
@@ -937,6 +1110,8 @@ function resolveMonsterAction(
       }),
     );
     sequence += 1;
+    // Quái vừa bị hoãn = "Làm chậm" cho nội tại Hàn Tức Ngưng Kết trong các hành động kế tiếp.
+    monster = { ...monster, slowedTurns: Math.max(monster.slowedTurns, CHARACTER_DATA.passives.water.slowedTurnsAfterDelay ?? 0) };
     return finishMonsterTurn(
       { ...state, player, monster, monsterActionDelay: state.monsterActionDelay - 1, damageTakenStreak: 0 },
       actionId,
@@ -944,6 +1119,21 @@ function resolveMonsterAction(
       events,
       config,
     );
+  }
+
+  // Skill quái (V5): đủ nộ + đúng ngưỡng HP thì dùng skill thay hành động lượt này.
+  const skill = selectMonsterSkill(monster);
+  if (skill) {
+    const skillTurn = resolveMonsterSkill({
+      state: { ...state, player, monster },
+      skill,
+      actionId,
+      startSequence: sequence,
+      shieldCap: monsterShieldCap(monster, config),
+      createEvent: (eventSequence, type, payload = {}) => event(state, actionId, eventSequence, type, payload),
+    });
+    events.push(...skillTurn.events);
+    return finishMonsterTurn(skillTurn.state, actionId, skillTurn.nextSequence, events, config);
   }
 
   if (monster.id === 'lantern_cat') {
@@ -971,7 +1161,8 @@ function resolveMonsterAction(
     );
   }
 
-  const action = monster.nextAction === 'long_mieu_lien_kich' ? 'basic' : monster.nextAction;
+  // Skill đã telegraph nhưng hết đủ điều kiện (vd bị hút nộ) thì đánh thường.
+  const action = monster.nextAction === 'long_mieu_lien_kich' || monster.nextAction === 'skill' ? 'basic' : monster.nextAction;
   const mistMatchedAttack = monster.id === 'mist_blob' && attackGemCount > 0;
   let attackAction: 'basic' | 'heavy' | 'poison' | undefined;
   if (action === 'telegraph') {
@@ -1017,7 +1208,7 @@ function resolveMonsterAction(
         actor: 'monster',
         actionId: `${actionId}:monster:${monster.actionCount}`,
         action: 'guard',
-        defenseBonus: MONSTER_COMBAT_BALANCE.guardDefenseBonus,
+        defenseBonus: monster.defense - monster.baseDefense,
         label: `${monster.name} dựng thế phòng thủ`,
       }));
     }
@@ -1037,6 +1228,24 @@ function resolveMonsterAction(
     attackAction = action === 'energy' ? undefined : action;
   }
 
+  // Nhân vật né đòn thường/nặng theo AGI (skill quái và đòn gieo độc luôn trúng).
+  if (attackAction && (attackGemCount > 0 || monster.id === 'mist_blob') && (attackAction === 'basic' || attackAction === 'heavy')) {
+    const dodge = rollPlayerDodge(player, rngState);
+    rngState = dodge.rngState;
+    if (dodge.dodged) {
+      events.push(event(state, actionId, sequence++, 'PLAYER_DODGED', {
+        actor: 'player',
+        actionId: `${actionId}:monster:${monster.actionCount}`,
+        action: attackAction,
+        chance: dodge.chance,
+        roll: dodge.roll,
+        target: 'player',
+        label: `Nhân vật né đòn của ${monster.name}`,
+      }));
+      attackAction = undefined;
+    }
+  }
+
   if (attackAction && (attackGemCount > 0 || monster.id === 'mist_blob')) {
       const isMistBlob = monster.id === 'mist_blob';
       const actionMultiplier = attackAction === 'heavy' ? MONSTER_COMBAT_BALANCE.heavyDamageMultiplier : 1;
@@ -1044,10 +1253,7 @@ function resolveMonsterAction(
       const baseDamage = isMistBlob
         ? attackAction === 'heavy' ? monster.attack * MONSTER_COMBAT_BALANCE.heavyDamageMultiplier : monster.attack
         : monster.attack * actionMultiplier * matchMultiplier;
-      const incoming = Math.max(
-        1,
-        Math.round(baseDamage) - Math.floor(player.stats.defense * MONSTER_COMBAT_BALANCE.defenseMitigationMultiplier),
-      );
+      const incoming = monsterAttackIncoming(player, baseDamage);
       const createEvent = (eventSequence: number, type: GameEvent['type'], payload: Readonly<Record<string, unknown>> = {}) =>
         event(state, actionId, eventSequence, type, payload);
       const damage = resolveIncomingMonsterDamage(player, monster, incoming, state.damageTakenStreak, createEvent, sequence);
@@ -1109,7 +1315,7 @@ function resolveMonsterAction(
   }
 
   if (action === 'poison' && monster.tactics.poison > 0) {
-      const requested = Math.max(1, Math.round(monster.tactics.poison * MONSTER_COMBAT_BALANCE.poisonPotencyMultiplier));
+      const requested = Math.max(1, Math.round(monster.attack * MONSTER_COMBAT_BALANCE.poisonAtkRatio));
       const cap = Math.max(1, Math.round(player.stats.maxHp * CHARACTER_DATA.limits.poisonMaxHpRatio));
       const applied = Math.max(0, Math.min(cap - player.poisonPotency, requested));
       player = clampPlayerState({
@@ -1135,7 +1341,7 @@ function resolveMonsterAction(
   }
 
   return finishMonsterTurn(
-    { ...state, player, monster, damageTakenStreak },
+    { ...state, player, monster, damageTakenStreak, rngState },
     actionId,
     sequence,
     events,
@@ -1172,7 +1378,8 @@ function finishMonsterTurn(
     };
   }
 
-  if (state.turn >= config.maxTurns) {
+  // maxTurns = 0: tạm bỏ giới hạn lượt (combat.json → battle.maxTurns).
+  if (config.maxTurns > 0 && state.turn >= config.maxTurns) {
     return {
       state: appendOutcome(state, events, actionId, sequence, 'DEFEAT', 'turn_limit'),
       events,
@@ -1181,13 +1388,16 @@ function finishMonsterTurn(
 
   const nextCount = state.monster.actionCount + 1;
   const nextPhase: 1 | 2 = state.monster.currentHp <= state.monster.maxHp * MONSTER_COMBAT_BALANCE.lowHpPhaseRatio ? 2 : 1;
-  const nextAction = chooseMonsterAction(state.monster, nextPhase, nextCount, config.energyCap);
-  const nextActionText = monsterActionText(nextAction);
-  const monster = { ...state.monster, actionCount: nextCount, phase: nextPhase, nextAction };
+  // Đủ nộ + đúng ngưỡng HP thì báo trước skill; lượt sau vẫn chọn lại skill theo trạng thái lúc đó.
+  const nextSkill = selectMonsterSkill(state.monster);
+  const nextAction: MonsterBattleState['nextAction'] = nextSkill ? 'skill' : chooseMonsterAction(state.monster, nextPhase, nextCount);
+  const nextActionText = nextSkill ? nextSkill.name : monsterActionText(nextAction);
+  const monster = { ...state.monster, actionCount: nextCount, phase: nextPhase, nextAction, nextSkillId: nextSkill?.id };
   events.push(
     event(state, actionId, sequence, 'MONSTER_TELEGRAPH', {
       actionId: `${actionId}:telegraph:${nextCount}`,
       action: nextAction,
+      skillId: nextSkill?.id,
       label: `${monster.name} chuẩn bị ${nextActionText}`,
       text: `${monster.name} chuẩn bị ${nextActionText}`,
     }),
@@ -1209,7 +1419,7 @@ function monsterActionText(action: BattleState['monster']['nextAction']): string
   if (action === 'poison') return 'gieo độc';
   if (action === 'energy') return 'tích năng lượng';
   if (action === 'telegraph') return 'báo đòn mạnh';
-  if (action === 'long_mieu_lien_kich') return 'Long Miêu Liên Kích';
+  if (action === 'skill' || action === 'long_mieu_lien_kich') return 'tuyệt kỹ';
   return 'đánh thường';
 }
 
@@ -1217,8 +1427,7 @@ function chooseMonsterAction(
   monster: BattleState['monster'],
   phase: 1 | 2,
   actionCount: number,
-  energyCap = CHARACTER_DATA.limits.maxEnergy,
-): 'basic' | 'guard' | 'heavy' | 'energy' | 'poison' | 'telegraph' | 'long_mieu_lien_kich' {
+): 'basic' | 'guard' | 'heavy' | 'energy' | 'poison' | 'telegraph' {
   const definition = MONSTER_DEFINITIONS[monster.id];
   if (!definition) return 'basic';
   if (monster.id === 'mist_blob') {
@@ -1226,7 +1435,7 @@ function chooseMonsterAction(
     // readable normal attack with a poison cast. It has no heavy/guard turn.
     return actionCount % 2 === 1 ? 'poison' : 'basic';
   }
-  if (monster.id === 'lantern_cat') return chooseLanternCatAction(actionCount, monster.energy, energyCap);
+  if (monster.id === 'lantern_cat') return chooseLanternCatAction(actionCount);
   if (monster.id === 'cloud_fox_boss' && phase === 2) return actionCount % 2 === 0 ? 'heavy' : 'basic';
   if (
     definition.behaviors.includes('poison') &&
@@ -1270,14 +1479,14 @@ function skillHitDamage(
   monster: MonsterBattleState,
   skillConfig: PlayerSkillData,
   criticalMultiplier: number,
-  burningBonus: number,
+  burningMultiplier: number,
 ): number {
   if (skillConfig.fixedDamage !== undefined) return Math.max(0, skillConfig.fixedDamage);
   const afterDefense = skillConfig.attackMultiplier !== undefined
-    ? Math.max(1, Math.round(player.stats.atk * skillConfig.attackMultiplier * criticalMultiplier + burningBonus) - monster.defense)
+    ? applyDefense(player.stats.atk * skillConfig.attackMultiplier * criticalMultiplier * burningMultiplier, monster.defense)
     : Math.max(
       1,
-      Math.round((skillConfig.baseDamage + player.stats.skillPower * skillConfig.skillPowerMultiplier) * criticalMultiplier + burningBonus)
+      Math.round((skillConfig.baseDamage + player.stats.skillPower * skillConfig.skillPowerMultiplier) * criticalMultiplier * burningMultiplier)
         - Math.floor(monster.defense * skillConfig.defenseMultiplier),
     );
   return applyDamageTakenBonus(monster, afterDefense);
@@ -1297,13 +1506,11 @@ export function previewPlayerSkill(state: BattleState, skillId: string): PlayerS
   const player = clampPlayerState(state.player);
   const config = playerSkillData(player.element, skillId);
   if (!config) return undefined;
-  const burningBonus = player.element === 'fire' && state.monster.burningTurns > 0
-    ? CHARACTER_DATA.passives.fire.burnDamageBonus ?? 0
-    : 0;
+  const burningMultiplier = burningDamageMultiplier(player, state.monster);
   if (!skillDealsDamage(config)) return { skillId, config, damagePerHit: 0, hitCount: 0, totalDamage: 0 };
   const hitCount = Math.max(1, config.hitCount ?? 1);
-  const firstHit = skillHitDamage(player, state.monster, config, 1, burningBonus);
-  const otherHit = skillHitDamage(player, state.monster, config, 1, 0);
+  const firstHit = skillHitDamage(player, state.monster, config, 1, burningMultiplier);
+  const otherHit = skillHitDamage(player, state.monster, config, 1, 1);
   return {
     skillId,
     config,
@@ -1343,9 +1550,7 @@ function resolvePlayerSkill(
     critical = roll.value < (passive?.criticalChanceBonus ?? 0) * 100;
   }
   const criticalMultiplier = critical ? 1 + (passive?.criticalDamageBonus ?? 0) : 1;
-  const burningBonus = playerState.element === 'fire' && state.monster.burningTurns > 0
-    ? passive?.burnDamageBonus ?? 0
-    : 0;
+  const burningMultiplier = burningDamageMultiplier(playerState, state.monster);
   let monster = state.monster;
   let player: PlayerBattleState = {
     ...playerState,
@@ -1364,8 +1569,8 @@ function resolvePlayerSkill(
   for (let hit = 0; hit < hitCount; hit += 1) {
     let damage: { monster: typeof monster; hpDamage: number; absorbed: number };
     // Bonus Thiêu đốt của nội tại Hỏa chỉ cộng một lần cho mỗi lần cast (hit đầu).
-    const hitBurningBonus = hit === 0 ? burningBonus : 0;
-    const requested = skillHitDamage(playerState, monster, skillConfig, criticalMultiplier, hitBurningBonus);
+    const hitBurningMultiplier = hit === 0 ? burningMultiplier : 1;
+    const requested = skillHitDamage(playerState, monster, skillConfig, criticalMultiplier, hitBurningMultiplier);
     if (skillConfig.fixedDamage !== undefined) {
       const absorbed = Math.min(monster.shield, requested);
       damage = monster.shield > 0
@@ -1382,13 +1587,14 @@ function resolvePlayerSkill(
       requested, shieldAbsorbed: damage.absorbed,
       shieldRemaining: monster.shield, shieldBroken: damage.absorbed > 0 && monster.shield === 0,
       critical, criticalChance: nextStreak >= 2 ? passive?.criticalChanceBonus ?? 0 : 0,
-      criticalRoll, criticalMultiplier, burningBonus: hitBurningBonus, attackMultiplier: skillConfig.attackMultiplier,
+      criticalRoll, criticalMultiplier, burningMultiplier: hitBurningMultiplier, attackMultiplier: skillConfig.attackMultiplier,
       bypassShield: skillConfig.bypassShield === true, hitIndex: hit + 1, hitCount, target: 'monster',
     }));
     sequence += 1;
   }
   // Hết hành động này: trừ lượt debuff cũ trước khi áp debuff mới của chính skill.
   monster = tickMonsterDebuffs(monster);
+  player = tickPlayerDebuffs(player);
   if (critical) events.push(event(state, action.actionId, sequence++, 'PASSIVE_TRIGGERED', {
     passiveId: 'metal_critical', element: 'metal', amount: criticalMultiplier, streak: nextStreak,
     target: 'monster', label: 'Kiếm Tâm Bất Diệt — chí mạng',
@@ -1439,8 +1645,14 @@ function resolvePlayerSkill(
     const controlRoll = nextInt(rngState, 100);
     rngState = controlRoll.state;
     if (controlRoll.value < (skillConfig.controlChance ?? 0) * 100) {
-      monster = { ...monster, controlEffect: skillConfig.controlEffect, controlTurns: skillConfig.controlTurns ?? 1 };
-      events.push(event(state, action.actionId, sequence++, 'CONTROL_APPLIED', { actor: 'player', effect: skillConfig.controlEffect, turns: monster.controlTurns, target: 'monster', source: action.skillId }));
+      // THỦY nghề — Hàn Tức Ngưng Kết: quái đang bị Làm chậm thì đóng băng kéo dài thêm.
+      const slowedBonus = playerState.element === 'water' && skillConfig.controlEffect === 'freeze' && state.monster.slowedTurns > 0
+        ? passive?.freezeExtraTurnsWhenDelayed ?? 0
+        : 0;
+      monster = { ...monster, controlEffect: skillConfig.controlEffect, controlTurns: (skillConfig.controlTurns ?? 1) + slowedBonus };
+      events.push(event(state, action.actionId, sequence++, 'CONTROL_APPLIED', {
+        actor: 'player', effect: skillConfig.controlEffect, turns: monster.controlTurns, slowedBonus, target: 'monster', source: action.skillId,
+      }));
     }
   }
   if (skillConfig.damageTakenBonus) {
@@ -1539,6 +1751,8 @@ export function resolveBattleAction(
     ? Math.max(0, Math.min(state.monster.poisonPotency, state.monster.skillPoisonPotency))
     : 0;
   const monsterGuardTurns = Number.isFinite(state.monster.guardTurns) ? Math.max(0, Math.floor(state.monster.guardTurns)) : 0;
+  const nonNegativeInt = (value: number | undefined) => (Number.isFinite(value) ? Math.max(0, Math.floor(value as number)) : 0);
+  const ratio = (value: number | undefined) => (Number.isFinite(value) ? Math.max(0, Math.min(1, value as number)) : 0);
   const damageTakenStreak = Number.isFinite(state.damageTakenStreak)
     ? Math.max(0, Math.floor(state.damageTakenStreak))
     : 0;
@@ -1567,6 +1781,14 @@ export function resolveBattleAction(
       damageTakenBonusTurns: monsterDamageTakenBonusTurns,
       skillPoisonPotency: monsterSkillPoisonPotency,
       guardTurns: monsterGuardTurns,
+      dodgeBonus: ratio(state.monster.dodgeBonus),
+      dodgeBonusCharges: nonNegativeInt(state.monster.dodgeBonusCharges),
+      dodgeBonusTurns: nonNegativeInt(state.monster.dodgeBonusTurns),
+      healPerTurn: nonNegativeInt(state.monster.healPerTurn),
+      healTurns: nonNegativeInt(state.monster.healTurns),
+      slowedTurns: nonNegativeInt(state.monster.slowedTurns),
+      // Snapshot cũ telegraph Long Miêu bằng action riêng; V5 gom vào 'skill'.
+      nextAction: state.monster.nextAction === 'long_mieu_lien_kich' ? 'skill' : state.monster.nextAction,
     }),
   };
 
@@ -1591,6 +1813,7 @@ export function resolveBattleAction(
     const afterMonster = resolveMonsterSequence(
       {
         ...state,
+        player: tickPlayerDebuffs(state.player),
         monster: tickMonsterDebuffs(state.monster),
         turn: state.turn + 1,
         phase: 'MONSTER_TURN',
@@ -1615,7 +1838,10 @@ export function resolveBattleAction(
     return reject(state, action, 'phase-locked');
   }
 
-  const match3Result = resolveSwap(toMatch3State(state, config), action, config.match3);
+  const metalPassive = state.player.element === 'metal' ? CHARACTER_DATA.passives.metal : undefined;
+  const match3Result = resolveSwap(toMatch3State(state, config), action, config.match3, {
+    attackBreaksEnergyChance: metalPassive?.yellowBreakChance ?? 0,
+  });
   if (!match3Result.accepted) {
     return {
       accepted: false,
@@ -1648,7 +1874,12 @@ export function resolveBattleAction(
   }
 
   const monsterTurn = resolveMonsterSequence(
-    { ...effects.state, monster: tickMonsterDebuffs(effects.state.monster), phase: 'MONSTER_TURN' },
+    {
+      ...effects.state,
+      player: tickPlayerDebuffs(effects.state.player),
+      monster: tickMonsterDebuffs(effects.state.monster),
+      phase: 'MONSTER_TURN',
+    },
     action.actionId,
     effects.nextSequence,
     config,

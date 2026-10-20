@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import type { ElementId } from '../../game-core';
+import { MONSTER_DATA, type ElementId } from '../../game-core';
 import { actorAnimationKey, normalizeActorSprite, type ActorFrameId } from '../battle/actor-frame-assets';
 import { BattleVfxPool } from '../battle/battle-visual-pools';
 import { basicAttackEffectForElement, ensureBasicAttackEffectAnimations, preloadBasicAttackEffects } from '../battle/basic-attack-effect-assets';
@@ -9,7 +9,7 @@ import { ensureMistDustAnimations, MIST_DUST_SPRITE_KEYS, preloadMistDustSprites
 import { ensureLanternCatAnimations, LANTERN_CAT_SPRITE_KEYS, preloadLanternCatSprites } from '../battle/monsters/lantern-cat/lantern-cat-assets';
 import { ensureCloudFoxAnimations, CLOUD_FOX_SPRITE_KEYS, preloadCloudFoxSprites } from '../battle/monsters/cloud-fox/cloud-fox-assets';
 import { ensureBambooMantisAnimations, BAMBOO_MANTIS_SPRITE_KEYS, preloadBambooMantisSprites } from '../battle/monsters/bamboo-mantis/bamboo-mantis-assets';
-import { ensureMonsterSkillEffectAnimations, monsterSkillEffectForMonster, preloadMonsterSkillEffects } from '../battle/monster-skill-effect-assets';
+import { ensureMonsterSkillEffectAnimations, monsterSkillEffectsForMonster, preloadMonsterSkillEffects } from '../battle/monster-skill-effect-assets';
 import { ensureMonsterBasicAttackAnimation, monsterBasicAttackForMonster, preloadMonsterBasicAttack, type TestMonsterId } from '../battle/monster-basic-attack-assets';
 import { ELEMENT_SKILL_CONFIG } from '../battle/element-skill-assets';
 
@@ -226,7 +226,7 @@ export class SkillTestScene extends Phaser.Scene {
       this.tweens.add({ targets: sprite, x: HERO_X, y: HERO_Y - 80, duration: 700, ease: 'Sine.easeInOut', onComplete: () => this.release(sprite) });
       return;
     }
-    const effect = monsterSkillEffectForMonster(this.monsterId as ActorFrameId);
+    const effect = monsterSkillEffectsForMonster(this.monsterId)[0];
     if (!effect) return;
     const sprite = this.vfxPool.acquireSpriteVfx(effect.textureKeys[0]);
     if (!sprite) return;
@@ -235,7 +235,7 @@ export class SkillTestScene extends Phaser.Scene {
       .setDepth(11)
       .play(effect.animationKey);
     this.activeVfx.add(sprite);
-    this.status?.setText('Sương Mù Xâm Thực · skill quái');
+    this.status?.setText(`${MONSTER_DATA.definitions[this.monsterId]?.skills?.[0]?.name ?? 'Skill'} · skill quái`);
     sprite.once(Phaser.Animations.Events.ANIMATION_COMPLETE, () => this.release(sprite));
   }
 

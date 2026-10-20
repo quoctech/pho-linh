@@ -19,6 +19,7 @@ import {
   type ResolveResult,
   type SwapAction,
 } from './types';
+import { nextInt } from './rng';
 
 function createInitialEvent(
   state: Match3State,
@@ -45,8 +46,13 @@ function boardPayload(board: Board): Readonly<Record<string, unknown>> {
 function matchMetadata(
   board: Board,
   coordinates: readonly { readonly row: number; readonly col: number }[],
-): { readonly gemCounts: Readonly<Record<string, number>>; readonly longMatchBonus: number } {
+): {
+  readonly gemCounts: Readonly<Record<string, number>>;
+  readonly longMatchBonus: number;
+  readonly longestLineByGem: Readonly<Record<string, number>>;
+} {
   const gemCounts: Record<string, number> = {};
+  const longestLineByGem: Record<string, number> = {};
   let longestLine = 0;
 
   for (const coord of coordinates) {
@@ -69,10 +75,12 @@ function matchMetadata(
       vertical += 1;
     }
     longestLine = Math.max(longestLine, horizontal, vertical);
+    longestLineByGem[gem] = Math.max(longestLineByGem[gem] ?? 0, horizontal, vertical);
   }
 
   return {
     gemCounts,
+    longestLineByGem,
     longMatchBonus: longestLine >= 5 ? 20 : longestLine >= 4 ? 10 : 0,
   };
 }
@@ -143,10 +151,36 @@ function refillBoard(
   };
 }
 
+/** Tuỳ chọn nội tại bàn cờ do battle core truyền vào (resolve vẫn thuần, deterministic theo RNG). */
+export interface ResolveSwapOptions {
+  /** KIM: mỗi cascade có ngọc đỏ, xác suất phá thêm 1 ngọc vàng kề ngọc đỏ bị ăn. */
+  readonly attackBreaksEnergyChance?: number;
+}
+
+/** Ngọc vàng đầu tiên (theo thứ tự hàng/cột) kề trực giao một ngọc đỏ vừa bị ăn. */
+function adjacentEnergyGem(
+  board: Board,
+  matches: readonly { readonly row: number; readonly col: number }[],
+  cleared: ReadonlySet<string>,
+): { readonly row: number; readonly col: number } | undefined {
+  const candidates: { row: number; col: number }[] = [];
+  for (const coord of matches) {
+    if (board[coord.row][coord.col] !== 'attack') continue;
+    for (const [dr, dc] of [[-1, 0], [1, 0], [0, -1], [0, 1]] as const) {
+      const row = coord.row + dr;
+      const col = coord.col + dc;
+      if (row < 0 || row >= board.length || col < 0 || col >= board[row].length) continue;
+      if (board[row][col] === 'energy' && !cleared.has(`${row}:${col}`)) candidates.push({ row, col });
+    }
+  }
+  return candidates.sort((a, b) => a.row - b.row || a.col - b.col)[0];
+}
+
 export function resolveSwap(
   state: Match3State,
   action: SwapAction,
   config: Match3Config = DEFAULT_MATCH3_CONFIG,
+  options: ResolveSwapOptions = {},
 ): ResolveResult {
   if (state.phase !== 'ready') {
     return rejectSwap(state, action, 'phase-locked');
@@ -192,6 +226,17 @@ export function resolveSwap(
 
     const cleared = new Set(matches.map((coord) => `${coord.row}:${coord.col}`));
     const metadata = matchMetadata(nextBoard, matches);
+    const bonusCoordinates: { row: number; col: number }[] = [];
+    const breakChance = options.attackBreaksEnergyChance ?? 0;
+    if (breakChance > 0 && (metadata.gemCounts['attack'] ?? 0) > 0) {
+      const roll = nextInt(rngState, 100);
+      rngState = roll.state;
+      const target = roll.value < breakChance * 100 ? adjacentEnergyGem(nextBoard, matches, cleared) : undefined;
+      if (target) {
+        bonusCoordinates.push(target);
+        cleared.add(`${target.row}:${target.col}`);
+      }
+    }
     const clearedBoard = nextBoard.map((row, rowIndex) =>
       row.map((gem, colIndex) =>
         cleared.has(`${rowIndex}:${colIndex}`) ? undefined : gem,
@@ -202,6 +247,7 @@ export function resolveSwap(
         cascade,
         coordinates: matches,
         ...metadata,
+        bonusCoordinates,
         ...boardPayload(clearedBoard as Board),
       }),
     );

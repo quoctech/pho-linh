@@ -1,25 +1,55 @@
-<ion-header><ion-toolbar><ion-title>Chọn hệ Ngũ Hành</ion-title></ion-toolbar></ion-header>
-<ion-content>
-  <main class="element-shell">
-    <p class="eyebrow">NGŨ HÀNH · PHỐ LINH</p>
-    <h1>Chọn linh lực của bạn</h1>
-    <p class="intro">Mỗi hệ mở ra một phong cách chiến đấu riêng. Hãy chọn linh lực phù hợp với lối đánh của bạn.</p>
+<ion-content [fullscreen]="true">
+  <main class="shell" [style.--c]="preview.color">
+    <header class="top">
+      <button type="button" class="back" (click)="goBack()" aria-label="Về nhà">←</button>
+      <div><p class="eyebrow">NGŨ HÀNH · PHỐ LINH</p><h1>Chọn linh lực</h1></div>
+    </header>
+    <p class="intro">Mỗi hệ là một lối đánh riêng. Chạm để xem trước, rồi xác nhận hệ bạn muốn theo.</p>
 
-    <div class="element-grid" aria-label="Các hệ Ngũ Hành">
+    <nav class="orbs" aria-label="Các hệ Ngũ Hành">
       @for (element of elements; track element.id) {
-        <article class="element-card" [class.locked]="!element.available" [class.selected]="isSelected(element)" [style.--element-color]="element.color">
-          <div class="element-icon" aria-hidden="true">{{ element.icon }}</div>
-          <div class="element-copy"><h2>{{ element.name }}</h2><p>{{ element.description }}</p></div>
-          @if (element.available) {
-            <ion-button expand="block" (click)="choose(element)" [disabled]="isSaving">
-              {{ isSelected(element) ? 'Đang chọn' : 'Chọn hệ ' + element.name }}
-            </ion-button>
-          } @else {
-            <span class="locked-label">🔒 Sắp ra mắt</span>
-          }
-        </article>
+        <button type="button" class="orb" [class.on]="element.id === previewId" [style.--oc]="element.color" (click)="select(element)" [attr.aria-pressed]="element.id === previewId">
+          <b>{{ element.hanzi }}</b><span>{{ element.name }}</span>
+          @if (isSelected(element)) {<i>Đang dùng</i>}
+        </button>
       }
-    </div>
-    <ion-button fill="clear" expand="block" (click)="goBack()">Về nhà</ion-button>
+    </nav>
+
+    <section class="card">
+      <div class="art"><img [src]="portraitSrc" [alt]="profile.className"></div>
+      <div class="info">
+        <span class="hz">{{ profile.hanzi }}</span>
+        <h2>{{ profile.className }}</h2>
+        <p class="sub">Hệ {{ profile.elementLabel }} · {{ profile.weapon }}</p>
+        <p class="role">{{ profile.role }}</p>
+      </div>
+      <p class="lore">{{ profile.intro }}</p>
+    </section>
+
+    <section class="box">
+      <h3>Chỉ số khởi đầu</h3>
+      @for (stat of statBars; track stat.label) {
+        <div class="bar"><span>{{ stat.label }}</span><div><i [style.width.%]="stat.percent"></i></div><b>{{ stat.value }}</b></div>
+      }
+    </section>
+
+    <section class="box duo">
+      <div><h3>Khắc chế</h3><p><b [style.color]="counters.strong.color">{{ counters.strong.hanzi }} {{ counters.strong.name }}</b> · +30% sát thương</p></div>
+      <div><h3>Bị khắc bởi</h3><p><b [style.color]="counters.weak.color">{{ counters.weak.hanzi }} {{ counters.weak.name }}</b> · −20% hiệu quả</p></div>
+    </section>
+
+    <section class="box">
+      <h3>Nội tại</h3>
+      <p><b>{{ profile.boardPassive.name }}</b> — {{ profile.boardPassive.description }}</p>
+      <p><b>{{ profile.classPassive.name }}</b> — {{ profile.classPassive.description }}</p>
+      <h3>Kỹ năng</h3>
+      @for (skill of skills; track skill.label) {<p class="skill"><b>{{ skill.label }}</b><span>⚡ {{ skill.cost }}</span></p>}
+    </section>
+
+    <footer class="cta">
+      <ion-button expand="block" (click)="choose()" [disabled]="isSaving || isSelected(preview)">
+        {{ isSelected(preview) ? 'Đang theo hệ ' + preview.name : 'Chọn hệ ' + preview.name }}
+      </ion-button>
+    </footer>
   </main>
 </ion-content>

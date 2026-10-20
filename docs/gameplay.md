@@ -342,7 +342,7 @@ Khi đủ `energyCost` riêng, người chơi có thể kích hoạt kỹ năng 
 |---|---|---|
 | Kim | Vạn Kiếm Quy Tông — 60, 120% ATK, chịu khiên | Kim Quang Phá Giáp — 100, 180% ATK xuyên khiên, giảm DEF 30%/2 lượt |
 | Mộc | Thanh Đằng Trói Hồn — 50, 80% ATK, hút 15 năng lượng | Vạn Diệp Độc Chú — 90, 90% ATK, độc 20% ATK/lượt ×3 |
-| Thủy | Hàn Triều Phá Không — 50, trừ 22 khiên hoặc HP | Băng Phong Thiên Lý — 100, 110% ATK, đóng băng 1 lượt |
+| Thủy | Hàn Triều Phá Không — 50, trừ 660 khiên hoặc HP | Băng Phong Thiên Lý — 100, 110% ATK, đóng băng 1 lượt |
 | Hỏa | Hỏa Vũ Liên Châu — 60, 3 × 40% ATK | Phần Thiên Xạ Nhật — 100, 150% ATK, tăng sát thương nhận 15%/2 lượt |
 | Thổ | Sơn Nhạc Trấn Địa — 65, 70% ATK, 40% choáng 1 lượt | Huyền Nham Hộ Thể — 80, khiên 200% DEF, giảm 25%, miễn khống chế, phản 35% |
 
@@ -353,80 +353,32 @@ actual = commonResolver(skillConfig, shield, status, monster)
 
 Kỹ năng chính và kỹ năng phụ đều mở khi đủ `energyCost` riêng của skill, dùng chung resolver và mỗi kỹ năng có ID/VFX riêng. Giữ nộ dưới cost tương ứng thì nút hiển thị trạng thái chờ; giữ nút 2 giây sẽ mở tooltip đầy đủ thông tin kỹ năng.
 
-### 11.9. Tuyệt kỹ riêng của Miêu Đèn
+### 11.9. Skill quái (Balance V5 — đã triển khai)
 
-**Tên:** Long Miêu Liên Kích. Khi Miêu Đèn đạt 100 năng lượng từ ngọc vàng hoặc phần thưởng năng lượng, lượt quái kế tiếp tự động dùng skill thay cho hành động thường.
+Mọi skill quái khai báo trong `monsters.json → definitions.<id>.skills` và chạy qua một resolver chung `game-core/monsters/monster-skills.ts`. Đầu mỗi lượt quái (sau khi tick độc/thiêu/hồi máu theo lượt), nếu quái **đủ nộ** và **đúng ngưỡng HP** thì tự dùng skill **thay** hành động thường (không cần ngọc đỏ). Nhiều skill hợp lệ → chọn `priority` cao nhất. Khi đủ điều kiện, telegraph lượt trước hiện "Quái chuẩn bị <tên skill>".
+
+| Quái | Skill | Nộ | Điều kiện | Hiệu ứng |
+|---|---|---:|---|---|
+| Sương Hồn | Sương Mù Xâm Thực | 100 | đủ nộ | Không sát thương; +35% né cho **2 lần** bị đánh bằng ngọc đỏ kế tiếp (25% → 60%) |
+| Miêu Đèn | Long Miêu Liên Kích | 80 | đủ nộ | 130% ATK; Thiêu đốt nhân vật 2 lượt × 10% HP tối đa; Choáng 1 lượt |
+| Bọ Lá Tre | Trúc Diệp Độc Châm | 60 | HP > 50% | 300 + 80% ATK; Dính độc 20% ATK trong 1 lượt |
+| Bọ Lá Tre | Lục Diệp Ẩn Tung | 100 | HP < 50% (ưu tiên) | +60% né trong 2 lượt; hồi 10% HP tối đa mỗi lượt × 2 lượt (ngay khi dùng + đầu lượt quái sau) |
+| Cáo Mây | Bích Vân Băng Băng | 100 | HP > 60% | 100% ATK; 40% Đóng băng nhân vật 1 lượt |
+| Cáo Mây | Vân Sương Ảo Ảo | 50 | HP < 60% | +30% né trong 2 lượt |
+| Cáo Mây | Vụ Lưu Thuẫn | 60 | HP < 30% (ưu tiên cao nhất) | Khiên sương 1.800; giảm 40% hồi máu của nhân vật trong 1 lượt |
 
 ```text
-damage = ceil(playerMaxHp × 0.10)
-energyDrain = ceil(playerEnergy × 0.20)
-playerEnergy = max(0, playerEnergy - energyDrain)
-monsterEnergyAfterSkill = 10
-playerSkipTurns = 1
+skillDamage = (baseDamage + monsterATK × attackMultiplier) × (1 − playerDEF / (playerDEF + 1900))
+→ nội tại Thủy/Thổ × giảm sát thương chủ động → khiên → HP → phản đòn (Huyền Nham)
+dodge = min(0.9, AGI / (AGI + 1900) + dodgeBonus đang hiệu lực)                          // chỉ né ngọc đỏ
 ```
 
-- Sát thương đi thẳng vào HP nhân vật, không bị khiên hấp thụ.
-- Nhân vật tự động mất đúng một lượt; không swap, dùng skill hoặc timeout trong lượt đó.
-- Sau lượt bị bỏ qua, quái tiếp tục xử lý một lượt và sau đó trả quyền điều khiển cho người chơi.
-- Core phát `MONSTER_SKILL_USED` và `PLAYER_TURN_SKIPPED`; Phaser chỉ trình diễn cast, liên kích, impact và icon choáng.
-
-### 11.10. Danh mục kỹ năng quái vật — bản thiết kế đề xuất
-
-Danh mục dưới đây là nội dung kỹ năng đã được đặt tên trong quá trình thiết kế. Đây là **content design**, chưa phải contract gameplay đã triển khai; tên, hệ, hiệu ứng và thông số cần được chốt trước khi cập nhật `monsters.json`, game-core hoặc runtime battle.
-
-#### Sương Hồn
-
-Quái cấp thấp · Hệ Thủy (đề xuất)
-
-| Kỹ năng | Hiệu ứng | Trạng thái |
-|---|---|---|
-| **Sương Mù Xâm Thực** | Phát tán sương lạnh, gây sát thương Thủy nhẹ và giảm tốc độ hành động của mục tiêu. | Đề xuất |
-
-**Trạng thái:** Chưa chốt tên kỹ năng chính thức hoặc kỹ năng thứ hai.
-
-#### Miêu Đèn
-
-Quái cấp trung · Hệ Hỏa (đề xuất)
-
-| Kỹ năng | Hiệu ứng | Trạng thái |
-|---|---|---|
-| **Long Miêu Liên Kích** | Liên tục tấn công bằng móng vuốt, gây nhiều đòn sát thương lên mục tiêu. | Đã đặt tên |
-
-**Trạng thái:** Đã có một kỹ năng được đặt tên; chưa chốt kỹ năng thứ hai.
-
-#### Bọ Lá Tre
-
-Quái cấp cao · Hệ Mộc
-
-| Kỹ năng | Hiệu ứng | Trạng thái |
-|---|---|---|
-| **Trúc Diệp Độc Châm** | Phóng lá tre sắc nhọn như kim độc, gây sát thương Mộc và áp dụng **Dính độc**, làm tiêu hao HP theo lượt. | Đã đặt tên |
-| **Lục Diệp Ẩn Tung** | Ngụy trang trong lá tre, tăng Né tránh và hồi phục một phần HP. | Đã đặt tên |
-
-**Trạng thái:** Đã có đủ hai kỹ năng.
-
-#### Cáo Mây
-
-Quái cấp cao · Hệ Thủy (đề xuất)
-
-| Kỹ năng | Hiệu ứng | Trạng thái |
-|---|---|---|
-| **Vân Sương Ảo Ảo** | Tạo ảo ảnh sương mù, tăng Né tránh và gây **Mù** cho đối thủ. | Đã đặt tên |
-| **Vụ Lưu Thuẫn** | Tạo khiên sương, hồi HP và giảm hiệu quả hồi máu của đối thủ. | Đã đặt tên |
-| **Bích Vân Băng Băng** | Phóng băng khí tấn công, gây sát thương Thủy và có xác suất **Đóng băng**. | Đã đặt tên |
-
-**Trạng thái:** Đã có ba kỹ năng được đặt tên.
-
-#### Bảng tổng kết
-
-| Quái | Kỹ năng đã đặt tên | Tình trạng |
-|---|---:|---|
-| Sương Hồn | 1 đề xuất | Chưa chốt |
-| Miêu Đèn | 1 | Thiếu kỹ năng 2 |
-| Bọ Lá Tre | 2 | Đủ |
-| Cáo Mây | 3 | Đủ, nếu cho phép 3 kỹ năng |
-
-**Quy tắc triển khai sau:** chỉ đưa các kỹ năng này vào data/game-core sau khi đã chốt tên chính thức, hệ, công thức sát thương, trạng thái, điều kiện kích hoạt, telegraph và test cân bằng. Không suy diễn từ tên animation asset thành gameplay skill.
+- **Né**: chỉ áp cho đòn ngọc đỏ của nhân vật, skill nhân vật luôn trúng. Buff theo "lần" trừ 1 mỗi lần roll né; buff theo "lượt" trừ theo hành động của người chơi (swap, skill, hết giờ, lượt bị mất).
+- **Choáng/Đóng băng nhân vật**: nhân vật mất 1 lượt (`PLAYER_TURN_SKIPPED`, payload `effect: 'stun' | 'freeze'`). Thổ đang miễn khống chế (Huyền Nham Hộ Thể) thì không bị. Đóng băng 40% roll bằng RNG deterministic.
+- **Thiêu đốt / độc lên nhân vật** tick đầu lượt quái và có thể gây thua (`player_defeated_by_burning`).
+- **Giảm hồi máu**: nhân ×(1 − 40%) cho hồi máu ngọc xanh lá, hết sau 1 hành động.
+- Long Miêu Liên Kích bản V5 bị khiên chặn và không còn hút nộ nhân vật.
+- Màn PK: tên skill nổi lớn + VFX theo `vfxId`; quái có buff né hiện vòng sáng nhấp nháy và badge "💨 Né 60% ·2 lần"; mỗi lần né quái lướt ngang + mờ, chữ "💨 NÉ! 60%", dòng trạng thái ghi buff còn bao nhiêu; nhân vật bị đóng băng/thiêu đốt có anim `frozen`/`burning` (bộ sprite nữ chưa có thì nháy màu) + badge trạng thái.
 
 ## 12. Hành vi quái và tính công bằng
 
@@ -467,15 +419,17 @@ Người chơi có thể xem chi tiết trước trận: HP, ATK, DEF, cơ chế
 
 **Các con số dưới đây là dataset khởi động**, phải chỉnh khi test thời lượng/tỉ lệ thắng.
 
-| ID | Quái | Cấp gợi ý | HP | ATK | DEF | Hành vi | EXP | Vàng |
-|---|---|---:|---:|---:|---:|---|---:|---:|
-| `mist_blob` | Sương Hồn | 1 | 270 | 55 | 0 | basic | 35 | 12 |
-| `lantern_cat` | Miêu Đèn | 2 | 280 | 26 | 5 | basic, guard | 55 | 20 |
-| `bamboo_mantis` | Bọ Lá Tre | 3 | 400 | 32 | 8 | basic, heavy | 75 | 28 |
-| `cloud_fox_boss` | Cáo Mây | 4 (boss) | 760 | 36 | 10 | basic, guard, heavy | 160 | 65 |
+Chỉ số V6 (nguồn: `monsters.json`, chi tiết `GAMEPLAY_BALANCE_V2.md §4.3`):
+
+| ID | Quái | Cấp | HP | ATK | DEF | AGI (né) | EXP | Vàng |
+|---|---|---:|---:|---:|---:|---:|---:|---:|
+| `mist_blob` | Sương Hồn | 1 | 10.500 | 950 | 600 | 150 (7,3%) | 35 | 12 |
+| `lantern_cat` | Miêu Đèn | 2 | 7.800 | 1.350 | 320 | 300 (13,6%) | 65 | 24 |
+| `bamboo_mantis` | Bọ Lá Tre | 3 | 11.500 | 850 | 450 | 250 (11,6%) | 105 | 42 |
+| `cloud_fox_boss` | Cáo Mây | 5 (boss) | 8.800 | 1.100 | 400 | 380 (16,7%) | 240 | 100 |
 
 - Người chơi bắt đầu với Sương Hồn; thắng 2 lần mở Miêu Đèn; thắng Miêu Đèn mở Bọ Lá Tre; thắng Bọ Lá Tre mở boss.
-- Sương Hồn có khiên tối đa 50 và 25% tỷ lệ né đòn đánh thường từ ngọc công; skill không bị né.
+- Sương Hồn có khiên tối đa 1.500. Mọi quái né đòn ngọc đỏ theo AGI (`AGI / (AGI + 1900)`); skill nhân vật không bị né. Sương Mù Xâm Thực cộng thêm 35% né cho 2 lần kế tiếp (xem §11.9).
 - Thua trận không mất EXP/vàng/túi đồ. Cho nút **Thử lại** và gợi ý ("Cộng VIT để sống lâu hơn", "Dùng ngọc xanh trước đòn mạnh").
 - Boss đầu có 2 trạng thái: trên 50% HP (basic/guard); ≤50% HP (heavy 2 lượt một lần). Trạng thái được hiển thị rõ.
 
@@ -1041,12 +995,12 @@ Không đổi balance giữa một trận đang diễn ra; `balanceVersion` đư
 
 ## Phụ lục — Mẫu một trận đầu tiên
 
-**Người chơi:** Level 1, STR/VIT/AGI/INT = 5/5/5/5, MAX_HP = 300, ATK = 25, DEF = 10, SKILL_POWER = 20.  
-**Quái:** Sương Hồn, HP=270, ATK=55, DEF=0, khiên tối đa 50, né 25% đòn đánh thường.
+**Người chơi (V6):** Kim Lv1 — HP 9.000, ATK 1.250, DEF 400, AGI 180 (né 8,7%).  
+**Quái:** Sương Hồn — HP 10.500, ATK 950, DEF 600 (giảm 24%), AGI 150 (né 7,3%), khiên tối đa 1.500.
 
-1. Lượt 1: match 3 đỏ → nếu không né, `round(3×25/3)−0 = 25 damage`; nếu né thì không mất HP/khiên. Khi quái phản công, sát thương là `55−floor(10×0.6)=49`.
-2. Lượt 2: match 3 xanh dương → khiên `round(3×(8+5×0.5))=32`; quái đánh 49, khiên hấp thụ tối đa 32 rồi phần còn lại trừ HP.
-3. Lượt 3: match 3 vàng → +24 energy; quái tiếp tục gây 49 damage nếu không né/không có khiên.
+1. Lượt 1: match 3 đỏ → nếu không né, `1.250 × 3 × 0.4 × 0.76 = 1.140 damage` (Kim còn 25% phá thêm 1 ngọc vàng kề, +15 nộ). Quái phản công: `950 × (1 − 400/2300) = 785` (nhân vật có 8,7% né).
+2. Lượt 2: match 3 xanh dương → khiên `400 × 1.5 × 3 = 1.800`; đòn 785 bị khiên chặn hết.
+3. Lượt 3: match 3 vàng → +15 nộ (Kim hòa Thủy); quái tiếp tục gây ~785 damage nếu không né/không có khiên.
 4. Các lượt sau: người chơi tìm combo đỏ/vàng, dùng heal/shield đúng lúc và tích skill. Kết quả tùy lựa chọn, board seed và cascade — **không bảo đảm chiến thắng bằng kịch bản cố định**.
 
 **Quan trọng:** ví dụ trên chứng minh công thức tương tác, chưa chứng minh cân bằng hoặc thời lượng trận 2–5 phút. Phải chạy mô phỏng nhiều seed và playtest người thật trước khi chốt chỉ số quái.

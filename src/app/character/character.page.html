@@ -1,44 +1,79 @@
-<ion-header><ion-toolbar><ion-title>Nhân vật</ion-title></ion-toolbar></ion-header>
-<ion-content>
+<ion-content [fullscreen]="true">
   @if (save; as current) {
-    <main class="shell">
-      <div class="hero-card">
-        @if (heroPortrait; as portrait) {
-          <img [src]="portrait" [alt]="current.settings.gender === 'female' ? 'Nữ kiếm sĩ' : 'Nam kiếm sĩ'" />
-        } @else {
-          <div class="hero-placeholder" aria-label="Assets nam đang chờ bộ 2.5D mới">Nam kiếm sĩ<br /><small>Đang cập nhật 2.5D</small></div>
-        }
-        <div><p class="eyebrow">PHIẾU NHÂN VẬT · HỆ {{ current.settings.element === 'metal' ? 'KIM' : current.settings.element.toUpperCase() }}</p><h1>Cấp {{ current.profile.level }}</h1></div>
-      </div>
-      @if (passiveIcon; as passive) {
-        <section class="passive-card" aria-labelledby="passive-title">
-          @if (passiveIconSrc; as iconSrc) {
-            <img class="passive-icon" [src]="iconSrc" [alt]="passive.label" />
+    <main class="shell" [style.--c]="color">
+      <header class="top">
+        <a class="back" routerLink="/home" aria-label="Về nhà">←</a>
+        <div><p class="eyebrow">PHIẾU NHÂN VẬT</p><h1>Nhân vật</h1></div>
+      </header>
+
+      <section class="hero">
+        <div class="art"><img [src]="heroPortrait" [alt]="profile.className"></div>
+        <div class="who">
+          <span class="hz">{{ profile.hanzi }}</span>
+          <h2>{{ profile.className }}</h2>
+          <p class="sub">Hệ {{ profile.elementLabel }} · Cấp {{ current.profile.level }}</p>
+          <div class="exp" aria-label="Kinh nghiệm"><i [style.width.%]="expPercent"></i></div>
+          <small>{{ formatNumber(current.profile.exp) }} / {{ formatNumber(expRequired) }} EXP</small>
+          <p class="power">POWER <b>{{ formatNumber(stats?.power ?? 0) }}</b></p>
+        </div>
+      </section>
+
+      <section class="box">
+        <h3>Chỉ số trận</h3>
+        <div class="grid">
+          @for (stat of statRows; track stat.label) {
+            <div class="stat"><small>{{ stat.label }}</small><b>{{ stat.value }}</b>@if (stat.delta) {<em>{{ stat.delta }}</em>}</div>
           }
-          <div>
-            <p class="eyebrow">NỘI TẠI HỆ</p>
-            <h2 id="passive-title">{{ passive.label }}</h2>
-            <p>{{ passive.description }}</p>
+        </div>
+      </section>
+
+      <section class="box">
+        <div class="row-head"><h3>Cộng điểm</h3><span class="pts" [class.has]="pointsLeft > 0">{{ pointsLeft }} điểm</span></div>
+        @for (attr of attributes; track attr.key) {
+          <div class="attr">
+            <div class="attr-copy"><b>{{ attr.key.toUpperCase() }} · {{ attr.label }}</b><small>{{ attr.effect }}</small></div>
+            <button type="button" (click)="change(attr.key, -1)" [disabled]="!draft[attr.key]" [attr.aria-label]="'Bớt ' + attr.label">−</button>
+            <span class="val">{{ current.profile.attributes[attr.key] + draft[attr.key] }}@if (draft[attr.key]) {<em>+{{ draft[attr.key] }}</em>}</span>
+            <button type="button" (click)="change(attr.key, 1)" [disabled]="pointsLeft <= 0" [attr.aria-label]="'Thêm ' + attr.label">+</button>
           </div>
+        }
+        @if (hasDraft) {
+          <div class="actions">
+            <ion-button (click)="commit()">Xác nhận điểm</ion-button>
+            <ion-button fill="clear" (click)="cancel()">Hủy</ion-button>
+          </div>
+        } @else if (current.profile.unspentPoints === 0) {
+          <p class="hint">Lên cấp để nhận thêm điểm thuộc tính.</p>
+        }
+      </section>
+
+      @if (devMode) {
+        <section class="box dev" aria-label="Công cụ cân bằng">
+          <div class="row-head"><h3>🧪 Công cụ cân bằng · offline</h3><span class="pts">Dev mode</span></div>
+          <p class="hint">Cấp {{ current.profile.level }} · đã cộng {{ spentPoints }} điểm · còn {{ current.profile.unspentPoints }} điểm · {{ formatNumber(current.profile.gold) }} vàng</p>
+          <div class="dev-grid">
+            @for (step of devTools.pointSteps; track step) {<button type="button" (click)="devGrantPoints(step)">+{{ step }} điểm</button>}
+            @for (step of devTools.levelSteps; track step) {<button type="button" (click)="devGrantLevels(step)">+{{ step }} cấp</button>}
+            <button type="button" (click)="devGrantGold()">+{{ formatNumber(devTools.goldStep) }} vàng</button>
+            <button type="button" (click)="devResetPoints()" [disabled]="spentPoints === 0">Tẩy điểm</button>
+          </div>
+          <div class="dev-level">
+            <label>Đặt cấp<input type="number" min="1" [max]="devTools.maxLevel" [value]="current.profile.level" (input)="setLevelInput($any($event.target).value)"></label>
+            <button type="button" (click)="devSetLevel()">Áp dụng</button>
+          </div>
+          <p class="hint">Đặt cấp sẽ tẩy điểm và cấp lại đúng số điểm của cấp đó. Dữ liệu chỉ lưu trên máy.</p>
         </section>
       }
-      <p>EXP {{ current.profile.exp }} / {{ expRequired }} · Điểm chưa dùng <strong>{{ current.profile.unspentPoints }}</strong></p>
-      <div class="exp"><span [style.width.%]="current.profile.exp / expRequired * 100"></span></div>
-      <div class="power">POWER <strong>{{ stats?.power }}</strong></div>
-      <ion-list>
-        @for (key of attributeKeys; track key) {
-          <ion-item>
-            <ion-label><strong>{{ key.toUpperCase() }}</strong><br><small>{{ current.profile.attributes[key] }} → {{ preview?.attributes?.[key] }}</small></ion-label>
-            <ion-button fill="clear" (click)="change(key, -1)" [disabled]="!draft[key]">−</ion-button>
-            <span>{{ draft[key] }}</span><ion-button fill="clear" (click)="change(key, 1)" [disabled]="current.profile.unspentPoints <= (preview?.unspentPoints ?? 0)">+</ion-button>
-          </ion-item>
-        }
-      </ion-list>
-      <p class="preview">Xem trước: HP {{ previewStats?.maxHp ?? stats?.maxHp }} · Công {{ previewStats?.atk ?? stats?.atk }} · Thủ {{ previewStats?.defense ?? stats?.defense }} · Sức mạnh kỹ năng {{ previewStats?.skillPower ?? stats?.skillPower }}</p>
-      <ion-button expand="block" (click)="commit()" [disabled]="!preview || preview.unspentPoints === current.profile.unspentPoints">Xác nhận điểm</ion-button>
-      <ion-button expand="block" fill="outline" (click)="cancel()">Hủy draft</ion-button>
-      <ion-button expand="block" fill="clear" routerLink="/home">Về nhà</ion-button>
-      <ion-button expand="block" fill="outline" routerLink="/element-selection">Đổi hệ Ngũ Hành</ion-button>
+
+      <section class="box passive">
+        <img [src]="passiveIconSrc" [alt]="passiveIcon.label">
+        <div><h3>Nội tại nghề</h3><b>{{ passiveIcon.label }}</b><p>{{ passiveIcon.description }}</p></div>
+      </section>
+
+      <nav class="links">
+        <a routerLink="/character-info">✧ Thông số & kỹ năng <b>→</b></a>
+        <a routerLink="/element-selection">☯ Đổi hệ Ngũ Hành <b>→</b></a>
+      </nav>
     </main>
   }
 </ion-content>

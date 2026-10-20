@@ -1,11 +1,60 @@
-<ion-header><ion-toolbar><ion-title>Túi đồ</ion-title></ion-toolbar></ion-header>
-<ion-content>
-  @if (save; as current) {
-    <main class="shell"><div class="heading"><div><p class="eyebrow">KHO VẬT PHẨM</p><h1>{{ current.inventory.length }} / 60 ô</h1></div>@if (current.pendingRewards.length) {<ion-badge color="warning">{{ current.pendingRewards.length }} chờ nhận</ion-badge>}</div>
-      <ion-select label="Lọc" label-placement="stacked" [(ngModel)]="filter"><ion-select-option value="all">Tất cả</ion-select-option><ion-select-option value="weapon">Vũ khí</ion-select-option><ion-select-option value="armor">Giáp</ion-select-option><ion-select-option value="charm">Bùa</ion-select-option><ion-select-option value="common">Thường</ion-select-option><ion-select-option value="rare">Hiếm</ion-select-option></ion-select>
-      @if (current.pendingRewards.length) {<section class="pending"><h2>Reward chờ nhận</h2>@for (pending of current.pendingRewards; track pending.claimId) {<ion-item><ion-label>{{ template(pending.item).name }}<br><small>Túi đầy lúc nhận thưởng</small></ion-label><ion-button (click)="claim(pending.claimId)" [disabled]="current.inventory.length >= 60">Nhận</ion-button></ion-item>}</section>}
-      <div class="grid">@for (item of items; track item.instanceId) {<article class="item"><div class="icon">{{ template(item).slot === 'weapon' ? '⚔' : template(item).slot === 'armor' ? '◆' : '✦' }}</div><strong>{{ template(item).name }}</strong><small>{{ template(item).description }}</small><ion-chip [color]="template(item).rarity === 'rare' ? 'tertiary' : 'medium'">{{ template(item).rarity }}</ion-chip><ion-button size="small" fill="outline" (click)="equip(item)" [disabled]="equipped(item)">{{ equipped(item) ? 'Đang dùng' : 'Trang bị' }}</ion-button></article>} @empty {<p>Chưa có vật phẩm. Hãy đi săn hoặc ghé shop.</p>}</div>
-      <section class="equipped"><h2>Đang trang bị</h2>@for (slot of slots; track slot) {<ion-item><ion-label>{{ slot }}<br><small>{{ current.equipment[slot] ? 'Đã trang bị' : 'Trống' }}</small></ion-label>@if (current.equipment[slot]) {<ion-button fill="clear" (click)="unequip(slot)">Tháo</ion-button>}</ion-item>}</section>
-    </main>
-  }
+<ion-content [fullscreen]="true">
+  <main class="shell">
+    <header class="top">
+      <a class="back" routerLink="/home" aria-label="Về nhà">←</a>
+      <div class="title"><p class="eyebrow">KHO VẬT PHẨM</p><h1>Túi đồ</h1></div>
+      @if (save; as current) {<span class="chip">▣ {{ current.inventory.length }}/{{ capacity }}</span>}
+    </header>
+
+    @if (save; as current) {
+      <section class="box">
+        <h3>Đang trang bị</h3>
+        <div class="slots">
+          @for (slot of slots; track slot) {
+            <div class="slot" [class.on]="!!equippedTemplate(slot)">
+              <span class="ic">{{ slotInfo[slot].icon }}</span>
+              <small>{{ slotInfo[slot].label }}</small>
+              @if (equippedTemplate(slot); as item) {
+                <b>{{ item.name }}</b>
+                <button type="button" class="link" (click)="unequip(slot)">Tháo</button>
+              } @else {
+                <b class="empty">Trống</b>
+              }
+            </div>
+          }
+        </div>
+        <p class="bonus">@if (gearBonuses.length) {Trang bị cộng: <b>{{ gearBonuses.join(' · ') }}</b>} @else {Chưa có trang bị cộng chỉ số.}</p>
+      </section>
+
+      @if (current.pendingRewards.length) {
+        <section class="box pending">
+          <h3>Thưởng chờ nhận · túi đầy lúc nhận</h3>
+          @for (pending of current.pendingRewards; track pending.claimId) {
+            <div class="pend"><b>{{ template(pending.item).name }}</b>
+              <button type="button" (click)="claim(pending.claimId)" [disabled]="current.inventory.length >= capacity">Nhận</button>
+            </div>
+          }
+        </section>
+      }
+
+      <nav class="filters" aria-label="Lọc vật phẩm">
+        @for (option of filters; track option.id) {
+          <button type="button" [class.on]="filter === option.id" (click)="setFilter(option.id)">{{ option.label }}</button>
+        }
+      </nav>
+
+      <div class="grid">
+        @for (item of items; track item.instanceId) {
+          <article class="item" [class.rare]="template(item).rarity === 'rare'" [class.equipped]="equipped(item)">
+            <div class="item-top"><span class="ic">{{ slotInfo[template(item).slot].icon }}</span><small>{{ template(item).rarity === 'rare' ? 'Hiếm' : 'Thường' }}</small></div>
+            <b>{{ template(item).name }}</b>
+            <p>{{ template(item).description }}</p>
+            <button type="button" (click)="equip(item)" [disabled]="equipped(item)">{{ equipped(item) ? '✓ Đang dùng' : 'Trang bị' }}</button>
+          </article>
+        } @empty {
+          <p class="empty-note">Chưa có vật phẩm. Hãy đi săn hoặc ghé <a routerLink="/shop">cửa hàng</a>.</p>
+        }
+      </div>
+    }
+  </main>
 </ion-content>

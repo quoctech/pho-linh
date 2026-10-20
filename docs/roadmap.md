@@ -161,7 +161,8 @@ Người test trả lời được "Vì sao tôi thắng/thua?", hành động t
 
 - [x] **Ba quái thường:** Sương Hồn, Miêu Đèn, Bọ Lá Tre. (Đã làm)
 - [x] **Miêu Đèn:** pack clean FullHD WebP + SFX tích hợp; 15 sheet trạng thái/đòn/FX (HP cao-thấp, năng lượng, khiên, độc, hồi phục, né, choáng, đánh thường, niệm độc, chết) dùng trực tiếp trong battle; logic hành động vẫn tách riêng trong `game-core/monsters/lantern-cat.ts`. (Đã làm)
-- [x] **Long Miêu Liên Kích:** skill tự kích hoạt khi Miêu Đèn đủ 100 năng lượng; xuyên khiên, hút năng lượng nhân vật, làm mất lượt và có bộ VFX WebP HD riêng. (Đã làm)
+- [x] **Long Miêu Liên Kích:** (V5) skill tự kích hoạt khi Miêu Đèn đủ 80 năng lượng; 130% ATK qua khiên, thiêu đốt nhân vật 2 lượt, làm mất lượt và có bộ VFX WebP HD riêng. (Đã làm)
+- [x] **Skill quái V5:** 7 skill của 4 quái data-driven trong `monsters.json`, resolver chung `monster-skills.ts`, hiển thị né/đóng băng/thiêu đốt/giảm hồi máu trên màn PK. (Đã làm)
 - [x] **Một boss:** Cáo Mây (hai phase có báo đòn rõ ràng). (Đã làm)
 - [x] Luật mở khóa quái theo `GAMEPLAY.md` §15. (Đã làm)
 - [x] EXP tích lũy, level up, nhận **+3 điểm** mỗi cấp; màn preview rồi commit STR/VIT/AGI/INT. (Đã làm)

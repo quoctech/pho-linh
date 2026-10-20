@@ -40,10 +40,11 @@ Thông tin animation của hero và quái là presentation metadata, tách khỏ
 `character.json` gồm các nhóm:
 
 - `baseAttributes`: `str`, `vit`, `agi`, `int` mặc định khi tạo profile.
-- `derivedStats`: công thức tạo `maxHp`, `atk`, `defense`, `skillPower`, `agiBonus` và `power`.
+- `elementBaseStats` (V6): chỉ số Lv1 theo hệ — `maxHp`, `atk`, `defense`, `agi`.
+- `derivedStats`: điểm thuộc tính **vượt** `baseAttributes` cộng thêm (`atk.strPerPoint`, `maxHp/defense.vitPerPoint`, `agi.agiPerPoint`), `skillPower` (legacy), `equipmentScale` (hệ số nhân bonus trang bị) và `power`.
 - `limits`: năng lượng tối đa, giới hạn khiên theo HP và giới hạn độc theo HP.
-- `combat`: hệ số công thức ngọc V2 — `attackTileFactor`, `poisonAtkFactor`, `poisonMaxStacks`, `heal.maxHpFactor`, `shield.defFactor`, `poison.turns`, và `monsterGems` (hằng số riêng cho hiệu ứng ngọc do quái tự match, tách khỏi công thức player).
-- `passives`: tham số nội tại Balance V3 theo hệ (`metal/wood/water/fire/earth`): `criticalChanceBonus`, `criticalDamageBonus`, `healMultiplierWhenPoisoned`, `damageReduction`, `damageStreakMin`, `burnDamageBonus`, `burningTurns`, `burningAtkFactor` và `shieldDamageReduction`. Xem `GAMEPLAY_BALANCE_V2.md §3`.
+- `combat`: hệ số công thức ngọc — `attackTileFactor`, `poisonAtkFactor`, `poisonMaxStacks`, `heal.maxHpFactor`, `shield.defFactor`, `poison.turns`; `dodge` (`agiOffset 1900`, `maxChance 0.9`) và `defenseMitigation` (`defOffset 1900`) dùng chung cho nhân vật và quái; `monsterGems` (heal `maxHpRatioPerGem`, shield `base` + `defMultiplier`, energy `perGem`) cho ngọc quái tự match.
+- `passives`: nội tại theo hệ (`metal/wood/water/fire/earth`). Nghề: `criticalChanceBonus`, `criticalDamageBonus`, `healMultiplierWhenPoisoned`, `freezeExtraTurnsWhenDelayed`, `burningDamageBonus`, `burningTurns`, `burningAtkFactor`, `shieldDamageReduction`. Bàn cờ (V6): `yellowBreakChance`/`yellowBreakEnergy`, `poisonExtraTurns`/`overhealToShield`, `shieldMatchMin`/`shieldBonusRatio`/`delayMonsterAttackTurns`/`slowedTurnsAfterDelay`, `redDamageBonus`/`redPierceShield`, `energyToShieldRatio`/`energyToShieldScale`. Xem `GAMEPLAY_BALANCE_V2.md §3`.
 - `skills`: cấu hình gameplay của skill chung/legacy. ID skill phải ổn định vì được ghi trong event/save.
 - `elementSkills`: metadata hiển thị và cấu hình gameplay của hai kỹ năng theo hệ. Battle resolver dùng một luồng chung và nhận skill ID + config tương ứng, nên UI và damage thực tế luôn dùng cùng số liệu. Ngoài công thức ATK/SP, config hỗ trợ khiên, đa đòn, độc, hút năng lượng, khống chế, tăng sát thương nhận, giảm sát thương, miễn khống chế và phản kích.
 
@@ -53,6 +54,7 @@ Thông tin animation của hero và quái là presentation metadata, tách khỏ
 
 - `match3.gemWeights`: trọng số sinh ngọc `{attack:25, poison:20, energy:20, heal:18, shield:17}` (tổng 100).
 - `match3.balanceVersion`: **3** — được ghi vào `BattleState` để replay/save biết bộ cân bằng đã dùng.
+- `battle.maxTurns`: giới hạn lượt mỗi trận; **0 = không giới hạn** (đang tạm bỏ).
 - `energyByMatchLength`: nộ theo độ dài match ngọc vàng `{3:15, 4:25, 5:40, 6:50}` (không nhân cascade).
 - `elements.cycle`: vòng tương khắc `["metal","wood","earth","water","fire"]` (mỗi hệ khắc hệ kế tiếp).
 - `elements.modifier`: bảng hệ số theo nhóm `damage/support/energy` và quan hệ `counter/neutral/countered`.
@@ -80,7 +82,7 @@ Thông số kỹ năng hiện hành:
 |---|---|---|
 | Kim | Vạn Kiếm Quy Tông: 60, 120% ATK, chịu khiên | Kim Quang Phá Giáp: 100, 180% ATK xuyên khiên, giảm DEF 30%/2 lượt |
 | Mộc | Thanh Đằng Trói Hồn: 50, 80% ATK, hút 15 năng lượng | Vạn Diệp Độc Chú: 90, 90% ATK, độc 20% ATK/lượt trong 3 lượt |
-| Thủy | Hàn Triều Phá Không: 50, trừ 22 khiên; không có khiên thì trừ HP | Băng Phong Thiên Lý: 100, 110% ATK, đóng băng 1 lượt |
+| Thủy | Hàn Triều Phá Không: 50, trừ 660 khiên; không có khiên thì trừ HP | Băng Phong Thiên Lý: 100, 110% ATK, đóng băng 1 lượt |
 | Hỏa | Hỏa Vũ Liên Châu: 60, 3 × 40% ATK | Phần Thiên Xạ Nhật: 100, 150% ATK, mục tiêu nhận thêm 15% sát thương/2 lượt |
 | Thổ | Sơn Nhạc Trấn Địa: 65, 70% ATK, 40% choáng 1 lượt | Huyền Nham Hộ Thể: 80, khiên 200% DEF, giảm 25% sát thương, miễn khống chế, phản 35% trong 2 lượt |
 
@@ -99,8 +101,15 @@ Quy tắc resolver skill (balanceVersion 4):
 
 `monsters.json` có hai phần:
 
-- `definitions`: record theo `monsterId` ổn định. Mỗi definition có tên hiển thị, `element` (hệ Ngũ Hành), level, `maxHp`, `attack`, `defense`, `shieldCap`, behavior, tactic, reward và điều kiện unlock.
-- `combat`: hệ số dùng chung cho heavy attack, giảm damage theo defense, guard (`guardDefenseBonus`, `guardTurns`), hệ số sát thương theo số ngọc đỏ quái match (`matchDamageMultipliers`), năng lượng, poison và skill riêng của Miêu Đèn (`lanternCatSkill`, gồm `stunTurns`).
+- `definitions`: record theo `monsterId` ổn định. Mỗi definition có tên hiển thị, `element` (hệ Ngũ Hành), level, `maxHp`, `attack`, `defense`, `agi` (V6: né = AGI / (AGI + 1900)), `shieldCap`, behavior, tactic, reward và điều kiện unlock.
+- `combat`: hệ số dùng chung cho heavy attack, guard (`guardDefenseRatio` = +% DEF gốc, `guardTurns`), độc quái `poisonAtkRatio`, khiên guard Sương Hồn `mistGuardShield`, hệ số sát thương theo số ngọc đỏ quái match (`matchDamageMultipliers`), năng lượng và thời lượng độc. Giảm sát thương theo DEF và trần né dùng chung `character.json → combat`.
+- `definitions.<id>.skills` (Balance V5): skill tự động của quái. Field:
+  - chung: `id` (ổn định, ghi trong event), `name`, `description` (UI chọn mục tiêu đọc trực tiếp), `vfxId` (thư mục VFX), `energyCost`, `priority`;
+  - điều kiện: `hpAbove` (HP > ngưỡng), `hpBelow` (HP < ngưỡng);
+  - sát thương: `baseDamage`, `attackMultiplier`;
+  - buff bản thân: `dodgeBonus` + `dodgeCharges` (số lần) hoặc `dodgeTurns` (số hành động người chơi), `healMaxHpRatio` + `healTurns`, `selfShield`;
+  - hiệu ứng lên nhân vật: `playerBurnMaxHpRatio`/`playerBurnTurns`, `playerPoisonAtkRatio`/`playerPoisonTurns`, `playerControl` (`stun`/`freeze`) + `playerControlChance`/`playerControlTurns`, `playerHealReduction`/`playerHealReductionTurns`.
+  Resolver: `game-core/monsters/monster-skills.ts` (`selectMonsterSkill`, `resolveMonsterSkill`). Bảng skill hiện hành: `GAMEPLAY.md §11.9`.
 
 Các ID hiện có:
 

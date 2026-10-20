@@ -1,11 +1,12 @@
-# PHỐ LINH — ĐẶC TẢ LỐI CHƠI & CÂN BẰNG V3
+# PHỐ LINH — ĐẶC TẢ LỐI CHƠI, CHỈ SỐ & CÂN BẰNG V6
 
-> **Trạng thái:** **Đã triển khai trong runtime** (`combat.json.balanceVersion = 4`); còn cần mô phỏng nhiều seed và playtest Android để tinh chỉnh số liệu.
+> **Trạng thái:** **Đã triển khai trong runtime** (`combat.json.balanceVersion = 6`); còn cần mô phỏng nhiều seed và playtest Android để tinh chỉnh số liệu.
 >
-> **V4 (20/10/2026):** skill %ATK trừ DEF quái; debuff quái đếm theo hành động người chơi; đóng băng/choáng bỏ trọn lượt quái; Hỏa Vũ Liên Châu chỉ cộng bonus Thiêu đốt 1 lần; Vạn Diệp Độc Chú cộng dồn với độc tầng; guard quái chỉ kéo dài 1 hành động; mọi đòn quái (kể cả Miêu Đèn) đi chung pipeline giảm sát thương/khiên/phản đòn. Chi tiết: `GAME_DATA_CENTER.md → Quy tắc resolver skill`.
-> **Phạm vi:** Match-3 6×6, ngọc, Ngũ Hành, nội tại nghề và công thức combat.
-> **Nguồn:** Đặc tả gameplay được chốt ngày 20/10/2026; cập nhật cơ chế nội tại bàn cờ ngày 20/10/2026.
-> **Dữ liệu:** mọi con số nằm trong `src/assets/game-data/combat.json` và `character.json`; logic ở `src/game-core` (xem `elements.ts`, `battle.ts`).
+> **V6 (20/10/2026):** thang chỉ số hàng nghìn, chỉ số Lv1 theo hệ, né theo AGI `AGI / (AGI + 1900)` cho nhân vật và quái, DEF giảm sát thương theo % `DEF / (DEF + 1900)`, nội tại bàn cờ theo hệ (mục 3.1), năng lượng match ≥5 = 40. Các số cố định cũ quy đổi ×30 hoặc sang % (mục 8).
+>
+> **V5:** skill quái data-driven trong `monsters.json → skills` (xem `GAMEPLAY.md §11.9`). **V4:** quy tắc resolver skill nhân vật (xem `GAME_DATA_CENTER.md → Quy tắc resolver skill`).
+>
+> **Dữ liệu:** mọi con số nằm trong `src/assets/game-data/{character,monsters,combat}.json`; logic ở `src/game-core` (`battle.ts`, `combat-formulas.ts`, `resolve.ts`, `monsters/*`).
 
 ## 1. Bàn cờ và năm loại ngọc
 
@@ -13,164 +14,143 @@ Bàn cờ cố định 6×6, gồm đúng năm loại ngọc:
 
 | ID | Nhận diện | Tác dụng khi match-3 |
 |---|---|---|
-| `attack` | Đỏ, kiếm | Gây sát thương vật lý trực tiếp lên quái |
-| `poison` | Tím, đầu lâu/giọt độc | Gây độc theo lượt lên quái |
+| `attack` | Đỏ, kiếm | Sát thương vật lý trực tiếp lên quái |
+| `poison` | Tím, đầu lâu | Độc DoT theo lượt lên quái (tối đa 5 tầng) |
 | `heal` | Xanh lá, tim/lá | Hồi HP cho nhân vật |
-| `shield` | Xanh dương, khiên | Tạo shield chặn sát thương |
-| `energy` | Vàng, sét | Cộng Nộ vào thanh 0–100 |
+| `shield` | Xanh dương, khiên | Tạo Khiên chặn sát thương |
+| `energy` | Vàng, sét | Cộng Nộ vào thanh 0–100 để dùng skill |
 
-Màu không được là tín hiệu duy nhất; mỗi ngọc phải có silhouette/icon riêng.
+Trọng số sinh ngọc (`combat.json → match3.gemWeights`): Đỏ 25% · Tím 20% · Vàng 20% · Xanh lá 18% · Xanh dương 17%.
 
 ## 2. Ngũ Hành
 
-Vòng tương khắc:
+Vòng tương khắc: `Kim → Mộc → Thổ → Thủy → Hỏa → Kim` (mỗi hệ khắc hệ kế tiếp).
 
-```text
-Kim → Mộc → Thổ → Thủy → Hỏa → Kim
-```
-
-So sánh hệ của nhân vật với hệ của quái để lấy `elementalModifier`:
-
-| Quan hệ | Đỏ/Tím: damage | Xanh lá/Xanh dương: heal/shield | Vàng: energy |
+| Quan hệ | Đỏ/Tím (damage) | Xanh lá/Xanh dương (support) | Vàng (energy) |
 |---|---:|---:|---:|
-| Nhân vật khắc quái | 130% | 100% | 120% |
-| Cùng hệ/hòa | 100% | 100% | 100% |
+| Nhân vật khắc quái | 130% | 100% | 120% (match-3 = 18 nộ) |
+| Cùng hệ / hòa | 100% | 100% | 100% |
 | Quái khắc nhân vật | 80% | 80% | 100% |
 
-Modifier chỉ điều chỉnh hiệu quả ngọc, không thay đổi board, RNG, lượt hay event order.
+Hệ quái: Sương Hồn & Cáo Mây — Thủy, Miêu Đèn — Hỏa, Bọ Lá Tre — Mộc.
 
-### Hệ của quái (M2)
+## 3. Nội tại theo hệ
 
-| Quái | Hệ | Quan hệ gợi ý |
+Hai lớp nội tại chạy song song; tham số trong `character.json → passives`, mọi proc dùng RNG deterministic của `game-core` và phát `PASSIVE_TRIGGERED`.
+
+### 3.1. Nội tại bàn cờ (mới ở V6)
+
+| Hệ | Cơ chế | Tham số |
 |---|---|---|
-| `mist_blob` — Sương Hồn | Thủy (`water`) | — |
-| `lantern_cat` — Miêu Đèn | Hỏa (`fire`) | — |
-| `bamboo_mantis` — Bọ Lá Tre | Mộc (`wood`) | — |
-| `cloud_fox_boss` — Cáo Mây | Thủy (`water`) | — |
+| Kim — Kiếm Tông | Mỗi cascade có ngọc Đỏ: 25% phá thêm 1 ngọc Vàng kề trực giao (ô đầu tiên theo hàng/cột), viên đó cho **+15 nộ** (× modifier năng lượng); ô trống rơi/refill như thường. | `yellowBreakChance 0.25`, `yellowBreakEnergy 15` |
+| Mộc — Linh Mộc Sư | Ngọc Tím duy trì độc **+1 lượt** (3 → 4). Hồi máu dư từ ngọc Xanh lá khi đầy HP chuyển thành **Khiên**. | `poisonExtraTurns 1`, `overhealToShield` |
+| Thủy — Hàn Thủy Thương | Match ngọc Xanh dương có dòng ≥4: khiên **×1.5** và **hoãn đòn đánh** của quái lượt kế (quái vẫn đi ngọc, DoT vẫn tick, không dùng skill). Quái vừa bị hoãn bị **Làm chậm** 2 hành động. | `shieldMatchMin 4`, `shieldBonusRatio 0.5`, `delayMonsterAttackTurns 1`, `slowedTurnsAfterDelay 2` |
+| Hỏa — Viêm Vũ Cung | Ngọc Đỏ **+20%** sát thương và **xuyên khiên** quái (vào thẳng HP); vẫn gây Thiêu đốt DoT 10% ATK × 3 lượt. | `redDamageBonus 0.2`, `redPierceShield`, `burningTurns 3`, `burningAtkFactor 0.1` |
+| Thổ — Huyền Thổ Vệ | Ngọc Vàng: nhận Khiên = **50% nộ vừa tích × 30** (15 nộ → 225 khiên). | `energyToShieldRatio 0.5`, `energyToShieldScale 30` |
 
-Hệ lưu ở `monsters.json` theo field `element`; thiếu field thì core coi là hòa/neutral.
+### 3.2. Nội tại nghề
 
-## 3. Nội tại nghề theo hệ nhân vật
+| Hệ | Nội tại | Cơ chế |
+|---|---|---|
+| Kim | Kiếm Tâm Bất Diệt | Từ đòn trực tiếp thứ 2 liên tiếp vào cùng mục tiêu: 40% chí mạng, chí mạng +40% sát thương. |
+| Mộc | Sinh Cơ Bất Tận | Quái đang dính độc → hồi máu của nhân vật ×1.4. |
+| Thủy | Hàn Tức Ngưng Kết | Quái đang bị **Làm chậm** (vừa bị hoãn đòn) → Băng Phong Thiên Lý đóng băng **+1 lượt**. (Bỏ cơ chế giảm 25% từ đòn thứ 3 của V3.) |
+| Hỏa | Liệt Diễm Chi Tâm | Mục tiêu đang Thiêu đốt nhận thêm **+20%** sát thương (ngọc + skill; thay +20 cố định). |
+| Thổ | Bất Động Như Sơn | Đang có Khiên → sát thương nhận giảm 10% trước khi khiên hấp thụ. |
 
-Nội tại là **cơ chế bàn cờ** kích hoạt theo hệ nhân vật, không phụ thuộc UI/animation.
-Tham số nằm trong `character.json → passives`; mọi proc dùng RNG deterministic của `game-core`,
-phát event `PASSIVE_TRIGGERED` (hoặc `MONSTER_ACTION_DELAYED`) và **không** được kích hoạt lại từ lớp Phaser.
+## 4. Chỉ số
 
-| Hệ | Nội tại | Cơ chế (đã triển khai) | Tham số |
-|---|---|---|---|
-| Kim — Kiếm Tâm Bất Diệt | Chí mạng liên kích | Từ đòn đánh trực tiếp thứ hai liên tiếp vào cùng mục tiêu, có **40%** cơ hội chí mạng; chí mạng tăng damage **40%**. | `criticalChanceBonus: 0.4`, `criticalDamageBonus: 0.4` |
-| Mộc — Sinh Cơ Bất Tận | Hồi phục cộng hưởng | Khi quái đang dính độc, mọi hồi HP của player tăng **40%**. | `healMultiplierWhenPoisoned: 1.4` |
-| Thủy — Hàn Tức Ngưng Kết | Giảm damage liên hoàn | Từ lần nhận damage thứ ba liên tiếp, incoming damage giảm **25%** trước khi trừ khiên. | `damageStreakMin: 3`, `damageReduction: 0.25` |
-| Hỏa — Liệt Diễm Chi Tâm | Thiêu đốt bùng nổ | Đòn đỏ áp Thiêu đốt 3 lượt; khi đánh mục tiêu đang Thiêu đốt, direct damage cộng **20**. Burning tick bằng 10% ATK mỗi lượt quái. | `burnDamageBonus: 20`, `burningTurns: 3`, `burningAtkFactor: 0.1` |
-| Thổ — Bất Động Như Sơn | Sơn giáp | Khi player đang có Khiên, mọi incoming damage giảm **10%** trước khi khiên hấp thụ. | `shieldDamageReduction: 0.1` |
-
-Chuỗi Kim reset khi không có attack trực tiếp hoặc đổi mục tiêu. Chuỗi Thủy reset khi lượt quái không gây damage.
-Critical và burning dùng RNG/state deterministic; UI chỉ đọc event từ `game-core`.
-
-## 4. Trọng số sinh ngọc
-
-Trọng số mặc định khi tạo/refill:
-
-| Ngọc | Tỷ lệ |
-|---|---:|
-| Đỏ / `attack` | 25% |
-| Tím / `poison` | 20% |
-| Vàng / `energy` | 20% |
-| Xanh lá / `heal` | 18% |
-| Xanh dương / `shield` | 17% |
-
-Tổng bằng 100%. Trọng số chỉ dùng trong RNG của game-core; UI không tự sinh ngọc.
-
-## 5. Công thức combat V2
-
-Các công thức dưới đây thay thế công thức balance cũ khi V2 được triển khai. Cho đến lúc đó, code vẫn chạy balance hiện tại trong `GAMEPLAY.md`.
+### 4.1. Công thức chung (`combat-formulas.ts`)
 
 ```ts
-damage      = round(player.ATK * tileCount * 0.4 * elementalModifier('damage') * comboMult * agiMult * criticalMult + burningBonus) - monsterDEF; // min 1
-perStack    = round(player.ATK * 0.25 * elementalModifier('damage') * comboMult);           // độc mỗi tầng/lượt
-poisonTotal = stacks * perStack;                                                            // stacks ≤ 5, duration 3 (+1 nếu Mộc)
-healAmount  = round(player.maxHP * 0.05 * tileCount * elementalModifier('support') * comboMult);
-shieldAmount = round(player.DEF * 1.5 * tileCount * elementalModifier('support') * comboMult);
-
-function getEnergyGain(matchLength: number): number {   // KHÔNG nhân comboMult
-  if (matchLength === 3) return 15;
-  if (matchLength === 4) return 25;
-  if (matchLength === 5) return 40;
-  if (matchLength >= 6) return 50;
-  return 0;
-}                                                        // rồi × elementalModifier('energy')
+dodgeChance = AGI / (AGI + 1900)              // tối đa 90%
+mitigation  = DEF / (DEF + 1900)              // sát thương × (1 − mitigation), mọi đòn
 ```
 
-Trong đó `criticalMult = 1.4` khi Kim proc, nếu không là `1`; `burningBonus = 20`
-chỉ dành cho hero Hỏa đánh mục tiêu đang burning. Burning tick là damage-over-time,
-không crit. Damage nhận vào áp dụng `waterReduction` từ hit thứ 3 liên tiếp và
-`earthReduction` khi player đang có khiên trước bước hấp thụ khiên.
+- Nhân vật chỉ né **đòn thường/nặng** của quái (`PLAYER_DODGED`); skill quái luôn trúng.
+- Quái chỉ né **ngọc Đỏ**; né = AGI + buff né từ skill quái (V5). Skill nhân vật luôn trúng.
 
-Kỹ năng hệ Kim dùng công thức riêng trong `character.json`: `Vạn Kiếm Quy Tông`
-tiêu 60 năng lượng, gây `120% ATK − DEF` và bị khiên hấp thụ trước HP; `Kim Quang Phá
-Giáp` tiêu 100 năng lượng, gây `180% ATK − DEF` xuyên khiên và giảm 30% DEF của quái
-trong 2 hành động tiếp theo của người chơi. Cả hai vẫn đi qua common player-skill resolver.
+### 4.2. Nhân vật Lv1 (`character.json → elementBaseStats`)
 
-Các hệ còn lại cũng dùng chung resolver và cost riêng: Mộc 50/90 (80% ATK + hút
-15 năng lượng; 90% ATK + độc 20% ATK trong 3 lượt), Thủy 50/100 (trừ 22 khiên/HP;
-110% ATK + đóng băng 1 lượt), Hỏa 60/100 (3 × 40% ATK; 150% ATK + tăng sát
-thương nhận 15% trong 2 lượt), Thổ 65/80 (70% ATK + 40% choáng; khiên 200% DEF,
-giảm 25%, miễn khống chế và phản 35%). Tooltip đọc trực tiếp config để hiển thị
-cost, hệ số và hiệu ứng; đủ cost thì skill sáng và bấm được với mọi monster.
+| Chỉ số | Kim | Mộc | Thủy | Hỏa | Thổ |
+|---|---:|---:|---:|---:|---:|
+| HP | 9.000 | 11.000 | 10.000 | 8.500 | 13.000 |
+| Năng lượng | 100 | 100 | 100 | 100 | 100 |
+| ATK | 1.250 | 950 | 1.000 | 1.300 | 750 |
+| DEF | 400 | 500 | 550 | 350 | 800 |
+| AGI (né) | 180 (8,7%) | 120 (5,9%) | 150 (7,3%) | 220 (10,4%) | 60 (3,1%) |
 
-Quy ước balance:
+Điểm thuộc tính vượt mốc khởi đầu (5/5/5/5): +1 STR = +25 ATK, +1 VIT = +200 HP & +10 DEF, +1 AGI = +5 AGI. Trang bị (`items.ts`) nhân `equipmentScale = 25`.
 
-- `tileCount` là số ô duy nhất bị clear trong nhóm resolve, không double-count giao điểm.
-- Damage, poison (potency mỗi tầng), heal và shield chịu cascade multiplier theo tầng resolve.
-- Energy dùng mức thưởng theo độ dài match (3/4/5/6 → 15/25/40/50); elemental modifier có thể tăng energy, nhưng **cascade multiplier không nhân energy**.
-- `agiMult = 1 + agiBonus` chỉ áp cho sát thương ngọc đỏ ở cascade ≥ 2 (giữ ý nghĩa của AGI từ công thức baseline).
-- Damage vẫn đi qua lớp shield rồi trừ defense (min 1) sau khi tính hiệu quả ngọc.
-- **Độc theo tầng:** mỗi nhóm ngọc tím cộng **1 tầng** (tối đa `poisonMaxStacks = 5`), mỗi tầng gây `perStack` sát thương/lượt; mỗi lần áp dụng mới reset duration về `poison.turns` (Mộc → +1).
-- Các giá trị gây số lẻ dùng `Math.round` thống nhất trong game-core và có test snapshot.
+### 4.3. Quái (`monsters.json → definitions`)
+
+| Quái | Hệ | Vai trò | HP | ATK | DEF | AGI (né) |
+|---|---|---|---:|---:|---:|---:|
+| Sương Hồn | Thủy | Băng / khống chế (trâu, lỳ) | 10.500 | 950 | 600 | 150 (7,3%) |
+| Miêu Đèn | Hỏa | Sát thủ (nhanh, đập đau, mỏng) | 7.800 | 1.350 | 320 | 300 (13,6%) |
+| Bọ Lá Tre | Mộc | Trị liệu / rút máu (né cao, dai) | 11.500 | 850 | 450 | 250 (11,6%) |
+| Cáo Mây | Thủy | Phép / né ảo (khó đánh) | 8.800 | 1.100 | 400 | 380 (16,7%) |
+
+Năng lượng tối đa của quái = 100.
+
+## 5. Công thức ngọc
+
+```ts
+damage = applyDefense(ATK × tileCount × 0.4 × elementalModifier × comboMult × crit × fireBonus × burningBonus, monsterDEF) × vulnerability
+poisonPerStack = round(ATK × 0.25 × elementalModifier × comboMult)        // tối đa 5 tầng, 3 lượt (+1 Mộc)
+heal   = round(maxHP × 0.05 × tileCount × supportModifier × comboMult)
+shield = round(DEF × 1.5 × tileCount × supportModifier × comboMult)       // × 1.5 nếu Thủy match ≥4
+energy = { 3: 15, 4: 25, ≥5: 40 } × energyModifier                        // không nhân combo
+```
+
+- `tileCount` là số ô duy nhất bị clear trong nhóm resolve.
+- Cascade multiplier: 1.0× / 1.2× / 1.4× / 1.6× (tầng 4+). Bỏ `agiMult` của V3 — AGI giờ chỉ quyết định né.
+- Quái đánh: `applyDefense(ATK quái × hệ số đòn × hệ số số ngọc, playerDEF)` → nội tại Thổ × giảm chủ động (Huyền Nham) → khiên → HP → phản đòn.
+- Làm tròn `Math.round` thống nhất trong game-core (có chống sai số float).
 
 ## 6. Cascade và nhịp lượt
 
-Cascade multiplier mặc định:
+Một swap hợp lệ là một lượt; resolve toàn bộ cascade trước khi quái hành động. Swap sai không mất lượt.
 
-| Tầng cascade | Multiplier |
-|---:|---:|
-| 1 | 1.0× |
-| 2 | 1.2× |
-| 3 | 1.4× |
-| 4 trở lên | 1.6× tối đa |
+**Giới hạn lượt:** tạm bỏ — `combat.json → battle.maxTurns = 0` nghĩa là không giới hạn (HUD hiện "Lượt N"). Đặt lại số dương (vd 24) để bật lại thua do hết lượt (`turn_limit`).
 
-Một swap hợp lệ vẫn là một lượt; resolve toàn bộ cascade trước khi quái hành động. Swap sai không mất lượt. Không thay đổi event order hiện tại:
+Event order giữ nguyên:
 
 ```text
 GEMS_CLEARED → GEMS_FALLING → GEMS_REFILLED → cascade tiếp theo / monster turn
 ```
 
-Một lượt phải kết thúc khi không còn match; mọi passive/proc phải nằm trong event log deterministic.
-
 ## 7. UX bàn cờ
 
-- Thao tác chính là **vuốt từ một ô sang ô kề trực giao** để swap ngay.
-- Tap đơn không tạo trạng thái “chọn ô”; nếu không vuốt, chỉ hiển thị hướng dẫn ngắn.
-- Vuốt chéo hoặc sang ô không kề không được swap và không mất lượt.
-- Khi đang resolve/cascade, khóa input; mở lại sau khi event log của lượt hoàn tất.
-- Giữ `reducedMotion`: giảm flash/particle/shake nhưng không giảm phản hồi icon, text hoặc kết quả combat.
+- Vuốt từ một ô sang ô kề trực giao để swap; tap không tạo selection state.
+- Khóa input khi đang resolve/cascade.
+- Màn PK V6: số ≥1.000 hiển thị có dấu chấm (9.000); nhân vật né có "💨 NÉ! x%" + anim dodge; Kim phá ngọc vàng nổ cùng đợt + "⚡ +15 NỘ"; Thủy hoãn đòn "🐢 HOÃN ĐÒN" + badge Làm chậm; Hỏa "🔥 XUYÊN KHIÊN"; Thổ/Mộc hiện khiên nhận thêm.
 
-## 8. Trạng thái triển khai
+## 8. Quy đổi số cố định (V6)
 
-- [x] Đưa weight, vòng Ngũ Hành, modifier và passive vào balance config versioned (`combat.json`/`character.json`, `balanceVersion = 3`).
-- [x] Mở rộng `game-core` để tính modifier/passive bằng RNG seed explicit (`elements.ts`, `battle.ts`).
-- [x] Bổ sung payload/event cho proc nội tại (`PASSIVE_TRIGGERED`), critical, burning, energy/heal/shield/poison và cascade tier.
-- [x] Viết unit/integration test cho từng hệ, từng loại ngọc, match 3/4/5/6, độc theo tầng và nội tại (`elements.spec.ts`, `battle-v2.spec.ts`).
-- [x] Cập nhật UI feedback cho critical damage màu vàng và burning.
-- [ ] Chạy mô phỏng nhiều seed rồi playtest Android để tinh chỉnh số liệu cân bằng.
+| Mục | V5 | V6 |
+|---|---:|---:|
+| Hàn Triều Phá Không trừ khiên | 22 | 660 |
+| Trúc Diệp Độc Châm sát thương gốc | 10 | 300 |
+| Vụ Lưu Thuẫn khiên sương | 60 | 1.800 |
+| Khiên tối đa Sương Hồn | 50 | 1.500 |
+| Khiên guard Sương Hồn | 20 | 600 |
+| Guard cộng DEF | +12 | +20% DEF gốc |
+| Độc quái gieo lên nhân vật | tactics.poison × 1.5 | 30% ATK quái / lượt |
+| Ngọc hồi máu của quái | 8 + level × 2 | 3% maxHP / viên |
+| Ngọc khiên của quái | 8 + DEF × 0.5 | 240 + DEF × 0.5 / viên |
+| Trang bị | ×1 | ×25 |
 
-## 9. Acceptance criteria V2
+## 9. Trạng thái triển khai
 
-- Cùng seed và cùng action sequence cho cùng board, event và combat result.
-- Modifier 130/100/80% áp đúng theo quan hệ hệ, không ảnh hưởng loại ngọc ngoài phạm vi.
-- Mỗi passive chỉ proc một lần theo event gameplay tương ứng.
-- Damage, heal, shield, energy, poison, critical và burning khớp công thức sau rounding.
-- Hiệu lực của năm nội tại được áp dụng đúng theo mô tả thiết kế và không bị kích hoạt lại từ UI/VFX.
-- Vuốt kề swap ngay; tap không để lại selection state.
-- Không thay đổi phần thưởng, lượt hoặc board state do VFX/animation.
-- Balance version được lưu cùng battle save/replay để không đổi luật giữa trận.
+- [x] Chỉ số theo hệ + quái V6 trong JSON, công thức AGI/DEF chung (`combat-formulas.ts`).
+- [x] Năm nội tại bàn cờ + nội tại nghề Thủy/Hỏa mới, có event và test (`battle-v2.spec.ts`).
+- [x] Màn PK hiển thị né hai phía, nội tại bàn cờ, số lớn.
+- [ ] Mô phỏng nhiều seed + playtest Android để tinh chỉnh (số lượt trung bình mỗi trận, tỉ lệ thắng theo hệ).
+
+## 10. Acceptance criteria
+
+- Cùng seed và cùng action sequence cho cùng board, event và kết quả.
+- Modifier 130/100/80% đúng quan hệ hệ; né/DEF đúng công thức sau làm tròn.
+- Mỗi nội tại chỉ proc một lần theo event gameplay tương ứng; không kích hoạt lại từ UI/VFX.
+- Balance version lưu cùng battle save/replay.

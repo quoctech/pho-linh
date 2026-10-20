@@ -1,5 +1,6 @@
 <ion-content class="hunt-content" [fullscreen]="true" [scrollY]="false">
   <div class="hunt-shell">
+    <button type="button" class="home-back" (click)="goHome()" aria-label="Về nhà">← Về nhà</button>
     <div #gameHost class="game-host" aria-label="Bản đồ chọn mục tiêu"></div>
     @if (isLoading) {
       <div class="loading-state" role="status" aria-live="polite">

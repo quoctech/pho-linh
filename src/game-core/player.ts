@@ -1,29 +1,40 @@
+import { dodgeChanceFromAgi } from './combat-formulas';
 import { CHARACTER_DATA } from './game-data';
 import type { Attributes, DerivedStats, ElementId, EquipmentBonuses, PlayerBattleState } from './types';
 
 export const BASE_ATTRIBUTES: Attributes = { ...CHARACTER_DATA.baseAttributes };
 
+/**
+ * Balance V6: chỉ số Lv1 lấy theo hệ (`elementBaseStats`); điểm thuộc tính vượt mốc khởi đầu
+ * và trang bị (× `equipmentScale`) cộng thêm. Né = AGI / (AGI + 1900).
+ */
 export function computeDerivedStats(
   attributes: Attributes,
   equipmentBonuses: EquipmentBonuses = {},
+  element: ElementId = 'metal',
 ): DerivedStats {
-  const str = safeAttribute(attributes.str, CHARACTER_DATA.baseAttributes.str);
-  const vit = safeAttribute(attributes.vit, CHARACTER_DATA.baseAttributes.vit);
-  const agi = safeAttribute(attributes.agi, CHARACTER_DATA.baseAttributes.agi);
-  const int = safeAttribute(attributes.int, CHARACTER_DATA.baseAttributes.int);
+  const startAttributes = CHARACTER_DATA.baseAttributes;
+  const extra = (value: number, start: number) => Math.max(0, safeAttribute(value, start) - start);
+  const str = extra(attributes.str, startAttributes.str);
+  const vit = extra(attributes.vit, startAttributes.vit);
+  const agiPoints = extra(attributes.agi, startAttributes.agi);
+  const int = safeAttribute(attributes.int, startAttributes.int);
   const formula = CHARACTER_DATA.derivedStats;
-  const maxHp = Math.max(1, formula.maxHp.base + formula.maxHp.vitPerPoint * vit + safeBonus(equipmentBonuses.maxHp));
-  const atk = Math.max(0, formula.atk.base + formula.atk.strPerPoint * str + safeBonus(equipmentBonuses.atk));
-  const defense = Math.max(0, formula.defense.base + formula.defense.vitPerPoint * vit + safeBonus(equipmentBonuses.defense));
-  const skillPower = Math.max(0, formula.skillPower.base + formula.skillPower.intPerPoint * int + safeBonus(equipmentBonuses.skillPower));
-  const agiBonus = Math.min(formula.agiBonus.cap, agi * formula.agiBonus.agiPerPoint + safeBonus(equipmentBonuses.agiBonus));
+  const base = CHARACTER_DATA.elementBaseStats[element] ?? CHARACTER_DATA.elementBaseStats.metal;
+  const gear = (value: number | undefined) => safeBonus(value) * formula.equipmentScale;
+  const maxHp = Math.max(1, base.maxHp + formula.maxHp.vitPerPoint * vit + gear(equipmentBonuses.maxHp));
+  const atk = Math.max(0, base.atk + formula.atk.strPerPoint * str + gear(equipmentBonuses.atk));
+  const defense = Math.max(0, base.defense + formula.defense.vitPerPoint * vit + gear(equipmentBonuses.defense));
+  const skillPower = Math.max(0, formula.skillPower.base + formula.skillPower.intPerPoint * int + gear(equipmentBonuses.skillPower));
+  const agi = Math.max(0, base.agi + formula.agi.agiPerPoint * agiPoints + gear(equipmentBonuses.agi));
 
   return {
     maxHp,
     atk,
     defense,
     skillPower,
-    agiBonus,
+    agi,
+    dodgeChance: dodgeChanceFromAgi(agi),
     power: Math.round(
       maxHp / formula.power.maxHpDivisor
       + atk * formula.power.atkMultiplier
@@ -40,7 +51,7 @@ export function createPlayerBattleState(
   // cũ không truyền element vẫn chạy được mà không ảnh hưởng tương khắc bất ngờ.
   element: ElementId = 'metal',
 ): PlayerBattleState {
-  const stats = computeDerivedStats(attributes, equipmentBonuses);
+  const stats = computeDerivedStats(attributes, equipmentBonuses, element);
   return {
     level: 1,
     element,
@@ -56,13 +67,17 @@ export function createPlayerBattleState(
     damageReductionPercent: 0,
     controlImmunityTurns: 0,
     reflectDamageRatio: 0,
+    burningPotency: 0,
+    burningTurns: 0,
+    healReduction: 0,
+    healReductionTurns: 0,
     attackStreakTargetId: undefined,
     attackStreak: 0,
   };
 }
 
 export function clampPlayerState(player: PlayerBattleState): PlayerBattleState {
-  const fallbackStats = computeDerivedStats(player.attributes);
+  const fallbackStats = computeDerivedStats(player.attributes, {}, player.element);
   const maxHp = safePositive(player.stats.maxHp, fallbackStats.maxHp);
   const stats: DerivedStats = {
     ...player.stats,
@@ -70,7 +85,8 @@ export function clampPlayerState(player: PlayerBattleState): PlayerBattleState {
     atk: safeNonNegative(player.stats.atk, fallbackStats.atk),
     defense: safeNonNegative(player.stats.defense, fallbackStats.defense),
     skillPower: safeNonNegative(player.stats.skillPower, fallbackStats.skillPower),
-    agiBonus: safeNonNegative(player.stats.agiBonus, fallbackStats.agiBonus),
+    agi: safeNonNegative(player.stats.agi, fallbackStats.agi),
+    dodgeChance: dodgeChanceFromAgi(safeNonNegative(player.stats.agi, fallbackStats.agi)),
     power: safeNonNegative(player.stats.power, fallbackStats.power),
   };
   return {
@@ -86,6 +102,10 @@ export function clampPlayerState(player: PlayerBattleState): PlayerBattleState {
     damageReductionPercent: Math.max(0, Math.min(1, safeNonNegative(player.damageReductionPercent, 0))),
     controlImmunityTurns: Math.max(0, Math.floor(safeNonNegative(player.controlImmunityTurns, 0))),
     reflectDamageRatio: Math.max(0, Math.min(1, safeNonNegative(player.reflectDamageRatio, 0))),
+    burningPotency: safeNonNegative(player.burningPotency, 0),
+    burningTurns: Math.max(0, Math.floor(safeNonNegative(player.burningTurns, 0))),
+    healReduction: Math.max(0, Math.min(1, safeNonNegative(player.healReduction, 0))),
+    healReductionTurns: Math.max(0, Math.floor(safeNonNegative(player.healReductionTurns, 0))),
     attackStreakTargetId: typeof player.attackStreakTargetId === 'string' ? player.attackStreakTargetId : undefined,
     attackStreak: Math.max(0, Math.floor(safeNonNegative(player.attackStreak, 0))),
   };

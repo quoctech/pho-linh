@@ -5,6 +5,9 @@ import {
   CHARACTER_DATA,
   DEFAULT_BATTLE_CONFIG,
   findLegalMoves,
+  describePlayerSkillEffects,
+  monsterDodgeChance,
+  monsterSkillById,
   previewPlayerSkill,
   type Board,
   type BattleState,
@@ -44,11 +47,12 @@ import {
   type HeroStatusSnapshot,
 } from './hero-status-vfx';
 import { preloadStatusUiAssets, ensureStatusUiAnimations } from './status/status-ui-assets';
-import { StatusUiVfx } from './status/status-ui-vfx';
+import { formatGameNumber, StatusUiVfx } from './status/status-ui-vfx';
 import { BattleVfxPool, GemVisualPool, type VfxQualityTier } from './battle-visual-pools';
 import {
   MONSTER_SKILL_EFFECTS,
   ensureMonsterSkillEffectAnimations,
+  isMonsterSkillEffectId,
   preloadMonsterSkillEffects,
   type MonsterSkillEffectId,
 } from './monster-skill-effect-assets';
@@ -239,8 +243,15 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
   /** Hiệu ứng đang áp lên quái (đóng băng/choáng, thiêu đốt, giảm DEF), đồng bộ theo event playback. */
   private monsterEffectsLabel?: Phaser.GameObjects.Text;
   private skillTooltipBackground?: Phaser.GameObjects.Rectangle;
-  private displayedMonsterEffects = new Map<'control' | 'vulnerable' | 'defense', string>();
+  private displayedMonsterEffects = new Map<'control' | 'vulnerable' | 'defense' | 'dodge' | 'heal' | 'slowed', string>();
   private displayedMonsterControl?: 'freeze' | 'stun';
+  /** Vòng sáng nhấp nháy quanh quái khi buff né đang hiệu lực. */
+  private monsterDodgeAura?: Phaser.GameObjects.Ellipse;
+  private monsterDodgeAuraTween?: Phaser.Tweens.Tween;
+  /** Hiệu ứng quái gây lên nhân vật (thiêu đốt, choáng/đóng băng, giảm hồi máu). */
+  private playerEffectsLabel?: Phaser.GameObjects.Text;
+  private displayedPlayerEffects = new Map<'burn' | 'control' | 'antiHeal', string>();
+  private displayedPlayerControl?: 'freeze' | 'stun';
   private statusLabel?: Phaser.GameObjects.Text;
   private skillButtons: Phaser.GameObjects.Rectangle[] = [];
   private skillIcons: Phaser.GameObjects.Image[] = [];
@@ -485,7 +496,7 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
       playHeroAnimation: this.playHeroAnimation.bind(this),
       shakeHero: this.shakeHero.bind(this),
       shakePlayerBar: this.shakePlayerBar.bind(this),
-      playMonsterSkillEffect: (onComplete) => this.playMonsterSkillEffect('lantern_long_mieu_lien_kich', {
+      playMonsterSkillEffect: (onComplete) => this.playMonsterSkillEffect('skill_long_mieu_lien_kich', {
         target: this.combatPoint('player'),
         onComplete,
       }),
@@ -740,6 +751,18 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
       })
       .setResolution(this.renderQuality)
       .setOrigin(1, 0.5)
+      .setDepth(12);
+    this.playerEffectsLabel = this.add
+      .text(this.layout.playerStatusBounds.left + 2, this.layout.statusBadgeY + 14, '', {
+        color: '#ffe0c2',
+        fontFamily: 'sans-serif',
+        fontSize: '8px',
+        fontStyle: 'bold',
+        stroke: '#171426',
+        strokeThickness: 3,
+      })
+      .setResolution(this.renderQuality)
+      .setOrigin(0, 0.5)
       .setDepth(12);
     const statusRight = this.layout.skillButtons[1].x + this.layout.skillButtonSize / 2;
     const statusWidth = this.layout.skillButtonSize * 2 + this.layout.skillButtonGap;
@@ -1308,7 +1331,7 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
     this.renderBars(state);
     this.syncMonsterEffectsFromState(state);
     this.telegraphLabel?.setText(this.formatMonsterPreparationText(state.telegraph));
-    this.turnLabel?.setText(`${state.turn}/${state.maxTurns}`);
+    this.turnLabel?.setText(state.maxTurns > 0 ? `${state.turn}/${state.maxTurns}` : `Lượt ${state.turn}`);
     this.updateSkillButtons(state);
     if (state.phase !== 'PLAYER_READY') {
       this.stopTurnTimer();
@@ -1388,7 +1411,82 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
     if (monster.defenseReductionTurns > 0) {
       this.setDisplayedMonsterEffect('defense', `🛡-${Math.round(monster.defenseReductionPercent * 100)}% ·${monster.defenseReductionTurns}`);
     }
+    if (monster.dodgeBonusCharges > 0 || monster.dodgeBonusTurns > 0) {
+      this.setDisplayedMonsterDodge(monsterDodgeChance(monster), monster.dodgeBonusCharges, monster.dodgeBonusTurns);
+    }
+    if (monster.healTurns > 0) this.setDisplayedMonsterEffect('heal', `✚ Hồi ·${monster.healTurns}`);
+    if (monster.slowedTurns > 0) this.setDisplayedMonsterEffect('slowed', `🐢 Làm chậm ·${monster.slowedTurns}`);
     this.refreshMonsterEffects();
+
+    const player = state.player;
+    this.displayedPlayerEffects.clear();
+    this.displayedPlayerControl = undefined;
+    if (player.burningTurns > 0) this.displayedPlayerEffects.set('burn', `🔥 Thiêu đốt ·${player.burningTurns}`);
+    if (player.healReductionTurns > 0) {
+      this.displayedPlayerEffects.set('antiHeal', `💔 -${Math.round(player.healReduction * 100)}% hồi ·${player.healReductionTurns}`);
+    }
+    if (state.playerSkipTurns > 0) this.setDisplayedPlayerControl(state.playerSkipEffect ?? 'stun', state.playerSkipTurns);
+    this.refreshPlayerEffects();
+  }
+
+  /** Buff né: hiện tỉ lệ né thực + số lần/lượt còn lại, kèm vòng sáng nhấp nháy quanh quái. */
+  private setDisplayedMonsterDodge(chance: number, charges: number, turns: number): void {
+    if (charges <= 0 && turns <= 0) {
+      this.displayedMonsterEffects.delete('dodge');
+    } else {
+      const remaining = charges > 0 ? `${charges} lần` : `${turns} lượt`;
+      this.displayedMonsterEffects.set('dodge', `💨 Né ${Math.round(chance * 100)}% ·${remaining}`);
+    }
+    this.refreshMonsterEffects();
+  }
+
+  private syncMonsterDodgeAura(active: boolean): void {
+    if (!active) {
+      this.monsterDodgeAuraTween?.stop();
+      this.monsterDodgeAuraTween = undefined;
+      this.monsterDodgeAura?.setVisible(false);
+      return;
+    }
+    if (!this.monsterDodgeAura && this.monsterVisual) {
+      this.monsterDodgeAura = this.add.ellipse(0, -36, 118, 132, 0xbfe9ff, 0.22).setStrokeStyle(2, 0xe6f7ff, 0.7);
+      this.monsterVisual.addAt(this.monsterDodgeAura, 0);
+    }
+    if (!this.monsterDodgeAura) return;
+    this.monsterDodgeAura.setVisible(true);
+    if (this.monsterDodgeAuraTween || this.reducedMotion) return;
+    this.monsterDodgeAuraTween = this.tweens.add({
+      targets: this.monsterDodgeAura,
+      alpha: { from: 0.35, to: 1 },
+      scale: { from: 0.94, to: 1.06 },
+      yoyo: true,
+      repeat: -1,
+      duration: 520,
+      ease: 'Sine.easeInOut',
+    });
+  }
+
+  private setDisplayedPlayerControl(effect: 'freeze' | 'stun' | undefined, turns: number): void {
+    if (!effect || turns <= 0) {
+      this.displayedPlayerControl = undefined;
+      this.displayedPlayerEffects.delete('control');
+    } else {
+      this.displayedPlayerControl = effect;
+      this.displayedPlayerEffects.set('control', `${effect === 'freeze' ? '❄ Đóng băng' : '💫 Choáng'} ·${turns}`);
+    }
+    this.refreshPlayerEffects();
+  }
+
+  private refreshPlayerEffects(): void {
+    this.playerEffectsLabel?.setText([...this.displayedPlayerEffects.values()].join('  '));
+    this.applyHeroControlTint();
+  }
+
+  /** Nhân vật bị đóng băng giữ tint xanh băng; flashHero khôi phục tint này sau mỗi lần nháy. */
+  private applyHeroControlTint(): void {
+    if (!this.heroSprite) return;
+    if (this.displayedPlayerControl === 'freeze') this.heroSprite.setTint(0x9fdcff);
+    else if (this.displayedPlayerEffects.has('burn')) this.heroSprite.setTint(0xffc9a8);
+    else this.heroSprite.clearTint();
   }
 
   private setDisplayedMonsterControl(effect: 'freeze' | 'stun' | undefined, turns: number): void {
@@ -1402,7 +1500,7 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
     this.refreshMonsterEffects();
   }
 
-  private setDisplayedMonsterEffect(key: 'vulnerable' | 'defense', text: string): void {
+  private setDisplayedMonsterEffect(key: 'vulnerable' | 'defense' | 'heal' | 'slowed', text: string): void {
     this.displayedMonsterEffects.set(key, text);
     this.refreshMonsterEffects();
   }
@@ -1410,6 +1508,7 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
   private refreshMonsterEffects(): void {
     this.monsterEffectsLabel?.setText([...this.displayedMonsterEffects.values()].join('  '));
     this.applyMonsterControlTint();
+    this.syncMonsterDodgeAura(this.displayedMonsterEffects.has('dodge'));
   }
 
   /** Quái bị đóng băng giữ tint xanh băng; flashMonster khôi phục tint này sau mỗi lần nháy. */
@@ -1592,21 +1691,7 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
     const preview = previewPlayerSkill(state, skillId);
     const percent = (ratio: number) => Math.round(ratio * 100);
     const skillEnergyCost = skillConfig.energyCost;
-    const effects: string[] = [];
-    if (skillConfig.energySteal) effects.push(`Hút ${skillConfig.energySteal} năng lượng`);
-    if (skillConfig.poisonAtkFactor) effects.push(`Độc ${percent(skillConfig.poisonAtkFactor)}% ATK/lượt · ${skillConfig.poisonTurns} lượt`);
-    if (skillConfig.controlEffect) {
-      const controlLabel = skillConfig.controlEffect === 'freeze' ? 'Đóng băng' : 'Choáng';
-      const chance = skillConfig.controlChance ?? 0;
-      effects.push(`${controlLabel} ${skillConfig.controlTurns ?? 1} lượt${chance < 1 ? ` · ${percent(chance)}%` : ''}`);
-    }
-    if (skillConfig.damageTakenBonus) effects.push(`Thiêu đốt: nhận thêm ${percent(skillConfig.damageTakenBonus)}% sát thương · ${skillConfig.damageTakenBonusTurns} lượt`);
-    if (skillConfig.defenseReduction) effects.push(`Giảm DEF ${percent(skillConfig.defenseReduction)}% · ${skillConfig.defenseReductionTurns} lượt`);
-    if (skillConfig.selfShieldDefenseMultiplier) {
-      const shield = Math.round(state.player.stats.defense * skillConfig.selfShieldDefenseMultiplier);
-      effects.push(`Khiên ${shield} (${percent(skillConfig.selfShieldDefenseMultiplier)}% DEF) · giảm nhận ${percent(skillConfig.selfDamageReduction ?? 0)}% · ${skillConfig.selfDamageReductionTurns ?? 0} lượt`);
-      if (skillConfig.reflectDamageRatio) effects.push(`Phản ${percent(skillConfig.reflectDamageRatio)}% · miễn khống chế`);
-    }
+    const effects = describePlayerSkillEffects(skillConfig, state.player.stats.defense, { includeDamage: false });
     let damageLine: string;
     if (skillConfig.fixedDamage !== undefined) {
       damageLine = `Trừ ${skillConfig.fixedDamage} khiên (hết khiên → HP)`;
@@ -2008,8 +2093,11 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
       case 'GEMS_CLEARED': {
         const counts = event.payload['gemCounts'];
         const clearedCoords = this.coordsFromPayload(event.payload['coordinates']);
-        this.animateGemsCleared(clearedCoords);
+        // KIM: ngọc vàng bị phá thêm cũng nổ cùng đợt để người chơi thấy nội tại kích hoạt.
+        const bonusCoords = this.coordsFromPayload(event.payload['bonusCoordinates']);
+        this.animateGemsCleared([...clearedCoords, ...bonusCoords]);
         this.spawnMatchBurst(clearedCoords);
+        if (bonusCoords.length > 0) this.spawnMatchBurst(bonusCoords);
         if (typeof counts === 'object' && counts !== null) {
           const gemCounts = counts as Record<string, unknown>;
           const [gem, count] = Object.entries(gemCounts)[0] ?? [];
@@ -2049,8 +2137,10 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
         break;
       case 'DAMAGE_APPLIED':
         if (event.payload['target'] === 'player') {
+          const playerShieldAbsorbed = this.safeNumber(Number(event.payload['shieldAbsorbed'] ?? 0));
           this.displayedPlayerHp = Math.max(0, (this.displayedPlayerHp ?? this.controller.currentState.player.currentHp) - amount);
-          this.statusLabel?.setText(`-${amount} HP`);
+          this.displayedShield = Math.max(0, (this.displayedShield ?? this.controller.currentState.player.shield) - playerShieldAbsorbed);
+          this.statusLabel?.setText(playerShieldAbsorbed > 0 ? `-${amount} HP · khiên chặn ${playerShieldAbsorbed}` : `-${amount} HP`);
           this.floatNumber(`-${amount} HP`, 80, 59, '#ff9aa4');
           this.shakePlayerBar();
         } else if (event.payload['target'] === 'monster') {
@@ -2088,6 +2178,9 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
             0,
             (this.displayedMonsterShield ?? this.controller.currentState.monster.shield) - monsterShieldAbsorbed,
           );
+          if (event.payload['pierceShield'] === true && (this.displayedMonsterShield ?? 0) > 0) {
+            this.floatNumber('🔥 XUYÊN KHIÊN', this.monsterPosition.x, 120, '#ffb36b', 700);
+          }
           this.displayedMonsterHp = Math.max(0, (this.displayedMonsterHp ?? this.controller.currentState.monster.currentHp) - amount);
           this.showComboLabel(matchCount);
           this.statusLabel?.setText(
@@ -2107,12 +2200,34 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
         this.refreshDisplayedBars();
         break;
       case 'BURNING_APPLIED':
+        if (event.payload['target'] === 'player') {
+          const turns = this.safeNumber(Number(event.payload['turns'] ?? 0));
+          this.statusLabel?.setText(`🔥 Nhân vật bị Thiêu đốt · ${turns} lượt (-${amount} HP/lượt)`);
+          this.floatNumber('🔥 THIÊU ĐỐT', 80, 104, '#ff9a4d', 800);
+          this.displayedPlayerEffects.set('burn', `🔥 Thiêu đốt ·${turns}`);
+          this.refreshPlayerEffects();
+          this.playHeroEffectAnimation('burning');
+          break;
+        }
         if (event.payload['target'] !== 'monster') break;
         this.statusLabel?.setText(`🔥 ${this.controller.currentState.monster.name} bị Thiêu đốt · ${Number(event.payload['turns'] ?? 0)} lượt`);
         this.floatNumber(`🔥 THIÊU ĐỐT`, this.monsterPosition.x, 104, '#ff9a4d', 700);
         this.flashMonster(0xff7a45);
         break;
       case 'BURNING_TICKED':
+        if (event.payload['target'] === 'player') {
+          const remaining = this.safeNumber(Number(event.payload['remainingTurns'] ?? 0));
+          this.displayedPlayerHp = Math.max(0, (this.displayedPlayerHp ?? this.controller.currentState.player.currentHp) - amount);
+          this.statusLabel?.setText(`🔥 Thiêu đốt gây ${amount} sát thương lên nhân vật`);
+          this.floatNumber(`🔥 -${amount} HP`, 80, 59, '#ff9a4d');
+          if (remaining > 0) this.displayedPlayerEffects.set('burn', `🔥 Thiêu đốt ·${remaining}`);
+          else this.displayedPlayerEffects.delete('burn');
+          this.refreshPlayerEffects();
+          this.flashHero(0xff7a45);
+          this.shakePlayerBar();
+          this.refreshDisplayedBars();
+          break;
+        }
         if (event.payload['target'] !== 'monster') break;
         this.displayedMonsterHp = Math.max(0, (this.displayedMonsterHp ?? this.controller.currentState.monster.currentHp) - amount);
         this.statusLabel?.setText(`🔥 Thiêu đốt gây ${amount} sát thương lên quái`);
@@ -2128,6 +2243,23 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
         this.setDisplayedMonsterEffect('defense', `🛡-${Math.round(Number(event.payload['amount'] ?? 0) * 100)}% ·${Number(event.payload['turns'] ?? 0)}`);
         break;
       case 'CONTROL_APPLIED': {
+        if (event.payload['target'] === 'player') {
+          const effect = event.payload['effect'] === 'freeze' ? 'freeze' : 'stun';
+          const label = effect === 'freeze' ? '❄ ĐÓNG BĂNG' : '💫 CHOÁNG';
+          if (event.payload['applied'] === true) {
+            this.statusLabel?.setText(`${label} nhân vật · ${this.safeNumber(Number(event.payload['turns'] ?? 1))} lượt`);
+            this.floatNumber(label, 80, 104, effect === 'freeze' ? '#9fdcff' : '#fff1a8', 800);
+            this.setDisplayedPlayerControl(effect, this.safeNumber(Number(event.payload['turns'] ?? 1)));
+            if (effect === 'freeze') this.playHeroEffectAnimation('frozen');
+          } else if (event.payload['resisted'] === true) {
+            this.statusLabel?.setText('Miễn khống chế');
+            this.floatNumber('MIỄN KHỐNG CHẾ', 80, 104, '#e3c48a', 700);
+          } else {
+            this.statusLabel?.setText(effect === 'freeze' ? 'Thoát đóng băng' : 'Thoát choáng');
+            this.floatNumber(effect === 'freeze' ? 'THOÁT BĂNG' : 'THOÁT CHOÁNG', 80, 104, '#d8f4ff', 600);
+          }
+          break;
+        }
         if (event.payload['target'] !== 'monster') break;
         const effect = event.payload['effect'] === 'freeze' ? 'freeze' : 'stun';
         const turns = this.safeNumber(Number(event.payload['turns'] ?? 1));
@@ -2180,8 +2312,16 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
           this.spawnHeroSwordProjectile(playDodge);
         }
         this.showComboLabel(matchCount);
-        this.statusLabel?.setText('Sương Hồn né đòn');
-        this.floatNumber(`${matchLabel}NÉ!`, this.monsterPosition.x, 104, '#d8f4ff');
+        const dodgeChance = Math.round(this.safeNumber(Number(event.payload['chance'] ?? 0)) * 100);
+        const charges = this.safeNumber(Number(event.payload['remainingCharges'] ?? 0));
+        const turns = this.safeNumber(Number(event.payload['remainingTurns'] ?? 0));
+        const remainingLabel = charges > 0 ? ` (buff còn ${charges} lần)` : turns > 0 ? ` (buff còn ${turns} lượt)` : '';
+        this.statusLabel?.setText(`💨 ${this.controller.currentState.monster.name} né đòn${remainingLabel}`);
+        this.floatNumber(`💨 ${matchLabel}NÉ! ${dodgeChance}%`, this.monsterPosition.x, 100, '#d8f4ff', 900);
+        this.playMonsterDodgeTween();
+        if (event.payload['source'] === 'monster_dodge_buff') {
+          this.setDisplayedMonsterDodge(this.safeNumber(Number(event.payload['chance'] ?? 0)), charges, turns);
+        }
         break;
       }
       case 'HEAL_APPLIED':
@@ -2254,25 +2394,92 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
         break;
       case 'MONSTER_SKILL_USED': {
         const skillId = String(event.payload['skillId'] ?? '');
-        if (skillId !== 'lantern_cat_long_mieu_lien_kich') break;
         const skillActionId = String(event.payload['actionId'] ?? '');
         if (skillActionId && skillActionId === this.lastLongMieuVisualId) break;
         this.lastLongMieuVisualId = skillActionId;
-        this.displayedMonsterEnergy = this.safeNumber(Number(event.payload['energyRestored'] ?? 10));
-        this.displayedEnergy = this.safeNumber(Number(event.payload['playerEnergyAfter'] ?? this.displayedEnergy ?? 0));
+        const skillName = String(event.payload['name'] ?? 'Tuyệt kỹ');
+        const vfxId = String(event.payload['vfxId'] ?? '');
+        this.displayedMonsterEnergy = this.safeNumber(Number(event.payload['energyAfter'] ?? 0));
         this.countdownLabel?.setColor('#ff7a80').setText('Tuyệt kỹ');
-        this.telegraphLabel?.setText('⚡ Long Miêu Liên Kích');
-        this.statusLabel?.setText('Miêu Đèn ra skill');
+        this.telegraphLabel?.setText(`⚡ ${skillName}`);
+        this.statusLabel?.setText(`${this.controller.currentState.monster.name} dùng ${skillName}`);
+        this.floatNumber(`⚡ ${skillName.toUpperCase()}`, this.monsterPosition.x, 96, '#ffd27a', 900);
         this.playMonsterAnimation('specialAttack');
         this.flashMonster(0xd8c2ff);
-        this.lanternCatVfx?.playLongMieuLienKich();
+        if (skillId === 'lantern_cat_long_mieu_lien_kich') {
+          this.lanternCatVfx?.playLongMieuLienKich();
+        } else if (isMonsterSkillEffectId(vfxId)) {
+          const towardPlayer = event.payload['target'] === 'player';
+          this.playMonsterSkillEffect(vfxId, {
+            target: towardPlayer ? this.combatPoint('player') : this.combatPoint('monster'),
+            travel: towardPlayer,
+          });
+        }
         this.refreshDisplayedBars();
+        break;
+      }
+      case 'PLAYER_DODGED': {
+        const chance = Math.round(this.safeNumber(Number(event.payload['chance'] ?? 0)) * 1000) / 10;
+        this.statusLabel?.setText(`💨 Nhân vật né đòn (${chance}%)`);
+        this.floatNumber(`💨 NÉ! ${chance}%`, 80, 100, '#d8f4ff', 900);
+        this.playMonsterAnimation('attack');
+        this.playHeroEffectAnimation('dodge');
+        break;
+      }
+      case 'MONSTER_ACTION_DELAYED':
+        this.statusLabel?.setText(String(event.payload['label'] ?? 'Quái bị hoãn đòn'));
+        this.floatNumber('🐢 HOÃN ĐÒN', this.monsterPosition.x, 104, '#9fdcff', 800);
+        this.setDisplayedMonsterEffect('slowed', '🐢 Làm chậm');
+        break;
+      case 'PASSIVE_TRIGGERED': {
+        const passiveId = String(event.payload['passiveId'] ?? '');
+        const label = String(event.payload['label'] ?? '');
+        if (passiveId === 'metal_yellow_break') {
+          this.statusLabel?.setText(`⚡ ${label}`);
+          this.floatNumber(`⚡ +${amount} NỘ`, 80, 96, '#f3c64f', 800);
+        } else if (passiveId === 'water_shield_delay') {
+          this.statusLabel?.setText(`💧 ${label}`);
+          this.floatNumber('💧 KHIÊN ×1.5', 80, 96, '#9dceff', 800);
+        } else if (passiveId === 'earth_energy_shield' || passiveId === 'wood_overheal_shield') {
+          this.statusLabel?.setText(label);
+        }
+        break;
+      }
+      case 'MONSTER_BUFF_APPLIED': {
+        if (event.payload['buff'] !== 'dodge') break;
+        const chance = this.safeNumber(Number(event.payload['dodgeChance'] ?? 0));
+        const charges = this.safeNumber(Number(event.payload['charges'] ?? 0));
+        const turns = this.safeNumber(Number(event.payload['turns'] ?? 0));
+        this.statusLabel?.setText(`💨 ${this.controller.currentState.monster.name} tăng né tránh lên ${Math.round(chance * 100)}%`);
+        this.floatNumber(`💨 NÉ +${Math.round(Number(event.payload['amount'] ?? 0) * 100)}%`, this.monsterPosition.x, 112, '#d8f4ff', 800);
+        this.setDisplayedMonsterDodge(chance, charges, turns);
+        break;
+      }
+      case 'HEAL_REDUCTION_APPLIED': {
+        if (event.payload['target'] !== 'player') break;
+        const percent = Math.round(Number(event.payload['amount'] ?? 0) * 100);
+        const turns = this.safeNumber(Number(event.payload['turns'] ?? 0));
+        this.statusLabel?.setText(`💔 Nhân vật bị giảm ${percent}% hồi máu · ${turns} lượt`);
+        this.floatNumber(`💔 -${percent}% HỒI MÁU`, 80, 104, '#ff9ab8', 800);
+        this.playHeroEffectAnimation('antiHeal');
+        this.displayedPlayerEffects.set('antiHeal', `💔 -${percent}% hồi ·${turns}`);
+        this.refreshPlayerEffects();
         break;
       }
       case 'PLAYER_TURN_SKIPPED':
         this.setPlayerControlsEnabled(false);
+        if (event.payload['effect'] === 'freeze') {
+          this.countdownLabel?.setColor('#9fdcff').setText('Đóng băng · mất lượt');
+          this.statusLabel?.setText(String(event.payload['label'] ?? 'Nhân vật bị đóng băng — mất lượt'));
+          this.floatNumber('❄ MẤT LƯỢT', 80, 104, '#9fdcff', 800);
+          this.setDisplayedPlayerControl('freeze', 1);
+          this.playHeroEffectAnimation('frozen');
+          this.playHeroStatusSfx('stunned');
+          break;
+        }
         this.countdownLabel?.setColor('#d5aaff').setText('Choáng · mất lượt');
         this.statusLabel?.setText('Nhân vật bị choáng');
+        this.setDisplayedPlayerControl('stun', 1);
         this.playHeroAnimation('stunned');
         this.playHeroStatusSfx('stunned');
         this.playerStunIcon
@@ -2322,7 +2529,7 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
             }
             this.time.delayedCall(260, () => {
               if (this.controller.currentState.monster.id === 'mist_blob' && isNewMonsterAction) {
-                this.playMonsterSkillEffect('mist_suong_mu_xam_thuc', {
+                this.playMonsterSkillEffect('skill_suong_mu_xam_thuc', {
                   from: {
                     x: this.monsterVisual?.x ?? this.monsterPosition.x,
                     y: this.monsterVisual?.y ?? this.monsterPosition.y,
@@ -2530,6 +2737,24 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
     this.tweens.add({ targets: this.monsterVisual, scale: 1.12, yoyo: true, duration: 180 });
   }
 
+  /** Né rõ ràng: anim dodge (nếu có) + quái lướt ngang và mờ đi rồi trở lại. */
+  private playMonsterDodgeTween(): void {
+    this.playMonsterEffectAnimation('dodge');
+    const visual = this.monsterVisual;
+    if (!visual) return;
+    // Container quái luôn đặt tại monsterPosition.x; các tween khác chỉ yoyo nên reset về đây an toàn.
+    const baseX = this.monsterPosition.x;
+    this.tweens.add({
+      targets: visual,
+      x: this.reducedMotion ? baseX : baseX + 22,
+      alpha: 0.35,
+      yoyo: true,
+      duration: 160,
+      ease: 'Sine.easeOut',
+      onComplete: () => visual.setPosition(baseX, visual.y).setAlpha(1),
+    });
+  }
+
   private flashMonster(color: number): void {
     if (this.monsterArt) {
       this.monsterArt.setTint(color);
@@ -2653,14 +2878,19 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
     });
   }
 
-  private playHeroEffectAnimation(key: 'heal' | 'antiHeal' | 'dodge' | 'poisonCast'): void {
+  private playHeroEffectAnimation(key: 'heal' | 'antiHeal' | 'dodge' | 'poisonCast' | 'frozen' | 'burning'): void {
     const sprite = this.heroSprite;
     const animationKey = key === 'antiHeal'
       ? this.heroSpriteKeys.antiHeal
       : key === 'poisonCast'
         ? this.heroSpriteKeys.poisonCast
         : this.heroSpriteKeys[key];
-    if (!sprite || !animationKey || !this.anims.exists(animationKey)) return;
+    if (!sprite || !animationKey || !this.anims.exists(animationKey)) {
+      // Bộ sprite nữ chưa có frame frozen/burning: dùng nháy màu để trạng thái vẫn rõ.
+      if (key === 'frozen') this.flashHero(0x9fdcff);
+      if (key === 'burning') this.flashHero(0xff7a45);
+      return;
+    }
 
     this.heroSkillAnimationToken += 1;
     this.heroSkillAnimationKey = undefined;
@@ -3197,7 +3427,7 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
   private flashHero(color: number): void {
     if (!this.heroSprite) return;
     this.heroSprite.setTint(color);
-    this.time.delayedCall(180, () => this.heroSprite?.clearTint());
+    this.time.delayedCall(180, () => this.applyHeroControlTint());
   }
 
   private monsterActionText(action: string): string {
@@ -3209,7 +3439,9 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
       telegraph: 'Báo đòn mạnh',
       long_mieu_lien_kich: 'Long Miêu Liên Kích',
     };
-    return `${this.controller.currentState.monster.name} · ${labels[action] ?? 'Hành động'}`;
+    const monster = this.controller.currentState.monster;
+    const skillName = action === 'skill' ? monsterSkillById(monster.id, monster.nextSkillId)?.name : undefined;
+    return `${monster.name} · ${skillName ?? labels[action] ?? 'Hành động'}`;
   }
 
   private gemAt(coord: Coord): string {
@@ -3420,6 +3652,8 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
   }
 
   private floatNumber(text: string, x: number, y: number, color: string, duration = 550): void {
+    // Số ≥ 4 chữ số hiển thị có dấu chấm ngăn nghìn (9.000) cho dễ đọc ở thang V6.
+    text = text.replace(/\d{4,}/g, (digits) => formatGameNumber(Number(digits)));
     const popup = this.add
       .text(x, y, text, { color, fontSize: '16px', fontStyle: 'bold' })
       .setResolution(this.renderQuality)
@@ -3510,6 +3744,16 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
       case 'DAMAGE_VULNERABILITY_APPLIED': return 420;
       case 'ENERGY_STOLEN': return 360;
       case 'DAMAGE_REFLECTED': return 420;
+      case 'MONSTER_BUFF_APPLIED': return 620;
+      case 'PLAYER_DODGED': return 700;
+      case 'MONSTER_ACTION_DELAYED': return 620;
+      case 'PASSIVE_TRIGGERED': {
+        const passiveId = String(event.payload['passiveId'] ?? '');
+        return passiveId === 'metal_yellow_break' || passiveId === 'water_shield_delay' ? 520 : 80;
+      }
+      case 'HEAL_REDUCTION_APPLIED': return 560;
+      case 'BURNING_APPLIED': return event.payload['target'] === 'player' ? 620 : 80;
+      case 'BURNING_TICKED': return 520;
       case 'MONSTER_GUARDED': return 260;
       case 'SKILL_USED': return this.reducedMotion ? 120 : 800;
       case 'MONSTER_SKILL_USED': return this.reducedMotion ? 650 : 1150;

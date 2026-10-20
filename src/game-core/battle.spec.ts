@@ -27,9 +27,14 @@ function stateWithMatch(gem: GemType, overrides: Partial<BattleState> = {}, seed
     ...initial,
     ...overrides,
     board,
-    monster: { ...initial.monster, currentHp: 999, ...overrides.monster },
+    monster: { ...initial.monster, currentHp: initial.monster.maxHp, ...overrides.monster },
     player: { ...initial.player, ...overrides.player },
   };
+}
+
+/** Tắt né theo AGI để test cô lập đòn đánh của quái. */
+function noDodge(player: BattleState['player']): BattleState['player'] {
+  return { ...player, stats: { ...player.stats, agi: 0, dodgeChance: 0 } };
 }
 
 function resolveGemMatch(gem: GemType, overrides: Partial<BattleState> = {}, seed = 99) {
@@ -43,23 +48,35 @@ function resolveGemMatch(gem: GemType, overrides: Partial<BattleState> = {}, see
 }
 
 describe('M1 battle core', () => {
-  it('computes the level-one baseline stats', () => {
+  it('computes the level-one baseline stats per element (V6)', () => {
     const stats = computeDerivedStats({ str: 5, vit: 5, agi: 5, int: 5 });
 
-    expect(stats.maxHp).toBe(300);
-    expect(stats.atk).toBe(25);
-    expect(stats.defense).toBe(10);
+    expect(stats.maxHp).toBe(9000);
+    expect(stats.atk).toBe(1250);
+    expect(stats.defense).toBe(400);
+    expect(stats.agi).toBe(180);
+    expect(stats.dodgeChance).toBeCloseTo(180 / 2080);
     expect(stats.skillPower).toBe(20);
-    expect(stats.agiBonus).toBe(0.025);
+    expect(computeDerivedStats({ str: 5, vit: 5, agi: 5, int: 5 }, {}, 'earth').maxHp).toBe(13000);
   });
 
-  it('uses the balanced Sương Hồn combat stats', () => {
+  it('adds attribute points above level-one start and scaled equipment', () => {
+    const stats = computeDerivedStats({ str: 7, vit: 6, agi: 8, int: 5 }, { atk: 5, agi: 2 }, 'fire');
+
+    expect(stats.atk).toBe(1300 + 2 * 25 + 5 * 25);
+    expect(stats.maxHp).toBe(8500 + 200);
+    expect(stats.defense).toBe(350 + 10);
+    expect(stats.agi).toBe(220 + 3 * 5 + 2 * 25);
+  });
+
+  it('uses the V6 Sương Hồn combat stats', () => {
     const monster = createBattleState(100).monster;
 
-    expect(monster.maxHp).toBe(270);
-    expect(monster.attack).toBe(55);
-    expect(monster.defense).toBe(0);
-    expect(monster.shieldCap).toBe(50);
+    expect(monster.maxHp).toBe(10500);
+    expect(monster.attack).toBe(950);
+    expect(monster.defense).toBe(600);
+    expect(monster.agi).toBe(150);
+    expect(monster.shieldCap).toBe(1500);
   });
 
   it('requires full energy before using Đèn Phá Mây', () => {
@@ -87,7 +104,7 @@ describe('M1 battle core', () => {
     const state: BattleState = {
       ...createBattleState(11),
       player: { ...createBattleState(11).player, energy: 100 },
-      monster: { ...createBattleState(11).monster, currentHp: 100 },
+      monster: { ...createBattleState(11).monster, currentHp: 1 },
     };
     const result = resolveBattleAction(state, {
       kind: 'skill',
@@ -123,8 +140,8 @@ describe('M1 battle core', () => {
     const move = findLegalMoves(initial.board)[0];
     const state: BattleState = {
       ...initial,
-      player: { ...initial.player, shield: 20 },
-      monster: { ...initial.monster, currentHp: 999 },
+      player: { ...noDodge(initial.player), shield: 600 },
+      monster: { ...initial.monster, currentHp: 9999 },
     };
     const result = resolveBattleAction(state, {
       kind: 'swap',
@@ -144,8 +161,8 @@ describe('M1 battle core', () => {
     const initial = createBattleState(122);
     const state: BattleState = {
       ...initial,
-      player: { ...initial.player, shield: 0, currentHp: 300 },
-      monster: { ...initial.monster, currentHp: 999 },
+      player: { ...noDodge(initial.player), shield: 0, currentHp: 9000 },
+      monster: { ...initial.monster, currentHp: 9999 },
     };
     const result = resolveBattleAction(state, {
       kind: 'timeout',
@@ -156,8 +173,8 @@ describe('M1 battle core', () => {
 
     expect(attack?.payload['target']).toBe('player');
     expect(attack?.payload['hpDamage']).toBe(amount);
-    expect(result.nextState.player.currentHp).toBe(300 - amount);
-    expect(result.nextState.monster.currentHp).toBe(999);
+    expect(result.nextState.player.currentHp).toBe(9000 - amount);
+    expect(result.nextState.monster.currentHp).toBe(9999);
   });
 
   it('keeps monster HP unchanged during the monster response to a player swap', () => {
@@ -165,8 +182,8 @@ describe('M1 battle core', () => {
     const move = findLegalMoves(initial.board)[0];
     const state: BattleState = {
       ...initial,
-      player: { ...initial.player, shield: 0, currentHp: 300 },
-      monster: { ...initial.monster, currentHp: 999 },
+      player: { ...noDodge(initial.player), shield: 0, currentHp: 9000 },
+      monster: { ...initial.monster, currentHp: 9999 },
     };
 
     const result = resolveBattleAction(state, {
@@ -184,12 +201,13 @@ describe('M1 battle core', () => {
 
     expect(attack?.payload['actor']).toBe('monster');
     expect(attack?.payload['target']).toBe('player');
-    expect(result.nextState.player.currentHp).toBe(300 - Number(attack?.payload['hpDamage']));
-    expect(result.nextState.monster.currentHp).toBe(999 - playerDamage - poisonDamage);
+    expect(result.nextState.player.currentHp).toBe(9000 - Number(attack?.payload['hpDamage']));
+    expect(result.nextState.monster.currentHp).toBe(9999 - playerDamage - poisonDamage);
   });
 
   it('lets Sương Hồn choose a deterministic legal swap and attacks by action, not by attack gems', () => {
-    const state = createBattleState(120);
+    const initial = createBattleState(120);
+    const state = { ...initial, player: noDodge(initial.player) };
     const result = resolveBattleAction(state, {
       kind: 'timeout',
       actionId: 'timeout-monster-move',
@@ -211,8 +229,9 @@ describe('M1 battle core', () => {
     expect(result.events.some((event) => event.type === 'MONSTER_ACTION_SKIPPED')).toBe(false);
     expect(selected?.payload['actor']).toBe('monster');
     expect(result.events.find((event) => event.type === 'MONSTER_ATTACKED')?.payload['actor']).toBe('monster');
-    expect(result.events.find((event) => event.type === 'MONSTER_ATTACKED')?.payload['baseDamage']).toBe(55);
-    expect(result.events.find((event) => event.type === 'MONSTER_ATTACKED')?.payload['amount']).toBe(49);
+    expect(result.events.find((event) => event.type === 'MONSTER_ATTACKED')?.payload['baseDamage']).toBe(950);
+    // 950 × (1 − 400 / (400 + 1900)) = 784.8
+    expect(result.events.find((event) => event.type === 'MONSTER_ATTACKED')?.payload['amount']).toBe(785);
     expect(result.events.find((event) => event.type === 'ENERGY_GAINED' && event.payload['target'] === 'player')?.payload['amount']).toBe(10);
     expect(result.events.find((event) => event.type === 'ENERGY_GAINED' && event.payload['target'] === 'monster')?.payload['amount']).toBe(15);
     expect(result.events.find((event) => event.type === 'GEMS_CLEARED')?.payload['actor']).toBe('monster');
@@ -239,8 +258,8 @@ describe('M1 battle core', () => {
     expect(results[2].nextState.monster.nextAction).toBe('poison');
   });
 
-  it('lets Sương Hồn deterministically dodge some normal attack matches', () => {
-    const outcomes = Array.from({ length: 100 }, (_, index) => resolveGemMatch('attack', {}, index + 1));
+  it('lets Sương Hồn deterministically dodge some normal attack matches (AGI 150 → 7.3%)', () => {
+    const outcomes = Array.from({ length: 200 }, (_, index) => resolveGemMatch('attack', {}, index + 1));
     const dodged = outcomes.filter((result) => result.events.some((event) => event.type === 'MONSTER_DODGED'));
     const hit = outcomes.filter((result) => result.events.some((event) =>
       event.type === 'DAMAGE_APPLIED' && event.payload['target'] === 'monster',
@@ -265,11 +284,11 @@ describe('M1 battle core', () => {
     expect(attack.events.find((event) => event.type === 'DAMAGE_APPLIED')?.payload['actor']).toBe('player');
 
     const heal = resolveGemMatch('heal', {
-      player: { ...createBattleState(99).player, currentHp: 250 },
+      player: { ...createBattleState(99).player, currentHp: 5000 },
       monster: { ...createBattleState(99).monster, nextAction: 'guard' },
     });
     expect(heal.events.some((event) => event.type === 'HEAL_APPLIED')).toBe(true);
-    expect(heal.nextState.player.currentHp).toBeGreaterThan(250);
+    expect(heal.nextState.player.currentHp).toBeGreaterThan(5000);
 
     const fullHeal = resolveGemMatch('heal');
     const healEvent = fullHeal.events.find((event) => event.type === 'HEAL_APPLIED');
@@ -293,8 +312,8 @@ describe('M1 battle core', () => {
     const poisoned = resolveBattleAction(
       {
         ...initial,
-        player: { ...initial.player, currentHp: 250 },
-        monster: { ...initial.monster, nextAction: 'poison', actionCount: 1, currentHp: 999 },
+        player: { ...initial.player, currentHp: 8000 },
+        monster: { ...initial.monster, nextAction: 'poison', actionCount: 1, currentHp: 9999 },
       },
       { kind: 'timeout', actionId: 'monster-poison-1' },
     );
@@ -337,14 +356,27 @@ describe('M1 battle core', () => {
     expect(result.events.find((event) => event.type === 'MONSTER_ATTACKED')?.payload['lethal']).toBe(true);
   });
 
-  it('defeats the player when the turn limit is reached', () => {
-    const result = resolveGemMatch('shield', {
-      turn: DEFAULT_BATTLE_CONFIG.maxTurns - 1,
-      player: { ...createBattleState(99).player, currentHp: 300 },
-    });
+  it('defeats the player when a configured turn limit is reached', () => {
+    const state = stateWithMatch('shield', { turn: 23, player: { ...createBattleState(99).player, currentHp: 9000 } });
+    const result = resolveBattleAction(
+      state,
+      { kind: 'swap', from: { row: 0, col: 0 }, to: { row: 0, col: 1 }, actionId: 'turn-limit' },
+      { ...DEFAULT_BATTLE_CONFIG, maxTurns: 24 },
+    );
 
     expect(result.nextState.phase).toBe('DEFEAT');
     expect(result.nextState.terminalReason).toBe('turn_limit');
+  });
+
+  it('has no turn limit by default (combat.json maxTurns = 0)', () => {
+    expect(DEFAULT_BATTLE_CONFIG.maxTurns).toBe(0);
+    const result = resolveGemMatch('shield', {
+      turn: 120,
+      player: { ...createBattleState(99).player, currentHp: 9000 },
+    });
+
+    expect(result.nextState.phase).toBe('PLAYER_READY');
+    expect(result.nextState.terminalReason).toBeUndefined();
   });
 
   it('abandons a ready battle without accepting more actions', () => {

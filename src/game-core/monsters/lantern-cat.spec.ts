@@ -5,14 +5,20 @@ import {
   chooseLanternCatAction,
   resolveLanternCatTurn,
 } from './lantern-cat';
-import type { GameEvent } from '../types';
+import type { BattleState, GameEvent } from '../types';
+
+/** Tắt né theo AGI để test cô lập đòn đánh của quái. */
+function noDodge(player: BattleState['player']): BattleState['player'] {
+  return { ...player, stats: { ...player.stats, agi: 0, dodgeChance: 0 } };
+}
 
 describe('Miêu Đèn behavior', () => {
   it('uses the updated attack/defense stats and prioritizes recovery resources', () => {
     const monster = createBattleState(20, 'lantern_cat').monster;
 
-    expect(monster.attack).toBe(40);
-    expect(monster.defense).toBe(10);
+    expect(monster.attack).toBe(1350);
+    expect(monster.defense).toBe(320);
+    expect(monster.agi).toBe(300);
     expect(monster.tactics.heal).toBe(10);
     expect(monster.tactics.energy).toBe(10);
     expect(monster.tactics.shield).toBe(0);
@@ -53,7 +59,7 @@ describe('Miêu Đèn behavior', () => {
 
     expect(result.events.some((event) => event.type === 'MONSTER_GUARDED')).toBe(true);
     expect(result.events.some((event) => event.type === 'SHIELD_GAINED')).toBe(false);
-    expect(result.state.monster.defense).toBe(initial.monster.baseDefense + 12);
+    expect(result.state.monster.defense).toBe(Math.round(initial.monster.baseDefense * 1.2)); // guard +20% DEF
   });
 
   it('applies poison as Miêu Đèn action and only attacks when attack gems exist', () => {
@@ -89,6 +95,7 @@ describe('Miêu Đèn behavior', () => {
     const state = {
       ...initial,
       phase: 'MONSTER_TURN' as const,
+      player: noDodge(initial.player),
       monster: { ...initial.monster, nextAction: 'energy' as const },
     };
     const result = resolveLanternCatTurn({
@@ -115,6 +122,7 @@ describe('Miêu Đèn behavior', () => {
     const state = {
       ...initial,
       phase: 'MONSTER_TURN' as const,
+      player: noDodge(initial.player),
       monster: { ...initial.monster, nextAction: 'heavy' as const },
     };
     const result = resolveLanternCatTurn({
@@ -135,44 +143,43 @@ describe('Miêu Đèn behavior', () => {
 
     const attack = result.events.find((event) => event.type === 'MONSTER_ATTACKED');
     expect(attack?.payload['action']).toBe('heavy');
-    expect(attack?.payload['baseDamage']).toBe(68);
+    expect(attack?.payload['baseDamage']).toBe(2295); // 1350 × 1.7
   });
 
-  it('prioritizes Long Miêu Liên Kích at full energy', () => {
-    expect(chooseLanternCatAction(2, 99, 100)).toBe('energy');
-    expect(chooseLanternCatAction(2, 100, 100)).toBe('long_mieu_lien_kich');
-  });
-
-  it('absorbs Long Miêu Liên Kích with shield, drains player energy and leaves ten energy', () => {
+  it('Long Miêu Liên Kích (80 nộ): 130% ATK qua khiên, Thiêu đốt 10% maxHP × 2 lượt, Choáng 1 lượt', () => {
     const initial = createBattleState(23, 'lantern_cat');
     const state = {
       ...initial,
-      phase: 'MONSTER_TURN' as const,
-      player: { ...initial.player, currentHp: 300, shield: 100, energy: 50 },
-      monster: { ...initial.monster, energy: 100, nextAction: 'long_mieu_lien_kich' as const },
+      player: { ...initial.player, currentHp: 9000, shield: 2000, energy: 50 },
+      monster: { ...initial.monster, energy: 80 },
     };
-    const result = resolveLanternCatTurn({
-      state,
-      actionId: 'lantern-long-mieu',
-      startSequence: 0,
-      attackGemCount: 0,
-      config: DEFAULT_BATTLE_CONFIG,
-      createEvent: (sequence, type, payload = {}): GameEvent => ({
-        eventId: `lantern-long-mieu:${sequence}`,
-        actionId: 'lantern-long-mieu',
-        battleId: state.battleId,
-        turn: state.turn,
-        type,
-        payload,
-      }),
-    });
+    const result = resolveBattleAction(state, { kind: 'timeout', actionId: 'lantern-long-mieu' });
+    const skillUsed = result.events.find((event) => event.type === 'MONSTER_SKILL_USED');
+    const hit = result.events.find((event) => event.type === 'DAMAGE_APPLIED' && event.payload['source'] === 'lantern_cat_long_mieu_lien_kich');
 
-    expect(result.events.some((event) => event.type === 'MONSTER_SKILL_USED')).toBe(true);
-    expect(result.state.player.currentHp).toBe(300);
-    expect(result.state.player.shield).toBe(70);
-    expect(result.state.player.energy).toBe(40);
-    expect(result.state.playerSkipTurns).toBe(1);
-    expect(result.state.monster.energy).toBe(10);
+    expect(skillUsed?.payload['energySpent']).toBe(80);
+    expect(hit?.payload['requested']).toBe(1450); // 1350 × 1.3 × (1 − 400 / 2300)
+    expect(hit?.payload['shieldAbsorbed']).toBe(1450);
+    expect(hit?.payload['amount']).toBe(0);
+    expect(result.events.some((event) => event.type === 'BURNING_APPLIED' && event.payload['target'] === 'player' && event.payload['amount'] === 900)).toBe(true);
+    const skipped = result.events.find((event) => event.type === 'PLAYER_TURN_SKIPPED');
+    expect(skipped?.payload['effect']).toBe('stun');
+    // Lượt bị choáng tự chuyển sang lượt quái kế tiếp → thiêu đốt tick lần 1.
+    expect(result.events.find((event) => event.type === 'BURNING_TICKED' && event.payload['target'] === 'player')?.payload['amount']).toBe(900);
+    expect(result.nextState.player.energy).toBeGreaterThanOrEqual(50); // không còn hút nộ
+  });
+
+  it('Long Miêu Liên Kích chưa dùng khi dưới 80 nộ', () => {
+    const initial = createBattleState(27, 'lantern_cat');
+    const result = resolveBattleAction(
+      { ...initial, monster: { ...initial.monster, energy: 40, currentHp: 999 } },
+      { kind: 'timeout', actionId: 'lantern-not-ready' },
+    );
+    const skillUsed = result.events.some((event) => event.type === 'MONSTER_SKILL_USED');
+    const energyAfterGems = result.events
+      .filter((event) => event.type === 'ENERGY_GAINED' && event.payload['target'] === 'monster' && event.payload['source'] === 'monster_energy_gems')
+      .reduce((total, event) => total + Number(event.payload['amount'] ?? 0), 40);
+    expect(skillUsed).toBe(energyAfterGems >= 80);
   });
 
   it('automatically skips one player turn after the skill', () => {

@@ -1,5 +1,12 @@
 import { clampPlayerState } from '../player';
-import { applyMonsterGuard, matchDamageMultiplier, reflectMonsterDamage, resolveIncomingMonsterDamage } from './monster-combat';
+import {
+  applyMonsterGuard,
+  matchDamageMultiplier,
+  monsterAttackIncoming,
+  reflectMonsterDamage,
+  resolveIncomingMonsterDamage,
+  rollPlayerDodge,
+} from './monster-combat';
 import { CHARACTER_DATA, MONSTER_COMBAT_BALANCE } from '../game-data';
 import type {
   BattleConfig,
@@ -8,7 +15,7 @@ import type {
   MonsterBattleState,
 } from '../types';
 
-export type LanternCatAction = 'basic' | 'guard' | 'energy' | 'poison' | 'heavy' | 'long_mieu_lien_kich';
+export type LanternCatAction = 'basic' | 'guard' | 'energy' | 'poison' | 'heavy';
 
 export interface LanternCatTurnContext {
   readonly state: BattleState;
@@ -30,14 +37,7 @@ export interface LanternCatTurnResult {
 }
 
 /** Miêu Đèn: đánh thường → tích năng lượng → tích năng lượng → gieo độc → bạo kích. */
-export function chooseLanternCatAction(actionCount: number): LanternCatAction;
-export function chooseLanternCatAction(actionCount: number, energy: number, energyCap: number): LanternCatAction;
-export function chooseLanternCatAction(
-  actionCount: number,
-  energy = 0,
-  energyCap = CHARACTER_DATA.limits.maxEnergy,
-): LanternCatAction {
-  if (energy >= energyCap) return 'long_mieu_lien_kich';
+export function chooseLanternCatAction(actionCount: number): LanternCatAction {
   switch (actionCount % 5) {
     case 1:
     case 2: return 'energy';
@@ -55,75 +55,12 @@ export function resolveLanternCatTurn(context: LanternCatTurnContext): LanternCa
   const events: GameEvent[] = [];
   let sequence = context.startSequence;
   let damageTakenStreak = 0;
-  let action: LanternCatAction = isLanternCatAction(monster.nextAction)
+  let rngState = context.state.rngState;
+  let dodged = false;
+  // Long Miêu Liên Kích đã chuyển sang skill chung trong monsters.json (monster-skills.ts).
+  const action: LanternCatAction = isLanternCatAction(monster.nextAction)
     ? monster.nextAction
-    : chooseLanternCatAction(monster.actionCount, monster.energy, context.config.energyCap);
-  if (action === 'long_mieu_lien_kich' && monster.energy < context.config.energyCap) {
-    action = chooseLanternCatAction(monster.actionCount, monster.energy, context.config.energyCap);
-  }
-
-  if (action === 'long_mieu_lien_kich') {
-    const damage = Math.max(1, Math.ceil(player.stats.maxHp * MONSTER_COMBAT_BALANCE.lanternCatSkill.maxHpDamageRatio));
-    const energyDrained = Math.min(
-      context.config.energyCap,
-      Math.max(0, Math.ceil(player.energy * MONSTER_COMBAT_BALANCE.lanternCatSkill.playerEnergyDrainRatio)),
-    );
-    const monsterEnergyBefore = monster.energy;
-    const monsterEnergyAfter = Math.min(context.config.energyCap, MONSTER_COMBAT_BALANCE.lanternCatSkill.energyRestored);
-    const damageResult = resolveIncomingMonsterDamage(
-      player, monster, damage, context.state.damageTakenStreak, context.createEvent, sequence,
-    );
-    events.push(...damageResult.events);
-    sequence = damageResult.nextSequence;
-    damageTakenStreak = damageResult.damageTakenStreak;
-    player = clampPlayerState({ ...damageResult.player, energy: player.energy - energyDrained });
-    monster = { ...monster, energy: monsterEnergyAfter };
-    events.push(context.createEvent(sequence, 'MONSTER_SKILL_USED', {
-      actor: 'monster',
-      actionId: `${context.actionId}:monster:${monster.actionCount}:long-mieu-lien-kich`,
-      skillId: 'lantern_cat_long_mieu_lien_kich',
-      label: `${monster.name} dùng Long Miêu Liên Kích`,
-      damage: damageResult.incoming,
-      energyBefore: monsterEnergyBefore,
-      energySpent: Math.max(0, monsterEnergyBefore - monsterEnergyAfter),
-      energyRestored: monsterEnergyAfter,
-      playerEnergyBefore: context.state.player.energy,
-      playerEnergyDrained: energyDrained,
-      playerEnergyAfter: player.energy,
-      stunTurns: MONSTER_COMBAT_BALANCE.lanternCatSkill.stunTurns,
-      target: 'player',
-    }));
-    sequence += 1;
-    events.push(context.createEvent(sequence, 'DAMAGE_APPLIED', {
-      actor: 'monster',
-      source: 'lantern_cat_long_mieu_lien_kich',
-      actionId: `${context.actionId}:monster:${monster.actionCount}:long-mieu-lien-kich`,
-      amount: damageResult.incoming,
-      requested: damageResult.incoming,
-      hpDamage: damageResult.incoming - damageResult.absorbed,
-      shieldAbsorbed: damageResult.absorbed,
-      shieldRemaining: player.shield,
-      shieldBroken: damageResult.absorbed > 0 && player.shield === 0,
-      target: 'player',
-      lethal: player.currentHp <= 0,
-    }));
-    sequence += 1;
-    const reflected = reflectMonsterDamage(player, monster, damageResult.incoming, context.createEvent, sequence);
-    monster = reflected.monster;
-    events.push(...reflected.events);
-    sequence = reflected.nextSequence;
-    return {
-      state: {
-        ...context.state,
-        player,
-        playerSkipTurns: player.controlImmunityTurns > 0 ? 0 : MONSTER_COMBAT_BALANCE.lanternCatSkill.stunTurns,
-        damageTakenStreak,
-        monster,
-      },
-      events,
-      nextSequence: sequence,
-    };
-  }
+    : chooseLanternCatAction(monster.actionCount);
 
   if (action === 'guard') {
     monster = applyMonsterGuard(monster);
@@ -131,7 +68,7 @@ export function resolveLanternCatTurn(context: LanternCatTurnContext): LanternCa
       actor: 'monster',
       actionId: `${context.actionId}:monster:${monster.actionCount}`,
       action: 'guard',
-      defenseBonus: MONSTER_COMBAT_BALANCE.guardDefenseBonus,
+      defenseBonus: monster.defense - monster.baseDefense,
       shieldGained: 0,
       label: `${monster.name} dựng thế phòng thủ`,
     }));
@@ -150,14 +87,28 @@ export function resolveLanternCatTurn(context: LanternCatTurnContext): LanternCa
       }));
       sequence += 1;
     } else if (shouldAttack) {
+      const dodge = rollPlayerDodge(player, rngState);
+      rngState = dodge.rngState;
+      dodged = dodge.dodged;
+      if (dodged) {
+        // Né thành công: không sát thương, không cộng nộ hai bên.
+        events.push(context.createEvent(sequence++, 'PLAYER_DODGED', {
+          actor: 'player',
+          actionId: `${context.actionId}:monster:${monster.actionCount}`,
+          action: attackAction,
+          chance: dodge.chance,
+          roll: dodge.roll,
+          target: 'player',
+          label: `Nhân vật né đòn của ${monster.name}`,
+        }));
+      }
+    }
+    if (shouldAttack && !dodged) {
       const matchMultiplier = matchDamageMultiplier(context.attackGemCount);
       const baseDamage = monster.attack
         * (attackAction === 'heavy' ? MONSTER_COMBAT_BALANCE.heavyDamageMultiplier : 1)
         * matchMultiplier;
-      const incoming = Math.max(
-        1,
-        Math.round(baseDamage) - Math.floor(player.stats.defense * MONSTER_COMBAT_BALANCE.defenseMitigationMultiplier),
-      );
+      const incoming = monsterAttackIncoming(player, baseDamage);
       const damage = resolveIncomingMonsterDamage(
         player, monster, incoming, context.state.damageTakenStreak, context.createEvent, sequence,
       );
@@ -213,7 +164,7 @@ export function resolveLanternCatTurn(context: LanternCatTurnContext): LanternCa
     }
 
     if (action === 'poison' && monster.tactics.poison > 0) {
-      const requested = Math.max(1, Math.round(monster.tactics.poison * MONSTER_COMBAT_BALANCE.poisonPotencyMultiplier));
+      const requested = Math.max(1, Math.round(monster.attack * MONSTER_COMBAT_BALANCE.poisonAtkRatio));
       const cap = Math.max(1, Math.round(player.stats.maxHp * CHARACTER_DATA.limits.poisonMaxHpRatio));
       const applied = Math.max(0, Math.min(cap - player.poisonPotency, requested));
       player = clampPlayerState({
@@ -235,7 +186,7 @@ export function resolveLanternCatTurn(context: LanternCatTurnContext): LanternCa
   }
 
   return {
-    state: { ...context.state, player, monster, damageTakenStreak },
+    state: { ...context.state, player, monster, damageTakenStreak, rngState },
     events,
     nextSequence: sequence,
   };
@@ -246,6 +197,5 @@ function isLanternCatAction(action: MonsterBattleState['nextAction']): action is
     || action === 'guard'
     || action === 'energy'
     || action === 'poison'
-    || action === 'heavy'
-    || action === 'long_mieu_lien_kich';
+    || action === 'heavy';
 }

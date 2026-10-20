@@ -76,6 +76,10 @@ export class HuntPage implements OnInit, AfterViewInit, OnDestroy {
     await this.router.navigate(['/battle', monster.id]);
   }
 
+  async goHome(): Promise<void> {
+    await this.router.navigate(['/home']);
+  }
+
   private async startGameIfReady(): Promise<void> {
     if (!this.viewReady || !this.visible || this.game || !this.save || this.loadError) return;
     const token = ++this.startToken;

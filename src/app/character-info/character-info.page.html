@@ -1,0 +1,70 @@
+<ion-content [fullscreen]="true">
+  <main class="info-screen" [style.--element-color]="color(selected)">
+    <header class="topbar">
+      <a class="back" routerLink="/home" aria-label="Về nhà">←</a>
+      <div><p class="eyebrow">THÔNG SỐ · NGŨ HÀNH</p><h1>Hồ sơ nhân vật</h1></div>
+    </header>
+
+    <nav class="element-tabs" aria-label="Chọn hệ để xem">
+      @for (element of elements; track element) {
+        <button type="button" class="tab" [class.active]="element === selected" [style.--tab-color]="color(element)" (click)="select(element)">
+          <span class="tab-hanzi">{{ hanzi(element) }}</span><span>{{ label(element) }}</span>
+          @if (isCurrent(element)) {<small>Đang dùng</small>}
+        </button>
+      }
+    </nav>
+
+    <section class="hero-card">
+      <div class="portrait"><img [src]="portraitSrc" [alt]="profile.className" loading="lazy"></div>
+      <div class="hero-copy">
+        <span class="hanzi">{{ profile.hanzi }}</span>
+        <h2>{{ profile.className }}</h2>
+        <p class="element-line">Hệ {{ profile.elementLabel }} · {{ profile.weapon }}</p>
+        <p class="role">{{ profile.role }}</p>
+        <p class="intro">{{ profile.intro }}</p>
+      </div>
+    </section>
+
+    <section class="block">
+      <div class="heading"><span>CHỈ SỐ</span><i></i><small>Lv{{ save?.profile?.level ?? 1 }}</small></div>
+      <div class="stat-grid">
+        @for (row of statRows; track row.label) {
+          <div class="stat"><small>{{ row.label }}</small><strong>{{ row.value }}</strong>@if (row.hint) {<em>{{ row.hint }}</em>}</div>
+        }
+      </div>
+      <p class="note">Né = AGI / (AGI + 1.900). DEF giảm sát thương nhận theo DEF / (DEF + 1.900).</p>
+    </section>
+
+    <section class="block">
+      <div class="heading"><span>NỘI TẠI</span><i></i></div>
+      <article class="passive">
+        <div class="passive-badge board">◈</div>
+        <div><small>Nội tại bàn cờ</small><h3>{{ profile.boardPassive.name }}</h3><p>{{ profile.boardPassive.description }}</p></div>
+      </article>
+      <article class="passive">
+        <img class="passive-icon" [src]="passiveIconSrc" [alt]="profile.classPassive.name" loading="lazy">
+        <div><small>Nội tại nghề</small><h3>{{ profile.classPassive.name }}</h3><p>{{ profile.classPassive.description }}</p></div>
+      </article>
+    </section>
+
+    <section class="block">
+      <div class="heading"><span>KỸ NĂNG</span><i></i></div>
+      @for (skill of skills; track skill.id) {
+        <article class="skill">
+          @if (skill.iconSrc) {<img class="skill-icon" [src]="skill.iconSrc" [alt]="skill.label" loading="lazy">}
+          <div class="skill-copy">
+            <div class="skill-title"><small>{{ skill.slotLabel }}</small><span class="cost">⚡ {{ skill.energyCost }} Nộ</span></div>
+            <h3>{{ skill.label }}</h3>
+            <ul>@for (effect of skill.effects; track effect) {<li>{{ effect }}</li>}</ul>
+            @if (skill.damagePreview !== undefined) {<p class="preview">≈ {{ formatNumber(skill.damagePreview) }} sát thương với ATK hiện tại (trước DEF quái)</p>}
+          </div>
+        </article>
+      }
+    </section>
+
+    @if (!isCurrent(selected)) {
+      <ion-button expand="block" routerLink="/element-selection">Đổi sang hệ {{ profile.elementLabel }}</ion-button>
+    }
+    <ion-button expand="block" fill="clear" routerLink="/home">Về nhà</ion-button>
+  </main>
+</ion-content>

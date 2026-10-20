@@ -233,7 +233,8 @@ export class TargetMapScene extends Phaser.Scene {
         color: MUTED_COLOR, fontFamily: 'sans-serif', fontSize: width < 600 ? '15px' : '17px', lineSpacing: 4, wordWrap: { width: width - 78 },
       }).setDepth(92);
       this.panelObjects.push(skillName, description);
-      skillY += 82;
+      // Mô tả skill lấy từ data nên dài ngắn khác nhau: xếp theo chiều cao thật.
+      skillY += Math.max(82, 30 + description.height + 14);
     }
     const close = this.add.text(left + width - 34, top + 18, '×', {
       color: TEXT_COLOR, fontFamily: 'sans-serif', fontSize: '38px', fontStyle: 'bold',

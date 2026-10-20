@@ -1,3 +1,4 @@
+import { COMBAT_DATA } from './game-data';
 import { MONSTER_DEFINITIONS } from './monsters/monster-definitions';
 import { createDefaultProfile } from './progression';
 import { ELEMENT_IDS } from './types';
@@ -30,7 +31,13 @@ export function migrateSave(raw: unknown, legacyBattle?: BattleState): LocalSave
   const fallback = createDefaultSave();
   if (!isRecord(raw)) return legacyBattle && isResumableBattle(legacyBattle) ? { ...fallback, activeBattle: legacyBattle } : fallback;
   const version = raw['schemaVersion'];
-  if (version === 1 && isLocalSave(raw)) return { ...fallback, ...raw, settings: { ...DEFAULT_SETTINGS, ...raw.settings } };
+  if (version === 1 && isLocalSave(raw)) {
+    const save: LocalSaveV1 = { ...fallback, ...raw, settings: { ...DEFAULT_SETTINGS, ...raw.settings } };
+    // Trận dở lưu từ bộ cân bằng cũ (vd thang 300 HP trước V6) không được khôi phục.
+    return save.activeBattle && save.activeBattle.balanceVersion !== COMBAT_DATA.match3.balanceVersion
+      ? { ...save, activeBattle: undefined }
+      : save;
+  }
   const oldBattle = isRecord(raw['state']) && isBattleState(raw['state']) ? raw['state'] : legacyBattle;
   return oldBattle && isResumableBattle(oldBattle) ? { ...fallback, activeBattle: oldBattle } : fallback;
 }
@@ -54,8 +61,10 @@ export function isBattleState(value: unknown): value is BattleState {
   return typeof value['battleId'] === 'string' && Array.isArray(board) && board.length === 6 && board.every((row) => Array.isArray(row) && row.length === 6) && isRecord(value['player']) && isRecord(value['monster']) && typeof value['phase'] === 'string';
 }
 
+/** Chỉ khôi phục trận chưa kết thúc và tạo bằng đúng bộ cân bằng hiện hành. */
 export function isResumableBattle(value: BattleState): boolean {
-  return !['VICTORY', 'DEFEAT', 'ABANDON'].includes(value.phase);
+  return !['VICTORY', 'DEFEAT', 'ABANDON'].includes(value.phase)
+    && value.balanceVersion === COMBAT_DATA.match3.balanceVersion;
 }
 
 function isRecord(value: unknown): value is Record<string, any> {

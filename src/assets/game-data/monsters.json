@@ -10,21 +10,14 @@
       "step": 0.1
     },
     "heavyDamageMultiplier": 1.7,
-    "defenseMitigationMultiplier": 0.6,
-    "guardDefenseBonus": 12,
+    "guardDefenseRatio": 0.2,
     "guardTurns": 1,
     "matchDamageMultipliers": {"3": 1, "4": 1.2, "5": 1.4, "6": 1.6},
-    "mistGuardShield": 20,
+    "mistGuardShield": 600,
     "playerEnergyOnMonsterAttack": 10,
     "monsterEnergyOnAttack": 15,
-    "poisonPotencyMultiplier": 1.5,
-    "poisonTurns": 3,
-    "lanternCatSkill": {
-      "maxHpDamageRatio": 0.1,
-      "playerEnergyDrainRatio": 0.2,
-      "energyRestored": 10,
-      "stunTurns": 1
-    }
+    "poisonAtkRatio": 0.3,
+    "poisonTurns": 3
   },
   "definitions": {
     "mist_blob": {
@@ -32,65 +25,162 @@
       "name": "Sương Hồn",
       "element": "water",
       "level": 1,
-      "maxHp": 270,
-      "attack": 55,
-      "defense": 0,
-      "shieldCap": 50,
+      "maxHp": 10500,
+      "attack": 950,
+      "defense": 600,
+      "agi": 150,
+      "shieldCap": 1500,
       "behaviorId": "basic",
       "behaviors": ["basic", "poison"],
       "tactics": {"attack": 8, "defense": 1, "heal": 0, "shield": 2, "energy": 1, "poison": 1},
-      "dodgeChance": 0.25,
       "dropPool": ["twig_blade", "cloth_coat"],
       "expReward": 35,
-      "goldReward": 12
+      "goldReward": 12,
+      "skills": [
+        {
+          "id": "mist_suong_mu_xam_thuc",
+          "name": "Sương Mù Xâm Thực",
+          "vfxId": "skill_suong_mu_xam_thuc",
+          "description": "Đủ 100 nộ: phủ sương quanh thân, tăng 35% né tránh cho 2 lần bị tấn công kế tiếp. Không gây sát thương.",
+          "energyCost": 100,
+          "priority": 1,
+          "dodgeBonus": 0.35,
+          "dodgeCharges": 2
+        }
+      ]
     },
     "lantern_cat": {
       "id": "lantern_cat",
       "name": "Miêu Đèn",
       "element": "fire",
       "level": 2,
-      "maxHp": 260,
-      "attack": 40,
-      "defense": 10,
+      "maxHp": 7800,
+      "attack": 1350,
+      "defense": 320,
+      "agi": 300,
       "behaviorId": "heavy",
       "behaviors": ["basic", "energy", "heavy", "poison"],
       "tactics": {"attack": 12, "defense": 8, "heal": 10, "shield": 0, "energy": 10, "poison": 12},
       "unlockRequirement": {"monsterId": "mist_blob", "wins": 2},
       "dropPool": ["leaf_charm", "swift_charm"],
       "expReward": 65,
-      "goldReward": 24
+      "goldReward": 24,
+      "skills": [
+        {
+          "id": "lantern_cat_long_mieu_lien_kich",
+          "name": "Long Miêu Liên Kích",
+          "vfxId": "skill_long_mieu_lien_kich",
+          "description": "Đủ 80 nộ: liên kích gây 130% ATK, Thiêu đốt nhân vật 2 lượt (mỗi lượt mất 10% HP tối đa) và gây Choáng 1 lượt.",
+          "energyCost": 80,
+          "priority": 1,
+          "attackMultiplier": 1.3,
+          "playerBurnMaxHpRatio": 0.1,
+          "playerBurnTurns": 2,
+          "playerControl": "stun",
+          "playerControlChance": 1,
+          "playerControlTurns": 1
+        }
+      ]
     },
     "bamboo_mantis": {
       "id": "bamboo_mantis",
       "name": "Bọ Lá Tre",
       "element": "wood",
       "level": 3,
-      "maxHp": 360,
-      "attack": 38,
-      "defense": 10,
+      "maxHp": 11500,
+      "attack": 850,
+      "defense": 450,
+      "agi": 250,
       "behaviorId": "heavy",
       "behaviors": ["basic", "heavy", "poison"],
       "tactics": {"attack": 8, "defense": 2, "heal": 1, "shield": 3, "energy": 2, "poison": 4},
       "unlockRequirement": {"monsterId": "lantern_cat", "wins": 1},
       "dropPool": ["lantern_blade", "mist_coat", "leaf_charm"],
       "expReward": 105,
-      "goldReward": 42
+      "goldReward": 42,
+      "skills": [
+        {
+          "id": "bamboo_truc_diep_doc_cham",
+          "name": "Trúc Diệp Độc Châm",
+          "vfxId": "skill_luc_diep_doc_cham",
+          "description": "Khi HP trên 50%, đủ 60 nộ: phóng kim lá tre gây 300 + 80% ATK và Dính độc (20% ATK) trong 1 lượt.",
+          "energyCost": 60,
+          "priority": 1,
+          "hpAbove": 0.5,
+          "baseDamage": 300,
+          "attackMultiplier": 0.8,
+          "playerPoisonAtkRatio": 0.2,
+          "playerPoisonTurns": 1
+        },
+        {
+          "id": "bamboo_luc_diep_an_tung",
+          "name": "Lục Diệp Ẩn Tung",
+          "vfxId": "skill_luc_diep_an_tung",
+          "description": "Ưu tiên khi HP dưới 50%, đủ 100 nộ: ẩn trong lá tre, tăng 60% né tránh và hồi 10% HP tối đa mỗi lượt trong 2 lượt.",
+          "energyCost": 100,
+          "priority": 2,
+          "hpBelow": 0.5,
+          "dodgeBonus": 0.6,
+          "dodgeTurns": 2,
+          "healMaxHpRatio": 0.1,
+          "healTurns": 2
+        }
+      ]
     },
     "cloud_fox_boss": {
       "id": "cloud_fox_boss",
       "name": "Cáo Mây",
       "element": "water",
       "level": 5,
-      "maxHp": 620,
-      "attack": 52,
-      "defense": 14,
+      "maxHp": 8800,
+      "attack": 1100,
+      "defense": 400,
+      "agi": 380,
       "behaviorId": "boss",
       "behaviors": ["basic", "guard", "heavy", "poison"],
       "tactics": {"attack": 8, "defense": 7, "heal": 3, "shield": 6, "energy": 7, "poison": 5},
       "unlockRequirement": {"monsterId": "bamboo_mantis", "wins": 1},
       "dropPool": ["lantern_blade", "mist_coat", "moon_charm", "sturdy_charm"],
       "expReward": 240,
-      "goldReward": 100
+      "goldReward": 100,
+      "skills": [
+        {
+          "id": "cloud_fox_bich_van_bang_bang",
+          "name": "Bích Vân Băng Băng",
+          "vfxId": "skill_bich_van_bang_bang",
+          "description": "Khi HP trên 60%, đủ 100 nộ: phóng băng khí gây 100% ATK, 40% Đóng băng nhân vật 1 lượt.",
+          "energyCost": 100,
+          "priority": 1,
+          "hpAbove": 0.6,
+          "attackMultiplier": 1,
+          "playerControl": "freeze",
+          "playerControlChance": 0.4,
+          "playerControlTurns": 1
+        },
+        {
+          "id": "cloud_fox_van_suong_ao_ao",
+          "name": "Vân Sương Ảo Ảo",
+          "vfxId": "skill_van_suong_ao_ao",
+          "description": "Khi HP dưới 60%, đủ 50 nộ: tạo ảo ảnh sương, tăng 30% né tránh trong 2 lượt.",
+          "energyCost": 50,
+          "priority": 2,
+          "hpBelow": 0.6,
+          "dodgeBonus": 0.3,
+          "dodgeTurns": 2
+        },
+        {
+          "id": "cloud_fox_vu_luu_thuan",
+          "name": "Vụ Lưu Thuẫn",
+          "vfxId": "skill_vu_luu_thuan",
+          "description": "Khi HP dưới 30%, đủ 60 nộ: tạo khiên sương 1.800 điểm và giảm 40% hồi máu của nhân vật trong 1 lượt.",
+          "energyCost": 60,
+          "priority": 3,
+          "hpBelow": 0.3,
+          "selfShield": 1800,
+          "playerHealReduction": 0.4,
+          "playerHealReductionTurns": 1
+        }
+      ]
     }
   }
 }

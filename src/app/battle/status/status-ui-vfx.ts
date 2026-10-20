@@ -38,7 +38,12 @@ export function formatStatusText(status: StatusModel): string {
 }
 
 function formatStatusNumber(value: number): string {
-  return Number.isFinite(value) ? String(value === 0 ? 0 : value) : '0';
+  return Number.isFinite(value) ? formatGameNumber(value === 0 ? 0 : value) : '0';
+}
+
+/** Số trong trận theo kiểu Việt Nam: 9000 → "9.000" (thang chỉ số Balance V6). */
+export function formatGameNumber(value: number): string {
+  return String(Math.round(value)).replace(/\B(?=(\d{3})+(?!\d))/g, '.');
 }
 
 interface StatusUiVfxOptions {

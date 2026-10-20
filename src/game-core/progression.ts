@@ -4,7 +4,7 @@ import { ITEM_TEMPLATES, INVENTORY_CAPACITY, createItemInstance, getEquippedItem
 import { MONSTER_DEFINITIONS } from './monsters/monster-definitions';
 import { computeDerivedStats } from './player';
 import type {
-  Attributes, BattleOutcome, BattleState, EquipmentBonuses, EquipmentSlots, ItemInstance,
+  Attributes, BattleOutcome, ElementId, BattleState, EquipmentBonuses, EquipmentSlots, ItemInstance,
   LocalSaveV1, MonsterProgress, PlayerProfile, RewardGrant, RewardJournalEntry, PendingReward,
 } from './types';
 
@@ -46,19 +46,74 @@ export function commitAttributeAllocation(profile: PlayerProfile, draft: Partial
   return previewAttributeAllocation(profile, draft);
 }
 
+/** Số điểm đã cộng vào thuộc tính (vượt mốc khởi đầu `baseAttributes`). */
+export function spentAttributePoints(profile: PlayerProfile): number {
+  const base = CHARACTER_DATA.baseAttributes;
+  return (['str', 'vit', 'agi', 'int'] as const)
+    .reduce((sum, key) => sum + Math.max(0, profile.attributes[key] - base[key]), 0);
+}
+
+/** Tổng điểm thuộc tính một nhân vật ở cấp `level` có được (điểm khởi đầu + điểm mỗi cấp). */
+export function totalAttributePointsForLevel(level: number): number {
+  const progression = CHARACTER_DATA.progression;
+  return progression.startingUnspentPoints + Math.max(0, level - 1) * progression.attributePointsPerLevel;
+}
+
+// ---- Công cụ test cân bằng offline (Dev mode). Hàm thuần, chỉ đổi profile local. ----
+
+/** Hoàn toàn bộ điểm đã cộng về điểm chưa dùng (tẩy điểm). */
+export function resetAttributePoints(profile: PlayerProfile): PlayerProfile {
+  return {
+    ...profile,
+    attributes: { ...CHARACTER_DATA.baseAttributes },
+    unspentPoints: profile.unspentPoints + spentAttributePoints(profile),
+  };
+}
+
+export function devGrantAttributePoints(profile: PlayerProfile, points: number): PlayerProfile {
+  return { ...profile, unspentPoints: Math.max(0, profile.unspentPoints + Math.floor(points)) };
+}
+
+/** Đặt cấp; tẩy điểm và cấp lại đúng số điểm của cấp đó để test như nhân vật thật. */
+export function devSetLevel(profile: PlayerProfile, level: number): PlayerProfile {
+  const maxLevel = CHARACTER_DATA.devTools.maxLevel;
+  const nextLevel = Math.max(CHARACTER_DATA.progression.startingLevel, Math.min(maxLevel, Math.floor(level)));
+  return {
+    ...profile,
+    level: nextLevel,
+    exp: 0,
+    attributes: { ...CHARACTER_DATA.baseAttributes },
+    unspentPoints: totalAttributePointsForLevel(nextLevel),
+  };
+}
+
+/** Lên thêm `levels` cấp, giữ điểm đã cộng và nhận điểm của các cấp mới. */
+export function devGrantLevels(profile: PlayerProfile, levels: number): PlayerProfile {
+  const maxLevel = CHARACTER_DATA.devTools.maxLevel;
+  const nextLevel = Math.max(1, Math.min(maxLevel, profile.level + Math.floor(levels)));
+  const gained = Math.max(0, nextLevel - profile.level) * CHARACTER_DATA.progression.attributePointsPerLevel;
+  return { ...profile, level: nextLevel, exp: 0, unspentPoints: profile.unspentPoints + gained };
+}
+
+export function devGrantGold(profile: PlayerProfile, gold: number): PlayerProfile {
+  return { ...profile, gold: Math.max(0, profile.gold + Math.floor(gold)) };
+}
+
 export function equipmentBonuses(inventory: readonly ItemInstance[], equipment: EquipmentSlots): EquipmentBonuses {
   const result: Record<string, number> = {};
   for (const id of getEquippedItemIds(equipment)) {
     const item = inventory.find((instance) => instance.instanceId === id);
     const bonuses = item ? ITEM_TEMPLATES[item.templateId]?.bonuses : undefined;
     if (!bonuses) continue;
-    for (const key of ['maxHp', 'atk', 'defense', 'skillPower', 'agiBonus'] as const) result[key] = (result[key] ?? 0) + (bonuses[key] ?? 0);
+    for (const key of ['maxHp', 'atk', 'defense', 'skillPower', 'agi'] as const) result[key] = (result[key] ?? 0) + (bonuses[key] ?? 0);
   }
   return result;
 }
 
-export function computeProfileStats(save: Pick<LocalSaveV1, 'profile' | 'inventory' | 'equipment'>) {
-  return computeDerivedStats(save.profile.attributes, equipmentBonuses(save.inventory, save.equipment));
+export function computeProfileStats(
+  save: Pick<LocalSaveV1, 'profile' | 'inventory' | 'equipment'> & { readonly settings?: { readonly element?: ElementId } },
+) {
+  return computeDerivedStats(save.profile.attributes, equipmentBonuses(save.inventory, save.equipment), save.settings?.element);
 }
 
 function monsterIdOf(outcome: BattleOutcome | BattleState): string {

@@ -1,1 +1,27 @@
-.shell { max-width:640px; margin:auto; padding:24px 16px; }.eyebrow { color:var(--ion-color-primary); font-size:12px; font-weight:700; letter-spacing:.12em; }.wallet { padding:14px; background:#28213d; color:#fff8e8; border-radius:12px; }.wallet strong { float:right; color:#f3c64f; }.catalogue { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; }.catalogue ion-card { margin:0; }.catalogue small { font-size:11px; color:#8a789c; }@media (max-width:360px) { .catalogue { grid-template-columns:1fr; } }
+ion-content{--background:#100d20}
+.shell{min-height:100%;padding:20px max(16px,calc((100% - 560px)/2)) 28px;color:#fff8e8;background:radial-gradient(circle at 80% 4%,#9d7a4b40,transparent 36%),#100d20}
+.top{display:flex;align-items:center;gap:12px;margin-bottom:16px}
+.back{display:grid;place-items:center;width:38px;height:38px;border:1px solid #ecdcff2e;border-radius:12px;color:#fff8e8;font-size:20px;text-decoration:none;background:#241d3dc7}
+.eyebrow{margin:0 0 4px;color:#f3c64f;font-size:10px;font-weight:700;letter-spacing:.2em}
+h1{margin:0;font:700 26px Georgia,serif}
+.wallet{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}
+.wallet>*{padding:12px 14px;border:1px solid #ecdcff1f;border-radius:16px;color:#fff8e8;text-decoration:none;background:#241d3dc7}
+.wallet small{display:block;color:#aaa4bd;font-size:10px;letter-spacing:.14em;text-transform:uppercase}
+.wallet b{font:700 20px Georgia,serif}
+.wallet>div b{color:#f3c64f}
+.toast{margin:0 0 12px;padding:10px 12px;border:1px solid #72dda266;border-radius:12px;color:#72dda2;font-size:12px;background:#1a3937a6}
+.filters{display:flex;gap:6px;overflow-x:auto;margin-bottom:12px}
+.filters button,.item button{padding:8px 13px;border:1px solid #ecdcff2e;border-radius:20px;color:#d9d2ea;font-size:12px;white-space:nowrap;background:#221c38a8}
+.filters .on{border-color:#f3c64f;color:#211936;font-weight:700;background:#f3c64f}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.item{display:flex;flex-direction:column;gap:6px;padding:12px;border:1px solid #ecdcff1f;border-radius:16px;background:#221c38a8}
+.item.rare{border-color:#b889e8aa;background:linear-gradient(160deg,#3a2c5c,#1d1733)}
+.item-top{display:flex;justify-content:space-between;align-items:center;gap:6px}
+.ic{color:#d8bd78;font-size:20px}
+.item-top small{color:#aaa4bd;font-size:10px;text-align:right}
+.rare .item-top small{color:#d6b4ff}
+.item b{font:700 15px Georgia,serif}
+.item p{flex:1;margin:0;color:#aaa4bd;font-size:12px}
+.owned{color:#72dda2;font-size:10px}
+.item button{border:0;border-radius:12px;color:#211936;font-weight:700;background:#f3c64f}
+.item button:disabled{border:1px solid #ecdcff2e;color:#68627c;font-weight:400;background:#181329}
