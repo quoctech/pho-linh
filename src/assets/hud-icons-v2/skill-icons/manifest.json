@@ -1,0 +1,19 @@
+{
+  "project": "PHỐ LINH",
+  "pack": "skill_icons_webp_cut",
+  "iconCount": 11,
+  "scope": "character-skills-only",
+  "icons": [
+    { "id": "kim_van_kiem_quy_tong", "file": "icons_webp/01_kim_van_kiem_quy_tong.webp" },
+    { "id": "kim_kim_quang_pha_giap", "file": "icons_webp/02_kim_kim_quang_pha_giap.webp" },
+    { "id": "kim_cuu_thien_loi_kiem", "file": "icons_webp/03_kim_cuu_thien_loi_kiem.webp" },
+    { "id": "moc_thanh_dang_troi_hon", "file": "icons_webp/04_moc_thanh_dang_troi_hon.webp" },
+    { "id": "moc_van_diep_doc_chu", "file": "icons_webp/05_moc_van_diep_doc_chu.webp" },
+    { "id": "thuy_han_trieu_pha_khong", "file": "icons_webp/06_thuy_han_trieu_pha_khong.webp" },
+    { "id": "thuy_bang_phong_thien_ly", "file": "icons_webp/07_thuy_bang_phong_thien_ly.webp" },
+    { "id": "hoa_hoa_vu_lien_chau", "file": "icons_webp/08_hoa_hoa_vu_lien_chau.webp" },
+    { "id": "hoa_phan_thien_xa_nhat", "file": "icons_webp/09_hoa_phan_thien_xa_nhat.webp" },
+    { "id": "tho_son_nhac_tran_dia", "file": "icons_webp/10_tho_son_nhac_tran_dia.webp" },
+    { "id": "tho_huyen_nham_ho_the", "file": "icons_webp/11_tho_huyen_nham_ho_the.webp" }
+  ]
+}

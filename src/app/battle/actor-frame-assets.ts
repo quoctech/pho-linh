@@ -4,10 +4,18 @@ import woodManifest from '../../assets/hero-wood/frames-manifest.json';
 import waterManifest from '../../assets/hero-water/frames-manifest.json';
 import fireManifest from '../../assets/hero-fire/frames-manifest.json';
 import earthManifest from '../../assets/hero-earth/frames-manifest.json';
+import femaleMetalManifest from '../../assets/hero-female-elements/metal/frames-manifest.json';
+import femaleWoodManifest from '../../assets/hero-female-elements/wood/frames-manifest.json';
+import femaleWaterManifest from '../../assets/hero-female-elements/water/frames-manifest.json';
+import femaleFireManifest from '../../assets/hero-female-elements/fire/frames-manifest.json';
+import femaleEarthManifest from '../../assets/hero-female-elements/earth/frames-manifest.json';
 import mistManifest from '../../assets/monsters/mist-dust/frames-manifest.json';
 import lanternManifest from '../../assets/monsters/mieu-den/frames-manifest.json';
 
-export type ActorFrameId = 'metal' | 'wood' | 'water' | 'fire' | 'earth' | 'mist_blob' | 'lantern_cat';
+export type ActorFrameId =
+  | 'metal' | 'wood' | 'water' | 'fire' | 'earth'
+  | 'female_metal' | 'female_wood' | 'female_water' | 'female_fire' | 'female_earth'
+  | 'mist_blob' | 'lantern_cat';
 export const ACTOR_FRAME_RATE = 12;
 
 const ACTOR_ASSETS = {
@@ -16,9 +24,18 @@ const ACTOR_ASSETS = {
   water: { root: 'assets/hero-water', manifest: waterManifest },
   fire: { root: 'assets/hero-fire', manifest: fireManifest },
   earth: { root: 'assets/hero-earth', manifest: earthManifest },
+  female_metal: { root: 'assets/hero-female-elements/metal', manifest: femaleMetalManifest },
+  female_wood: { root: 'assets/hero-female-elements/wood', manifest: femaleWoodManifest },
+  female_water: { root: 'assets/hero-female-elements/water', manifest: femaleWaterManifest },
+  female_fire: { root: 'assets/hero-female-elements/fire', manifest: femaleFireManifest },
+  female_earth: { root: 'assets/hero-female-elements/earth', manifest: femaleEarthManifest },
   mist_blob: { root: 'assets/monsters/mist-dust', manifest: mistManifest },
   lantern_cat: { root: 'assets/monsters/mieu-den', manifest: lanternManifest },
 } as const;
+
+export function femaleActorForElement(element: 'metal' | 'wood' | 'water' | 'fire' | 'earth'): ActorFrameId {
+  return `female_${element}` as ActorFrameId;
+}
 
 export function actorRows(actor: ActorFrameId): readonly { readonly id: string; readonly label: string }[] {
   return ACTOR_ASSETS[actor].manifest.strips;
@@ -37,9 +54,14 @@ export function actorAnimationKey(actor: ActorFrameId, row: string): string {
 }
 
 export function preloadActorFrames(scene: Phaser.Scene, actor: ActorFrameId): void {
+  preloadActorRows(scene, actor, ACTOR_ASSETS[actor].manifest.strips.map((row) => row.id));
+}
+
+export function preloadActorRows(scene: Phaser.Scene, actor: ActorFrameId, rowIds: readonly string[]): void {
   const { root, manifest } = ACTOR_ASSETS[actor];
-  for (const row of manifest.strips) {
-    row.frames.forEach((frame, index) => {
+  for (const rowId of rowIds) {
+    const row = manifest.strips.find((entry) => entry.id === rowId);
+    row?.frames.forEach((frame, index) => {
       const key = actorFrameKey(actor, row.id, index);
       if (!scene.textures.exists(key)) scene.load.image(key, `${root}/${frame.file}`);
     });

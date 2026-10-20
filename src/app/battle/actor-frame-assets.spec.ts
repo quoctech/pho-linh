@@ -13,7 +13,11 @@ import {
   type ActorFrameId,
 } from './actor-frame-assets';
 
-const ACTORS: readonly ActorFrameId[] = ['metal', 'wood', 'water', 'fire', 'earth', 'mist_blob', 'lantern_cat'];
+const ACTORS: readonly ActorFrameId[] = [
+  'metal', 'wood', 'water', 'fire', 'earth',
+  'female_metal', 'female_wood', 'female_water', 'female_fire', 'female_earth',
+  'mist_blob', 'lantern_cat',
+];
 
 describe('separated V2 actor frames', () => {
   it('preloads only independent images with unique keys for each actor', () => {

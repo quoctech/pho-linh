@@ -56,7 +56,7 @@ describe('status presentation mapping', () => {
 
 describe('battle layout', () => {
   it('anchors hero and monster status bars to the shared HUD edges', () => {
-    for (const width of [320, 360, 390]) {
+    for (const width of [320, 360, 414]) {
       const layout = createBattleLayout(width, 620);
 
       expect(layout.playerStatusBounds.left).toBe(layout.hudLeft);
@@ -71,10 +71,16 @@ describe('battle layout', () => {
       expect(Number.isInteger(layout.monsterStatusBounds.left)).toBe(true);
       expect(Number.isInteger(layout.monsterStatusBounds.right)).toBe(true);
       expect(layout.statusBarY + 15).toBeLessThan(layout.statusBadgeY);
-      expect(layout.statusBadgeY + 10).toBeLessThan(layout.energyBarY);
-      expect(layout.energyBarY + 15).toBeLessThan(layout.telegraphY);
+      expect(layout.energyBarY + 15).toBeLessThan(layout.statusBadgeY);
+      expect(layout.statusBadgeY + 12).toBeLessThan(layout.telegraphY);
       expect(layout.statusY).toBeGreaterThan(layout.telegraphY);
       expect(layout.statusY).toBeLessThan(layout.boardTop);
+      for (const point of layout.heroSkillButtons) {
+        expect(point.x - layout.skillButtonSize / 2).toBeGreaterThanOrEqual(0);
+        expect(point.x + layout.skillButtonSize / 2).toBeLessThanOrEqual(width);
+      }
+      const lastHeroSkill = layout.heroSkillButtons[layout.heroSkillButtons.length - 1];
+      expect(lastHeroSkill.x + layout.skillButtonSize / 2).toBe(layout.boardLeft + layout.boardWidth);
     }
   });
 
@@ -83,11 +89,14 @@ describe('battle layout', () => {
       const layout = createBattleLayout(320, height);
       const boardBottom = layout.boardTop + layout.boardWidth;
       const heroTop = layout.hero.y - 77;
-      const skillRight = layout.skillButton.x + 64;
+      const [firstSkill, secondSkill] = layout.skillButtons;
 
       expect(boardBottom).toBeLessThanOrEqual(heroTop);
-      expect(skillRight).toBeLessThan(320);
-      expect(layout.skillButton.x - 64).toBeGreaterThan(110);
+      expect(firstSkill.x).toBeLessThan(secondSkill.x);
+      expect(secondSkill.x - firstSkill.x).toBe(layout.skillButtonSize + layout.skillButtonGap);
+      expect(firstSkill.x - layout.skillButtonSize / 2).toBeGreaterThan(0);
+      expect(secondSkill.x + layout.skillButtonSize / 2).toBeLessThan(320);
+      expect(firstSkill.y).toBe(secondSkill.y);
     }
   });
 });

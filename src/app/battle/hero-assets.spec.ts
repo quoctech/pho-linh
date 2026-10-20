@@ -6,6 +6,9 @@ import {
   HERO_ELEMENT_ANIMATION_METADATA,
   HERO_ELEMENT_ASSET_ROOTS,
   HERO_ELEMENT_RUNTIME_MAPPING,
+  HERO_FEMALE_ELEMENT_ANIMATION_METADATA,
+  HERO_FEMALE_ELEMENT_ASSET_ROOTS,
+  HERO_FEMALE_ELEMENT_RUNTIME_MAPPING,
   HERO_ASSETS_AVAILABLE,
   HERO_DISPLAY_HEIGHT,
   HERO_DISPLAY_WIDTH,
@@ -78,6 +81,24 @@ describe('hero asset metadata', () => {
     }
   });
 
+  it('maps every female element runtime action to a six-frame separated WebP row', () => {
+    for (const element of ['metal', 'wood', 'water', 'fire', 'earth'] as const) {
+      const animations = HERO_FEMALE_ELEMENT_ANIMATION_METADATA[element];
+      expect(HERO_FEMALE_ELEMENT_ASSET_ROOTS[element]).toBe(`assets/hero-female-elements/${element}`);
+      expect(Object.keys(animations)).toEqual([...HERO_ANIMATION_NAMES]);
+      for (const animation of HERO_ANIMATION_NAMES) {
+        const metadata = animations[animation];
+        const row = actorRow(`female_${element}` as ActorFrameId, metadata.assetId ?? '');
+        expect(metadata.assetId).toBe(HERO_FEMALE_ELEMENT_RUNTIME_MAPPING[animation]);
+        expect(row).toBeDefined();
+        expect(metadata.framePaths).toHaveLength(HERO_METAL_FRAME_COUNT);
+        expect(metadata.frameWidth).toBe(row?.equalFrameSize.w);
+        expect(metadata.frameHeight).toBe(row?.equalFrameSize.h);
+        expect(metadata.frameRate).toBe(ACTOR_FRAME_RATE);
+      }
+    }
+  });
+
   it('declares all 19 MP3/OGG SFX events shared by the two genders', () => {
     expect(HERO_SFX_NAMES).toHaveLength(19);
     expect(new Set(HERO_SFX_NAMES).size).toBe(19);
@@ -92,11 +113,11 @@ describe('hero asset metadata', () => {
         height: metadata.frameHeight * scale,
       });
     }
+    const femaleIdleWidth = HERO_FEMALE_ELEMENT_ANIMATION_METADATA.metal.idle.frameWidth;
     for (const animation of HERO_ANIMATION_NAMES) {
-      expect(heroDisplaySize('female', animation)).toEqual({
-        width: HERO_DISPLAY_WIDTH,
-        height: HERO_DISPLAY_HEIGHT,
-      });
+      const metadata = HERO_FEMALE_ELEMENT_ANIMATION_METADATA.metal[animation];
+      expect(heroDisplaySize('female', animation).width).toBeCloseTo(metadata.frameWidth * HERO_METAL_DISPLAY_WIDTH / femaleIdleWidth);
+      expect(heroDisplaySize('female', animation).height).toBeCloseTo(metadata.frameHeight * HERO_METAL_DISPLAY_WIDTH / femaleIdleWidth);
     }
   });
 
@@ -108,8 +129,8 @@ describe('hero asset metadata', () => {
     ]));
   });
 
-  it('ships 24 independent six-frame rows for all seven V2 actors', () => {
-    for (const actor of ['metal', 'wood', 'water', 'fire', 'earth', 'mist_blob', 'lantern_cat'] as const satisfies readonly ActorFrameId[]) {
+  it('ships 24 independent six-frame rows for all twelve V2 actors', () => {
+    for (const actor of ['metal', 'wood', 'water', 'fire', 'earth', 'female_metal', 'female_wood', 'female_water', 'female_fire', 'female_earth', 'mist_blob', 'lantern_cat'] as const satisfies readonly ActorFrameId[]) {
       const rows = actorRows(actor);
       expect(rows).toHaveLength(24);
       expect(new Set(rows.map((row) => row.id)).size).toBe(24);

@@ -51,6 +51,17 @@ export interface CharacterData {
       readonly defenseMultiplier: number;
     };
   };
+  readonly elementSkills: Readonly<Record<string, {
+    readonly basicAttackFolder: string;
+    readonly primarySkillId: string;
+    readonly primarySkillLabel: string;
+    readonly primarySkillIcon: string;
+    readonly primarySkillFolder: string;
+    readonly secondarySkillId: string;
+    readonly secondarySkillLabel: string;
+    readonly secondarySkillIcon: string;
+    readonly secondarySkillFolder: string;
+  }>>;
 }
 
 export interface MonsterCombatBalance {

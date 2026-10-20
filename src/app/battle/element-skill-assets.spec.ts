@@ -1,37 +1,26 @@
-import {
-  ELEMENT_SKILL_CONFIG,
-  elementSkillAnimationKey,
-  elementSkillFrameNames,
-  usesElementSkillAtlas,
-} from './element-skill-assets';
+import { ELEMENT_SKILL_CONFIG, elementSkillIconFramePaths, fitSkillIconDisplaySize, getElementSkillVisualState, skillIconPath } from './element-skill-assets';
 
-describe('five-element skill runtime assets', () => {
-  it('registers the basic attack and both named skills for every element', () => {
+describe('static skill icon assets', () => {
+  it('maps both skills for every element to existing WebP files', () => {
     const elements = ['metal', 'wood', 'water', 'fire', 'earth'] as const;
-    const expectedPrimary = {
-      metal: ['kim_quang_pha_giap', 'Kim Quang Phá Giáp'],
-      wood: ['van_doc_phe_tam', 'Vạn Độc Phệ Tâm'],
-      water: ['han_bang_phong_an', 'Hàn Băng Phong Ấn'],
-      fire: ['liet_diem_xuyen_tam', 'Liệt Diễm Xuyên Tâm'],
-      earth: ['bat_dong_son_ha', 'Bất Động Sơn Hà'],
+    const expected = {
+      metal: ['kim_kim_quang_pha_giap', 'kim_van_kiem_quy_tong'], wood: ['moc_thanh_dang_troi_hon', 'moc_van_diep_doc_chu'],
+      water: ['thuy_han_trieu_pha_khong', 'thuy_bang_phong_thien_ly'], fire: ['hoa_hoa_vu_lien_chau', 'hoa_phan_thien_xa_nhat'],
+      earth: ['tho_son_nhac_tran_dia', 'tho_huyen_nham_ho_the'],
     } as const;
-    const keys = new Set<string>();
-
     for (const element of elements) {
       const config = ELEMENT_SKILL_CONFIG[element];
-      expect(usesElementSkillAtlas(element)).toBe(false);
-      expect(config.atlasImage).toBe('');
-      expect(config.atlasJson).toBe('');
-      expect([config.basicAttackFolder, config.primarySkillFolder, config.secondarySkillFolder]).toHaveLength(3);
-      expect(config.primarySkillFolder).toBe(expectedPrimary[element][0]);
-      expect(config.primarySkillLabel).toBe(expectedPrimary[element][1]);
-      for (const slot of ['basicAttack', 'primarySkill', 'secondarySkill'] as const) {
-        const key = elementSkillAnimationKey(element, slot);
-        expect(keys.has(key)).toBe(false);
-        keys.add(key);
-        expect(elementSkillFrameNames(element, slot)).toHaveLength(0);
-      }
+      expect([config.primarySkillIcon, config.secondarySkillIcon]).toEqual(expected[element]);
+      expect(elementSkillIconFramePaths(element, 'primarySkill')).toHaveLength(1);
+      expect(elementSkillIconFramePaths(element, 'secondarySkill')).toHaveLength(1);
+      expect(elementSkillIconFramePaths(element, 'primarySkill')[0]).toMatch(/\.webp$/);
+      expect(skillIconPath(config.primarySkillIcon)).toContain('hud-icons-v2');
     }
-    expect(keys.size).toBe(15);
+  });
+  it('keeps static icon size and state feedback independent', () => {
+    expect(getElementSkillVisualState('primarySkill', true, 100, 100)).toEqual({ active: true, locked: false, animate: false });
+    expect(getElementSkillVisualState('secondarySkill', true, 100, 100)).toEqual({ active: false, locked: true, animate: false });
+    expect(fitSkillIconDisplaySize(165, 148)).toEqual({ width: 30, height: 27 });
+    expect(fitSkillIconDisplaySize(165, 132)).toEqual({ width: 30, height: 24 });
   });
 });

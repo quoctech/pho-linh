@@ -227,9 +227,7 @@ export class StatusUiVfx {
   ): BarView {
     const innerWidth = getStatusInnerWidth(bounds.width);
     const barY = Math.round(y);
-    const textX = reverse
-      ? bounds.right - BAR_INNER_LEFT - 4
-      : bounds.left + BAR_INNER_LEFT + 4;
+    const textX = Math.round((bounds.left + bounds.right) / 2);
     const fill = this.scene.add.graphics().setDepth(100);
     const crop = this.cropFor(textureKey);
     const frame = this.scene.add
@@ -240,7 +238,7 @@ export class StatusUiVfx {
       .setDepth(101);
     const text = this.scene.add.text(Math.round(textX), barY, '', { ...STATUS_TEXT_STYLE, color: textColor })
       .setResolution(this.renderQuality)
-      .setOrigin(reverse ? 1 : 0, 0.5)
+      .setOrigin(0.5, 0.5)
       .setDepth(103);
     return { frame, fill, text, bounds, y: barY, fillColor, reverse, innerLeft: BAR_INNER_LEFT, innerWidth };
   }

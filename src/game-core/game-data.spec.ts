@@ -12,6 +12,10 @@ describe('local game data contract', () => {
     expect(CHARACTER_DATA.baseAttributes).toEqual({ str: 5, vit: 5, agi: 5, int: 5 });
     expect(CHARACTER_DATA.derivedStats.maxHp.vitPerPoint).toBe(20);
     expect(CHARACTER_DATA.skills.cloud_break_lantern.baseDamage).toBe(50);
+    expect(Object.keys(CHARACTER_DATA.elementSkills)).toEqual(['metal', 'wood', 'water', 'fire', 'earth']);
+    expect(CHARACTER_DATA.elementSkills['fire'].primarySkillLabel).toBe('Hỏa Vũ Liên Châu');
+    expect(CHARACTER_DATA.elementSkills['water'].primarySkillIcon).toBe('thuy_han_trieu_pha_khong');
+    expect(CHARACTER_DATA.elementSkills['water'].secondarySkillIcon).toBe('thuy_bang_phong_thien_ly');
     expect(CHARACTER_DATA.limits.maxEnergy).toBe(100);
   });
 

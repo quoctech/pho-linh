@@ -77,5 +77,62 @@
       "skillPowerMultiplier": 4,
       "defenseMultiplier": 0.5
     }
+  },
+  "elementSkills": {
+    "metal": {
+      "basicAttackFolder": "normal_attack",
+      "primarySkillId": "kim_quang_pha_giap",
+      "primarySkillLabel": "Kim Quang Phá Giáp",
+      "primarySkillIcon": "kim_kim_quang_pha_giap",
+      "primarySkillFolder": "kim_quang_pha_giap",
+      "secondarySkillId": "van_kiem_quy_tong",
+      "secondarySkillLabel": "Vạn Kiếm Quy Tông",
+      "secondarySkillIcon": "kim_van_kiem_quy_tong",
+      "secondarySkillFolder": "van_kiem_quy_tong"
+    },
+    "wood": {
+      "basicAttackFolder": "normal_attack_a",
+      "primarySkillId": "thanh_dang_troi_hon",
+      "primarySkillLabel": "Thanh Đằng Trói Hồn",
+      "primarySkillIcon": "moc_thanh_dang_troi_hon",
+      "primarySkillFolder": "skill_1",
+      "secondarySkillId": "thanh_moc_hoi_xuan",
+      "secondarySkillLabel": "Vạn Diệp Độc Chú",
+      "secondarySkillIcon": "moc_van_diep_doc_chu",
+      "secondarySkillFolder": "skill_2"
+    },
+    "water": {
+      "basicAttackFolder": "normal_attack_a",
+      "primarySkillId": "han_trieu_pha_khong",
+      "primarySkillLabel": "Hàn Triều Phá Không",
+      "primarySkillIcon": "thuy_han_trieu_pha_khong",
+      "primarySkillFolder": "skill_1",
+      "secondarySkillId": "thuy_linh_ho_the",
+      "secondarySkillLabel": "Băng Phong Thiên Lý",
+      "secondarySkillIcon": "thuy_bang_phong_thien_ly",
+      "secondarySkillFolder": "skill_2"
+    },
+    "fire": {
+      "basicAttackFolder": "normal_attack_a",
+      "primarySkillId": "hoa_vu_lien_chau",
+      "primarySkillLabel": "Hỏa Vũ Liên Châu",
+      "primarySkillIcon": "hoa_hoa_vu_lien_chau",
+      "primarySkillFolder": "skill_1",
+      "secondarySkillId": "phan_thien_hoa_vu",
+      "secondarySkillLabel": "Phần Thiên Xạ Nhật",
+      "secondarySkillIcon": "hoa_phan_thien_xa_nhat",
+      "secondarySkillFolder": "skill_2"
+    },
+    "earth": {
+      "basicAttackFolder": "normal_attack_a",
+      "primarySkillId": "son_nhac_tran_dia",
+      "primarySkillLabel": "Sơn Nhạc Trấn Địa",
+      "primarySkillIcon": "tho_son_nhac_tran_dia",
+      "primarySkillFolder": "skill_1",
+      "secondarySkillId": "dia_sat_phan_chan",
+      "secondarySkillLabel": "Huyền Nham Hộ Thể",
+      "secondarySkillIcon": "tho_huyen_nham_ho_the",
+      "secondarySkillFolder": "skill_2"
+    }
   }
 }

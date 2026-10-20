@@ -34,7 +34,10 @@ export interface BattleLayout {
   readonly monsterStatusBounds: BattleBounds;
   readonly telegraphY: number;
   readonly statusY: number;
-  readonly skillButton: BattlePoint;
+  readonly skillButtons: readonly BattlePoint[];
+  readonly heroSkillButtons: readonly BattlePoint[];
+  readonly skillButtonSize: number;
+  readonly skillButtonGap: number;
 }
 
 const MIN_CELL_SIZE = 38;
@@ -54,10 +57,17 @@ export function createBattleLayout(width: number, height: number): BattleLayout 
   const safeHeight = Math.max(520, height);
   const cellSize = Math.max(MIN_CELL_SIZE, Math.min(MAX_CELL_SIZE, (safeHeight - 308) / BOARD_SIZE));
   const boardWidth = cellSize * BOARD_SIZE;
+  const boardLeft = (safeWidth - boardWidth) / 2;
   const boardTop = Math.max(200, Math.min(240, safeHeight - boardWidth - 92));
   const boardBottom = boardTop + boardWidth;
   const heroY = Math.min(safeHeight - 8, boardBottom + 112);
-  const skillY = Math.min(safeHeight - 48, boardBottom + 52);
+  const skillY = Math.min(safeHeight - 50, boardBottom + 48);
+  const skillButtonSize = 54;
+  const skillButtonGap = 8;
+  const skillRowWidth = skillButtonSize * 2 + skillButtonGap;
+  // The hero skill row follows the board's right edge so its right padding
+  // matches the board's right padding at every viewport width.
+  const skillRowLeft = boardLeft + boardWidth - skillRowWidth;
   const sidePadding = Math.max(4, (safeWidth - 360) / 2);
   const hudLeft = Math.round(HUD_EDGE_PADDING);
   const hudRight = Math.round(safeWidth - HUD_EDGE_PADDING);
@@ -74,7 +84,7 @@ export function createBattleLayout(width: number, height: number): BattleLayout 
     width: safeWidth,
     height: safeHeight,
     cellSize,
-    boardLeft: (safeWidth - boardWidth) / 2,
+    boardLeft,
     boardTop,
     boardWidth,
     // Monster visual placement adds its sheet-specific transparent-padding
@@ -85,11 +95,11 @@ export function createBattleLayout(width: number, height: number): BattleLayout 
     monsterCombatY: -32,
     heroStunY: -92,
     statusBarY: 66,
-    statusBadgeY: 84,
-    energyBarY: 106,
+    statusBadgeY: 108,
+    energyBarY: 86,
     monsterStatusBarY: 66,
-    monsterStatusBadgeY: 84,
-    monsterEnergyBarY: 106,
+    monsterStatusBadgeY: 108,
+    monsterEnergyBarY: 86,
     hudLeft,
     hudRight,
     statusBarWidth,
@@ -105,6 +115,15 @@ export function createBattleLayout(width: number, height: number): BattleLayout 
     },
     telegraphY: 146,
     statusY: 166,
-    skillButton: { x: safeWidth - 86 - sidePadding, y: skillY },
+    skillButtons: [
+      { x: skillRowLeft + skillButtonSize / 2, y: skillY },
+      { x: skillRowLeft + skillButtonSize + skillButtonGap + skillButtonSize / 2, y: skillY },
+    ],
+    heroSkillButtons: [
+      { x: skillRowLeft + skillButtonSize / 2, y: skillY },
+      { x: skillRowLeft + skillButtonSize + skillButtonGap + skillButtonSize / 2, y: skillY },
+    ],
+    skillButtonSize,
+    skillButtonGap,
   };
 }

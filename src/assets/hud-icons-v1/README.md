@@ -1,18 +1,15 @@
 # PHỐ LINH — HUD & Skill Icons WebP
 
-Bao gồm HUD máu, năng lượng và trạng thái; icon kỹ năng nhân vật và quái. Ảnh WebP có alpha.
+Chỉ còn các asset HUD máu, năng lượng và trạng thái đang được runtime sử dụng. Bộ icon skill tĩnh mới nằm trong `../hud-icons-v2/skill-icons`.
 
 ## Quy trình
 
-Tách từng ô theo lưới nguồn trước → trim alpha bên trong ô → chuẩn hóa frame theo kích thước lớn nhất cùng dòng → xuất frame riêng và strip ngang 6 frame (gap 50px).
+Các icon skill cũ đã được thay bằng ảnh WebP tĩnh, cắt riêng từng file.
 
 ## Nội dung
 
-- `hud_status`: HUD tổng và 6 panel độc lập
-- `skill_icons_fantasy`: 8 strips, 48 frames
-- `skill_icons_elemental`: 12 strips, 72 frames
-- `skill_icons_monsters`: 4 strips, 24 frames
+- `hud`: HUD tổng và các panel độc lập
 
-JSON `manifest.json` chứa toạ độ nguồn, canvas và atlas rect để tích hợp Phaser.
+JSON `manifest.json` chỉ mô tả các asset HUD còn lại.
 
 **Lưu ý:** Đây là bộ ảnh tĩnh / các trạng thái mẫu lấy từ artwork đã duyệt; FPS, loop và transition cần cấu hình thêm trong game. Với vùng vẽ chạm biên ô ảnh nguồn, phải chỉnh nguồn nếu muốn không mất nét hiệu ứng.
