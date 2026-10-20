@@ -42,11 +42,11 @@ Nội tại được kích hoạt theo hệ nhân vật, không phụ thuộc v�
 
 | Hệ | Nội tại thiết kế |
 |---|---|
-| Kim — Sắc Bè & Nộ Cấp Tập | Khi match ngọc đỏ, 25% cơ hội phá thêm một ngọc vàng lân cận để tích Nộ. |
-| Mộc — Trị Liệu & Độc Sinh Sôi | Match tím cộng thêm 1 lượt độc; heal vượt quá HP tối đa khi HP đầy chuyển thành shield. |
-| Thủy — Kiểm Soát & Hoãn Lượt | Match-4/5 ngọc xanh dương cộng giáp và làm chậm bộ đếm lượt của quái thêm 1 lượt. |
-| Hỏa — Cuồng Công & Thiêu Đốt | Match đỏ +20% damage và xuyên/thiêu đốt shield của quái. |
-| Thổ — Kiên Cố & Chuyển Hóa | Match vàng nhận thêm shield bằng 50% số Nộ vừa tích. |
+| Kim — Kiếm Tâm Bất Diệt | Tăng tỷ lệ chí mạng khi liên tục tấn công cùng một mục tiêu. |
+| Mộc — Sinh Cơ Bất Tận | Tăng hiệu quả hồi phục khi trên chiến trường có mục tiêu đang Dính độc. |
+| Thủy — Hàn Tức Ngưng Kết | Tăng hiệu quả khống chế lên mục tiêu đã bị Làm chậm. |
+| Hỏa — Liệt Diễm Chi Tâm | Tăng sát thương lên mục tiêu đang Thiêu đốt. |
+| Thổ — Bất Động Như Sơn | Tăng khả năng chống chịu khi đang có Khiên. |
 
 Các nội tại có proc phải dùng RNG deterministic của `game-core`, ghi event rõ ràng và không được kích hoạt lại từ animation.
 
@@ -133,7 +133,7 @@ Một lượt phải kết thúc khi không còn match; mọi passive/proc phả
 - Modifier 130/100/80% áp đúng theo quan hệ hệ, không ảnh hưởng loại ngọc ngoài phạm vi.
 - Mỗi passive chỉ proc một lần theo event gameplay tương ứng.
 - Damage, heal, shield, energy và poison khớp công thức sau rounding.
-- Poison không vượt 5 tầng; heal dư của Mộc chỉ chuyển shield khi HP đã đầy.
+- Hiệu lực của năm nội tại được áp dụng đúng theo mô tả thiết kế và không bị kích hoạt lại từ UI/VFX.
 - Vuốt kề swap ngay; tap không để lại selection state.
 - Không thay đổi phần thưởng, lượt hoặc board state do VFX/animation.
 - Balance version được lưu cùng battle save/replay để không đổi luật giữa trận.
