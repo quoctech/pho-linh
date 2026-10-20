@@ -1,7 +1,12 @@
 import characterJson from '../assets/game-data/character.json';
 import combatJson from '../assets/game-data/combat.json';
 import monstersJson from '../assets/game-data/monsters.json';
-import type { Attributes, BattleConfig, GemType, MonsterDefinition } from './types';
+import type { Attributes, BattleConfig, ElementId, GemType, MonsterDefinition } from './types';
+
+/** Quan hệ Ngũ Hành giữa nhân vật và quái. */
+export type ElementRelationship = 'counter' | 'neutral' | 'countered';
+/** Nhóm hiệu quả ngọc chịu ảnh hưởng của modifier Ngũ Hành. */
+export type ElementCategory = 'damage' | 'support' | 'energy';
 
 export interface CharacterData {
   readonly schemaVersion: number;
@@ -37,12 +42,33 @@ export interface CharacterData {
     readonly poisonMaxHpRatio: number;
   };
   readonly combat: {
-    readonly attackGemStatDivisor: number;
-    readonly heal: { readonly base: number; readonly intMultiplier: number };
-    readonly shield: { readonly base: number; readonly vitMultiplier: number };
-    readonly energy: { readonly perGem: number };
-    readonly poison: { readonly intBase: number; readonly intMultiplier: number; readonly turns: number };
+    /** V2: sát thương ngọc đỏ = ATK × số ô × attackTileFactor × modifier Ngũ Hành. */
+    readonly attackTileFactor: number;
+    /** V2: độc mỗi tầng/lượt = ATK × poisonAtkFactor × modifier Ngũ Hành. */
+    readonly poisonAtkFactor: number;
+    readonly poisonMaxStacks: number;
+    readonly heal: { readonly maxHpFactor: number };
+    readonly shield: { readonly defFactor: number };
+    readonly poison: { readonly turns: number };
+    /** Hằng số riêng cho hiệu ứng ngọc do quái tự match (không dùng công thức player V2). */
+    readonly monsterGems: {
+      readonly heal: { readonly base: number; readonly levelMultiplier: number };
+      readonly shield: { readonly base: number; readonly defMultiplier: number };
+      readonly energy: { readonly perGem: number };
+    };
   };
+  /** Tham số nội tại nghề theo hệ nhân vật (Balance V2). */
+  readonly passives: Readonly<Record<ElementId, {
+    readonly energyBonusChance?: number;
+    readonly energyBonusAmount?: number;
+    readonly poisonBonusTurns?: number;
+    readonly healOverflowToShield?: boolean;
+    readonly shieldDelayMinMatch?: number;
+    readonly monsterDelayTurns?: number;
+    readonly bonusDamageFactor?: number;
+    readonly burnMonsterShield?: boolean;
+    readonly energyToShieldFactor?: number;
+  }>>;
   readonly skills: {
     readonly cloud_break_lantern: {
       readonly energyCost: number;
@@ -102,6 +128,13 @@ export interface CombatData {
     readonly maxGenerationAttempts: number;
     readonly balanceVersion: number;
     readonly comboMultipliers: readonly number[];
+  };
+  /** V2: năng lượng nhận theo độ dài match ngọc vàng (không nhân cascade). */
+  readonly energyByMatchLength: Readonly<Record<string, number>>;
+  /** V2: vòng tương khắc Ngũ Hành và bảng modifier theo quan hệ. */
+  readonly elements: {
+    readonly cycle: readonly ElementId[];
+    readonly modifier: Readonly<Record<ElementCategory, Readonly<Record<ElementRelationship, number>>>>;
   };
   readonly battle: {
     readonly maxTurns: number;

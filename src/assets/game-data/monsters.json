@@ -27,6 +27,7 @@
     "mist_blob": {
       "id": "mist_blob",
       "name": "Sương Hồn",
+      "element": "water",
       "level": 1,
       "maxHp": 270,
       "attack": 55,
@@ -43,6 +44,7 @@
     "lantern_cat": {
       "id": "lantern_cat",
       "name": "Miêu Đèn",
+      "element": "fire",
       "level": 2,
       "maxHp": 260,
       "attack": 40,
@@ -58,6 +60,7 @@
     "bamboo_mantis": {
       "id": "bamboo_mantis",
       "name": "Bọ Lá Tre",
+      "element": "wood",
       "level": 3,
       "maxHp": 360,
       "attack": 38,
@@ -73,6 +76,7 @@
     "cloud_fox_boss": {
       "id": "cloud_fox_boss",
       "name": "Cáo Mây",
+      "element": "water",
       "level": 5,
       "maxHp": 620,
       "attack": 52,

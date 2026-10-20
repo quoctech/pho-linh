@@ -118,7 +118,7 @@ export class BattlePage implements AfterViewInit, OnDestroy {
       monsterId,
       `m2-${Date.now().toString(36)}`,
       undefined,
-      createPlayerBattleState(save.profile.attributes, equipmentBonuses(save.inventory, save.equipment)),
+      createPlayerBattleState(save.profile.attributes, equipmentBonuses(save.inventory, save.equipment), save.settings.element),
     );
     this.controller = new BattleController(initial);
     this.unsubscribe = this.controller.subscribe((state) => this.onBattleStateChanged(state));

@@ -105,6 +105,8 @@ export interface EquipmentSlots {
 
 export interface PlayerBattleState {
   readonly level: number;
+  /** Hệ Ngũ Hành của nhân vật; quyết định tương khắc và nội tại nghề (Balance V2). */
+  readonly element: ElementId;
   readonly attributes: Attributes;
   readonly stats: DerivedStats;
   readonly currentHp: number;
@@ -112,11 +114,15 @@ export interface PlayerBattleState {
   readonly energy: number;
   readonly poisonPotency: number;
   readonly poisonTurns: number;
+  /** Số tầng độc đang chịu (mô hình độc theo tầng V2, tối đa poisonMaxStacks). */
+  readonly poisonStacks: number;
 }
 
 export interface MonsterDefinition {
   readonly id: string;
   readonly name: string;
+  /** Hệ Ngũ Hành của quái (Balance V2); thiếu field => coi như hòa/neutral. */
+  readonly element?: ElementId;
   readonly level: number;
   readonly maxHp: number;
   readonly attack: number;
@@ -156,6 +162,8 @@ export interface MonsterBattleState extends MonsterDefinition {
   readonly shield: number;
   readonly poisonPotency: number;
   readonly poisonTurns: number;
+  /** Số tầng độc đang chịu (mô hình độc theo tầng V2). */
+  readonly poisonStacks: number;
   readonly nextAction: 'basic' | 'guard' | 'heavy' | 'energy' | 'poison' | 'telegraph' | 'long_mieu_lien_kich';
   readonly phase: 1 | 2;
   readonly actionCount: number;
@@ -199,6 +207,8 @@ export interface BattleState {
   readonly phase: BattlePhase;
   readonly player: PlayerBattleState;
   readonly playerSkipTurns: number;
+  /** Số lượt hành động tấn công của quái đang bị hoãn (nội tại THỦY, Balance V2). */
+  readonly monsterActionDelay: number;
   readonly monster: MonsterBattleState;
   readonly telegraph: string;
   readonly terminalReason?: string;
@@ -258,6 +268,8 @@ export interface GameEvent {
     | 'MONSTER_ATTACKED'
     | 'MONSTER_GUARDED'
     | 'MONSTER_SKILL_USED'
+    | 'MONSTER_ACTION_DELAYED'
+    | 'PASSIVE_TRIGGERED'
     | 'PLAYER_TURN_SKIPPED'
     | 'SKILL_USED'
     | 'TURN_STARTED'

@@ -42,8 +42,21 @@ Thông tin animation của hero và quái là presentation metadata, tách khỏ
 - `baseAttributes`: `str`, `vit`, `agi`, `int` mặc định khi tạo profile.
 - `derivedStats`: công thức tạo `maxHp`, `atk`, `defense`, `skillPower`, `agiBonus` và `power`.
 - `limits`: năng lượng tối đa, giới hạn khiên theo HP và giới hạn độc theo HP.
-- `combat`: hệ số của ngọc hồi máu, khiên, năng lượng, độc và damage đánh thường.
+- `combat`: hệ số công thức ngọc V2 — `attackTileFactor`, `poisonAtkFactor`, `poisonMaxStacks`, `heal.maxHpFactor`, `shield.defFactor`, `poison.turns`, và `monsterGems` (hằng số riêng cho hiệu ứng ngọc do quái tự match, tách khỏi công thức player).
+- `passives`: tham số nội tại nghề theo hệ (`metal/wood/water/fire/earth`); mỗi hệ gồm các field như `energyBonusChance`, `poisonBonusTurns`, `healOverflowToShield`, `shieldDelayMinMatch`, `monsterDelayTurns`, `bonusDamageFactor`, `burnMonsterShield`, `energyToShieldFactor`. Xem `GAMEPLAY_BALANCE_V2.md §3`.
 - `skills`: cấu hình gameplay của skill. ID skill phải ổn định vì được ghi trong event/save.
+
+### Combat data (Balance V2)
+
+`combat.json` bổ sung cho đợt V2:
+
+- `match3.gemWeights`: trọng số sinh ngọc `{attack:25, poison:20, energy:20, heal:18, shield:17}` (tổng 100).
+- `match3.balanceVersion`: **2** — được ghi vào `BattleState` để replay/save biết bộ cân bằng đã dùng.
+- `energyByMatchLength`: nộ theo độ dài match ngọc vàng `{3:15, 4:25, 5:40, 6:50}` (không nhân cascade).
+- `elements.cycle`: vòng tương khắc `["metal","wood","earth","water","fire"]` (mỗi hệ khắc hệ kế tiếp).
+- `elements.modifier`: bảng hệ số theo nhóm `damage/support/energy` và quan hệ `counter/neutral/countered`.
+
+Logic Ngũ Hành/passive thuần nằm ở `src/game-core/elements.ts` và `battle.ts`; không hardcode số trong class render.
 
 Ví dụ chỉnh sức mạnh skill:
 
@@ -62,7 +75,7 @@ UI tooltip và battle resolver đều lấy cùng cấu hình này, tránh tình
 
 `monsters.json` có hai phần:
 
-- `definitions`: record theo `monsterId` ổn định. Mỗi definition có tên hiển thị, level, `maxHp`, `attack`, `defense`, `shieldCap`, behavior, tactic, reward và điều kiện unlock.
+- `definitions`: record theo `monsterId` ổn định. Mỗi definition có tên hiển thị, `element` (hệ Ngũ Hành), level, `maxHp`, `attack`, `defense`, `shieldCap`, behavior, tactic, reward và điều kiện unlock.
 - `combat`: hệ số dùng chung cho heavy attack, giảm damage theo defense, guard, năng lượng, poison và skill riêng của Miêu Đèn.
 
 Các ID hiện có:
@@ -117,4 +130,6 @@ Backend và client nên chạy cùng các kiểm tra:
 - tỉ lệ dodge, poison, shield và multiplier không vượt giới hạn thiết kế;
 - mọi ID trong unlock requirement đều tồn tại;
 - JSON parse được và khớp schema version;
-- `balanceVersion` tăng khi dữ liệu cân bằng thay đổi.
+- `balanceVersion` tăng khi dữ liệu cân bằng thay đổi;
+- `elements.cycle` đủ đúng 5 hệ không trùng; `elements.modifier` có đủ ba nhóm × ba quan hệ và trong khoảng thiết kế;
+- mọi `monster.element` là hệ hợp lệ; `gemWeights` tổng bằng 100; `energyByMatchLength` có đủ khóa 3–6.

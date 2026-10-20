@@ -22,6 +22,7 @@ export function createMonsterBattleState(monsterId: string): MonsterBattleState 
     shield: 0,
     poisonPotency: 0,
     poisonTurns: 0,
+    poisonStacks: 0,
     nextAction: definition.behaviors[0] ?? 'basic',
     phase: 1,
     actionCount: 0,

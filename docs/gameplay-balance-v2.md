@@ -1,8 +1,9 @@
 # PHỐ LINH — ĐẶC TẢ LỐI CHƠI & CÂN BẰNG V2
 
-> **Trạng thái:** Đã ghi nhận làm nguồn thiết kế cho đợt gameplay kế tiếp; **chưa triển khai trong code**.
+> **Trạng thái:** **Đã triển khai trong runtime** (`combat.json.balanceVersion = 2`); còn cần mô phỏng nhiều seed và playtest Android để tinh chỉnh số liệu.
 > **Phạm vi:** Match-3 6×6, ngọc, Ngũ Hành, nội tại nghề và công thức combat.
-> **Nguồn:** Đặc tả gameplay được chốt ngày 20/10/2026.
+> **Nguồn:** Đặc tả gameplay được chốt ngày 20/10/2026; cập nhật cơ chế nội tại bàn cờ ngày 20/10/2026.
+> **Dữ liệu:** mọi con số nằm trong `src/assets/game-data/combat.json` và `character.json`; logic ở `src/game-core` (xem `elements.ts`, `battle.ts`).
 
 ## 1. Bàn cờ và năm loại ngọc
 
@@ -36,19 +37,34 @@ So sánh hệ của nhân vật với hệ của quái để lấy `elementalMod
 
 Modifier chỉ điều chỉnh hiệu quả ngọc, không thay đổi board, RNG, lượt hay event order.
 
+### Hệ của quái (M2)
+
+| Quái | Hệ | Quan hệ gợi ý |
+|---|---|---|
+| `mist_blob` — Sương Hồn | Thủy (`water`) | — |
+| `lantern_cat` — Miêu Đèn | Hỏa (`fire`) | — |
+| `bamboo_mantis` — Bọ Lá Tre | Mộc (`wood`) | — |
+| `cloud_fox_boss` — Cáo Mây | Thủy (`water`) | — |
+
+Hệ lưu ở `monsters.json` theo field `element`; thiếu field thì core coi là hòa/neutral.
+
 ## 3. Nội tại nghề theo hệ nhân vật
 
-Nội tại được kích hoạt theo hệ nhân vật, không phụ thuộc vào UI hoặc animation:
+Nội tại là **cơ chế bàn cờ** kích hoạt theo hệ nhân vật, không phụ thuộc UI/animation.
+Tham số nằm trong `character.json → passives`; mọi proc dùng RNG deterministic của `game-core`,
+phát event `PASSIVE_TRIGGERED` (hoặc `MONSTER_ACTION_DELAYED`) và **không** được kích hoạt lại từ lớp Phaser.
 
-| Hệ | Nội tại thiết kế |
-|---|---|
-| Kim — Kiếm Tâm Bất Diệt | Tăng tỷ lệ chí mạng khi liên tục tấn công cùng một mục tiêu. |
-| Mộc — Sinh Cơ Bất Tận | Tăng hiệu quả hồi phục khi trên chiến trường có mục tiêu đang Dính độc. |
-| Thủy — Hàn Tức Ngưng Kết | Tăng hiệu quả khống chế lên mục tiêu đã bị Làm chậm. |
-| Hỏa — Liệt Diễm Chi Tâm | Tăng sát thương lên mục tiêu đang Thiêu đốt. |
-| Thổ — Bất Động Như Sơn | Tăng khả năng chống chịu khi đang có Khiên. |
+| Hệ | Nội tại | Cơ chế (đã triển khai) | Tham số |
+|---|---|---|---|
+| Kim — Kiếm Tâm Bất Diệt | Nộ cấp tập | Khi ăn **ngọc đỏ**, có cơ hội tích thêm một lượng Nộ xác định (bản gọn của "phá ngọc vàng lân cận" — không can thiệp bàn cờ để giữ cascade/replay ổn định). | `energyBonusChance: 0.25`, `energyBonusAmount: 5` |
+| Mộc — Sinh Cơ Bất Tận | Trị liệu & độc sinh sôi | Độc gây lên quái kéo dài **+1 lượt**; khi hồi máu lúc HP đã đầy, phần máu dư **chuyển thành Khiên** (giới hạn theo trần khiên). | `poisonBonusTurns: 1`, `healOverflowToShield: true` |
+| Thủy — Hàn Tức Ngưng Kết | Phòng thủ & hoãn lượt | Khi ăn **ngọc khiên** tạo Match-4/5, ngoài tích giáp còn **hoãn đòn đánh của quái thêm 1 lượt** (quái vẫn trúng độc trong lượt bị hoãn). | `shieldDelayMinMatch: 4`, `monsterDelayTurns: 1` |
+| Hỏa — Liệt Diễm Chi Tâm | Bùng nổ & đốt cháy | Khi ăn **ngọc đỏ**, sát thương **+20%** và **thiêu rụi điểm Khiên** hiện có của quái. | `bonusDamageFactor: 0.2`, `burnMonsterShield: true` |
+| Thổ — Bất Động Như Sơn | Chuyển hóa năng lượng | Khi ăn **ngọc vàng**, nhận thêm **50% Khiên** dựa trên lượng Nộ vừa tích. | `energyToShieldFactor: 0.5` |
 
-Các nội tại có proc phải dùng RNG deterministic của `game-core`, ghi event rõ ràng và không được kích hoạt lại từ animation.
+> **Bản gọn của KIM & THỦY:** KIM không phá ngọc vàng thật trên bàn mà quy đổi thành thưởng Nộ xác định;
+> THỦY hoãn phần hành động tấn công của quái (quái vẫn đổi ngọc và trúng độc). Hai lựa chọn này giữ nguyên
+> ý đồ thiết kế nhưng tránh can thiệp mong manh vào vòng resolve/cascade và event replay.
 
 ## 4. Trọng số sinh ngọc
 
@@ -69,27 +85,30 @@ Tổng bằng 100%. Trọng số chỉ dùng trong RNG của game-core; UI khôn
 Các công thức dưới đây thay thế công thức balance cũ khi V2 được triển khai. Cho đến lúc đó, code vẫn chạy balance hiện tại trong `GAMEPLAY.md`.
 
 ```ts
-damage = (player.ATK * tileCount * 0.4) * elementalModifier;
-poisonPerTurn = player.ATK * 0.25; // duy trì 3 lượt, cộng dồn tối đa 5 tầng
-healAmount = player.maxHP * (0.05 * tileCount);
-shieldAmount = player.DEF * 1.5 * tileCount;
+damage      = round(player.ATK * tileCount * 0.4 * elementalModifier('damage') * fireBonus) * comboMult * agiMult - monsterDEF; // min 1
+perStack    = round(player.ATK * 0.25 * elementalModifier('damage') * comboMult);           // độc mỗi tầng/lượt
+poisonTotal = stacks * perStack;                                                            // stacks ≤ 5, duration 3 (+1 nếu Mộc)
+healAmount  = round(player.maxHP * 0.05 * tileCount * elementalModifier('support') * comboMult);
+shieldAmount = round(player.DEF * 1.5 * tileCount * elementalModifier('support') * comboMult);
 
-function getEnergyGain(matchCount: number): number {
-  if (matchCount === 3) return 15;
-  if (matchCount === 4) return 25;
-  if (matchCount >= 5) return 40;
+function getEnergyGain(matchLength: number): number {   // KHÔNG nhân comboMult
+  if (matchLength === 3) return 15;
+  if (matchLength === 4) return 25;
+  if (matchLength === 5) return 40;
+  if (matchLength >= 6) return 50;
   return 0;
-}
+}                                                        // rồi × elementalModifier('energy')
 ```
 
 Quy ước balance:
 
 - `tileCount` là số ô duy nhất bị clear trong nhóm resolve, không double-count giao điểm.
-- Damage, poison, heal và shield chịu cascade multiplier theo tầng resolve.
-- Energy dùng mức thưởng theo độ dài match; elemental modifier có thể tăng lượng energy, nhưng cascade multiplier không nhân energy.
-- Damage vẫn đi qua các lớp shield/defense theo rule combat tổng quát sau khi tính hiệu quả ngọc.
-- Poison tối đa 5 tầng; mỗi lần áp dụng mới cập nhật duration theo rule độc của trận.
-- Các giá trị gây số lẻ phải có quy tắc rounding thống nhất trong game-core và test snapshot.
+- Damage, poison (potency mỗi tầng), heal và shield chịu cascade multiplier theo tầng resolve.
+- Energy dùng mức thưởng theo độ dài match (3/4/5/6 → 15/25/40/50); elemental modifier có thể tăng energy, nhưng **cascade multiplier không nhân energy**.
+- `agiMult = 1 + agiBonus` chỉ áp cho sát thương ngọc đỏ ở cascade ≥ 2 (giữ ý nghĩa của AGI từ công thức baseline).
+- Damage vẫn đi qua lớp shield rồi trừ defense (min 1) sau khi tính hiệu quả ngọc.
+- **Độc theo tầng:** mỗi nhóm ngọc tím cộng **1 tầng** (tối đa `poisonMaxStacks = 5`), mỗi tầng gây `perStack` sát thương/lượt; mỗi lần áp dụng mới reset duration về `poison.turns` (Mộc → +1).
+- Các giá trị gây số lẻ dùng `Math.round` thống nhất trong game-core và có test snapshot.
 
 ## 6. Cascade và nhịp lượt
 
@@ -118,14 +137,14 @@ Một lượt phải kết thúc khi không còn match; mọi passive/proc phả
 - Khi đang resolve/cascade, khóa input; mở lại sau khi event log của lượt hoàn tất.
 - Giữ `reducedMotion`: giảm flash/particle/shake nhưng không giảm phản hồi icon, text hoặc kết quả combat.
 
-## 8. Kế hoạch triển khai sau khi chốt docs
+## 8. Trạng thái triển khai
 
-1. Đưa weight, vòng Ngũ Hành, modifier và passive vào balance config versioned.
-2. Mở rộng `game-core` để tính modifier/passive bằng RNG seed explicit.
-3. Bổ sung payload/event cho proc nội tại, energy/heal/shield/poison và cascade tier.
-4. Cập nhật UI telegraph/HUD để giải thích hệ, passive proc và số tầng độc.
-5. Viết unit/integration test cho từng hệ, từng loại ngọc, match 3/4/5, cascade và giới hạn poison.
-6. Chạy mô phỏng nhiều seed rồi playtest Android trước khi bật balance V2 mặc định.
+- [x] Đưa weight, vòng Ngũ Hành, modifier và passive vào balance config versioned (`combat.json`/`character.json`, `balanceVersion = 2`).
+- [x] Mở rộng `game-core` để tính modifier/passive bằng RNG seed explicit (`elements.ts`, `battle.ts`).
+- [x] Bổ sung payload/event cho proc nội tại (`PASSIVE_TRIGGERED`, `MONSTER_ACTION_DELAYED`), energy/heal/shield/poison và cascade tier.
+- [x] Viết unit/integration test cho từng hệ, từng loại ngọc, match 3/4/5/6, độc theo tầng và nội tại (`elements.spec.ts`, `battle-v2.spec.ts`).
+- [ ] Cập nhật UI telegraph/HUD để giải thích hệ, passive proc và số tầng độc.
+- [ ] Chạy mô phỏng nhiều seed rồi playtest Android để tinh chỉnh số liệu cân bằng.
 
 ## 9. Acceptance criteria V2
 

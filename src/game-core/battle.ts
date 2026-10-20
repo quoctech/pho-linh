@@ -6,7 +6,8 @@ import { applyMonsterAttackDamage, matchDamageMultiplier } from './monsters/mons
 import { clampPlayerState, createPlayerBattleState } from './player';
 import { createInitialState, resolveSwap } from './resolve';
 import { nextInt } from './rng';
-import { CHARACTER_DATA, MONSTER_COMBAT_BALANCE } from './game-data';
+import { CHARACTER_DATA, COMBAT_DATA, MONSTER_COMBAT_BALANCE } from './game-data';
+import { elementalModifier, elementRelationship } from './elements';
 
 import {
   GEM_TYPES,
@@ -82,6 +83,7 @@ export function createBattleState(
     phase: 'PLAYER_READY',
     player: player ?? createPlayerBattleState(),
     playerSkipTurns: 0,
+    monsterActionDelay: 0,
     monster: createMonsterBattleState(monsterId),
     telegraph: `${createMonsterBattleState(monsterId).name} chuẩn bị hành động`,
     terminalReason: undefined,
@@ -101,6 +103,16 @@ function reject(state: BattleState, action: BattleAction, reason: string): Battl
 
 function comboMultiplier(cascade: number, config: BattleConfig): number {
   return config.comboMultipliers[Math.min(cascade - 1, config.comboMultipliers.length - 1)] ?? 1;
+}
+
+/**
+ * V2: nộ nhận theo độ dài match ngọc vàng (3→15, 4→25, 5→40, 6→50), không nhân cascade.
+ * `count` là tổng ô vàng bị clear trong bước resolve; với match thẳng đây là độ dài line.
+ */
+function playerEnergyGain(count: number): number {
+  if (count < 3) return 0;
+  const key = String(Math.min(6, count));
+  return COMBAT_DATA.energyByMatchLength[key] ?? 0;
 }
 
 function resolveMonsterMove(
@@ -248,7 +260,8 @@ function applyMonsterGemEffects(
 
     const healCount = counts['heal'] ?? 0;
     if (healCount > 0) {
-      const requested = Math.round(healCount * (CHARACTER_DATA.combat.heal.base + monster.level * 2) * multiplier);
+      const monsterHeal = CHARACTER_DATA.combat.monsterGems.heal;
+      const requested = Math.round(healCount * (monsterHeal.base + monster.level * monsterHeal.levelMultiplier) * multiplier);
       const amount = Math.min(monster.maxHp - monster.currentHp, requested);
       monster = { ...monster, currentHp: Math.min(monster.maxHp, monster.currentHp + requested) };
       events.push(event(state, actionId, sequence, 'HEAL_APPLIED', {
@@ -263,7 +276,8 @@ function applyMonsterGemEffects(
 
     const shieldCount = counts['shield'] ?? 0;
     if (shieldCount > 0) {
-      const requested = Math.round(shieldCount * (CHARACTER_DATA.combat.shield.base + monster.defense * CHARACTER_DATA.combat.shield.vitMultiplier) * multiplier);
+      const monsterShield = CHARACTER_DATA.combat.monsterGems.shield;
+      const requested = Math.round(shieldCount * (monsterShield.base + monster.defense * monsterShield.defMultiplier) * multiplier);
       const cap = monsterShieldCap(monster, config);
       const amount = Math.max(0, Math.min(cap - monster.shield, requested));
       monster = { ...monster, shield: Math.min(cap, monster.shield + requested) };
@@ -279,7 +293,7 @@ function applyMonsterGemEffects(
 
     const energyCount = counts['energy'] ?? 0;
     if (energyCount > 0) {
-      const requested = energyCount * CHARACTER_DATA.combat.energy.perGem + longMatchBonus;
+      const requested = energyCount * CHARACTER_DATA.combat.monsterGems.energy.perGem + longMatchBonus;
       const amount = Math.max(0, Math.min(CHARACTER_DATA.limits.maxEnergy - monster.energy, requested));
       monster = { ...monster, energy: Math.min(CHARACTER_DATA.limits.maxEnergy, monster.energy + requested) };
       events.push(event(state, actionId, sequence, 'ENERGY_GAINED', {
@@ -423,8 +437,19 @@ function applyGemEffects(
   let player = clampPlayerState(state.player);
   let monster = state.monster;
   let rngState = state.rngState;
+  let monsterActionDelay = state.monsterActionDelay;
   const events: GameEvent[] = [];
   let sequence = startSequence;
+
+  // Balance V2: hệ số hiệu quả ngọc theo tương khắc Ngũ Hành và tham số nội tại nghề.
+  // Tính một lần cho cả lượt; game-core quyết định, UI chỉ đọc event.
+  const combat = CHARACTER_DATA.combat;
+  const passive = CHARACTER_DATA.passives[player.element];
+  const relationship = elementRelationship(player.element, monster.element ?? player.element);
+  const damageMod = elementalModifier(relationship, 'damage');
+  const supportMod = elementalModifier(relationship, 'support');
+  const energyMod = elementalModifier(relationship, 'energy');
+  const shieldCap = Math.round(player.stats.maxHp * config.shieldCapMaxHpRatio);
 
   for (const source of baseEvents) {
     if (source.type !== 'GEMS_CLEARED') {
@@ -433,13 +458,14 @@ function applyGemEffects(
 
     const counts = value<Readonly<Record<string, number>>>(source.payload, 'gemCounts', {});
     const cascade = value(source.payload, 'cascade', 1);
-    const longMatchBonus = value(source.payload, 'longMatchBonus', 0);
     const multiplier = comboMultiplier(cascade, config);
     events.push(
       event(state, actionId, sequence, 'GEMS_EFFECT_APPLIED', {
         cascade,
         counts,
         comboMultiplier: multiplier,
+        elementRelationship: relationship,
+        element: player.element,
       }),
     );
     sequence += 1;
@@ -471,9 +497,24 @@ function applyGemEffects(
             continue;
           }
         }
+        // HỎA — Liệt Diễm Chi Tâm: thiêu đốt điểm khiên của quái trước khi đánh.
+        if (passive?.burnMonsterShield && monster.shield > 0) {
+          const burned = monster.shield;
+          monster = { ...monster, shield: 0 };
+          events.push(
+            event(state, actionId, sequence, 'PASSIVE_TRIGGERED', {
+              passiveId: 'fire_burn_shield',
+              element: 'fire',
+              amount: burned,
+              target: 'monster',
+              label: `${monster.name} bị thiêu rụi khiên`,
+            }),
+          );
+          sequence += 1;
+        }
         const agiMultiplier = cascade >= 2 ? 1 + player.stats.agiBonus : 1;
-        const matchMultiplier = matchDamageMultiplier(count);
-        const raw = count * (player.stats.atk / CHARACTER_DATA.combat.attackGemStatDivisor) * matchMultiplier;
+        const fireDamageMultiplier = 1 + (passive?.bonusDamageFactor ?? 0);
+        const raw = player.stats.atk * count * combat.attackTileFactor * damageMod * fireDamageMultiplier;
         const requested = Math.max(1, Math.round(raw * multiplier * agiMultiplier) - monster.defense);
         const damage = applyDamageToMonster(monster, requested);
         monster = damage.monster;
@@ -487,18 +528,43 @@ function applyGemEffects(
             shieldRemaining: monster.shield,
             shieldBroken: damage.absorbed > 0 && monster.shield === 0,
             matchCount: count,
-            matchDamageMultiplier: matchMultiplier,
             comboMultiplier: multiplier,
+            elementRelationship: relationship,
+            elementalModifier: damageMod,
             cascade,
             target: 'monster',
           }),
         );
         sequence += 1;
+
+        // KIM — Kiếm Tâm Bất Diệt: ăn ngọc đỏ có cơ hội tích thêm nộ.
+        if (passive?.energyBonusChance && passive.energyBonusAmount) {
+          const roll = nextInt(rngState, 100);
+          rngState = roll.state;
+          if (roll.value < passive.energyBonusChance * 100) {
+            const gained = Math.min(config.energyCap - player.energy, passive.energyBonusAmount);
+            if (gained > 0) {
+              player = clampPlayerState({ ...player, energy: player.energy + passive.energyBonusAmount });
+              events.push(
+                event(state, actionId, sequence, 'PASSIVE_TRIGGERED', {
+                  passiveId: 'metal_bonus_energy',
+                  element: 'metal',
+                  amount: gained,
+                  roll: roll.value,
+                  target: 'player',
+                  label: 'Kiếm Tâm Bất Diệt — tích thêm nộ',
+                }),
+              );
+              sequence += 1;
+            }
+          }
+        }
       }
 
       if (gem === 'heal') {
-        const amount = Math.round(count * (CHARACTER_DATA.combat.heal.base + player.attributes.int * CHARACTER_DATA.combat.heal.intMultiplier) * multiplier);
+        const amount = Math.round(player.stats.maxHp * combat.heal.maxHpFactor * count * supportMod * multiplier);
         const healed = Math.min(player.stats.maxHp - player.currentHp, amount);
+        const overflow = amount - healed;
         player = clampPlayerState({ ...player, currentHp: player.currentHp + amount });
         events.push(
           event(state, actionId, sequence, 'HEAL_APPLIED', {
@@ -506,30 +572,66 @@ function applyGemEffects(
             amount: healed,
             requested: amount,
             capped: healed < amount,
+            elementalModifier: supportMod,
             target: 'player',
           }),
         );
         sequence += 1;
+
+        // MỘC — Sinh Cơ Bất Tận: máu hồi dư khi đã đầy chuyển thành khiên.
+        if (passive?.healOverflowToShield && overflow > 0) {
+          const bonusShield = Math.max(0, Math.min(shieldCap - player.shield, overflow));
+          if (bonusShield > 0) {
+            player = clampPlayerState({ ...player, shield: player.shield + bonusShield });
+            events.push(
+              event(state, actionId, sequence, 'PASSIVE_TRIGGERED', {
+                passiveId: 'wood_overflow_shield',
+                element: 'wood',
+                amount: bonusShield,
+                target: 'player',
+                label: 'Sinh Cơ Bất Tận — máu dư hóa khiên',
+              }),
+            );
+            sequence += 1;
+          }
+        }
       }
 
       if (gem === 'shield') {
-        const amount = Math.round(count * (CHARACTER_DATA.combat.shield.base + player.attributes.vit * CHARACTER_DATA.combat.shield.vitMultiplier) * multiplier);
-        const cap = Math.round(player.stats.maxHp * config.shieldCapMaxHpRatio);
-        const gained = Math.min(cap - player.shield, amount);
+        const amount = Math.round(player.stats.defense * combat.shield.defFactor * count * supportMod * multiplier);
+        const gained = Math.min(shieldCap - player.shield, amount);
         player = clampPlayerState({ ...player, shield: player.shield + gained });
         events.push(
           event(state, actionId, sequence, 'SHIELD_GAINED', {
             actor: 'player',
             amount: gained,
             requested: amount,
+            elementalModifier: supportMod,
             target: 'player',
           }),
         );
         sequence += 1;
+
+        // THỦY — Hàn Tức Ngưng Kết: match-4/5 khiên làm hoãn đòn đánh của quái.
+        if (passive?.shieldDelayMinMatch && count >= passive.shieldDelayMinMatch) {
+          const delay = passive.monsterDelayTurns ?? 1;
+          monsterActionDelay += delay;
+          events.push(
+            event(state, actionId, sequence, 'PASSIVE_TRIGGERED', {
+              passiveId: 'water_delay_monster',
+              element: 'water',
+              amount: delay,
+              matchCount: count,
+              target: 'monster',
+              label: `Hàn Tức Ngưng Kết — hoãn đòn quái ${delay} lượt`,
+            }),
+          );
+          sequence += 1;
+        }
       }
 
       if (gem === 'energy') {
-        const amount = count * CHARACTER_DATA.combat.energy.perGem + longMatchBonus;
+        const amount = Math.round(playerEnergyGain(count) * energyMod);
         const gained = Math.min(config.energyCap - player.energy, amount);
         player = clampPlayerState({ ...player, energy: player.energy + amount });
         events.push(
@@ -537,27 +639,49 @@ function applyGemEffects(
             actor: 'player',
             amount: gained,
             requested: amount,
+            matchCount: count,
+            elementalModifier: energyMod,
             target: 'player',
           }),
         );
         sequence += 1;
+
+        // THỔ — Bất Động Như Sơn: nhận thêm khiên theo lượng nộ vừa tích.
+        if (passive?.energyToShieldFactor && gained > 0) {
+          const bonusShield = Math.max(0, Math.min(shieldCap - player.shield, Math.round(gained * passive.energyToShieldFactor)));
+          if (bonusShield > 0) {
+            player = clampPlayerState({ ...player, shield: player.shield + bonusShield });
+            events.push(
+              event(state, actionId, sequence, 'PASSIVE_TRIGGERED', {
+                passiveId: 'earth_energy_shield',
+                element: 'earth',
+                amount: bonusShield,
+                target: 'player',
+                label: 'Bất Động Như Sơn — nộ hóa khiên',
+              }),
+            );
+            sequence += 1;
+          }
+        }
       }
 
       if (gem === 'poison') {
-        const amount = Math.round(count * (CHARACTER_DATA.combat.poison.intBase + player.attributes.int * CHARACTER_DATA.combat.poison.intMultiplier) * multiplier);
-        const cap = Math.round(monster.maxHp * CHARACTER_DATA.limits.poisonMaxHpRatio);
-        const applied = Math.min(cap - monster.poisonPotency, amount);
-        monster = {
-          ...monster,
-          poisonPotency: Math.min(cap, monster.poisonPotency + amount),
-          poisonTurns: CHARACTER_DATA.combat.poison.turns,
-        };
+        // V2: độc theo tầng — mỗi nhóm ngọc tím cộng một tầng (tối đa poisonMaxStacks),
+        // mỗi tầng gây ATK × poisonAtkFactor mỗi lượt, duration reset về poison.turns
+        // (+poisonBonusTurns nếu là MỘC). poisonPotency lưu tổng sát thương/lượt.
+        const perStack = Math.max(0, Math.round(player.stats.atk * combat.poisonAtkFactor * damageMod * multiplier));
+        const stacks = Math.min(combat.poisonMaxStacks, monster.poisonStacks + 1);
+        const potency = stacks * perStack;
+        const turns = combat.poison.turns + (passive?.poisonBonusTurns ?? 0);
+        monster = { ...monster, poisonStacks: stacks, poisonPotency: potency, poisonTurns: turns };
         events.push(
           event(state, actionId, sequence, 'POISON_APPLIED', {
             actor: 'player',
-            amount: applied,
-            requested: amount,
-            turns: CHARACTER_DATA.combat.poison.turns,
+            amount: potency,
+            perStack,
+            stacks,
+            turns,
+            elementalModifier: damageMod,
             target: 'monster',
           }),
         );
@@ -567,7 +691,7 @@ function applyGemEffects(
 
     if (monster.currentHp <= 0) {
       const next = appendOutcome(
-        { ...state, player: clampPlayerState(player), monster, rngState },
+        { ...state, player: clampPlayerState(player), monster, rngState, monsterActionDelay },
         events,
         actionId,
         sequence,
@@ -579,7 +703,7 @@ function applyGemEffects(
   }
 
   return {
-    state: { ...state, player: clampPlayerState(player), monster, rngState },
+    state: { ...state, player: clampPlayerState(player), monster, rngState, monsterActionDelay },
     events,
     nextSequence: sequence,
   };
@@ -608,6 +732,7 @@ function resolveMonsterTurn(
       currentHp: Math.max(0, monster.currentHp - poisonDamage),
       poisonTurns: remainingTurns,
       poisonPotency: remainingTurns > 0 ? monster.poisonPotency : 0,
+      poisonStacks: remainingTurns > 0 ? monster.poisonStacks : 0,
     };
     events.push(
       event(state, actionId, sequence, 'POISON_TICKED', {
@@ -642,6 +767,7 @@ function resolveMonsterTurn(
       currentHp: player.currentHp - poisonDamage,
       poisonTurns: remainingTurns,
       poisonPotency: remainingTurns > 0 ? player.poisonPotency : 0,
+      poisonStacks: remainingTurns > 0 ? player.poisonStacks : 0,
     });
     events.push(
       event(state, actionId, sequence, 'POISON_TICKED', {
@@ -666,6 +792,28 @@ function resolveMonsterTurn(
         events,
       };
     }
+  }
+
+  // THỦY — Hàn Tức Ngưng Kết: quái bị hoãn, bỏ qua toàn bộ hành động tấn công lượt này
+  // (độc vẫn tick ở trên). Trừ một lượt hoãn rồi chuyển sang telegraph lượt kế.
+  if (state.monsterActionDelay > 0) {
+    events.push(
+      event(state, actionId, sequence, 'MONSTER_ACTION_DELAYED', {
+        actor: 'monster',
+        remaining: state.monsterActionDelay - 1,
+        source: 'water_delay_monster',
+        label: `${monster.name} bị trì hoãn — mất lượt đánh`,
+        target: 'monster',
+      }),
+    );
+    sequence += 1;
+    return finishMonsterTurn(
+      { ...state, player, monster, monsterActionDelay: state.monsterActionDelay - 1 },
+      actionId,
+      sequence,
+      events,
+      config,
+    );
   }
 
   if (monster.id === 'lantern_cat') {
@@ -827,6 +975,9 @@ function resolveMonsterTurn(
         ...player,
         poisonPotency: Math.min(cap, player.poisonPotency + requested),
         poisonTurns: MONSTER_COMBAT_BALANCE.poisonTurns,
+        // Giữ số tầng >0 để HUD biết người chơi đang trúng độc; độc quái lên người
+        // chơi vẫn dùng mô hình potency riêng, stack chỉ phục vụ hiển thị.
+        poisonStacks: Math.min(CHARACTER_DATA.combat.poisonMaxStacks, player.poisonStacks + 1),
       });
       events.push(
         event(state, actionId, sequence, 'POISON_APPLIED', {
@@ -1040,10 +1191,19 @@ export function resolveBattleAction(
   const playerSkipTurns = Number.isFinite(state.playerSkipTurns)
     ? Math.max(0, Math.min(1, state.playerSkipTurns))
     : 0;
+  // monsterActionDelay và poisonStacks là field state V2 mới; snapshot activeBattle cũ
+  // không có nên chuẩn hóa về 0 để tránh undefined/NaN khi khôi phục save cũ.
+  const monsterActionDelay = Number.isFinite(state.monsterActionDelay)
+    ? Math.max(0, Math.floor(state.monsterActionDelay))
+    : 0;
+  const monsterPoisonStacks = Number.isFinite(state.monster.poisonStacks)
+    ? Math.max(0, Math.floor(state.monster.poisonStacks))
+    : 0;
   state = {
     ...state,
     playerSkipTurns,
-    monster: { ...state.monster, shield: monsterShield, energy: monsterEnergy },
+    monsterActionDelay,
+    monster: { ...state.monster, shield: monsterShield, energy: monsterEnergy, poisonStacks: monsterPoisonStacks },
   };
 
   if (action.kind === 'abandon') {

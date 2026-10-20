@@ -5,6 +5,7 @@ export * from './monsters/monster-definitions';
 export * from './monsters/lantern-cat';
 export * from './monsters/monster-combat';
 export * from './player';
+export * from './elements';
 export * from './resolve';
 export * from './rng';
 export * from './types';

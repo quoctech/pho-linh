@@ -33,7 +33,36 @@ describe('local game data contract', () => {
 
   it('keeps the match-3 and battle config in the shared combat JSON', () => {
     expect(COMBAT_DATA.match3.gemTypes).toEqual(['attack', 'heal', 'shield', 'energy', 'poison']);
-    expect(COMBAT_DATA.match3.balanceVersion).toBe(1);
+    expect(COMBAT_DATA.match3.balanceVersion).toBe(2);
     expect(COMBAT_DATA.battle.maxTurns).toBe(24);
+  });
+
+  it('exposes Balance V2 gem weights, energy table and elemental modifiers', () => {
+    expect(COMBAT_DATA.match3.gemWeights).toEqual({ attack: 25, poison: 20, energy: 20, heal: 18, shield: 17 });
+    expect(COMBAT_DATA.energyByMatchLength).toEqual({ '3': 15, '4': 25, '5': 40, '6': 50 });
+    expect(COMBAT_DATA.elements.cycle).toEqual(['metal', 'wood', 'earth', 'water', 'fire']);
+    expect(COMBAT_DATA.elements.modifier.damage).toEqual({ counter: 1.3, neutral: 1.0, countered: 0.8 });
+    expect(COMBAT_DATA.elements.modifier.support).toEqual({ counter: 1.0, neutral: 1.0, countered: 0.8 });
+    expect(COMBAT_DATA.elements.modifier.energy).toEqual({ counter: 1.2, neutral: 1.0, countered: 1.0 });
+  });
+
+  it('keeps V2 player combat factors and class passives in JSON data', () => {
+    expect(CHARACTER_DATA.combat.attackTileFactor).toBe(0.4);
+    expect(CHARACTER_DATA.combat.poisonAtkFactor).toBe(0.25);
+    expect(CHARACTER_DATA.combat.poisonMaxStacks).toBe(5);
+    expect(CHARACTER_DATA.combat.heal.maxHpFactor).toBe(0.05);
+    expect(CHARACTER_DATA.combat.shield.defFactor).toBe(1.5);
+    expect(CHARACTER_DATA.passives.metal.energyBonusChance).toBe(0.25);
+    expect(CHARACTER_DATA.passives.wood.healOverflowToShield).toBe(true);
+    expect(CHARACTER_DATA.passives.water.shieldDelayMinMatch).toBe(4);
+    expect(CHARACTER_DATA.passives.fire.burnMonsterShield).toBe(true);
+    expect(CHARACTER_DATA.passives.earth.energyToShieldFactor).toBe(0.5);
+  });
+
+  it('assigns a Ngũ Hành element to every monster', () => {
+    expect(MONSTER_DEFINITIONS['mist_blob'].element).toBe('water');
+    expect(MONSTER_DEFINITIONS['lantern_cat'].element).toBe('fire');
+    expect(MONSTER_DEFINITIONS['bamboo_mantis'].element).toBe('wood');
+    expect(MONSTER_DEFINITIONS['cloud_fox_boss'].element).toBe('water');
   });
 });

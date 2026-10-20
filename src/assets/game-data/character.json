@@ -52,22 +52,51 @@
     "poisonMaxHpRatio": 0.2
   },
   "combat": {
-    "attackGemStatDivisor": 3,
+    "attackTileFactor": 0.4,
+    "poisonAtkFactor": 0.25,
+    "poisonMaxStacks": 5,
     "heal": {
-      "base": 8,
-      "intMultiplier": 0.6
+      "maxHpFactor": 0.05
     },
     "shield": {
-      "base": 8,
-      "vitMultiplier": 0.5
-    },
-    "energy": {
-      "perGem": 8
+      "defFactor": 1.5
     },
     "poison": {
-      "intBase": 3,
-      "intMultiplier": 0.4,
       "turns": 3
+    },
+    "monsterGems": {
+      "heal": {
+        "base": 8,
+        "levelMultiplier": 2
+      },
+      "shield": {
+        "base": 8,
+        "defMultiplier": 0.5
+      },
+      "energy": {
+        "perGem": 8
+      }
+    }
+  },
+  "passives": {
+    "metal": {
+      "energyBonusChance": 0.25,
+      "energyBonusAmount": 5
+    },
+    "wood": {
+      "poisonBonusTurns": 1,
+      "healOverflowToShield": true
+    },
+    "water": {
+      "shieldDelayMinMatch": 4,
+      "monsterDelayTurns": 1
+    },
+    "fire": {
+      "bonusDamageFactor": 0.2,
+      "burnMonsterShield": true
+    },
+    "earth": {
+      "energyToShieldFactor": 0.5
     }
   },
   "skills": {

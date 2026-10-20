@@ -1,5 +1,5 @@
 import { CHARACTER_DATA } from './game-data';
-import type { Attributes, DerivedStats, EquipmentBonuses, PlayerBattleState } from './types';
+import type { Attributes, DerivedStats, ElementId, EquipmentBonuses, PlayerBattleState } from './types';
 
 export const BASE_ATTRIBUTES: Attributes = { ...CHARACTER_DATA.baseAttributes };
 
@@ -36,10 +36,14 @@ export function computeDerivedStats(
 export function createPlayerBattleState(
   attributes: Attributes = BASE_ATTRIBUTES,
   equipmentBonuses = {},
+  // Hệ nhân vật lấy từ save (settings.element). Mặc định 'metal' để các test/snapshot
+  // cũ không truyền element vẫn chạy được mà không ảnh hưởng tương khắc bất ngờ.
+  element: ElementId = 'metal',
 ): PlayerBattleState {
   const stats = computeDerivedStats(attributes, equipmentBonuses);
   return {
     level: 1,
+    element,
     attributes,
     stats,
     currentHp: stats.maxHp,
@@ -47,6 +51,7 @@ export function createPlayerBattleState(
     energy: 0,
     poisonPotency: 0,
     poisonTurns: 0,
+    poisonStacks: 0,
   };
 }
 
@@ -70,6 +75,7 @@ export function clampPlayerState(player: PlayerBattleState): PlayerBattleState {
     energy: Math.max(0, Math.min(CHARACTER_DATA.limits.maxEnergy, safeNonNegative(player.energy, 0))),
     poisonPotency: safeNonNegative(player.poisonPotency, 0),
     poisonTurns: Math.max(0, Math.floor(safeNonNegative(player.poisonTurns, 0))),
+    poisonStacks: Math.max(0, Math.floor(safeNonNegative(player.poisonStacks, 0))),
   };
 }
 
