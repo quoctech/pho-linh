@@ -15,8 +15,8 @@
       "manifest": "skill_han_trieu_pha_khong/skill_han_trieu_pha_khong_manifest.json",
       "frameCount": 6,
       "standardFrameSize": {
-        "width": 475,
-        "height": 398
+        "width": 512,
+        "height": 512
       }
     },
     {
@@ -28,8 +28,8 @@
       "manifest": "skill_bang_phong_thien_ly/skill_bang_phong_thien_ly_manifest.json",
       "frameCount": 6,
       "standardFrameSize": {
-        "width": 508,
-        "height": 423
+        "width": 512,
+        "height": 512
       },
       "fix": "transparency_fix_v3"
     },
@@ -42,8 +42,8 @@
       "manifest": "skill_hoa_vu_lien_chau/skill_hoa_vu_lien_chau_manifest.json",
       "frameCount": 6,
       "standardFrameSize": {
-        "width": 408,
-        "height": 377
+        "width": 512,
+        "height": 512
       }
     },
     {
@@ -55,8 +55,8 @@
       "manifest": "skill_phan_thien_xa_nhat/skill_phan_thien_xa_nhat_manifest.json",
       "frameCount": 6,
       "standardFrameSize": {
-        "width": 452,
-        "height": 420
+        "width": 512,
+        "height": 512
       }
     },
     {

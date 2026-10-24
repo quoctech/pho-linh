@@ -11,6 +11,7 @@ export interface BasicAttackEffectDefinition {
   readonly animationKey: string;
   readonly frameRate: number;
   readonly displayWidth: number;
+  readonly rotationDegrees?: number;
 }
 
 const ASSET_ROOT = 'assets/vfx/hero-basic-attacks/v1';
@@ -24,6 +25,7 @@ function definition(
   folder: string,
   frameWidth: number,
   frameHeight: number,
+  rotationDegrees?: number,
 ): BasicAttackEffectDefinition {
   const animationKey = `hero-basic-attack-effect-${element}`;
   return {
@@ -36,13 +38,14 @@ function definition(
     animationKey,
     frameRate: FRAME_RATE,
     displayWidth: DISPLAY_WIDTH,
+    rotationDegrees,
   };
 }
 
 export const BASIC_ATTACK_EFFECTS: Readonly<Record<BasicAttackEffectDefinition['element'], BasicAttackEffectDefinition>> = {
   metal: definition('metal', 'basic_attack_kim_kiem_v2', 'basic_attack_kim_kiem_v2', 395, 483),
   wood: definition('wood', 'basic_attack_moc_gay_v2', 'basic_attack_moc_gay_v2', 387, 534),
-  water: definition('water', 'basic_attack_thuy_thuong_v2', 'basic_attack_thuy_thuong_v2', 368, 524),
+  water: definition('water', 'basic_attack_thuy_thuong_v2', 'basic_attack_thuy_thuong_v2', 368, 524, -40),
   fire: definition('fire', 'basic_attack_hoa_cung_v2', 'basic_attack_hoa_cung_v2', 515, 389),
   earth: definition('earth', 'basic_attack_tho_dao_v2', 'basic_attack_tho_dao_v2', 387, 441),
 };

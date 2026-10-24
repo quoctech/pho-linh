@@ -86,4 +86,34 @@ describe('separated V2 actor frames', () => {
     expect(actorRow('earth', 'skill_1')?.frames[0]?.file).toBe('frames_webp/12_normal_attack/12_normal_attack_01.webp');
     expect(actorRow('earth', 'skill_2')?.frames[0]?.file).toBe('frames_webp/13_poison_cast/13_poison_cast_01.webp');
   });
+
+  it('uses the new 512px Kim package with logical skill aliases', () => {
+    const rows = actorRows('metal');
+    expect(rows).toHaveLength(24);
+    expect(new Set(rows.flatMap((row) => actorRow('metal', row.id)?.frames.map((frame) => frame.file) ?? [])).size).toBe(108);
+    expect(actorRow('metal', 'idle')?.equalFrameSize).toEqual({ w: 512, h: 512 });
+    expect(actorRow('metal', 'energy_charge')?.frames[0]?.file).toBe('frames_webp/02_full_energy/02_full_energy_01.webp');
+    expect(actorRow('metal', 'skill_dodge')?.frames[0]?.file).toBe('frames_webp/14_dodge/14_dodge_01.webp');
+    expect(actorRow('metal', 'kim_quang_pha_giap')?.frames[0]?.file).toBe('frames_webp/12_normal_attack/12_normal_attack_01.webp');
+  });
+
+  it('uses the new 512px Thủy package with logical skill aliases', () => {
+    const rows = actorRows('water');
+    expect(rows).toHaveLength(24);
+    expect(new Set(rows.flatMap((row) => actorRow('water', row.id)?.frames.map((frame) => frame.file) ?? [])).size).toBe(108);
+    expect(actorRow('water', 'idle')?.equalFrameSize).toEqual({ w: 512, h: 512 });
+    expect(actorRow('water', 'energy_rage')?.frames[0]?.file).toBe('frames_webp/02_full_rage/02_full_rage_01.webp');
+    expect(actorRow('water', 'skill_1')?.frames[0]?.file).toBe('frames_webp/12_normal_attack/12_normal_attack_01.webp');
+    expect(actorRow('water', 'skill_2')?.frames[0]?.file).toBe('frames_webp/13_poison_cast/13_poison_cast_01.webp');
+  });
+
+  it('uses the new 512px Hỏa package with logical skill aliases', () => {
+    const rows = actorRows('fire');
+    expect(rows).toHaveLength(24);
+    expect(new Set(rows.flatMap((row) => actorRow('fire', row.id)?.frames.map((frame) => frame.file) ?? [])).size).toBe(108);
+    expect(actorRow('fire', 'idle')?.equalFrameSize).toEqual({ w: 512, h: 512 });
+    expect(actorRow('fire', 'anti_heal')?.frames[0]?.file).toBe('frames_webp/06_heal_reduction/06_heal_reduction_01.webp');
+    expect(actorRow('fire', 'skill_1')?.frames[0]?.file).toBe('frames_webp/12_normal_attack/12_normal_attack_01.webp');
+    expect(actorRow('fire', 'skill_2')?.frames[0]?.file).toBe('frames_webp/13_poison_cast/13_poison_cast_01.webp');
+  });
 });

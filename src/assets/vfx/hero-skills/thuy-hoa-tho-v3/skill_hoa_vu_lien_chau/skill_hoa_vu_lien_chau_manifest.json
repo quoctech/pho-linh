@@ -1,183 +1,74 @@
 {
-  "skillId": "skill_hoa_vu_lien_chau",
-  "skillLabel": "Hỏa Vũ Liên Châu",
-  "element": "hoa",
-  "description": "Bắn liên tiếp nhiều hỏa tiễn, gây sát thương Hỏa nhiều lần lên mục tiêu.",
-  "sourceOriginalFile": "chuỗi_hiệu_ứng_mưa_tên_lửa_rực_cháy.png",
-  "sourceTransparentFile": "skill_hoa_vu_lien_chau_source_transparent.webp",
-  "sourceSize": {
-    "width": 2172,
-    "height": 724
+  "skill": "hoa_vu_lien_chau",
+  "canvas": {
+    "width": 512,
+    "height": 512
   },
-  "detectedBoundsX": [
-    0,
-    315,
-    689,
-    1056,
-    1442,
-    1850,
-    2172
-  ],
-  "detectedCentersX": [
-    162.5370274552922,
-    496.4302521424679,
-    875.4551652415068,
-    1250.9400927403271,
-    1634.3751194001338,
-    2000.6844223072908
-  ],
-  "backgroundRemoval": {
-    "bgColorMedianRGB": [
-      20.0,
-      20.0,
-      22.0
-    ],
-    "thresholdLow": 6.0,
-    "thresholdHigh": 65.65462664580463
-  },
-  "frameCount": 6,
-  "standardFrameSize": {
-    "width": 408,
-    "height": 377
-  },
-  "equalSpacedPreviewFile": "previews/skill_hoa_vu_lien_chau_equal_spaced_preview.webp",
   "frames": [
     {
-      "index": 1,
-      "name": "skill_hoa_vu_lien_chau_01",
+      "index": 0,
       "file": "frames_webp/skill_hoa_vu_lien_chau_01.webp",
-      "sourceXBounds": {
-        "x0": 0,
-        "x1": 315
-      },
-      "cropBoxInsideSeparatedSegment": {
-        "left": 1,
-        "top": 141,
-        "right": 315,
-        "bottom": 518
-      },
-      "standardFrameSize": {
-        "width": 408,
-        "height": 377
-      },
-      "pastePosition": {
-        "x": 47,
-        "y": 0
+      "width": 512,
+      "height": 512,
+      "duration_ms": 100,
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    {
+      "index": 1,
+      "file": "frames_webp/skill_hoa_vu_lien_chau_02.webp",
+      "width": 512,
+      "height": 512,
+      "duration_ms": 100,
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
       }
     },
     {
       "index": 2,
-      "name": "skill_hoa_vu_lien_chau_02",
-      "file": "frames_webp/skill_hoa_vu_lien_chau_02.webp",
-      "sourceXBounds": {
-        "x0": 315,
-        "x1": 689
-      },
-      "cropBoxInsideSeparatedSegment": {
-        "left": 2,
-        "top": 200,
-        "right": 374,
-        "bottom": 473
-      },
-      "standardFrameSize": {
-        "width": 408,
-        "height": 377
-      },
-      "pastePosition": {
-        "x": 18,
-        "y": 52
+      "file": "frames_webp/skill_hoa_vu_lien_chau_03.webp",
+      "width": 512,
+      "height": 512,
+      "duration_ms": 100,
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
       }
     },
     {
       "index": 3,
-      "name": "skill_hoa_vu_lien_chau_03",
-      "file": "frames_webp/skill_hoa_vu_lien_chau_03.webp",
-      "sourceXBounds": {
-        "x0": 689,
-        "x1": 1056
-      },
-      "cropBoxInsideSeparatedSegment": {
-        "left": 0,
-        "top": 184,
-        "right": 367,
-        "bottom": 501
-      },
-      "standardFrameSize": {
-        "width": 408,
-        "height": 377
-      },
-      "pastePosition": {
-        "x": 20,
-        "y": 30
+      "file": "frames_webp/skill_hoa_vu_lien_chau_04.webp",
+      "width": 512,
+      "height": 512,
+      "duration_ms": 100,
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
       }
     },
     {
       "index": 4,
-      "name": "skill_hoa_vu_lien_chau_04",
-      "file": "frames_webp/skill_hoa_vu_lien_chau_04.webp",
-      "sourceXBounds": {
-        "x0": 1056,
-        "x1": 1442
-      },
-      "cropBoxInsideSeparatedSegment": {
-        "left": 0,
-        "top": 162,
-        "right": 386,
-        "bottom": 500
-      },
-      "standardFrameSize": {
-        "width": 408,
-        "height": 377
-      },
-      "pastePosition": {
-        "x": 11,
-        "y": 19
+      "file": "frames_webp/skill_hoa_vu_lien_chau_05.webp",
+      "width": 512,
+      "height": 512,
+      "duration_ms": 100,
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
       }
     },
     {
       "index": 5,
-      "name": "skill_hoa_vu_lien_chau_05",
-      "file": "frames_webp/skill_hoa_vu_lien_chau_05.webp",
-      "sourceXBounds": {
-        "x0": 1442,
-        "x1": 1850
-      },
-      "cropBoxInsideSeparatedSegment": {
-        "left": 0,
-        "top": 173,
-        "right": 408,
-        "bottom": 518
-      },
-      "standardFrameSize": {
-        "width": 408,
-        "height": 377
-      },
-      "pastePosition": {
-        "x": 0,
-        "y": 16
-      }
-    },
-    {
-      "index": 6,
-      "name": "skill_hoa_vu_lien_chau_06",
       "file": "frames_webp/skill_hoa_vu_lien_chau_06.webp",
-      "sourceXBounds": {
-        "x0": 1850,
-        "x1": 2172
-      },
-      "cropBoxInsideSeparatedSegment": {
-        "left": 5,
-        "top": 214,
-        "right": 318,
-        "bottom": 512
-      },
-      "standardFrameSize": {
-        "width": 408,
-        "height": 377
-      },
-      "pastePosition": {
-        "x": 47,
-        "y": 39
+      "width": 512,
+      "height": 512,
+      "duration_ms": 100,
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
       }
     }
   ]

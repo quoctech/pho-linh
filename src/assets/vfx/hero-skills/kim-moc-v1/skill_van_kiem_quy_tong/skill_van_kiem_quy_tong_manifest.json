@@ -1,176 +1,110 @@
 {
-  "skillId": "skill_van_kiem_quy_tong",
-  "skillLabel": "Vạn Kiếm Quy Tông",
-  "element": "kim",
-  "description": "Triệu hồi hàng loạt kiếm khí tấn công liên tiếp, gây sát thương Kim nhiều lần.",
-  "sourceOriginalFile": "chuỗi_kiếm_pháp_ma_thuật_rực_sáng.png",
-  "sourceConvertedFile": "skill_van_kiem_quy_tong_source.webp",
-  "sourceSize": {
-    "width": 2172,
-    "height": 724
+  "schema_version": "1.0",
+  "character_element": "kim",
+  "skill_id": "van_kiem_quy_tong",
+  "skill_name": "Vạn Kiếm Quy Tông",
+  "type": "VFX_only_no_character_no_enemy",
+  "animation_key": "metal_van_kiem_quy_tong",
+  "frame_count": 6,
+  "playback": "once",
+  "frame_size": {
+    "width": 512,
+    "height": 512
   },
-  "detectedBoundsX": [
-    0,
-    304,
-    617,
-    980,
-    1391,
-    1838,
-    2172
-  ],
-  "backgroundRemoval": {
-    "bgColor": [
-      39.0,
-      40.0,
-      44.0
-    ],
-    "thresholdLow": 6.0,
-    "thresholdHigh": 128.30051636684865
-  },
-  "frameCount": 6,
-  "standardFrameSize": {
-    "width": 447,
-    "height": 551
-  },
-  "equalSpacedPreviewFile": "previews/skill_van_kiem_quy_tong_equal_spaced_preview.webp",
+  "format": "WEBP RGBA lossless",
+  "coordinate_system": "Each frame uses identical source cell geometry and an identical final canvas placement.",
+  "direction": "bottom_left_to_top_right",
+  "animation_duration_ms": 740,
   "frames": [
     {
-      "index": 1,
-      "name": "skill_van_kiem_quy_tong_01",
+      "index": 0,
+      "name": "kiem_khoi_phat",
       "file": "frames_webp/skill_van_kiem_quy_tong_01.webp",
-      "sourceXBounds": {
-        "x0": 0,
-        "x1": 304
+      "native_file": "frames_native_webp/van_kiem_quy_tong_01.webp",
+      "duration_ms": 110,
+      "width": 512,
+      "height": 512,
+      "origin": {
+        "x": 0.5,
+        "y": 0.5
       },
-      "cropBoxInsideSeparatedSegment": {
-        "left": 22,
-        "top": 145,
-        "right": 304,
-        "bottom": 564
+      "sha256_pixels": "744ed8adc95a148ac703cb787d846bb0918ff9b963286aa1cf430c58aa31cabe"
+    },
+    {
+      "index": 1,
+      "name": "kiem_tap_hop",
+      "file": "frames_webp/skill_van_kiem_quy_tong_02.webp",
+      "native_file": "frames_native_webp/van_kiem_quy_tong_02.webp",
+      "duration_ms": 110,
+      "width": 512,
+      "height": 512,
+      "origin": {
+        "x": 0.5,
+        "y": 0.5
       },
-      "standardFrameSize": {
-        "width": 447,
-        "height": 551
-      },
-      "pastePosition": {
-        "x": 82,
-        "y": 66
-      }
+      "sha256_pixels": "e423975d8858600bc314fa38c0ad69ec2c7c43c804080fc2824f4db1d3d127c0"
     },
     {
       "index": 2,
-      "name": "skill_van_kiem_quy_tong_02",
-      "file": "frames_webp/skill_van_kiem_quy_tong_02.webp",
-      "sourceXBounds": {
-        "x0": 304,
-        "x1": 617
+      "name": "kiem_dong_loat",
+      "file": "frames_webp/skill_van_kiem_quy_tong_03.webp",
+      "native_file": "frames_native_webp/van_kiem_quy_tong_03.webp",
+      "duration_ms": 110,
+      "width": 512,
+      "height": 512,
+      "origin": {
+        "x": 0.5,
+        "y": 0.5
       },
-      "cropBoxInsideSeparatedSegment": {
-        "left": 16,
-        "top": 145,
-        "right": 313,
-        "bottom": 562
-      },
-      "standardFrameSize": {
-        "width": 447,
-        "height": 551
-      },
-      "pastePosition": {
-        "x": 75,
-        "y": 67
-      }
+      "sha256_pixels": "6c04db27447f81599d8837f1447bd6d25245dc3419b9c646c18e47ef154c4d40"
     },
     {
       "index": 3,
-      "name": "skill_van_kiem_quy_tong_03",
-      "file": "frames_webp/skill_van_kiem_quy_tong_03.webp",
-      "sourceXBounds": {
-        "x0": 617,
-        "x1": 980
+      "name": "kiem_ap_sat",
+      "file": "frames_webp/skill_van_kiem_quy_tong_04.webp",
+      "native_file": "frames_native_webp/van_kiem_quy_tong_04.webp",
+      "duration_ms": 110,
+      "width": 512,
+      "height": 512,
+      "origin": {
+        "x": 0.5,
+        "y": 0.5
       },
-      "cropBoxInsideSeparatedSegment": {
-        "left": 8,
-        "top": 208,
-        "right": 363,
-        "bottom": 557
-      },
-      "standardFrameSize": {
-        "width": 447,
-        "height": 551
-      },
-      "pastePosition": {
-        "x": 46,
-        "y": 101
-      }
+      "sha256_pixels": "b6b06f3f28937a84782f46674914f050f34ba6ec6ca97c9837cb78542974e8c9"
     },
     {
       "index": 4,
-      "name": "skill_van_kiem_quy_tong_04",
-      "file": "frames_webp/skill_van_kiem_quy_tong_04.webp",
-      "sourceXBounds": {
-        "x0": 980,
-        "x1": 1391
+      "name": "kiem_xuyen_pha",
+      "file": "frames_webp/skill_van_kiem_quy_tong_05.webp",
+      "native_file": "frames_native_webp/van_kiem_quy_tong_05.webp",
+      "duration_ms": 110,
+      "width": 512,
+      "height": 512,
+      "origin": {
+        "x": 0.5,
+        "y": 0.5
       },
-      "cropBoxInsideSeparatedSegment": {
-        "left": 13,
-        "top": 129,
-        "right": 411,
-        "bottom": 577
-      },
-      "standardFrameSize": {
-        "width": 447,
-        "height": 551
-      },
-      "pastePosition": {
-        "x": 24,
-        "y": 51
-      }
+      "sha256_pixels": "8d9838d32c07c42d69380e0bac01deab79d30268f5cf2fcb90fa4bed3181d41f"
     },
     {
       "index": 5,
-      "name": "skill_van_kiem_quy_tong_05",
-      "file": "frames_webp/skill_van_kiem_quy_tong_05.webp",
-      "sourceXBounds": {
-        "x0": 1391,
-        "x1": 1838
-      },
-      "cropBoxInsideSeparatedSegment": {
-        "left": 0,
-        "top": 70,
-        "right": 447,
-        "bottom": 621
-      },
-      "standardFrameSize": {
-        "width": 447,
-        "height": 551
-      },
-      "pastePosition": {
-        "x": 0,
-        "y": 0
-      }
-    },
-    {
-      "index": 6,
-      "name": "skill_van_kiem_quy_tong_06",
+      "name": "ket_lieu",
       "file": "frames_webp/skill_van_kiem_quy_tong_06.webp",
-      "sourceXBounds": {
-        "x0": 1838,
-        "x1": 2172
+      "native_file": "frames_native_webp/van_kiem_quy_tong_06.webp",
+      "duration_ms": 190,
+      "width": 512,
+      "height": 512,
+      "origin": {
+        "x": 0.5,
+        "y": 0.5
       },
-      "cropBoxInsideSeparatedSegment": {
-        "left": 10,
-        "top": 163,
-        "right": 320,
-        "bottom": 562
-      },
-      "standardFrameSize": {
-        "width": 447,
-        "height": 551
-      },
-      "pastePosition": {
-        "x": 68,
-        "y": 76
-      }
+      "sha256_pixels": "8606b72f189c2c2be7a39028bfde253d3a528e66b719ce185c1b6054e65faba2"
     }
-  ]
+  ],
+  "notes": {
+    "native_webp": "Frames at approximately original cell resolution (720x358), avoiding downscaling.",
+    "webp512": "512x512 transparent canvas; 480x239 render area positioned at x=16,y=136",
+    "source": "One 3x2 sprite sheet; rendered divider lines removed during extraction.",
+    "alpha": "Thresholded extremely-low-alpha background noise; gold glow preserved."
+  }
 }

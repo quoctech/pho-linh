@@ -1,5 +1,12 @@
 # PHỐ LINH — Nam hệ Kim — Tách frame độc lập WebP (V2)
 
+Bộ frame runtime mới từ `kim1` và `kim2`, thay thế toàn bộ sprite Kim cũ.
+
+- 24 logical rows giữ nguyên contract của battle và skin preview.
+- 18 animation vật lý, tổng cộng 108 frame WebP mới.
+- Các trạng thái trùng hoặc không có animation riêng dùng alias tới frame tương thích.
+- `frames-manifest.json` là manifest canonical của runtime.
+
 Bản V2 sửa lại theo đúng yêu cầu: **tách frame bằng khoảng trắng / ranh giới thực tế trước**, sau đó mới crop.
 
 ## Quy trình xử lý

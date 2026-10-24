@@ -4,7 +4,7 @@
 - **Hệ:** hoa
 - **Mô tả:** Bắn một mũi tên hỏa diễm cực mạnh, phát nổ gây sát thương diện rộng và Thiêu đốt.
 - **Số frame:** 6
-- **Frame chuẩn:** 452 x 420px
+- **Frame chuẩn:** 512 x 512px
 - **Nền:** Trong suốt (transparent)
 
 ## Quy ước file
@@ -14,9 +14,9 @@
 - Preview giãn cách: `previews/skill_phan_thien_xa_nhat_equal_spaced_preview.webp`
 - Manifest: `skill_phan_thien_xa_nhat_manifest.json`
 
-## Rule xử lý
+## Quy ước runtime
 
-- Khử nền tối sang trong suốt.
-- Frame trước không dính frame sau.
-- Frame trên không dính frame dưới.
-- Lấy frame có width / height lớn nhất của skill làm chuẩn cho toàn bộ frame còn lại.
+- Đây là FX-only, không chứa nhân vật hoặc quái.
+- Canvas WebP RGBA trong suốt 512 x 512, pivot ở tâm.
+- Chạy một lần ở 10 FPS, bay từ nhân vật tới mục tiêu rồi kết thúc bằng vùng nổ.
+- Runtime áp dụng rotation cố định `30°`, tint lửa vàng-cam và scale lớn hơn nhẹ bằng Phaser.

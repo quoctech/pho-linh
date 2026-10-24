@@ -190,7 +190,13 @@ export class SkillTestScene extends Phaser.Scene {
       const sprite = this.vfxPool.acquireSpriteVfx(effect.textureKeys[0]);
       if (!sprite) return;
       const size = { width: effect.displayWidth, height: Math.round(effect.displayWidth * effect.frameHeight / effect.frameWidth) };
-      sprite.setPosition(HERO_X, HERO_Y - 82).setDisplaySize(size.width, size.height).setDepth(12).play(effect.animationKey);
+      sprite.setPosition(HERO_X, HERO_Y - 82)
+        .setDisplaySize(size.width, size.height)
+        .setRotation(effect.rotationDegrees === undefined
+          ? Phaser.Math.Angle.Between(HERO_X, HERO_Y - 82, MONSTER_X, MONSTER_Y)
+          : (effect.rotationDegrees * Math.PI) / 180)
+        .setDepth(12)
+        .play(effect.animationKey);
       this.activeVfx.add(sprite);
       this.status?.setText('Đánh thường · VFX bay tới mục tiêu');
       this.tweens.add({ targets: sprite, x: MONSTER_X, y: MONSTER_Y, duration: 650, ease: 'Sine.easeInOut', onComplete: () => this.release(sprite) });
@@ -202,10 +208,50 @@ export class SkillTestScene extends Phaser.Scene {
     const sprite = this.vfxPool.acquireSpriteVfx(effect.textureKeys[0]);
     if (!sprite) return;
     const height = Math.round(effect.displayWidth * effect.frameHeight / effect.frameWidth);
-    sprite.setPosition(MONSTER_X, MONSTER_Y - 2).setDisplaySize(effect.displayWidth, height).setDepth(11).play(effect.animationKey);
+    const launch = { x: HERO_X + 18, y: HERO_Y - 82 };
+    const impact = { x: MONSTER_X - 18, y: MONSTER_Y - 8 };
+    const staticTarget = effect.target === 'player'
+      ? { x: HERO_X, y: HERO_Y - 82 }
+      : { x: MONSTER_X, y: MONSTER_Y - 2 };
+    let animationDone = false;
+    let travelDone = !effect.travel;
+    let released = false;
+    const finish = (): void => {
+      if (released || !animationDone || !travelDone) return;
+      released = true;
+      this.release(sprite);
+    };
+    sprite.clearTint();
+    if (effect.tint !== undefined) sprite.setTint(effect.tint);
+    sprite.setPosition(effect.travel ? launch.x : staticTarget.x, effect.travel ? launch.y : staticTarget.y)
+      .setDisplaySize(effect.displayWidth, height)
+      // The supplied Kim VFX is drawn on a -45° diagonal. Match that
+      // direction to the actual flight vector instead of leaving it skewed.
+      .setRotation(effect.travel
+        ? effect.rotationDegrees === undefined
+          ? Phaser.Math.Angle.Between(launch.x, launch.y, impact.x, impact.y)
+          : (effect.rotationDegrees * Math.PI) / 180
+        : 0)
+      .setDepth(11).play(effect.animationKey);
     this.activeVfx.add(sprite);
-    this.status?.setText(`${effect.label} · trình diễn presentation-only`);
-    sprite.once(Phaser.Animations.Events.ANIMATION_COMPLETE, () => this.release(sprite));
+    this.status?.setText(`${effect.label} · ${effect.travel ? 'bay từ nhân vật tới quái' : 'trình diễn presentation-only'}`);
+    sprite.once(Phaser.Animations.Events.ANIMATION_COMPLETE, () => {
+      animationDone = true;
+      finish();
+    });
+    if (effect.travel) {
+      this.tweens.add({
+        targets: sprite,
+        x: impact.x,
+        y: impact.y,
+        duration: 650,
+        ease: 'Cubic.Out',
+        onComplete: () => {
+          travelDone = true;
+          finish();
+        },
+      });
+    }
   }
 
   private playMonsterAction(action: 'monsterBasicAttack' | 'monsterSkill'): void {

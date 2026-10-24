@@ -4,7 +4,7 @@
 - **Hệ:** kim
 - **Mô tả:** Triệu hồi hàng loạt kiếm khí tấn công liên tiếp, gây sát thương Kim nhiều lần.
 - **Số frame:** 6
-- **Kích thước frame chuẩn:** 447 x 551px
+- **Kích thước frame chuẩn:** 512 x 512px
 
 ## Quy ước file
 
@@ -13,9 +13,9 @@
 - Preview: `previews/skill_van_kiem_quy_tong_equal_spaced_preview.webp`
 - Manifest: `skill_van_kiem_quy_tong_manifest.json`
 
-## Rule xử lý
+## Quy ước runtime
 
-- Tách frame theo khoảng trống / ranh giới pixel thực tế.
-- Frame trước không dính frame sau.
-- Khử nền tối để thuận tiện dùng trong game.
-- Các frame còn lại được đặt vào canvas chuẩn theo frame lớn nhất của skill.
+- Đây là FX-only, không chứa nhân vật hoặc quái.
+- Canvas WebP RGBA lossless 512 x 512, pivot ở tâm.
+- Chạy một lần ở khoảng 8 FPS, theo timing frame trong manifest.
+- Di chuyển toàn bộ FX object giữa nhân vật và mục tiêu; không reposition từng frame.

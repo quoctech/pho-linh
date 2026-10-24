@@ -4,7 +4,7 @@
 - **Hệ:** thuy
 - **Mô tả:** Đâm thương tạo dòng nước băng xuyên mục tiêu, gây sát thương Thủy và giảm tốc.
 - **Số frame:** 6
-- **Frame chuẩn:** 475 x 398px
+- **Frame chuẩn:** 512 x 512px
 - **Nền:** Trong suốt (transparent)
 
 ## Quy ước file
@@ -14,9 +14,9 @@
 - Preview giãn cách: `previews/skill_han_trieu_pha_khong_equal_spaced_preview.webp`
 - Manifest: `skill_han_trieu_pha_khong_manifest.json`
 
-## Rule xử lý
+## Quy ước runtime
 
-- Khử nền tối sang trong suốt.
-- Frame trước không dính frame sau.
-- Frame trên không dính frame dưới.
-- Lấy frame có width / height lớn nhất của skill làm chuẩn cho toàn bộ frame còn lại.
+- Đây là FX-only, không chứa nhân vật hoặc quái.
+- Canvas WebP RGBA trong suốt 512 x 512, pivot ở tâm.
+- Chạy một lần với timing 115ms cho năm frame đầu và 165ms cho frame cuối.
+- Bay từ nhân vật tới mục tiêu; rotation được cấu hình riêng trong runtime.

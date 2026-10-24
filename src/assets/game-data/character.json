@@ -251,7 +251,7 @@
       "primarySkillFolder": "skill_1",
       "primarySkill": { "energyCost": 50, "baseDamage": 0, "skillPowerMultiplier": 0, "defenseMultiplier": 0, "fixedDamage": 1100, "fixedDamageTarget": "shield_or_hp" },
       "secondarySkill": { "energyCost": 100, "baseDamage": 0, "skillPowerMultiplier": 0, "defenseMultiplier": 0, "attackMultiplier": 1.4, "controlEffect": "freeze", "controlChance": 1, "controlTurns": 1 },
-      "secondarySkillId": "thuy_linh_ho_the",
+      "secondarySkillId": "bang_phong_thien_ly",
       "secondarySkillLabel": "Băng Phong Thiên Lý",
       "secondarySkillIcon": "thuy_bang_phong_thien_ly",
       "secondarySkillFolder": "skill_2"
@@ -264,7 +264,7 @@
       "primarySkillFolder": "skill_1",
       "primarySkill": { "energyCost": 60, "baseDamage": 0, "skillPowerMultiplier": 0, "defenseMultiplier": 0, "attackMultiplier": 0.4, "hitCount": 3 },
       "secondarySkill": { "energyCost": 100, "baseDamage": 0, "skillPowerMultiplier": 0, "defenseMultiplier": 0, "attackMultiplier": 1.5, "damageTakenBonus": 0.15, "damageTakenBonusTurns": 2 },
-      "secondarySkillId": "phan_thien_hoa_vu",
+      "secondarySkillId": "phan_thien_xa_nhat",
       "secondarySkillLabel": "Phần Thiên Xạ Nhật",
       "secondarySkillIcon": "hoa_phan_thien_xa_nhat",
       "secondarySkillFolder": "skill_2"
@@ -277,7 +277,7 @@
       "primarySkillFolder": "skill_1",
       "primarySkill": { "energyCost": 65, "baseDamage": 0, "skillPowerMultiplier": 0, "defenseMultiplier": 0, "attackMultiplier": 0.7, "controlEffect": "stun", "controlChance": 0.4, "controlTurns": 1 },
       "secondarySkill": { "energyCost": 80, "baseDamage": 0, "skillPowerMultiplier": 0, "defenseMultiplier": 0, "selfShieldDefenseMultiplier": 2, "selfDamageReduction": 0.25, "selfDamageReductionTurns": 2, "controlImmunityTurns": 2, "reflectDamageRatio": 0.35 },
-      "secondarySkillId": "dia_sat_phan_chan",
+      "secondarySkillId": "huyen_nham_ho_the",
       "secondarySkillLabel": "Huyền Nham Hộ Thể",
       "secondarySkillIcon": "tho_huyen_nham_ho_the",
       "secondarySkillFolder": "skill_2"

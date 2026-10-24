@@ -356,7 +356,7 @@ describe('Cân bằng skill hệ (balanceVersion 7)', () => {
         }),
         'water', 'secondary', `thuy-2-${monsterId}`,
       );
-      expect(skillDamage(result.events, 'thuy_linh_ho_the')[0]?.payload['requested'], monsterId).toBe(1540); // 1100 × 1.4, DEF 0
+      expect(skillDamage(result.events, 'bang_phong_thien_ly')[0]?.payload['requested'], monsterId).toBe(1540); // 1100 × 1.4, DEF 0
       expect(result.events.some((e) => e.type === 'CONTROL_APPLIED' && e.payload['effect'] === 'freeze'), monsterId).toBe(true);
       expect(result.events.some((e) => e.type === 'MONSTER_ACTION_SKIPPED' && e.payload['reason'] === 'freeze'), monsterId).toBe(true);
       expect(result.events.some((e) => e.type === 'MONSTER_THINKING' || e.type === 'MONSTER_MOVE_SELECTED'), monsterId).toBe(false);
@@ -383,7 +383,7 @@ describe('Cân bằng skill hệ (balanceVersion 7)', () => {
       player: { energy: 100 }, monster: { element: 'earth', defense: 0, baseDefense: 0 },
     });
     const cast = castSkill(state, 'fire', 'secondary', 'hoa-2');
-    expect(skillDamage(cast.events, 'phan_thien_hoa_vu')[0]?.payload['requested']).toBe(1575); // 1050 × 1.5
+    expect(skillDamage(cast.events, 'phan_thien_xa_nhat')[0]?.payload['requested']).toBe(1575); // 1050 × 1.5
     expect(cast.nextState.monster.damageTakenBonusTurns).toBe(2);
 
     const first = swap(nextTurn(cast.nextState, state), 'hoa-2-gem-1');
@@ -406,8 +406,8 @@ describe('Cân bằng skill hệ (balanceVersion 7)', () => {
       )).find((candidate) => candidate.events.some((e) => e.type === 'MONSTER_ATTACKED'));
       expect(attacked, monsterId).toBeDefined();
       const events = attacked!.events;
-      expect(skillDamage(events, 'dia_sat_phan_chan'), monsterId).toHaveLength(0);
-      expect(firstEvent(events, (e) => e.type === 'SHIELD_GAINED' && e.payload['source'] === 'dia_sat_phan_chan')?.payload['amount'], monsterId).toBe(1100); // 550 × 2
+      expect(skillDamage(events, 'huyen_nham_ho_the'), monsterId).toHaveLength(0);
+      expect(firstEvent(events, (e) => e.type === 'SHIELD_GAINED' && e.payload['source'] === 'huyen_nham_ho_the')?.payload['amount'], monsterId).toBe(1100); // 550 × 2
       const hit = firstEvent(events, (e) => e.type === 'MONSTER_ATTACKED')!;
       const raw = Number(hit.payload['rawIncoming']);
       const expected = Math.max(1, Math.round(raw * 0.9 * 0.75)); // Sơn giáp × Huyền Nham

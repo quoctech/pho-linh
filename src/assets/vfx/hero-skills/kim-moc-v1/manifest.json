@@ -14,8 +14,8 @@
       "manifest": "skill_van_kiem_quy_tong/skill_van_kiem_quy_tong_manifest.json",
       "frameCount": 6,
       "standardFrameSize": {
-        "width": 447,
-        "height": 551
+        "width": 512,
+        "height": 512
       }
     },
     {
@@ -27,8 +27,8 @@
       "manifest": "skill_kim_quang_pha_giap/skill_kim_quang_pha_giap_manifest.json",
       "frameCount": 6,
       "standardFrameSize": {
-        "width": 426,
-        "height": 391
+        "width": 512,
+        "height": 512
       }
     },
     {

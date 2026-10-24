@@ -3196,21 +3196,37 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
   private playHeroSkillEffect(skillId: string): boolean {
     const effect = heroSkillEffectForSkill(skillId);
     const target = this.combatPoint(effect?.target ?? 'monster');
+    const start = this.combatPoint('player');
     if (!effect || !this.battleVfxPool || !this.anims.exists(effect.animationKey)) return false;
     const sprite = this.battleVfxPool.acquireSpriteVfx(effect.textureKeys[0]);
     if (!sprite) return false;
-    const displaySize = fitHeroSkillEffectDisplaySize(effect);
+    const displaySize = fitHeroSkillEffectDisplaySize(effect, effect.displayWidth);
+    const launch = effect.travel ? { x: start.x + 18, y: start.y - 16 } : target;
+    const impact = { x: target.x - 18, y: target.y - 8 };
+    const travelDuration = this.reducedMotion ? 220 : 360;
     let released = false;
+    let animationDone = false;
+    let travelDone = !effect.travel;
     const finish = (): void => {
-      if (released) return;
+      if (released || !animationDone || !travelDone) return;
       released = true;
       this.vfxSprites.delete(sprite);
       this.battleVfxPool?.release(sprite);
     };
+    sprite.clearTint();
+    if (effect.tint !== undefined) sprite.setTint(effect.tint);
     sprite
-      .setPosition(target.x, target.y)
+      .setPosition(launch.x, launch.y)
       .setOrigin(0.5)
       .setDisplaySize(displaySize.width, displaySize.height)
+      // The supplied Kim VFX artwork points bottom-left -> top-right.
+      // Rotate the whole effect so that this intrinsic diagonal follows the
+      // actual caster-to-target vector (horizontal in the battle layout).
+      .setRotation(effect.travel
+        ? effect.rotationDegrees === undefined
+          ? Phaser.Math.Angle.Between(launch.x, launch.y, impact.x, impact.y)
+          : (effect.rotationDegrees * Math.PI) / 180
+        : 0)
       .setDepth(16)
       .setAlpha(1)
       .setVisible(true)
@@ -3218,7 +3234,23 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
       .play(effect.animationKey);
     sprite.anims.timeScale = this.reducedMotion ? 1.8 : 1;
     this.vfxSprites.add(sprite);
-    sprite.once(Phaser.Animations.Events.ANIMATION_COMPLETE, finish);
+    sprite.once(Phaser.Animations.Events.ANIMATION_COMPLETE, () => {
+      animationDone = true;
+      finish();
+    });
+    if (effect.travel) {
+      this.tweens.add({
+        targets: sprite,
+        x: impact.x,
+        y: impact.y,
+        duration: travelDuration,
+        ease: 'Cubic.Out',
+        onComplete: () => {
+          travelDone = true;
+          finish();
+        },
+      });
+    }
     return true;
   }
 
@@ -3246,7 +3278,9 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
       .setPosition(launch.x, launch.y)
       .setOrigin(0.5)
       .setDisplaySize(displaySize.width, displaySize.height)
-      .setRotation(Phaser.Math.Angle.Between(launch.x, launch.y, impact.x, impact.y))
+      .setRotation(effect.rotationDegrees === undefined
+        ? Phaser.Math.Angle.Between(launch.x, launch.y, impact.x, impact.y)
+        : (effect.rotationDegrees * Math.PI) / 180)
       .setDepth(16)
       .setAlpha(1)
       .setVisible(true)

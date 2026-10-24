@@ -1,4304 +1,1310 @@
 {
   "key": "hoa",
   "displayName": "Hỏa",
-  "character": "Nam hệ Hỏa",
+  "character": "Nam hệ Hỏa - Cung Thủ",
   "type": "element_character",
+  "version": "hoa-assets-2026-10",
+  "sourcePackages": [
+    "hoa_1",
+    "hoa_2"
+  ],
+  "notes": "Canonical runtime manifest. Logical aliases preserve the 24-row actor contract while using the new Hỏa WebP frames.",
   "strips": [
     {
       "id": "idle",
-      "label": "Idle / đứng chờ",
-      "sourceStrip": "hoa/rows_webp/01_idle.webp",
-      "sourceStripSize": {
-        "w": 793,
-        "h": 166
-      },
-      "detectedColumnBounds": [
-        0,
-        126,
-        254,
-        376,
-        519,
-        650,
-        793
-      ],
-      "detectedCentersX": [
-        68.10508152877232,
-        196.46988493347718,
-        314.11775667761117,
-        443.40956427559775,
-        580.9605999378302,
-        716.068851918959
-      ],
+      "label": "idle",
+      "sourceStrip": "hoa/hoa_1/frames/01_idle",
       "frameCount": 6,
       "equalFrameSize": {
-        "w": 143,
-        "h": 162
+        "w": 512,
+        "h": 512
       },
-      "independentSegmentGap": 80,
-      "equalSpacedStripFile": "equal_spaced_strips_webp/01_idle_equal_spaced.webp",
-      "equalSpacedStripSize": {
-        "w": 1258,
-        "h": 162
-      },
-      "rawSeparatedSegmentsFolder": "spaced_segments_webp/01_idle",
       "frames": [
         {
           "index": 1,
-          "name": "idle_01",
+          "name": "01_idle_01",
           "file": "frames_webp/01_idle/01_idle_01.webp",
-          "sourceXBounds": {
-            "x0": 0,
-            "x1": 126
-          },
-          "cropBoxInsideSeparatedSegment": {
-            "left": 0,
-            "top": 9,
-            "right": 126,
-            "bottom": 166
-          },
-          "equalCanvas": {
-            "w": 143,
-            "h": 162
-          },
-          "pastePosition": {
-            "x": 8,
-            "y": 5
-          }
+          "width": 512,
+          "height": 512
         },
         {
           "index": 2,
-          "name": "idle_02",
+          "name": "01_idle_02",
           "file": "frames_webp/01_idle/01_idle_02.webp",
-          "sourceXBounds": {
-            "x0": 126,
-            "x1": 254
-          },
-          "cropBoxInsideSeparatedSegment": {
-            "left": 3,
-            "top": 6,
-            "right": 128,
-            "bottom": 166
-          },
-          "equalCanvas": {
-            "w": 143,
-            "h": 162
-          },
-          "pastePosition": {
-            "x": 9,
-            "y": 2
-          }
+          "width": 512,
+          "height": 512
         },
         {
           "index": 3,
-          "name": "idle_03",
+          "name": "01_idle_03",
           "file": "frames_webp/01_idle/01_idle_03.webp",
-          "sourceXBounds": {
-            "x0": 254,
-            "x1": 376
-          },
-          "cropBoxInsideSeparatedSegment": {
-            "left": 0,
-            "top": 7,
-            "right": 122,
-            "bottom": 166
-          },
-          "equalCanvas": {
-            "w": 143,
-            "h": 162
-          },
-          "pastePosition": {
-            "x": 10,
-            "y": 3
-          }
+          "width": 512,
+          "height": 512
         },
         {
           "index": 4,
-          "name": "idle_04",
+          "name": "01_idle_04",
           "file": "frames_webp/01_idle/01_idle_04.webp",
-          "sourceXBounds": {
-            "x0": 376,
-            "x1": 519
-          },
-          "cropBoxInsideSeparatedSegment": {
-            "left": 0,
-            "top": 5,
-            "right": 143,
-            "bottom": 166
-          },
-          "equalCanvas": {
-            "w": 143,
-            "h": 162
-          },
-          "pastePosition": {
-            "x": 0,
-            "y": 1
-          }
+          "width": 512,
+          "height": 512
         },
         {
           "index": 5,
-          "name": "idle_05",
+          "name": "01_idle_05",
           "file": "frames_webp/01_idle/01_idle_05.webp",
-          "sourceXBounds": {
-            "x0": 519,
-            "x1": 650
-          },
-          "cropBoxInsideSeparatedSegment": {
-            "left": 0,
-            "top": 4,
-            "right": 131,
-            "bottom": 166
-          },
-          "equalCanvas": {
-            "w": 143,
-            "h": 162
-          },
-          "pastePosition": {
-            "x": 6,
-            "y": 0
-          }
+          "width": 512,
+          "height": 512
         },
         {
           "index": 6,
-          "name": "idle_06",
+          "name": "01_idle_06",
           "file": "frames_webp/01_idle/01_idle_06.webp",
-          "sourceXBounds": {
-            "x0": 650,
-            "x1": 793
-          },
-          "cropBoxInsideSeparatedSegment": {
-            "left": 0,
-            "top": 5,
-            "right": 143,
-            "bottom": 166
-          },
-          "equalCanvas": {
-            "w": 143,
-            "h": 162
-          },
-          "pastePosition": {
-            "x": 0,
-            "y": 1
-          }
+          "width": 512,
+          "height": 512
         }
-      ],
-      "index": 1
+      ]
     },
     {
       "id": "energy_rage",
-      "label": "Năng lượng / nộ năng",
-      "sourceStrip": "hoa/rows_webp/02_energy_rage.webp",
-      "sourceStripSize": {
-        "w": 793,
-        "h": 158
-      },
-      "detectedColumnBounds": [
-        0,
-        125,
-        257,
-        390,
-        518,
-        658,
-        793
-      ],
-      "detectedCentersX": [
-        66.57750439367311,
-        196.41378268097324,
-        328.36349834983497,
-        456.1335620634726,
-        588.9557487380819,
-        724.216659705233
-      ],
+      "label": "energy_rage",
+      "sourceStrip": "hoa/hoa_1/frames/02_full_rage",
       "frameCount": 6,
       "equalFrameSize": {
-        "w": 140,
-        "h": 158
+        "w": 512,
+        "h": 512
       },
-      "independentSegmentGap": 80,
-      "equalSpacedStripFile": "equal_spaced_strips_webp/02_energy_rage_equal_spaced.webp",
-      "equalSpacedStripSize": {
-        "w": 1240,
-        "h": 158
-      },
-      "rawSeparatedSegmentsFolder": "spaced_segments_webp/02_energy_rage",
       "frames": [
         {
           "index": 1,
-          "name": "energy_rage_01",
-          "file": "frames_webp/02_energy_rage/02_energy_rage_01.webp",
-          "sourceXBounds": {
-            "x0": 0,
-            "x1": 125
-          },
-          "cropBoxInsideSeparatedSegment": {
-            "left": 0,
-            "top": 5,
-            "right": 125,
-            "bottom": 158
-          },
-          "equalCanvas": {
-            "w": 140,
-            "h": 158
-          },
-          "pastePosition": {
-            "x": 7,
-            "y": 5
-          }
+          "name": "02_full_rage_01",
+          "file": "frames_webp/02_full_rage/02_full_rage_01.webp",
+          "width": 512,
+          "height": 512
         },
         {
           "index": 2,
-          "name": "energy_rage_02",
-          "file": "frames_webp/02_energy_rage/02_energy_rage_02.webp",
-          "sourceXBounds": {
-            "x0": 125,
-            "x1": 257
-          },
-          "cropBoxInsideSeparatedSegment": {
-            "left": 0,
-            "top": 0,
-            "right": 132,
-            "bottom": 158
-          },
-          "equalCanvas": {
-            "w": 140,
-            "h": 158
-          },
-          "pastePosition": {
-            "x": 4,
-            "y": 0
-          }
+          "name": "02_full_rage_02",
+          "file": "frames_webp/02_full_rage/02_full_rage_02.webp",
+          "width": 512,
+          "height": 512
         },
         {
           "index": 3,
-          "name": "energy_rage_03",
-          "file": "frames_webp/02_energy_rage/02_energy_rage_03.webp",
-          "sourceXBounds": {
-            "x0": 257,
-            "x1": 390
-          },
-          "cropBoxInsideSeparatedSegment": {
-            "left": 0,
-            "top": 0,
-            "right": 133,
-            "bottom": 158
-          },
-          "equalCanvas": {
-            "w": 140,
-            "h": 158
-          },
-          "pastePosition": {
-            "x": 3,
-            "y": 0
-          }
+          "name": "02_full_rage_03",
+          "file": "frames_webp/02_full_rage/02_full_rage_03.webp",
+          "width": 512,
+          "height": 512
         },
         {
           "index": 4,
-          "name": "energy_rage_04",
-          "file": "frames_webp/02_energy_rage/02_energy_rage_04.webp",
-          "sourceXBounds": {
-            "x0": 390,
-            "x1": 518
-          },
-          "cropBoxInsideSeparatedSegment": {
-            "left": 0,
-            "top": 0,
-            "right": 128,
-            "bottom": 158
-          },
-          "equalCanvas": {
-            "w": 140,
-            "h": 158
-          },
-          "pastePosition": {
-            "x": 6,
-            "y": 0
-          }
+          "name": "02_full_rage_04",
+          "file": "frames_webp/02_full_rage/02_full_rage_04.webp",
+          "width": 512,
+          "height": 512
         },
         {
           "index": 5,
-          "name": "energy_rage_05",
-          "file": "frames_webp/02_energy_rage/02_energy_rage_05.webp",
-          "sourceXBounds": {
-            "x0": 518,
-            "x1": 658
-          },
-          "cropBoxInsideSeparatedSegment": {
-            "left": 0,
-            "top": 0,
-            "right": 140,
-            "bottom": 158
-          },
-          "equalCanvas": {
-            "w": 140,
-            "h": 158
-          },
-          "pastePosition": {
-            "x": 0,
-            "y": 0
-          }
+          "name": "02_full_rage_05",
+          "file": "frames_webp/02_full_rage/02_full_rage_05.webp",
+          "width": 512,
+          "height": 512
         },
         {
           "index": 6,
-          "name": "energy_rage_06",
-          "file": "frames_webp/02_energy_rage/02_energy_rage_06.webp",
-          "sourceXBounds": {
-            "x0": 658,
-            "x1": 793
-          },
-          "cropBoxInsideSeparatedSegment": {
-            "left": 0,
-            "top": 0,
-            "right": 135,
-            "bottom": 158
-          },
-          "equalCanvas": {
-            "w": 140,
-            "h": 158
-          },
-          "pastePosition": {
-            "x": 2,
-            "y": 0
-          }
+          "name": "02_full_rage_06",
+          "file": "frames_webp/02_full_rage/02_full_rage_06.webp",
+          "width": 512,
+          "height": 512
         }
-      ],
-      "index": 2
+      ]
     },
     {
       "id": "low_hp",
-      "label": "Yếu máu",
-      "sourceStrip": "hoa/rows_webp/03_low_hp.webp",
-      "sourceStripSize": {
-        "w": 793,
-        "h": 155
-      },
-      "detectedColumnBounds": [
-        0,
-        123,
-        265,
-        388,
-        524,
-        648,
-        793
-      ],
-      "detectedCentersX": [
-        67.6141202838999,
-        198.07719060960295,
-        328.6283422459893,
-        458.7754117754118,
-        589.4730757212791,
-        719.351608103468
-      ],
+      "label": "low_hp",
+      "sourceStrip": "hoa/hoa_1/frames/03_low_hp",
       "frameCount": 6,
       "equalFrameSize": {
-        "w": 145,
-        "h": 147
+        "w": 512,
+        "h": 512
       },
-      "independentSegmentGap": 80,
-      "equalSpacedStripFile": "equal_spaced_strips_webp/03_low_hp_equal_spaced.webp",
-      "equalSpacedStripSize": {
-        "w": 1270,
-        "h": 147
-      },
-      "rawSeparatedSegmentsFolder": "spaced_segments_webp/03_low_hp",
       "frames": [
         {
           "index": 1,
-          "name": "low_hp_01",
+          "name": "03_low_hp_01",
           "file": "frames_webp/03_low_hp/03_low_hp_01.webp",
-          "sourceXBounds": {
-            "x0": 0,
-            "x1": 123
-          },
-          "cropBoxInsideSeparatedSegment": {
-            "left": 0,
-            "top": 9,
-            "right": 123,
-            "bottom": 155
-          },
-          "equalCanvas": {
-            "w": 145,
-            "h": 147
-          },
-          "pastePosition": {
-            "x": 11,
-            "y": 1
-          }
+          "width": 512,
+          "height": 512
         },
         {
           "index": 2,
-          "name": "low_hp_02",
+          "name": "03_low_hp_02",
           "file": "frames_webp/03_low_hp/03_low_hp_02.webp",
-          "sourceXBounds": {
-            "x0": 123,
-            "x1": 265
-          },
-          "cropBoxInsideSeparatedSegment": {
-            "left": 0,
-            "top": 13,
-            "right": 142,
-            "bottom": 155
-          },
-          "equalCanvas": {
-            "w": 145,
-            "h": 147
-          },
-          "pastePosition": {
-            "x": 1,
-            "y": 5
-          }
+          "width": 512,
+          "height": 512
         },
         {
           "index": 3,
-          "name": "low_hp_03",
+          "name": "03_low_hp_03",
           "file": "frames_webp/03_low_hp/03_low_hp_03.webp",
-          "sourceXBounds": {
-            "x0": 265,
-            "x1": 388
-          },
-          "cropBoxInsideSeparatedSegment": {
-            "left": 0,
-            "top": 12,
-            "right": 123,
-            "bottom": 155
-          },
-          "equalCanvas": {
-            "w": 145,
-            "h": 147
-          },
-          "pastePosition": {
-            "x": 11,
-            "y": 4
-          }
+          "width": 512,
+          "height": 512
         },
         {
           "index": 4,
-          "name": "low_hp_04",
+          "name": "03_low_hp_04",
           "file": "frames_webp/03_low_hp/03_low_hp_04.webp",
-          "sourceXBounds": {
-            "x0": 388,
-            "x1": 524
-          },
-          "cropBoxInsideSeparatedSegment": {
-            "left": 0,
-            "top": 17,
-            "right": 136,
-            "bottom": 155
-          },
-          "equalCanvas": {
-            "w": 145,
-            "h": 147
-          },
-          "pastePosition": {
-            "x": 4,
-            "y": 9
-          }
+          "width": 512,
+          "height": 512
         },
         {
           "index": 5,
-          "name": "low_hp_05",
+          "name": "03_low_hp_05",
           "file": "frames_webp/03_low_hp/03_low_hp_05.webp",
-          "sourceXBounds": {
-            "x0": 524,
-            "x1": 648
-          },
-          "cropBoxInsideSeparatedSegment": {
-            "left": 0,
-            "top": 8,
-            "right": 124,
-            "bottom": 155
-          },
-          "equalCanvas": {
-            "w": 145,
-            "h": 147
-          },
-          "pastePosition": {
-            "x": 10,
-            "y": 0
-          }
+          "width": 512,
+          "height": 512
         },
         {
           "index": 6,
-          "name": "low_hp_06",
+          "name": "03_low_hp_06",
           "file": "frames_webp/03_low_hp/03_low_hp_06.webp",
-          "sourceXBounds": {
-            "x0": 648,
-            "x1": 793
-          },
-          "cropBoxInsideSeparatedSegment": {
-            "left": 0,
-            "top": 48,
-            "right": 145,
-            "bottom": 155
-          },
-          "equalCanvas": {
-            "w": 145,
-            "h": 147
-          },
-          "pastePosition": {
-            "x": 0,
-            "y": 40
-          }
+          "width": 512,
+          "height": 512
         }
-      ],
-      "index": 3
+      ]
     },
     {
       "id": "high_hp",
-      "label": "Nhiều máu / trạng thái khỏe",
-      "sourceStrip": "hoa/rows_webp/04_high_hp.webp",
-      "sourceStripSize": {
-        "w": 793,
-        "h": 168
-      },
-      "detectedColumnBounds": [
-        0,
-        132,
-        267,
-        395,
-        522,
-        652,
-        793
-      ],
-      "detectedCentersX": [
-        69.1654187572366,
-        199.6494837758112,
-        330.09200743494426,
-        460.63428805237317,
-        585.8384065536904,
-        718.7815259225719
-      ],
+      "label": "high_hp",
+      "sourceStrip": "hoa/hoa_1/frames/04_high_hp",
       "frameCount": 6,
       "equalFrameSize": {
-        "w": 141,
-        "h": 163
+        "w": 512,
+        "h": 512
       },
-      "independentSegmentGap": 80,
-      "equalSpacedStripFile": "equal_spaced_strips_webp/04_high_hp_equal_spaced.webp",
-      "equalSpacedStripSize": {
-        "w": 1246,
-        "h": 163
-      },
-      "rawSeparatedSegmentsFolder": "spaced_segments_webp/04_high_hp",
       "frames": [
         {
           "index": 1,
-          "name": "high_hp_01",
+          "name": "04_high_hp_01",
           "file": "frames_webp/04_high_hp/04_high_hp_01.webp",
-          "sourceXBounds": {
-            "x0": 0,
-            "x1": 132
-          },
-          "cropBoxInsideSeparatedSegment": {
-            "left": 0,
-            "top": 6,
-            "right": 132,
-            "bottom": 168
-          },
-          "equalCanvas": {
-            "w": 141,
-            "h": 163
-          },
-          "pastePosition": {
-            "x": 4,
-            "y": 1
-          }
+          "width": 512,
+          "height": 512
         },
         {
           "index": 2,
-          "name": "high_hp_02",
+          "name": "04_high_hp_02",
           "file": "frames_webp/04_high_hp/04_high_hp_02.webp",
-          "sourceXBounds": {
-            "x0": 132,
-            "x1": 267
-          },
-          "cropBoxInsideSeparatedSegment": {
-            "left": 0,
-            "top": 5,
-            "right": 135,
-            "bottom": 168
-          },
-          "equalCanvas": {
-            "w": 141,
-            "h": 163
-          },
-          "pastePosition": {
-            "x": 3,
-            "y": 0
-          }
+          "width": 512,
+          "height": 512
         },
         {
           "index": 3,
-          "name": "high_hp_03",
+          "name": "04_high_hp_03",
           "file": "frames_webp/04_high_hp/04_high_hp_03.webp",
-          "sourceXBounds": {
-            "x0": 267,
-            "x1": 395
-          },
-          "cropBoxInsideSeparatedSegment": {
-            "left": 0,
-            "top": 7,
-            "right": 128,
-            "bottom": 168
-          },
-          "equalCanvas": {
-            "w": 141,
-            "h": 163
-          },
-          "pastePosition": {
-            "x": 6,
-            "y": 2
-          }
+          "width": 512,
+          "height": 512
         },
         {
           "index": 4,
-          "name": "high_hp_04",
+          "name": "04_high_hp_04",
           "file": "frames_webp/04_high_hp/04_high_hp_04.webp",
-          "sourceXBounds": {
-            "x0": 395,
-            "x1": 522
-          },
-          "cropBoxInsideSeparatedSegment": {
-            "left": 0,
-            "top": 5,
-            "right": 127,
-            "bottom": 168
-          },
-          "equalCanvas": {
-            "w": 141,
-            "h": 163
-          },
-          "pastePosition": {
-            "x": 7,
-            "y": 0
-          }
+          "width": 512,
+          "height": 512
         },
         {
           "index": 5,
-          "name": "high_hp_05",
+          "name": "04_high_hp_05",
           "file": "frames_webp/04_high_hp/04_high_hp_05.webp",
-          "sourceXBounds": {
-            "x0": 522,
-            "x1": 652
-          },
-          "cropBoxInsideSeparatedSegment": {
-            "left": 0,
-            "top": 8,
-            "right": 130,
-            "bottom": 168
-          },
-          "equalCanvas": {
-            "w": 141,
-            "h": 163
-          },
-          "pastePosition": {
-            "x": 5,
-            "y": 3
-          }
+          "width": 512,
+          "height": 512
         },
         {
           "index": 6,
-          "name": "high_hp_06",
+          "name": "04_high_hp_06",
           "file": "frames_webp/04_high_hp/04_high_hp_06.webp",
-          "sourceXBounds": {
-            "x0": 652,
-            "x1": 793
-          },
-          "cropBoxInsideSeparatedSegment": {
-            "left": 0,
-            "top": 5,
-            "right": 141,
-            "bottom": 168
-          },
-          "equalCanvas": {
-            "w": 141,
-            "h": 163
-          },
-          "pastePosition": {
-            "x": 0,
-            "y": 0
-          }
+          "width": 512,
+          "height": 512
         }
-      ],
-      "index": 4
+      ]
     },
     {
       "id": "heal",
-      "label": "Hồi máu",
-      "sourceStrip": "hoa/rows_webp/05_heal.webp",
-      "sourceStripSize": {
-        "w": 793,
-        "h": 144
-      },
-      "detectedColumnBounds": [
-        0,
-        128,
-        261,
-        395,
-        526,
-        656,
-        793
-      ],
-      "detectedCentersX": [
-        68.03383847081109,
-        200.55017970693945,
-        332.377867834499,
-        464.38545549669743,
-        594.9103700848111,
-        724.0649696519262
-      ],
+      "label": "heal",
+      "sourceStrip": "hoa/hoa_1/frames/05_healing",
       "frameCount": 6,
       "equalFrameSize": {
-        "w": 137,
-        "h": 144
+        "w": 512,
+        "h": 512
       },
-      "independentSegmentGap": 80,
-      "equalSpacedStripFile": "equal_spaced_strips_webp/05_heal_equal_spaced.webp",
-      "equalSpacedStripSize": {
-        "w": 1222,
-        "h": 144
-      },
-      "rawSeparatedSegmentsFolder": "spaced_segments_webp/05_heal",
       "frames": [
         {
           "index": 1,
-          "name": "heal_01",
-          "file": "frames_webp/05_heal/05_heal_01.webp",
-          "sourceXBounds": {
-            "x0": 0,
-            "x1": 128
-          },
-          "cropBoxInsideSeparatedSegment": {
-            "left": 0,
-            "top": 0,
-            "right": 128,
-            "bottom": 144
-          },
-          "equalCanvas": {
-            "w": 137,
-            "h": 144
-          },
-          "pastePosition": {
-            "x": 4,
-            "y": 0
-          }
+          "name": "05_healing_01",
+          "file": "frames_webp/05_healing/05_healing_01.webp",
+          "width": 512,
+          "height": 512
         },
         {
           "index": 2,
-          "name": "heal_02",
-          "file": "frames_webp/05_heal/05_heal_02.webp",
-          "sourceXBounds": {
-            "x0": 128,
-            "x1": 261
-          },
-          "cropBoxInsideSeparatedSegment": {
-            "left": 0,
-            "top": 0,
-            "right": 133,
-            "bottom": 144
-          },
-          "equalCanvas": {
-            "w": 137,
-            "h": 144
-          },
-          "pastePosition": {
-            "x": 2,
-            "y": 0
-          }
+          "name": "05_healing_02",
+          "file": "frames_webp/05_healing/05_healing_02.webp",
+          "width": 512,
+          "height": 512
         },
         {
           "index": 3,
-          "name": "heal_03",
-          "file": "frames_webp/05_heal/05_heal_03.webp",
-          "sourceXBounds": {
-            "x0": 261,
-            "x1": 395
-          },
-          "cropBoxInsideSeparatedSegment": {
-            "left": 0,
-            "top": 0,
-            "right": 134,
-            "bottom": 144
-          },
-          "equalCanvas": {
-            "w": 137,
-            "h": 144
-          },
-          "pastePosition": {
-            "x": 1,
-            "y": 0
-          }
+          "name": "05_healing_03",
+          "file": "frames_webp/05_healing/05_healing_03.webp",
+          "width": 512,
+          "height": 512
         },
         {
           "index": 4,
-          "name": "heal_04",
-          "file": "frames_webp/05_heal/05_heal_04.webp",
-          "sourceXBounds": {
-            "x0": 395,
-            "x1": 526
-          },
-          "cropBoxInsideSeparatedSegment": {
-            "left": 0,
-            "top": 0,
-            "right": 131,
-            "bottom": 144
-          },
-          "equalCanvas": {
-            "w": 137,
-            "h": 144
-          },
-          "pastePosition": {
-            "x": 3,
-            "y": 0
-          }
+          "name": "05_healing_04",
+          "file": "frames_webp/05_healing/05_healing_04.webp",
+          "width": 512,
+          "height": 512
         },
         {
           "index": 5,
-          "name": "heal_05",
-          "file": "frames_webp/05_heal/05_heal_05.webp",
-          "sourceXBounds": {
-            "x0": 526,
-            "x1": 656
-          },
-          "cropBoxInsideSeparatedSegment": {
-            "left": 0,
-            "top": 0,
-            "right": 130,
-            "bottom": 144
-          },
-          "equalCanvas": {
-            "w": 137,
-            "h": 144
-          },
-          "pastePosition": {
-            "x": 3,
-            "y": 0
-          }
+          "name": "05_healing_05",
+          "file": "frames_webp/05_healing/05_healing_05.webp",
+          "width": 512,
+          "height": 512
         },
         {
           "index": 6,
-          "name": "heal_06",
-          "file": "frames_webp/05_heal/05_heal_06.webp",
-          "sourceXBounds": {
-            "x0": 656,
-            "x1": 793
-          },
-          "cropBoxInsideSeparatedSegment": {
-            "left": 0,
-            "top": 0,
-            "right": 137,
-            "bottom": 144
-          },
-          "equalCanvas": {
-            "w": 137,
-            "h": 144
-          },
-          "pastePosition": {
-            "x": 0,
-            "y": 0
-          }
+          "name": "05_healing_06",
+          "file": "frames_webp/05_healing/05_healing_06.webp",
+          "width": 512,
+          "height": 512
         }
-      ],
-      "index": 5
+      ]
     },
     {
       "id": "anti_heal",
-      "label": "Giảm hồi máu",
-      "sourceStrip": "hoa/rows_webp/06_anti_heal.webp",
-      "sourceStripSize": {
-        "w": 793,
-        "h": 166
-      },
-      "detectedColumnBounds": [
-        0,
-        123,
-        257,
-        391,
-        522,
-        657,
-        793
-      ],
-      "detectedCentersX": [
-        64.5894371978473,
-        189.8324485199485,
-        324.7063730647828,
-        458.7926570779712,
-        589.6019996899705,
-        722.55171875
-      ],
+      "label": "anti_heal",
+      "sourceStrip": "hoa/hoa_1/frames/06_heal_reduction",
       "frameCount": 6,
       "equalFrameSize": {
-        "w": 136,
-        "h": 161
+        "w": 512,
+        "h": 512
       },
-      "independentSegmentGap": 80,
-      "equalSpacedStripFile": "equal_spaced_strips_webp/06_anti_heal_equal_spaced.webp",
-      "equalSpacedStripSize": {
-        "w": 1216,
-        "h": 161
-      },
-      "rawSeparatedSegmentsFolder": "spaced_segments_webp/06_anti_heal",
       "frames": [
         {
           "index": 1,
-          "name": "anti_heal_01",
-          "file": "frames_webp/06_anti_heal/06_anti_heal_01.webp",
-          "sourceXBounds": {
-            "x0": 0,
-            "x1": 123
-          },
-          "cropBoxInsideSeparatedSegment": {
-            "left": 0,
-            "top": 6,
-            "right": 123,
-            "bottom": 160
-          },
-          "equalCanvas": {
-            "w": 136,
-            "h": 161
-          },
-          "pastePosition": {
-            "x": 6,
-            "y": 7
-          }
+          "name": "06_heal_reduction_01",
+          "file": "frames_webp/06_heal_reduction/06_heal_reduction_01.webp",
+          "width": 512,
+          "height": 512
         },
         {
           "index": 2,
-          "name": "anti_heal_02",
-          "file": "frames_webp/06_anti_heal/06_anti_heal_02.webp",
-          "sourceXBounds": {
-            "x0": 123,
-            "x1": 257
-          },
-          "cropBoxInsideSeparatedSegment": {
-            "left": 0,
-            "top": 7,
-            "right": 134,
-            "bottom": 160
-          },
-          "equalCanvas": {
-            "w": 136,
-            "h": 161
-          },
-          "pastePosition": {
-            "x": 1,
-            "y": 8
-          }
+          "name": "06_heal_reduction_02",
+          "file": "frames_webp/06_heal_reduction/06_heal_reduction_02.webp",
+          "width": 512,
+          "height": 512
         },
         {
           "index": 3,
-          "name": "anti_heal_03",
-          "file": "frames_webp/06_anti_heal/06_anti_heal_03.webp",
-          "sourceXBounds": {
-            "x0": 257,
-            "x1": 391
-          },
-          "cropBoxInsideSeparatedSegment": {
-            "left": 0,
-            "top": 0,
-            "right": 134,
-            "bottom": 159
-          },
-          "equalCanvas": {
-            "w": 136,
-            "h": 161
-          },
-          "pastePosition": {
-            "x": 1,
-            "y": 2
-          }
+          "name": "06_heal_reduction_03",
+          "file": "frames_webp/06_heal_reduction/06_heal_reduction_03.webp",
+          "width": 512,
+          "height": 512
         },
         {
           "index": 4,
-          "name": "anti_heal_04",
-          "file": "frames_webp/06_anti_heal/06_anti_heal_04.webp",
-          "sourceXBounds": {
-            "x0": 391,
-            "x1": 522
-          },
-          "cropBoxInsideSeparatedSegment": {
-            "left": 0,
-            "top": 5,
-            "right": 131,
-            "bottom": 166
-          },
-          "equalCanvas": {
-            "w": 136,
-            "h": 161
-          },
-          "pastePosition": {
-            "x": 2,
-            "y": 0
-          }
+          "name": "06_heal_reduction_04",
+          "file": "frames_webp/06_heal_reduction/06_heal_reduction_04.webp",
+          "width": 512,
+          "height": 512
         },
         {
           "index": 5,
-          "name": "anti_heal_05",
-          "file": "frames_webp/06_anti_heal/06_anti_heal_05.webp",
-          "sourceXBounds": {
-            "x0": 522,
-            "x1": 657
-          },
-          "cropBoxInsideSeparatedSegment": {
-            "left": 0,
-            "top": 3,
-            "right": 135,
-            "bottom": 161
-          },
-          "equalCanvas": {
-            "w": 136,
-            "h": 161
-          },
-          "pastePosition": {
-            "x": 0,
-            "y": 3
-          }
+          "name": "06_heal_reduction_05",
+          "file": "frames_webp/06_heal_reduction/06_heal_reduction_05.webp",
+          "width": 512,
+          "height": 512
         },
         {
           "index": 6,
-          "name": "anti_heal_06",
-          "file": "frames_webp/06_anti_heal/06_anti_heal_06.webp",
-          "sourceXBounds": {
-            "x0": 657,
-            "x1": 793
-          },
-          "cropBoxInsideSeparatedSegment": {
-            "left": 0,
-            "top": 5,
-            "right": 136,
-            "bottom": 158
-          },
-          "equalCanvas": {
-            "w": 136,
-            "h": 161
-          },
-          "pastePosition": {
-            "x": 0,
-            "y": 8
-          }
+          "name": "06_heal_reduction_06",
+          "file": "frames_webp/06_heal_reduction/06_heal_reduction_06.webp",
+          "width": 512,
+          "height": 512
         }
-      ],
-      "index": 6
+      ]
     },
     {
       "id": "poison",
-      "label": "Dính độc",
-      "sourceStrip": "hoa/rows_webp/07_poison.webp",
-      "sourceStripSize": {
-        "w": 793,
-        "h": 165
-      },
-      "detectedColumnBounds": [
-        0,
-        127,
-        262,
-        392,
-        526,
-        658,
-        793
-      ],
-      "detectedCentersX": [
-        69.9562932469125,
-        201.38597288495038,
-        332.9083747216989,
-        465.75374475733975,
-        598.3662319623428,
-        722.2489418249828
-      ],
+      "label": "poison",
+      "sourceStrip": "hoa/hoa_1/frames/07_poisoned",
       "frameCount": 6,
       "equalFrameSize": {
-        "w": 135,
-        "h": 165
+        "w": 512,
+        "h": 512
       },
-      "independentSegmentGap": 80,
-      "equalSpacedStripFile": "equal_spaced_strips_webp/07_poison_equal_spaced.webp",
-      "equalSpacedStripSize": {
-        "w": 1210,
-        "h": 165
-      },
-      "rawSeparatedSegmentsFolder": "spaced_segments_webp/07_poison",
       "frames": [
         {
           "index": 1,
-          "name": "poison_01",
-          "file": "frames_webp/07_poison/07_poison_01.webp",
-          "sourceXBounds": {
-            "x0": 0,
-            "x1": 127
-          },
-          "cropBoxInsideSeparatedSegment": {
-            "left": 0,
-            "top": 0,
-            "right": 127,
-            "bottom": 165
-          },
-          "equalCanvas": {
-            "w": 135,
-            "h": 165
-          },
-          "pastePosition": {
-            "x": 4,
-            "y": 0
-          }
+          "name": "07_poisoned_01",
+          "file": "frames_webp/07_poisoned/07_poisoned_01.webp",
+          "width": 512,
+          "height": 512
         },
         {
           "index": 2,
-          "name": "poison_02",
-          "file": "frames_webp/07_poison/07_poison_02.webp",
-          "sourceXBounds": {
-            "x0": 127,
-            "x1": 262
-          },
-          "cropBoxInsideSeparatedSegment": {
-            "left": 0,
-            "top": 0,
-            "right": 135,
-            "bottom": 165
-          },
-          "equalCanvas": {
-            "w": 135,
-            "h": 165
-          },
-          "pastePosition": {
-            "x": 0,
-            "y": 0
-          }
+          "name": "07_poisoned_02",
+          "file": "frames_webp/07_poisoned/07_poisoned_02.webp",
+          "width": 512,
+          "height": 512
         },
         {
           "index": 3,
-          "name": "poison_03",
-          "file": "frames_webp/07_poison/07_poison_03.webp",
-          "sourceXBounds": {
-            "x0": 262,
-            "x1": 392
-          },
-          "cropBoxInsideSeparatedSegment": {
-            "left": 0,
-            "top": 0,
-            "right": 130,
-            "bottom": 165
-          },
-          "equalCanvas": {
-            "w": 135,
-            "h": 165
-          },
-          "pastePosition": {
-            "x": 2,
-            "y": 0
-          }
+          "name": "07_poisoned_03",
+          "file": "frames_webp/07_poisoned/07_poisoned_03.webp",
+          "width": 512,
+          "height": 512
         },
         {
           "index": 4,
-          "name": "poison_04",
-          "file": "frames_webp/07_poison/07_poison_04.webp",
-          "sourceXBounds": {
-            "x0": 392,
-            "x1": 526
-          },
-          "cropBoxInsideSeparatedSegment": {
-            "left": 0,
-            "top": 0,
-            "right": 134,
-            "bottom": 165
-          },
-          "equalCanvas": {
-            "w": 135,
-            "h": 165
-          },
-          "pastePosition": {
-            "x": 0,
-            "y": 0
-          }
+          "name": "07_poisoned_04",
+          "file": "frames_webp/07_poisoned/07_poisoned_04.webp",
+          "width": 512,
+          "height": 512
         },
         {
           "index": 5,
-          "name": "poison_05",
-          "file": "frames_webp/07_poison/07_poison_05.webp",
-          "sourceXBounds": {
-            "x0": 526,
-            "x1": 658
-          },
-          "cropBoxInsideSeparatedSegment": {
-            "left": 0,
-            "top": 0,
-            "right": 132,
-            "bottom": 149
-          },
-          "equalCanvas": {
-            "w": 135,
-            "h": 165
-          },
-          "pastePosition": {
-            "x": 1,
-            "y": 16
-          }
+          "name": "07_poisoned_05",
+          "file": "frames_webp/07_poisoned/07_poisoned_05.webp",
+          "width": 512,
+          "height": 512
         },
         {
           "index": 6,
-          "name": "poison_06",
-          "file": "frames_webp/07_poison/07_poison_06.webp",
-          "sourceXBounds": {
-            "x0": 658,
-            "x1": 793
-          },
-          "cropBoxInsideSeparatedSegment": {
-            "left": 0,
-            "top": 16,
-            "right": 135,
-            "bottom": 152
-          },
-          "equalCanvas": {
-            "w": 135,
-            "h": 165
-          },
-          "pastePosition": {
-            "x": 0,
-            "y": 29
-          }
+          "name": "07_poisoned_06",
+          "file": "frames_webp/07_poisoned/07_poisoned_06.webp",
+          "width": 512,
+          "height": 512
         }
-      ],
-      "index": 7
+      ]
     },
     {
       "id": "stun",
-      "label": "Bị choáng",
-      "sourceStrip": "hoa/rows_webp/08_stun.webp",
-      "sourceStripSize": {
-        "w": 793,
-        "h": 165
-      },
-      "detectedColumnBounds": [
-        0,
-        138,
-        267,
-        398,
-        523,
-        654,
-        793
-      ],
-      "detectedCentersX": [
-        69.15451017660568,
-        202.76347593979386,
-        333.0179389916232,
-        463.31338759958436,
-        594.9853759788659,
-        723.7329164297896
-      ],
+      "label": "stun",
+      "sourceStrip": "hoa/hoa_1/frames/08_stunned",
       "frameCount": 6,
       "equalFrameSize": {
-        "w": 139,
-        "h": 165
+        "w": 512,
+        "h": 512
       },
-      "independentSegmentGap": 80,
-      "equalSpacedStripFile": "equal_spaced_strips_webp/08_stun_equal_spaced.webp",
-      "equalSpacedStripSize": {
-        "w": 1234,
-        "h": 165
-      },
-      "rawSeparatedSegmentsFolder": "spaced_segments_webp/08_stun",
       "frames": [
         {
           "index": 1,
-          "name": "stun_01",
-          "file": "frames_webp/08_stun/08_stun_01.webp",
-          "sourceXBounds": {
-            "x0": 0,
-            "x1": 138
-          },
-          "cropBoxInsideSeparatedSegment": {
-            "left": 0,
-            "top": 0,
-            "right": 138,
-            "bottom": 165
-          },
-          "equalCanvas": {
-            "w": 139,
-            "h": 165
-          },
-          "pastePosition": {
-            "x": 0,
-            "y": 0
-          }
+          "name": "08_stunned_01",
+          "file": "frames_webp/08_stunned/08_stunned_01.webp",
+          "width": 512,
+          "height": 512
         },
         {
           "index": 2,
-          "name": "stun_02",
-          "file": "frames_webp/08_stun/08_stun_02.webp",
-          "sourceXBounds": {
-            "x0": 138,
-            "x1": 267
-          },
-          "cropBoxInsideSeparatedSegment": {
-            "left": 0,
-            "top": 0,
-            "right": 129,
-            "bottom": 165
-          },
-          "equalCanvas": {
-            "w": 139,
-            "h": 165
-          },
-          "pastePosition": {
-            "x": 5,
-            "y": 0
-          }
+          "name": "08_stunned_02",
+          "file": "frames_webp/08_stunned/08_stunned_02.webp",
+          "width": 512,
+          "height": 512
         },
         {
           "index": 3,
-          "name": "stun_03",
-          "file": "frames_webp/08_stun/08_stun_03.webp",
-          "sourceXBounds": {
-            "x0": 267,
-            "x1": 398
-          },
-          "cropBoxInsideSeparatedSegment": {
-            "left": 0,
-            "top": 0,
-            "right": 131,
-            "bottom": 165
-          },
-          "equalCanvas": {
-            "w": 139,
-            "h": 165
-          },
-          "pastePosition": {
-            "x": 4,
-            "y": 0
-          }
+          "name": "08_stunned_03",
+          "file": "frames_webp/08_stunned/08_stunned_03.webp",
+          "width": 512,
+          "height": 512
         },
         {
           "index": 4,
-          "name": "stun_04",
-          "file": "frames_webp/08_stun/08_stun_04.webp",
-          "sourceXBounds": {
-            "x0": 398,
-            "x1": 523
-          },
-          "cropBoxInsideSeparatedSegment": {
-            "left": 0,
-            "top": 0,
-            "right": 125,
-            "bottom": 165
-          },
-          "equalCanvas": {
-            "w": 139,
-            "h": 165
-          },
-          "pastePosition": {
-            "x": 7,
-            "y": 0
-          }
+          "name": "08_stunned_04",
+          "file": "frames_webp/08_stunned/08_stunned_04.webp",
+          "width": 512,
+          "height": 512
         },
         {
           "index": 5,
-          "name": "stun_05",
-          "file": "frames_webp/08_stun/08_stun_05.webp",
-          "sourceXBounds": {
-            "x0": 523,
-            "x1": 654
-          },
-          "cropBoxInsideSeparatedSegment": {
-            "left": 0,
-            "top": 0,
-            "right": 131,
-            "bottom": 165
-          },
-          "equalCanvas": {
-            "w": 139,
-            "h": 165
-          },
-          "pastePosition": {
-            "x": 4,
-            "y": 0
-          }
+          "name": "08_stunned_05",
+          "file": "frames_webp/08_stunned/08_stunned_05.webp",
+          "width": 512,
+          "height": 512
         },
         {
           "index": 6,
-          "name": "stun_06",
-          "file": "frames_webp/08_stun/08_stun_06.webp",
-          "sourceXBounds": {
-            "x0": 654,
-            "x1": 793
-          },
-          "cropBoxInsideSeparatedSegment": {
-            "left": 0,
-            "top": 26,
-            "right": 139,
-            "bottom": 158
-          },
-          "equalCanvas": {
-            "w": 139,
-            "h": 165
-          },
-          "pastePosition": {
-            "x": 0,
-            "y": 33
-          }
+          "name": "08_stunned_06",
+          "file": "frames_webp/08_stunned/08_stunned_06.webp",
+          "width": 512,
+          "height": 512
         }
-      ],
-      "index": 8
+      ]
     },
     {
       "id": "shield",
-      "label": "Có khiên",
-      "sourceStrip": "hoa/rows_webp/09_shield.webp",
-      "sourceStripSize": {
-        "w": 793,
-        "h": 165
-      },
-      "detectedColumnBounds": [
-        0,
-        138,
-        269,
-        399,
-        534,
-        672,
-        793
-      ],
-      "detectedCentersX": [
-        71.39332625713149,
-        203.9947517157852,
-        333.94140025362077,
-        467.1461467405648,
-        602.5098355369236,
-        729.6121925819114
-      ],
+      "label": "shield",
+      "sourceStrip": "hoa/hoa_1/frames/09_magic_shield",
       "frameCount": 6,
       "equalFrameSize": {
-        "w": 138,
-        "h": 165
+        "w": 512,
+        "h": 512
       },
-      "independentSegmentGap": 80,
-      "equalSpacedStripFile": "equal_spaced_strips_webp/09_shield_equal_spaced.webp",
-      "equalSpacedStripSize": {
-        "w": 1228,
-        "h": 165
-      },
-      "rawSeparatedSegmentsFolder": "spaced_segments_webp/09_shield",
       "frames": [
         {
           "index": 1,
-          "name": "shield_01",
-          "file": "frames_webp/09_shield/09_shield_01.webp",
-          "sourceXBounds": {
-            "x0": 0,
-            "x1": 138
-          },
-          "cropBoxInsideSeparatedSegment": {
-            "left": 0,
-            "top": 0,
-            "right": 138,
-            "bottom": 165
-          },
-          "equalCanvas": {
-            "w": 138,
-            "h": 165
-          },
-          "pastePosition": {
-            "x": 0,
-            "y": 0
-          }
+          "name": "09_magic_shield_01",
+          "file": "frames_webp/09_magic_shield/09_magic_shield_01.webp",
+          "width": 512,
+          "height": 512
         },
         {
           "index": 2,
-          "name": "shield_02",
-          "file": "frames_webp/09_shield/09_shield_02.webp",
-          "sourceXBounds": {
-            "x0": 138,
-            "x1": 269
-          },
-          "cropBoxInsideSeparatedSegment": {
-            "left": 0,
-            "top": 0,
-            "right": 131,
-            "bottom": 165
-          },
-          "equalCanvas": {
-            "w": 138,
-            "h": 165
-          },
-          "pastePosition": {
-            "x": 3,
-            "y": 0
-          }
+          "name": "09_magic_shield_02",
+          "file": "frames_webp/09_magic_shield/09_magic_shield_02.webp",
+          "width": 512,
+          "height": 512
         },
         {
           "index": 3,
-          "name": "shield_03",
-          "file": "frames_webp/09_shield/09_shield_03.webp",
-          "sourceXBounds": {
-            "x0": 269,
-            "x1": 399
-          },
-          "cropBoxInsideSeparatedSegment": {
-            "left": 0,
-            "top": 0,
-            "right": 130,
-            "bottom": 149
-          },
-          "equalCanvas": {
-            "w": 138,
-            "h": 165
-          },
-          "pastePosition": {
-            "x": 4,
-            "y": 16
-          }
+          "name": "09_magic_shield_03",
+          "file": "frames_webp/09_magic_shield/09_magic_shield_03.webp",
+          "width": 512,
+          "height": 512
         },
         {
           "index": 4,
-          "name": "shield_04",
-          "file": "frames_webp/09_shield/09_shield_04.webp",
-          "sourceXBounds": {
-            "x0": 399,
-            "x1": 534
-          },
-          "cropBoxInsideSeparatedSegment": {
-            "left": 0,
-            "top": 0,
-            "right": 135,
-            "bottom": 151
-          },
-          "equalCanvas": {
-            "w": 138,
-            "h": 165
-          },
-          "pastePosition": {
-            "x": 1,
-            "y": 14
-          }
+          "name": "09_magic_shield_04",
+          "file": "frames_webp/09_magic_shield/09_magic_shield_04.webp",
+          "width": 512,
+          "height": 512
         },
         {
           "index": 5,
-          "name": "shield_05",
-          "file": "frames_webp/09_shield/09_shield_05.webp",
-          "sourceXBounds": {
-            "x0": 534,
-            "x1": 672
-          },
-          "cropBoxInsideSeparatedSegment": {
-            "left": 0,
-            "top": 0,
-            "right": 138,
-            "bottom": 149
-          },
-          "equalCanvas": {
-            "w": 138,
-            "h": 165
-          },
-          "pastePosition": {
-            "x": 0,
-            "y": 16
-          }
+          "name": "09_magic_shield_05",
+          "file": "frames_webp/09_magic_shield/09_magic_shield_05.webp",
+          "width": 512,
+          "height": 512
         },
         {
           "index": 6,
-          "name": "shield_06",
-          "file": "frames_webp/09_shield/09_shield_06.webp",
-          "sourceXBounds": {
-            "x0": 672,
-            "x1": 793
-          },
-          "cropBoxInsideSeparatedSegment": {
-            "left": 0,
-            "top": 0,
-            "right": 121,
-            "bottom": 150
-          },
-          "equalCanvas": {
-            "w": 138,
-            "h": 165
-          },
-          "pastePosition": {
-            "x": 8,
-            "y": 15
-          }
+          "name": "09_magic_shield_06",
+          "file": "frames_webp/09_magic_shield/09_magic_shield_06.webp",
+          "width": 512,
+          "height": 512
         }
-      ],
-      "index": 9
+      ]
     },
     {
       "id": "hit",
-      "label": "Bị tấn công",
-      "sourceStrip": "hoa/rows_webp/10_hit.webp",
-      "sourceStripSize": {
-        "w": 793,
-        "h": 165
-      },
-      "detectedColumnBounds": [
-        0,
-        145,
-        265,
-        425,
-        540,
-        651,
-        793
-      ],
-      "detectedCentersX": [
-        74.1375713741911,
-        206.49905778894473,
-        337.40617595956405,
-        463.35125553914327,
-        586.9193113195425,
-        716.3497804184965
-      ],
+      "label": "hit",
+      "sourceStrip": "hoa/hoa_2/frames/10_hit_react",
       "frameCount": 6,
       "equalFrameSize": {
-        "w": 160,
-        "h": 165
+        "w": 512,
+        "h": 512
       },
-      "independentSegmentGap": 80,
-      "equalSpacedStripFile": "equal_spaced_strips_webp/10_hit_equal_spaced.webp",
-      "equalSpacedStripSize": {
-        "w": 1360,
-        "h": 165
-      },
-      "rawSeparatedSegmentsFolder": "spaced_segments_webp/10_hit",
       "frames": [
         {
           "index": 1,
-          "name": "hit_01",
-          "file": "frames_webp/10_hit/10_hit_01.webp",
-          "sourceXBounds": {
-            "x0": 0,
-            "x1": 145
-          },
-          "cropBoxInsideSeparatedSegment": {
-            "left": 2,
-            "top": 0,
-            "right": 145,
-            "bottom": 165
-          },
-          "equalCanvas": {
-            "w": 160,
-            "h": 165
-          },
-          "pastePosition": {
-            "x": 8,
-            "y": 0
-          }
+          "name": "10_hit_react_01",
+          "file": "frames_webp/10_hit_react/10_hit_react_01.webp",
+          "width": 512,
+          "height": 512
         },
         {
           "index": 2,
-          "name": "hit_02",
-          "file": "frames_webp/10_hit/10_hit_02.webp",
-          "sourceXBounds": {
-            "x0": 145,
-            "x1": 265
-          },
-          "cropBoxInsideSeparatedSegment": {
-            "left": 0,
-            "top": 0,
-            "right": 120,
-            "bottom": 145
-          },
-          "equalCanvas": {
-            "w": 160,
-            "h": 165
-          },
-          "pastePosition": {
-            "x": 20,
-            "y": 20
-          }
+          "name": "10_hit_react_02",
+          "file": "frames_webp/10_hit_react/10_hit_react_02.webp",
+          "width": 512,
+          "height": 512
         },
         {
           "index": 3,
-          "name": "hit_03",
-          "file": "frames_webp/10_hit/10_hit_03.webp",
-          "sourceXBounds": {
-            "x0": 265,
-            "x1": 425
-          },
-          "cropBoxInsideSeparatedSegment": {
-            "left": 0,
-            "top": 0,
-            "right": 160,
-            "bottom": 143
-          },
-          "equalCanvas": {
-            "w": 160,
-            "h": 165
-          },
-          "pastePosition": {
-            "x": 0,
-            "y": 22
-          }
+          "name": "10_hit_react_03",
+          "file": "frames_webp/10_hit_react/10_hit_react_03.webp",
+          "width": 512,
+          "height": 512
         },
         {
           "index": 4,
-          "name": "hit_04",
-          "file": "frames_webp/10_hit/10_hit_04.webp",
-          "sourceXBounds": {
-            "x0": 425,
-            "x1": 540
-          },
-          "cropBoxInsideSeparatedSegment": {
-            "left": 0,
-            "top": 26,
-            "right": 115,
-            "bottom": 148
-          },
-          "equalCanvas": {
-            "w": 160,
-            "h": 165
-          },
-          "pastePosition": {
-            "x": 22,
-            "y": 43
-          }
+          "name": "10_hit_react_04",
+          "file": "frames_webp/10_hit_react/10_hit_react_04.webp",
+          "width": 512,
+          "height": 512
         },
         {
           "index": 5,
-          "name": "hit_05",
-          "file": "frames_webp/10_hit/10_hit_05.webp",
-          "sourceXBounds": {
-            "x0": 540,
-            "x1": 651
-          },
-          "cropBoxInsideSeparatedSegment": {
-            "left": 0,
-            "top": 40,
-            "right": 111,
-            "bottom": 144
-          },
-          "equalCanvas": {
-            "w": 160,
-            "h": 165
-          },
-          "pastePosition": {
-            "x": 24,
-            "y": 61
-          }
+          "name": "10_hit_react_05",
+          "file": "frames_webp/10_hit_react/10_hit_react_05.webp",
+          "width": 512,
+          "height": 512
         },
         {
           "index": 6,
-          "name": "hit_06",
-          "file": "frames_webp/10_hit/10_hit_06.webp",
-          "sourceXBounds": {
-            "x0": 651,
-            "x1": 793
-          },
-          "cropBoxInsideSeparatedSegment": {
-            "left": 0,
-            "top": 31,
-            "right": 142,
-            "bottom": 148
-          },
-          "equalCanvas": {
-            "w": 160,
-            "h": 165
-          },
-          "pastePosition": {
-            "x": 9,
-            "y": 48
-          }
+          "name": "10_hit_react_06",
+          "file": "frames_webp/10_hit_react/10_hit_react_06.webp",
+          "width": 512,
+          "height": 512
         }
-      ],
-      "index": 10
+      ]
     },
     {
       "id": "defeat",
-      "label": "Bị tiêu diệt",
-      "sourceStrip": "hoa/rows_webp/11_defeat.webp",
-      "sourceStripSize": {
-        "w": 793,
-        "h": 166
-      },
-      "detectedColumnBounds": [
-        0,
-        134,
-        259,
-        406,
-        527,
-        620,
-        793
-      ],
-      "detectedCentersX": [
-        73.9593447631981,
-        202.8627070128808,
-        335.19030746371016,
-        467.81745543945914,
-        578.8536190133237,
-        707.5081828442438
-      ],
+      "label": "defeat",
+      "sourceStrip": "hoa/hoa_2/frames/11_death",
       "frameCount": 6,
       "equalFrameSize": {
-        "w": 173,
-        "h": 166
+        "w": 512,
+        "h": 512
       },
-      "independentSegmentGap": 80,
-      "equalSpacedStripFile": "equal_spaced_strips_webp/11_defeat_equal_spaced.webp",
-      "equalSpacedStripSize": {
-        "w": 1438,
-        "h": 166
-      },
-      "rawSeparatedSegmentsFolder": "spaced_segments_webp/11_defeat",
       "frames": [
         {
           "index": 1,
-          "name": "defeat_01",
-          "file": "frames_webp/11_defeat/11_defeat_01.webp",
-          "sourceXBounds": {
-            "x0": 0,
-            "x1": 134
-          },
-          "cropBoxInsideSeparatedSegment": {
-            "left": 0,
-            "top": 0,
-            "right": 134,
-            "bottom": 166
-          },
-          "equalCanvas": {
-            "w": 173,
-            "h": 166
-          },
-          "pastePosition": {
-            "x": 19,
-            "y": 0
-          }
+          "name": "11_death_01",
+          "file": "frames_webp/11_death/11_death_01.webp",
+          "width": 512,
+          "height": 512
         },
         {
           "index": 2,
-          "name": "defeat_02",
-          "file": "frames_webp/11_defeat/11_defeat_02.webp",
-          "sourceXBounds": {
-            "x0": 134,
-            "x1": 259
-          },
-          "cropBoxInsideSeparatedSegment": {
-            "left": 0,
-            "top": 11,
-            "right": 125,
-            "bottom": 166
-          },
-          "equalCanvas": {
-            "w": 173,
-            "h": 166
-          },
-          "pastePosition": {
-            "x": 24,
-            "y": 11
-          }
+          "name": "11_death_02",
+          "file": "frames_webp/11_death/11_death_02.webp",
+          "width": 512,
+          "height": 512
         },
         {
           "index": 3,
-          "name": "defeat_03",
-          "file": "frames_webp/11_defeat/11_defeat_03.webp",
-          "sourceXBounds": {
-            "x0": 259,
-            "x1": 406
-          },
-          "cropBoxInsideSeparatedSegment": {
-            "left": 0,
-            "top": 28,
-            "right": 147,
-            "bottom": 135
-          },
-          "equalCanvas": {
-            "w": 173,
-            "h": 166
-          },
-          "pastePosition": {
-            "x": 13,
-            "y": 59
-          }
+          "name": "11_death_03",
+          "file": "frames_webp/11_death/11_death_03.webp",
+          "width": 512,
+          "height": 512
         },
         {
           "index": 4,
-          "name": "defeat_04",
-          "file": "frames_webp/11_defeat/11_defeat_04.webp",
-          "sourceXBounds": {
-            "x0": 406,
-            "x1": 527
-          },
-          "cropBoxInsideSeparatedSegment": {
-            "left": 0,
-            "top": 44,
-            "right": 121,
-            "bottom": 166
-          },
-          "equalCanvas": {
-            "w": 173,
-            "h": 166
-          },
-          "pastePosition": {
-            "x": 26,
-            "y": 44
-          }
+          "name": "11_death_04",
+          "file": "frames_webp/11_death/11_death_04.webp",
+          "width": 512,
+          "height": 512
         },
         {
           "index": 5,
-          "name": "defeat_05",
-          "file": "frames_webp/11_defeat/11_defeat_05.webp",
-          "sourceXBounds": {
-            "x0": 527,
-            "x1": 620
-          },
-          "cropBoxInsideSeparatedSegment": {
-            "left": 0,
-            "top": 55,
-            "right": 93,
-            "bottom": 166
-          },
-          "equalCanvas": {
-            "w": 173,
-            "h": 166
-          },
-          "pastePosition": {
-            "x": 40,
-            "y": 55
-          }
+          "name": "11_death_05",
+          "file": "frames_webp/11_death/11_death_05.webp",
+          "width": 512,
+          "height": 512
         },
         {
           "index": 6,
-          "name": "defeat_06",
-          "file": "frames_webp/11_defeat/11_defeat_06.webp",
-          "sourceXBounds": {
-            "x0": 620,
-            "x1": 793
-          },
-          "cropBoxInsideSeparatedSegment": {
-            "left": 0,
-            "top": 40,
-            "right": 173,
-            "bottom": 166
-          },
-          "equalCanvas": {
-            "w": 173,
-            "h": 166
-          },
-          "pastePosition": {
-            "x": 0,
-            "y": 40
-          }
+          "name": "11_death_06",
+          "file": "frames_webp/11_death/11_death_06.webp",
+          "width": 512,
+          "height": 512
         }
-      ],
-      "index": 11
+      ]
     },
     {
       "id": "normal_attack_a",
-      "label": "Đòn đánh thường A",
-      "sourceStrip": "hoa/rows_webp/12_normal_attack_a.webp",
-      "sourceStripSize": {
-        "w": 793,
-        "h": 200
-      },
-      "detectedColumnBounds": [
-        0,
-        131,
-        255,
-        391,
-        528,
-        653,
-        793
-      ],
-      "detectedCentersX": [
-        73.83745431090088,
-        195.2921508664628,
-        326.05344576174474,
-        463.4536717428088,
-        589.5639577934098,
-        719.7092462180491
-      ],
+      "label": "normal_attack_a",
+      "sourceStrip": "hoa/hoa_2/frames/12_normal_attack",
       "frameCount": 6,
       "equalFrameSize": {
-        "w": 140,
-        "h": 163
+        "w": 512,
+        "h": 512
       },
-      "independentSegmentGap": 80,
-      "equalSpacedStripFile": "equal_spaced_strips_webp/12_normal_attack_a_equal_spaced.webp",
-      "equalSpacedStripSize": {
-        "w": 1240,
-        "h": 163
-      },
-      "rawSeparatedSegmentsFolder": "spaced_segments_webp/12_normal_attack_a",
       "frames": [
         {
           "index": 1,
-          "name": "normal_attack_a_01",
-          "file": "frames_webp/12_normal_attack_a/12_normal_attack_a_01.webp",
-          "sourceXBounds": {
-            "x0": 0,
-            "x1": 131
-          },
-          "cropBoxInsideSeparatedSegment": {
-            "left": 0,
-            "top": 0,
-            "right": 131,
-            "bottom": 163
-          },
-          "equalCanvas": {
-            "w": 140,
-            "h": 163
-          },
-          "pastePosition": {
-            "x": 4,
-            "y": 0
-          }
+          "name": "12_normal_attack_01",
+          "file": "frames_webp/12_normal_attack/12_normal_attack_01.webp",
+          "width": 512,
+          "height": 512
         },
         {
           "index": 2,
-          "name": "normal_attack_a_02",
-          "file": "frames_webp/12_normal_attack_a/12_normal_attack_a_02.webp",
-          "sourceXBounds": {
-            "x0": 131,
-            "x1": 255
-          },
-          "cropBoxInsideSeparatedSegment": {
-            "left": 0,
-            "top": 0,
-            "right": 124,
-            "bottom": 160
-          },
-          "equalCanvas": {
-            "w": 140,
-            "h": 163
-          },
-          "pastePosition": {
-            "x": 8,
-            "y": 3
-          }
+          "name": "12_normal_attack_02",
+          "file": "frames_webp/12_normal_attack/12_normal_attack_02.webp",
+          "width": 512,
+          "height": 512
         },
         {
           "index": 3,
-          "name": "normal_attack_a_03",
-          "file": "frames_webp/12_normal_attack_a/12_normal_attack_a_03.webp",
-          "sourceXBounds": {
-            "x0": 255,
-            "x1": 391
-          },
-          "cropBoxInsideSeparatedSegment": {
-            "left": 0,
-            "top": 0,
-            "right": 136,
-            "bottom": 159
-          },
-          "equalCanvas": {
-            "w": 140,
-            "h": 163
-          },
-          "pastePosition": {
-            "x": 2,
-            "y": 4
-          }
+          "name": "12_normal_attack_03",
+          "file": "frames_webp/12_normal_attack/12_normal_attack_03.webp",
+          "width": 512,
+          "height": 512
         },
         {
           "index": 4,
-          "name": "normal_attack_a_04",
-          "file": "frames_webp/12_normal_attack_a/12_normal_attack_a_04.webp",
-          "sourceXBounds": {
-            "x0": 391,
-            "x1": 528
-          },
-          "cropBoxInsideSeparatedSegment": {
-            "left": 0,
-            "top": 0,
-            "right": 137,
-            "bottom": 161
-          },
-          "equalCanvas": {
-            "w": 140,
-            "h": 163
-          },
-          "pastePosition": {
-            "x": 1,
-            "y": 2
-          }
+          "name": "12_normal_attack_04",
+          "file": "frames_webp/12_normal_attack/12_normal_attack_04.webp",
+          "width": 512,
+          "height": 512
         },
         {
           "index": 5,
-          "name": "normal_attack_a_05",
-          "file": "frames_webp/12_normal_attack_a/12_normal_attack_a_05.webp",
-          "sourceXBounds": {
-            "x0": 528,
-            "x1": 653
-          },
-          "cropBoxInsideSeparatedSegment": {
-            "left": 0,
-            "top": 0,
-            "right": 125,
-            "bottom": 121
-          },
-          "equalCanvas": {
-            "w": 140,
-            "h": 163
-          },
-          "pastePosition": {
-            "x": 7,
-            "y": 42
-          }
+          "name": "12_normal_attack_05",
+          "file": "frames_webp/12_normal_attack/12_normal_attack_05.webp",
+          "width": 512,
+          "height": 512
         },
         {
           "index": 6,
-          "name": "normal_attack_a_06",
-          "file": "frames_webp/12_normal_attack_a/12_normal_attack_a_06.webp",
-          "sourceXBounds": {
-            "x0": 653,
-            "x1": 793
-          },
-          "cropBoxInsideSeparatedSegment": {
-            "left": 0,
-            "top": 0,
-            "right": 140,
-            "bottom": 157
-          },
-          "equalCanvas": {
-            "w": 140,
-            "h": 163
-          },
-          "pastePosition": {
-            "x": 0,
-            "y": 6
-          }
+          "name": "12_normal_attack_06",
+          "file": "frames_webp/12_normal_attack/12_normal_attack_06.webp",
+          "width": 512,
+          "height": 512
         }
-      ],
-      "index": 12
+      ]
     },
     {
       "id": "normal_attack_b",
-      "label": "Đòn đánh thường B / biến thể",
-      "sourceStrip": "hoa/rows_webp/13_normal_attack_b.webp",
-      "sourceStripSize": {
-        "w": 793,
-        "h": 165
-      },
-      "detectedColumnBounds": [
-        0,
-        131,
-        255,
-        391,
-        534,
-        663,
-        793
-      ],
-      "detectedCentersX": [
-        69.63619080539233,
-        193.58386106313569,
-        324.2607912125633,
-        464.41971119703305,
-        598.9244972577696,
-        722.233451237999
-      ],
+      "label": "normal_attack_b",
+      "sourceStrip": "hoa/hoa_2/frames/12_normal_attack",
       "frameCount": 6,
       "equalFrameSize": {
-        "w": 143,
-        "h": 165
+        "w": 512,
+        "h": 512
       },
-      "independentSegmentGap": 80,
-      "equalSpacedStripFile": "equal_spaced_strips_webp/13_normal_attack_b_equal_spaced.webp",
-      "equalSpacedStripSize": {
-        "w": 1258,
-        "h": 165
-      },
-      "rawSeparatedSegmentsFolder": "spaced_segments_webp/13_normal_attack_b",
       "frames": [
         {
           "index": 1,
-          "name": "normal_attack_b_01",
-          "file": "frames_webp/13_normal_attack_b/13_normal_attack_b_01.webp",
-          "sourceXBounds": {
-            "x0": 0,
-            "x1": 131
-          },
-          "cropBoxInsideSeparatedSegment": {
-            "left": 0,
-            "top": 0,
-            "right": 131,
-            "bottom": 165
-          },
-          "equalCanvas": {
-            "w": 143,
-            "h": 165
-          },
-          "pastePosition": {
-            "x": 6,
-            "y": 0
-          }
+          "name": "12_normal_attack_01",
+          "file": "frames_webp/12_normal_attack/12_normal_attack_01.webp",
+          "width": 512,
+          "height": 512
         },
         {
           "index": 2,
-          "name": "normal_attack_b_02",
-          "file": "frames_webp/13_normal_attack_b/13_normal_attack_b_02.webp",
-          "sourceXBounds": {
-            "x0": 131,
-            "x1": 255
-          },
-          "cropBoxInsideSeparatedSegment": {
-            "left": 0,
-            "top": 1,
-            "right": 124,
-            "bottom": 165
-          },
-          "equalCanvas": {
-            "w": 143,
-            "h": 165
-          },
-          "pastePosition": {
-            "x": 9,
-            "y": 1
-          }
+          "name": "12_normal_attack_02",
+          "file": "frames_webp/12_normal_attack/12_normal_attack_02.webp",
+          "width": 512,
+          "height": 512
         },
         {
           "index": 3,
-          "name": "normal_attack_b_03",
-          "file": "frames_webp/13_normal_attack_b/13_normal_attack_b_03.webp",
-          "sourceXBounds": {
-            "x0": 255,
-            "x1": 391
-          },
-          "cropBoxInsideSeparatedSegment": {
-            "left": 0,
-            "top": 0,
-            "right": 136,
-            "bottom": 165
-          },
-          "equalCanvas": {
-            "w": 143,
-            "h": 165
-          },
-          "pastePosition": {
-            "x": 3,
-            "y": 0
-          }
+          "name": "12_normal_attack_03",
+          "file": "frames_webp/12_normal_attack/12_normal_attack_03.webp",
+          "width": 512,
+          "height": 512
         },
         {
           "index": 4,
-          "name": "normal_attack_b_04",
-          "file": "frames_webp/13_normal_attack_b/13_normal_attack_b_04.webp",
-          "sourceXBounds": {
-            "x0": 391,
-            "x1": 534
-          },
-          "cropBoxInsideSeparatedSegment": {
-            "left": 0,
-            "top": 5,
-            "right": 143,
-            "bottom": 165
-          },
-          "equalCanvas": {
-            "w": 143,
-            "h": 165
-          },
-          "pastePosition": {
-            "x": 0,
-            "y": 5
-          }
+          "name": "12_normal_attack_04",
+          "file": "frames_webp/12_normal_attack/12_normal_attack_04.webp",
+          "width": 512,
+          "height": 512
         },
         {
           "index": 5,
-          "name": "normal_attack_b_05",
-          "file": "frames_webp/13_normal_attack_b/13_normal_attack_b_05.webp",
-          "sourceXBounds": {
-            "x0": 534,
-            "x1": 663
-          },
-          "cropBoxInsideSeparatedSegment": {
-            "left": 0,
-            "top": 6,
-            "right": 129,
-            "bottom": 165
-          },
-          "equalCanvas": {
-            "w": 143,
-            "h": 165
-          },
-          "pastePosition": {
-            "x": 7,
-            "y": 6
-          }
+          "name": "12_normal_attack_05",
+          "file": "frames_webp/12_normal_attack/12_normal_attack_05.webp",
+          "width": 512,
+          "height": 512
         },
         {
           "index": 6,
-          "name": "normal_attack_b_06",
-          "file": "frames_webp/13_normal_attack_b/13_normal_attack_b_06.webp",
-          "sourceXBounds": {
-            "x0": 663,
-            "x1": 793
-          },
-          "cropBoxInsideSeparatedSegment": {
-            "left": 0,
-            "top": 0,
-            "right": 122,
-            "bottom": 165
-          },
-          "equalCanvas": {
-            "w": 143,
-            "h": 165
-          },
-          "pastePosition": {
-            "x": 10,
-            "y": 0
-          }
+          "name": "12_normal_attack_06",
+          "file": "frames_webp/12_normal_attack/12_normal_attack_06.webp",
+          "width": 512,
+          "height": 512
         }
-      ],
-      "index": 13
+      ]
     },
     {
       "id": "skill_cast",
-      "label": "Tung chiêu / tung kỹ năng",
-      "sourceStrip": "hoa/rows_webp/14_skill_cast.webp",
-      "sourceStripSize": {
-        "w": 793,
-        "h": 156
-      },
-      "detectedColumnBounds": [
-        0,
-        125,
-        231,
-        384,
-        524,
-        663,
-        793
-      ],
-      "detectedCentersX": [
-        68.06008700380642,
-        178.86952407985618,
-        307.0552434456929,
-        453.0019225839528,
-        591.2793866041442,
-        723.3628908252178
-      ],
+      "label": "skill_cast",
+      "sourceStrip": "hoa/hoa_2/frames/12_normal_attack",
       "frameCount": 6,
       "equalFrameSize": {
-        "w": 153,
-        "h": 156
+        "w": 512,
+        "h": 512
       },
-      "independentSegmentGap": 80,
-      "equalSpacedStripFile": "equal_spaced_strips_webp/14_skill_cast_equal_spaced.webp",
-      "equalSpacedStripSize": {
-        "w": 1318,
-        "h": 156
-      },
-      "rawSeparatedSegmentsFolder": "spaced_segments_webp/14_skill_cast",
       "frames": [
         {
           "index": 1,
-          "name": "skill_cast_01",
-          "file": "frames_webp/14_skill_cast/14_skill_cast_01.webp",
-          "sourceXBounds": {
-            "x0": 0,
-            "x1": 125
-          },
-          "cropBoxInsideSeparatedSegment": {
-            "left": 0,
-            "top": 0,
-            "right": 125,
-            "bottom": 156
-          },
-          "equalCanvas": {
-            "w": 153,
-            "h": 156
-          },
-          "pastePosition": {
-            "x": 14,
-            "y": 0
-          }
+          "name": "12_normal_attack_01",
+          "file": "frames_webp/12_normal_attack/12_normal_attack_01.webp",
+          "width": 512,
+          "height": 512
         },
         {
           "index": 2,
-          "name": "skill_cast_02",
-          "file": "frames_webp/14_skill_cast/14_skill_cast_02.webp",
-          "sourceXBounds": {
-            "x0": 125,
-            "x1": 231
-          },
-          "cropBoxInsideSeparatedSegment": {
-            "left": 0,
-            "top": 0,
-            "right": 106,
-            "bottom": 156
-          },
-          "equalCanvas": {
-            "w": 153,
-            "h": 156
-          },
-          "pastePosition": {
-            "x": 23,
-            "y": 0
-          }
+          "name": "12_normal_attack_02",
+          "file": "frames_webp/12_normal_attack/12_normal_attack_02.webp",
+          "width": 512,
+          "height": 512
         },
         {
           "index": 3,
-          "name": "skill_cast_03",
-          "file": "frames_webp/14_skill_cast/14_skill_cast_03.webp",
-          "sourceXBounds": {
-            "x0": 231,
-            "x1": 384
-          },
-          "cropBoxInsideSeparatedSegment": {
-            "left": 0,
-            "top": 0,
-            "right": 153,
-            "bottom": 156
-          },
-          "equalCanvas": {
-            "w": 153,
-            "h": 156
-          },
-          "pastePosition": {
-            "x": 0,
-            "y": 0
-          }
+          "name": "12_normal_attack_03",
+          "file": "frames_webp/12_normal_attack/12_normal_attack_03.webp",
+          "width": 512,
+          "height": 512
         },
         {
           "index": 4,
-          "name": "skill_cast_04",
-          "file": "frames_webp/14_skill_cast/14_skill_cast_04.webp",
-          "sourceXBounds": {
-            "x0": 384,
-            "x1": 524
-          },
-          "cropBoxInsideSeparatedSegment": {
-            "left": 0,
-            "top": 0,
-            "right": 140,
-            "bottom": 156
-          },
-          "equalCanvas": {
-            "w": 153,
-            "h": 156
-          },
-          "pastePosition": {
-            "x": 6,
-            "y": 0
-          }
+          "name": "12_normal_attack_04",
+          "file": "frames_webp/12_normal_attack/12_normal_attack_04.webp",
+          "width": 512,
+          "height": 512
         },
         {
           "index": 5,
-          "name": "skill_cast_05",
-          "file": "frames_webp/14_skill_cast/14_skill_cast_05.webp",
-          "sourceXBounds": {
-            "x0": 524,
-            "x1": 663
-          },
-          "cropBoxInsideSeparatedSegment": {
-            "left": 0,
-            "top": 0,
-            "right": 139,
-            "bottom": 156
-          },
-          "equalCanvas": {
-            "w": 153,
-            "h": 156
-          },
-          "pastePosition": {
-            "x": 7,
-            "y": 0
-          }
+          "name": "12_normal_attack_05",
+          "file": "frames_webp/12_normal_attack/12_normal_attack_05.webp",
+          "width": 512,
+          "height": 512
         },
         {
           "index": 6,
-          "name": "skill_cast_06",
-          "file": "frames_webp/14_skill_cast/14_skill_cast_06.webp",
-          "sourceXBounds": {
-            "x0": 663,
-            "x1": 793
-          },
-          "cropBoxInsideSeparatedSegment": {
-            "left": 0,
-            "top": 8,
-            "right": 130,
-            "bottom": 156
-          },
-          "equalCanvas": {
-            "w": 153,
-            "h": 156
-          },
-          "pastePosition": {
-            "x": 11,
-            "y": 8
-          }
+          "name": "12_normal_attack_06",
+          "file": "frames_webp/12_normal_attack/12_normal_attack_06.webp",
+          "width": 512,
+          "height": 512
         }
-      ],
-      "index": 14
+      ]
     },
     {
       "id": "element_projectile",
-      "label": "Phóng đạn / phóng hiệu ứng nguyên tố",
-      "sourceStrip": "hoa/rows_webp/15_element_projectile.webp",
-      "sourceStripSize": {
-        "w": 793,
-        "h": 152
-      },
-      "detectedColumnBounds": [
-        0,
-        121,
-        253,
-        382,
-        516,
-        645,
-        793
-      ],
-      "detectedCentersX": [
-        66.2687165775401,
-        188.83600070348223,
-        313.57146477445514,
-        442.68285163776494,
-        578.8241951710262,
-        719.7924003107198
-      ],
+      "label": "element_projectile",
+      "sourceStrip": "hoa/hoa_2/frames/13_poison_cast",
       "frameCount": 6,
       "equalFrameSize": {
-        "w": 148,
-        "h": 152
+        "w": 512,
+        "h": 512
       },
-      "independentSegmentGap": 80,
-      "equalSpacedStripFile": "equal_spaced_strips_webp/15_element_projectile_equal_spaced.webp",
-      "equalSpacedStripSize": {
-        "w": 1288,
-        "h": 152
-      },
-      "rawSeparatedSegmentsFolder": "spaced_segments_webp/15_element_projectile",
       "frames": [
         {
           "index": 1,
-          "name": "element_projectile_01",
-          "file": "frames_webp/15_element_projectile/15_element_projectile_01.webp",
-          "sourceXBounds": {
-            "x0": 0,
-            "x1": 121
-          },
-          "cropBoxInsideSeparatedSegment": {
-            "left": 0,
-            "top": 0,
-            "right": 121,
-            "bottom": 152
-          },
-          "equalCanvas": {
-            "w": 148,
-            "h": 152
-          },
-          "pastePosition": {
-            "x": 13,
-            "y": 0
-          }
+          "name": "13_poison_cast_01",
+          "file": "frames_webp/13_poison_cast/13_poison_cast_01.webp",
+          "width": 512,
+          "height": 512
         },
         {
           "index": 2,
-          "name": "element_projectile_02",
-          "file": "frames_webp/15_element_projectile/15_element_projectile_02.webp",
-          "sourceXBounds": {
-            "x0": 121,
-            "x1": 253
-          },
-          "cropBoxInsideSeparatedSegment": {
-            "left": 0,
-            "top": 0,
-            "right": 132,
-            "bottom": 152
-          },
-          "equalCanvas": {
-            "w": 148,
-            "h": 152
-          },
-          "pastePosition": {
-            "x": 8,
-            "y": 0
-          }
+          "name": "13_poison_cast_02",
+          "file": "frames_webp/13_poison_cast/13_poison_cast_02.webp",
+          "width": 512,
+          "height": 512
         },
         {
           "index": 3,
-          "name": "element_projectile_03",
-          "file": "frames_webp/15_element_projectile/15_element_projectile_03.webp",
-          "sourceXBounds": {
-            "x0": 253,
-            "x1": 382
-          },
-          "cropBoxInsideSeparatedSegment": {
-            "left": 0,
-            "top": 17,
-            "right": 129,
-            "bottom": 121
-          },
-          "equalCanvas": {
-            "w": 148,
-            "h": 152
-          },
-          "pastePosition": {
-            "x": 9,
-            "y": 48
-          }
+          "name": "13_poison_cast_03",
+          "file": "frames_webp/13_poison_cast/13_poison_cast_03.webp",
+          "width": 512,
+          "height": 512
         },
         {
           "index": 4,
-          "name": "element_projectile_04",
-          "file": "frames_webp/15_element_projectile/15_element_projectile_04.webp",
-          "sourceXBounds": {
-            "x0": 382,
-            "x1": 516
-          },
-          "cropBoxInsideSeparatedSegment": {
-            "left": 0,
-            "top": 23,
-            "right": 134,
-            "bottom": 124
-          },
-          "equalCanvas": {
-            "w": 148,
-            "h": 152
-          },
-          "pastePosition": {
-            "x": 7,
-            "y": 51
-          }
+          "name": "13_poison_cast_04",
+          "file": "frames_webp/13_poison_cast/13_poison_cast_04.webp",
+          "width": 512,
+          "height": 512
         },
         {
           "index": 5,
-          "name": "element_projectile_05",
-          "file": "frames_webp/15_element_projectile/15_element_projectile_05.webp",
-          "sourceXBounds": {
-            "x0": 516,
-            "x1": 645
-          },
-          "cropBoxInsideSeparatedSegment": {
-            "left": 0,
-            "top": 25,
-            "right": 129,
-            "bottom": 124
-          },
-          "equalCanvas": {
-            "w": 148,
-            "h": 152
-          },
-          "pastePosition": {
-            "x": 9,
-            "y": 53
-          }
+          "name": "13_poison_cast_05",
+          "file": "frames_webp/13_poison_cast/13_poison_cast_05.webp",
+          "width": 512,
+          "height": 512
         },
         {
           "index": 6,
-          "name": "element_projectile_06",
-          "file": "frames_webp/15_element_projectile/15_element_projectile_06.webp",
-          "sourceXBounds": {
-            "x0": 645,
-            "x1": 793
-          },
-          "cropBoxInsideSeparatedSegment": {
-            "left": 0,
-            "top": 0,
-            "right": 148,
-            "bottom": 152
-          },
-          "equalCanvas": {
-            "w": 148,
-            "h": 152
-          },
-          "pastePosition": {
-            "x": 0,
-            "y": 0
-          }
+          "name": "13_poison_cast_06",
+          "file": "frames_webp/13_poison_cast/13_poison_cast_06.webp",
+          "width": 512,
+          "height": 512
         }
-      ],
-      "index": 15
+      ]
     },
     {
       "id": "dodge",
-      "label": "Né đòn",
-      "sourceStrip": "hoa/rows_webp/16_dodge.webp",
-      "sourceStripSize": {
-        "w": 793,
-        "h": 153
-      },
-      "detectedColumnBounds": [
-        0,
-        131,
-        245,
-        382,
-        520,
-        660,
-        793
-      ],
-      "detectedCentersX": [
-        67.14098690835851,
-        185.67679963837722,
-        308.6919057571727,
-        450.94072345390896,
-        585.2713896921246,
-        712.0069873417722
-      ],
+      "label": "dodge",
+      "sourceStrip": "hoa/hoa_2/frames/14_dodge",
       "frameCount": 6,
       "equalFrameSize": {
-        "w": 140,
-        "h": 153
+        "w": 512,
+        "h": 512
       },
-      "independentSegmentGap": 80,
-      "equalSpacedStripFile": "equal_spaced_strips_webp/16_dodge_equal_spaced.webp",
-      "equalSpacedStripSize": {
-        "w": 1240,
-        "h": 153
-      },
-      "rawSeparatedSegmentsFolder": "spaced_segments_webp/16_dodge",
       "frames": [
         {
           "index": 1,
-          "name": "dodge_01",
-          "file": "frames_webp/16_dodge/16_dodge_01.webp",
-          "sourceXBounds": {
-            "x0": 0,
-            "x1": 131
-          },
-          "cropBoxInsideSeparatedSegment": {
-            "left": 0,
-            "top": 11,
-            "right": 131,
-            "bottom": 153
-          },
-          "equalCanvas": {
-            "w": 140,
-            "h": 153
-          },
-          "pastePosition": {
-            "x": 4,
-            "y": 11
-          }
+          "name": "14_dodge_01",
+          "file": "frames_webp/14_dodge/14_dodge_01.webp",
+          "width": 512,
+          "height": 512
         },
         {
           "index": 2,
-          "name": "dodge_02",
-          "file": "frames_webp/16_dodge/16_dodge_02.webp",
-          "sourceXBounds": {
-            "x0": 131,
-            "x1": 245
-          },
-          "cropBoxInsideSeparatedSegment": {
-            "left": 0,
-            "top": 2,
-            "right": 114,
-            "bottom": 153
-          },
-          "equalCanvas": {
-            "w": 140,
-            "h": 153
-          },
-          "pastePosition": {
-            "x": 13,
-            "y": 2
-          }
+          "name": "14_dodge_02",
+          "file": "frames_webp/14_dodge/14_dodge_02.webp",
+          "width": 512,
+          "height": 512
         },
         {
           "index": 3,
-          "name": "dodge_03",
-          "file": "frames_webp/16_dodge/16_dodge_03.webp",
-          "sourceXBounds": {
-            "x0": 245,
-            "x1": 382
-          },
-          "cropBoxInsideSeparatedSegment": {
-            "left": 0,
-            "top": 8,
-            "right": 137,
-            "bottom": 147
-          },
-          "equalCanvas": {
-            "w": 140,
-            "h": 153
-          },
-          "pastePosition": {
-            "x": 1,
-            "y": 14
-          }
+          "name": "14_dodge_03",
+          "file": "frames_webp/14_dodge/14_dodge_03.webp",
+          "width": 512,
+          "height": 512
         },
         {
           "index": 4,
-          "name": "dodge_04",
-          "file": "frames_webp/16_dodge/16_dodge_04.webp",
-          "sourceXBounds": {
-            "x0": 382,
-            "x1": 520
-          },
-          "cropBoxInsideSeparatedSegment": {
-            "left": 0,
-            "top": 0,
-            "right": 138,
-            "bottom": 145
-          },
-          "equalCanvas": {
-            "w": 140,
-            "h": 153
-          },
-          "pastePosition": {
-            "x": 1,
-            "y": 8
-          }
+          "name": "14_dodge_04",
+          "file": "frames_webp/14_dodge/14_dodge_04.webp",
+          "width": 512,
+          "height": 512
         },
         {
           "index": 5,
-          "name": "dodge_05",
-          "file": "frames_webp/16_dodge/16_dodge_05.webp",
-          "sourceXBounds": {
-            "x0": 520,
-            "x1": 660
-          },
-          "cropBoxInsideSeparatedSegment": {
-            "left": 0,
-            "top": 6,
-            "right": 140,
-            "bottom": 148
-          },
-          "equalCanvas": {
-            "w": 140,
-            "h": 153
-          },
-          "pastePosition": {
-            "x": 0,
-            "y": 11
-          }
+          "name": "14_dodge_05",
+          "file": "frames_webp/14_dodge/14_dodge_05.webp",
+          "width": 512,
+          "height": 512
         },
         {
           "index": 6,
-          "name": "dodge_06",
-          "file": "frames_webp/16_dodge/16_dodge_06.webp",
-          "sourceXBounds": {
-            "x0": 660,
-            "x1": 793
-          },
-          "cropBoxInsideSeparatedSegment": {
-            "left": 0,
-            "top": 0,
-            "right": 133,
-            "bottom": 153
-          },
-          "equalCanvas": {
-            "w": 140,
-            "h": 153
-          },
-          "pastePosition": {
-            "x": 3,
-            "y": 0
-          }
+          "name": "14_dodge_06",
+          "file": "frames_webp/14_dodge/14_dodge_06.webp",
+          "width": 512,
+          "height": 512
         }
-      ],
-      "index": 16
+      ]
     },
     {
       "id": "skill_dodge",
-      "label": "Né chiêu",
-      "sourceStrip": "hoa/rows_webp/17_skill_dodge.webp",
-      "sourceStripSize": {
-        "w": 793,
-        "h": 165
-      },
-      "detectedColumnBounds": [
-        0,
-        128,
-        279,
-        429,
-        589,
-        634,
-        793
-      ],
-      "detectedCentersX": [
-        72.03707959855971,
-        208.92835374962652,
-        354.9602291433463,
-        490.95228602662206,
-        620.4046685977169,
-        728.2202232752389
-      ],
+      "label": "skill_dodge",
+      "sourceStrip": "hoa/hoa_2/frames/14_dodge",
       "frameCount": 6,
       "equalFrameSize": {
-        "w": 160,
-        "h": 165
+        "w": 512,
+        "h": 512
       },
-      "independentSegmentGap": 80,
-      "equalSpacedStripFile": "equal_spaced_strips_webp/17_skill_dodge_equal_spaced.webp",
-      "equalSpacedStripSize": {
-        "w": 1360,
-        "h": 165
-      },
-      "rawSeparatedSegmentsFolder": "spaced_segments_webp/17_skill_dodge",
       "frames": [
         {
           "index": 1,
-          "name": "skill_dodge_01",
-          "file": "frames_webp/17_skill_dodge/17_skill_dodge_01.webp",
-          "sourceXBounds": {
-            "x0": 0,
-            "x1": 128
-          },
-          "cropBoxInsideSeparatedSegment": {
-            "left": 0,
-            "top": 0,
-            "right": 128,
-            "bottom": 165
-          },
-          "equalCanvas": {
-            "w": 160,
-            "h": 165
-          },
-          "pastePosition": {
-            "x": 16,
-            "y": 0
-          }
+          "name": "14_dodge_01",
+          "file": "frames_webp/14_dodge/14_dodge_01.webp",
+          "width": 512,
+          "height": 512
         },
         {
           "index": 2,
-          "name": "skill_dodge_02",
-          "file": "frames_webp/17_skill_dodge/17_skill_dodge_02.webp",
-          "sourceXBounds": {
-            "x0": 128,
-            "x1": 279
-          },
-          "cropBoxInsideSeparatedSegment": {
-            "left": 0,
-            "top": 0,
-            "right": 151,
-            "bottom": 165
-          },
-          "equalCanvas": {
-            "w": 160,
-            "h": 165
-          },
-          "pastePosition": {
-            "x": 4,
-            "y": 0
-          }
+          "name": "14_dodge_02",
+          "file": "frames_webp/14_dodge/14_dodge_02.webp",
+          "width": 512,
+          "height": 512
         },
         {
           "index": 3,
-          "name": "skill_dodge_03",
-          "file": "frames_webp/17_skill_dodge/17_skill_dodge_03.webp",
-          "sourceXBounds": {
-            "x0": 279,
-            "x1": 429
-          },
-          "cropBoxInsideSeparatedSegment": {
-            "left": 0,
-            "top": 0,
-            "right": 150,
-            "bottom": 165
-          },
-          "equalCanvas": {
-            "w": 160,
-            "h": 165
-          },
-          "pastePosition": {
-            "x": 5,
-            "y": 0
-          }
+          "name": "14_dodge_03",
+          "file": "frames_webp/14_dodge/14_dodge_03.webp",
+          "width": 512,
+          "height": 512
         },
         {
           "index": 4,
-          "name": "skill_dodge_04",
-          "file": "frames_webp/17_skill_dodge/17_skill_dodge_04.webp",
-          "sourceXBounds": {
-            "x0": 429,
-            "x1": 589
-          },
-          "cropBoxInsideSeparatedSegment": {
-            "left": 0,
-            "top": 0,
-            "right": 160,
-            "bottom": 165
-          },
-          "equalCanvas": {
-            "w": 160,
-            "h": 165
-          },
-          "pastePosition": {
-            "x": 0,
-            "y": 0
-          }
+          "name": "14_dodge_04",
+          "file": "frames_webp/14_dodge/14_dodge_04.webp",
+          "width": 512,
+          "height": 512
         },
         {
           "index": 5,
-          "name": "skill_dodge_05",
-          "file": "frames_webp/17_skill_dodge/17_skill_dodge_05.webp",
-          "sourceXBounds": {
-            "x0": 589,
-            "x1": 634
-          },
-          "cropBoxInsideSeparatedSegment": {
-            "left": 0,
-            "top": 0,
-            "right": 45,
-            "bottom": 165
-          },
-          "equalCanvas": {
-            "w": 160,
-            "h": 165
-          },
-          "pastePosition": {
-            "x": 57,
-            "y": 0
-          }
+          "name": "14_dodge_05",
+          "file": "frames_webp/14_dodge/14_dodge_05.webp",
+          "width": 512,
+          "height": 512
         },
         {
           "index": 6,
-          "name": "skill_dodge_06",
-          "file": "frames_webp/17_skill_dodge/17_skill_dodge_06.webp",
-          "sourceXBounds": {
-            "x0": 634,
-            "x1": 793
-          },
-          "cropBoxInsideSeparatedSegment": {
-            "left": 0,
-            "top": 0,
-            "right": 159,
-            "bottom": 165
-          },
-          "equalCanvas": {
-            "w": 160,
-            "h": 165
-          },
-          "pastePosition": {
-            "x": 0,
-            "y": 0
-          }
+          "name": "14_dodge_06",
+          "file": "frames_webp/14_dodge/14_dodge_06.webp",
+          "width": 512,
+          "height": 512
         }
-      ],
-      "index": 17
+      ]
     },
     {
       "id": "frozen",
-      "label": "Bị đóng băng",
-      "sourceStrip": "hoa/rows_webp/18_frozen.webp",
-      "sourceStripSize": {
-        "w": 793,
-        "h": 166
-      },
-      "detectedColumnBounds": [
-        0,
-        134,
-        270,
-        407,
-        536,
-        667,
-        793
-      ],
-      "detectedCentersX": [
-        71.76275495464263,
-        205.55849864743013,
-        341.56904078116025,
-        472.0259601483437,
-        605.4184769192792,
-        731.2143817634629
-      ],
+      "label": "frozen",
+      "sourceStrip": "hoa/hoa_2/frames/15_frozen",
       "frameCount": 6,
       "equalFrameSize": {
-        "w": 137,
-        "h": 166
+        "w": 512,
+        "h": 512
       },
-      "independentSegmentGap": 80,
-      "equalSpacedStripFile": "equal_spaced_strips_webp/18_frozen_equal_spaced.webp",
-      "equalSpacedStripSize": {
-        "w": 1222,
-        "h": 166
-      },
-      "rawSeparatedSegmentsFolder": "spaced_segments_webp/18_frozen",
       "frames": [
         {
           "index": 1,
-          "name": "frozen_01",
-          "file": "frames_webp/18_frozen/18_frozen_01.webp",
-          "sourceXBounds": {
-            "x0": 0,
-            "x1": 134
-          },
-          "cropBoxInsideSeparatedSegment": {
-            "left": 0,
-            "top": 0,
-            "right": 134,
-            "bottom": 166
-          },
-          "equalCanvas": {
-            "w": 137,
-            "h": 166
-          },
-          "pastePosition": {
-            "x": 1,
-            "y": 0
-          }
+          "name": "15_frozen_01",
+          "file": "frames_webp/15_frozen/15_frozen_01.webp",
+          "width": 512,
+          "height": 512
         },
         {
           "index": 2,
-          "name": "frozen_02",
-          "file": "frames_webp/18_frozen/18_frozen_02.webp",
-          "sourceXBounds": {
-            "x0": 134,
-            "x1": 270
-          },
-          "cropBoxInsideSeparatedSegment": {
-            "left": 0,
-            "top": 0,
-            "right": 136,
-            "bottom": 154
-          },
-          "equalCanvas": {
-            "w": 137,
-            "h": 166
-          },
-          "pastePosition": {
-            "x": 0,
-            "y": 12
-          }
+          "name": "15_frozen_02",
+          "file": "frames_webp/15_frozen/15_frozen_02.webp",
+          "width": 512,
+          "height": 512
         },
         {
           "index": 3,
-          "name": "frozen_03",
-          "file": "frames_webp/18_frozen/18_frozen_03.webp",
-          "sourceXBounds": {
-            "x0": 270,
-            "x1": 407
-          },
-          "cropBoxInsideSeparatedSegment": {
-            "left": 0,
-            "top": 0,
-            "right": 137,
-            "bottom": 166
-          },
-          "equalCanvas": {
-            "w": 137,
-            "h": 166
-          },
-          "pastePosition": {
-            "x": 0,
-            "y": 0
-          }
+          "name": "15_frozen_03",
+          "file": "frames_webp/15_frozen/15_frozen_03.webp",
+          "width": 512,
+          "height": 512
         },
         {
           "index": 4,
-          "name": "frozen_04",
-          "file": "frames_webp/18_frozen/18_frozen_04.webp",
-          "sourceXBounds": {
-            "x0": 407,
-            "x1": 536
-          },
-          "cropBoxInsideSeparatedSegment": {
-            "left": 0,
-            "top": 0,
-            "right": 129,
-            "bottom": 154
-          },
-          "equalCanvas": {
-            "w": 137,
-            "h": 166
-          },
-          "pastePosition": {
-            "x": 4,
-            "y": 12
-          }
+          "name": "15_frozen_04",
+          "file": "frames_webp/15_frozen/15_frozen_04.webp",
+          "width": 512,
+          "height": 512
         },
         {
           "index": 5,
-          "name": "frozen_05",
-          "file": "frames_webp/18_frozen/18_frozen_05.webp",
-          "sourceXBounds": {
-            "x0": 536,
-            "x1": 667
-          },
-          "cropBoxInsideSeparatedSegment": {
-            "left": 0,
-            "top": 0,
-            "right": 131,
-            "bottom": 166
-          },
-          "equalCanvas": {
-            "w": 137,
-            "h": 166
-          },
-          "pastePosition": {
-            "x": 3,
-            "y": 0
-          }
+          "name": "15_frozen_05",
+          "file": "frames_webp/15_frozen/15_frozen_05.webp",
+          "width": 512,
+          "height": 512
         },
         {
           "index": 6,
-          "name": "frozen_06",
-          "file": "frames_webp/18_frozen/18_frozen_06.webp",
-          "sourceXBounds": {
-            "x0": 667,
-            "x1": 793
-          },
-          "cropBoxInsideSeparatedSegment": {
-            "left": 0,
-            "top": 0,
-            "right": 126,
-            "bottom": 154
-          },
-          "equalCanvas": {
-            "w": 137,
-            "h": 166
-          },
-          "pastePosition": {
-            "x": 5,
-            "y": 12
-          }
+          "name": "15_frozen_06",
+          "file": "frames_webp/15_frozen/15_frozen_06.webp",
+          "width": 512,
+          "height": 512
         }
-      ],
-      "index": 18
+      ]
     },
     {
       "id": "burning",
-      "label": "Bị thiêu đốt",
-      "sourceStrip": "hoa/rows_webp/19_burning.webp",
-      "sourceStripSize": {
-        "w": 793,
-        "h": 165
-      },
-      "detectedColumnBounds": [
-        0,
-        131,
-        271,
-        403,
-        534,
-        661,
-        793
-      ],
-      "detectedCentersX": [
-        70.95811518324608,
-        207.88036086985795,
-        342.8438393367639,
-        470.67383384527466,
-        594.311028587444,
-        724.6969638367821
-      ],
+      "label": "burning",
+      "sourceStrip": "hoa/hoa_2/frames/16_burning",
       "frameCount": 6,
       "equalFrameSize": {
-        "w": 140,
-        "h": 165
+        "w": 512,
+        "h": 512
       },
-      "independentSegmentGap": 80,
-      "equalSpacedStripFile": "equal_spaced_strips_webp/19_burning_equal_spaced.webp",
-      "equalSpacedStripSize": {
-        "w": 1240,
-        "h": 165
-      },
-      "rawSeparatedSegmentsFolder": "spaced_segments_webp/19_burning",
       "frames": [
         {
           "index": 1,
-          "name": "burning_01",
-          "file": "frames_webp/19_burning/19_burning_01.webp",
-          "sourceXBounds": {
-            "x0": 0,
-            "x1": 131
-          },
-          "cropBoxInsideSeparatedSegment": {
-            "left": 0,
-            "top": 0,
-            "right": 131,
-            "bottom": 165
-          },
-          "equalCanvas": {
-            "w": 140,
-            "h": 165
-          },
-          "pastePosition": {
-            "x": 4,
-            "y": 0
-          }
+          "name": "16_burning_01",
+          "file": "frames_webp/16_burning/16_burning_01.webp",
+          "width": 512,
+          "height": 512
         },
         {
           "index": 2,
-          "name": "burning_02",
-          "file": "frames_webp/19_burning/19_burning_02.webp",
-          "sourceXBounds": {
-            "x0": 131,
-            "x1": 271
-          },
-          "cropBoxInsideSeparatedSegment": {
-            "left": 0,
-            "top": 0,
-            "right": 140,
-            "bottom": 165
-          },
-          "equalCanvas": {
-            "w": 140,
-            "h": 165
-          },
-          "pastePosition": {
-            "x": 0,
-            "y": 0
-          }
+          "name": "16_burning_02",
+          "file": "frames_webp/16_burning/16_burning_02.webp",
+          "width": 512,
+          "height": 512
         },
         {
           "index": 3,
-          "name": "burning_03",
-          "file": "frames_webp/19_burning/19_burning_03.webp",
-          "sourceXBounds": {
-            "x0": 271,
-            "x1": 403
-          },
-          "cropBoxInsideSeparatedSegment": {
-            "left": 0,
-            "top": 0,
-            "right": 132,
-            "bottom": 165
-          },
-          "equalCanvas": {
-            "w": 140,
-            "h": 165
-          },
-          "pastePosition": {
-            "x": 4,
-            "y": 0
-          }
+          "name": "16_burning_03",
+          "file": "frames_webp/16_burning/16_burning_03.webp",
+          "width": 512,
+          "height": 512
         },
         {
           "index": 4,
-          "name": "burning_04",
-          "file": "frames_webp/19_burning/19_burning_04.webp",
-          "sourceXBounds": {
-            "x0": 403,
-            "x1": 534
-          },
-          "cropBoxInsideSeparatedSegment": {
-            "left": 0,
-            "top": 0,
-            "right": 131,
-            "bottom": 165
-          },
-          "equalCanvas": {
-            "w": 140,
-            "h": 165
-          },
-          "pastePosition": {
-            "x": 4,
-            "y": 0
-          }
+          "name": "16_burning_04",
+          "file": "frames_webp/16_burning/16_burning_04.webp",
+          "width": 512,
+          "height": 512
         },
         {
           "index": 5,
-          "name": "burning_05",
-          "file": "frames_webp/19_burning/19_burning_05.webp",
-          "sourceXBounds": {
-            "x0": 534,
-            "x1": 661
-          },
-          "cropBoxInsideSeparatedSegment": {
-            "left": 0,
-            "top": 0,
-            "right": 127,
-            "bottom": 165
-          },
-          "equalCanvas": {
-            "w": 140,
-            "h": 165
-          },
-          "pastePosition": {
-            "x": 6,
-            "y": 0
-          }
+          "name": "16_burning_05",
+          "file": "frames_webp/16_burning/16_burning_05.webp",
+          "width": 512,
+          "height": 512
         },
         {
           "index": 6,
-          "name": "burning_06",
-          "file": "frames_webp/19_burning/19_burning_06.webp",
-          "sourceXBounds": {
-            "x0": 661,
-            "x1": 793
-          },
-          "cropBoxInsideSeparatedSegment": {
-            "left": 0,
-            "top": 16,
-            "right": 132,
-            "bottom": 151
-          },
-          "equalCanvas": {
-            "w": 140,
-            "h": 165
-          },
-          "pastePosition": {
-            "x": 4,
-            "y": 30
-          }
+          "name": "16_burning_06",
+          "file": "frames_webp/16_burning/16_burning_06.webp",
+          "width": 512,
+          "height": 512
         }
-      ],
-      "index": 19
+      ]
     },
     {
       "id": "lightning",
-      "label": "Bị sét đánh",
-      "sourceStrip": "hoa/rows_webp/20_lightning.webp",
-      "sourceStripSize": {
-        "w": 793,
-        "h": 165
-      },
-      "detectedColumnBounds": [
-        0,
-        129,
-        273,
-        405,
-        532,
-        668,
-        793
-      ],
-      "detectedCentersX": [
-        71.26260455836083,
-        206.7300785992715,
-        341.81537731371617,
-        474.4623863110837,
-        607.6064186613813,
-        729.0606466227348
-      ],
+      "label": "lightning",
+      "sourceStrip": "hoa/hoa_2/frames/18_lightning_struck",
       "frameCount": 6,
       "equalFrameSize": {
-        "w": 144,
-        "h": 160
+        "w": 512,
+        "h": 512
       },
-      "independentSegmentGap": 80,
-      "equalSpacedStripFile": "equal_spaced_strips_webp/20_lightning_equal_spaced.webp",
-      "equalSpacedStripSize": {
-        "w": 1264,
-        "h": 160
-      },
-      "rawSeparatedSegmentsFolder": "spaced_segments_webp/20_lightning",
       "frames": [
         {
           "index": 1,
-          "name": "lightning_01",
-          "file": "frames_webp/20_lightning/20_lightning_01.webp",
-          "sourceXBounds": {
-            "x0": 0,
-            "x1": 129
-          },
-          "cropBoxInsideSeparatedSegment": {
-            "left": 0,
-            "top": 0,
-            "right": 129,
-            "bottom": 159
-          },
-          "equalCanvas": {
-            "w": 144,
-            "h": 160
-          },
-          "pastePosition": {
-            "x": 7,
-            "y": 1
-          }
+          "name": "17_lightning_struck_01",
+          "file": "frames_webp/17_lightning_struck/17_lightning_struck_01.webp",
+          "width": 512,
+          "height": 512
         },
         {
           "index": 2,
-          "name": "lightning_02",
-          "file": "frames_webp/20_lightning/20_lightning_02.webp",
-          "sourceXBounds": {
-            "x0": 129,
-            "x1": 273
-          },
-          "cropBoxInsideSeparatedSegment": {
-            "left": 0,
-            "top": 0,
-            "right": 144,
-            "bottom": 160
-          },
-          "equalCanvas": {
-            "w": 144,
-            "h": 160
-          },
-          "pastePosition": {
-            "x": 0,
-            "y": 0
-          }
+          "name": "17_lightning_struck_02",
+          "file": "frames_webp/17_lightning_struck/17_lightning_struck_02.webp",
+          "width": 512,
+          "height": 512
         },
         {
           "index": 3,
-          "name": "lightning_03",
-          "file": "frames_webp/20_lightning/20_lightning_03.webp",
-          "sourceXBounds": {
-            "x0": 273,
-            "x1": 405
-          },
-          "cropBoxInsideSeparatedSegment": {
-            "left": 0,
-            "top": 0,
-            "right": 132,
-            "bottom": 160
-          },
-          "equalCanvas": {
-            "w": 144,
-            "h": 160
-          },
-          "pastePosition": {
-            "x": 6,
-            "y": 0
-          }
+          "name": "17_lightning_struck_03",
+          "file": "frames_webp/17_lightning_struck/17_lightning_struck_03.webp",
+          "width": 512,
+          "height": 512
         },
         {
           "index": 4,
-          "name": "lightning_04",
-          "file": "frames_webp/20_lightning/20_lightning_04.webp",
-          "sourceXBounds": {
-            "x0": 405,
-            "x1": 532
-          },
-          "cropBoxInsideSeparatedSegment": {
-            "left": 0,
-            "top": 0,
-            "right": 127,
-            "bottom": 160
-          },
-          "equalCanvas": {
-            "w": 144,
-            "h": 160
-          },
-          "pastePosition": {
-            "x": 8,
-            "y": 0
-          }
+          "name": "17_lightning_struck_04",
+          "file": "frames_webp/17_lightning_struck/17_lightning_struck_04.webp",
+          "width": 512,
+          "height": 512
         },
         {
           "index": 5,
-          "name": "lightning_05",
-          "file": "frames_webp/20_lightning/20_lightning_05.webp",
-          "sourceXBounds": {
-            "x0": 532,
-            "x1": 668
-          },
-          "cropBoxInsideSeparatedSegment": {
-            "left": 0,
-            "top": 0,
-            "right": 136,
-            "bottom": 159
-          },
-          "equalCanvas": {
-            "w": 144,
-            "h": 160
-          },
-          "pastePosition": {
-            "x": 4,
-            "y": 1
-          }
+          "name": "17_lightning_struck_05",
+          "file": "frames_webp/17_lightning_struck/17_lightning_struck_05.webp",
+          "width": 512,
+          "height": 512
         },
         {
           "index": 6,
-          "name": "lightning_06",
-          "file": "frames_webp/20_lightning/20_lightning_06.webp",
-          "sourceXBounds": {
-            "x0": 668,
-            "x1": 793
-          },
-          "cropBoxInsideSeparatedSegment": {
-            "left": 0,
-            "top": 12,
-            "right": 125,
-            "bottom": 159
-          },
-          "equalCanvas": {
-            "w": 144,
-            "h": 160
-          },
-          "pastePosition": {
-            "x": 9,
-            "y": 13
-          }
+          "name": "17_lightning_struck_06",
+          "file": "frames_webp/17_lightning_struck/17_lightning_struck_06.webp",
+          "width": 512,
+          "height": 512
         }
-      ],
-      "index": 20
+      ]
     },
     {
       "id": "skill_lock",
-      "label": "Bị khóa chiêu",
-      "sourceStrip": "hoa/rows_webp/21_skill_lock.webp",
-      "sourceStripSize": {
-        "w": 793,
-        "h": 165
-      },
-      "detectedColumnBounds": [
-        0,
-        124,
-        275,
-        404,
-        520,
-        652,
-        793
-      ],
-      "detectedCentersX": [
-        64.62981481481482,
-        201.352214709535,
-        335.7336029114436,
-        463.29837320574165,
-        593.0438879456706,
-        723.9363129644921
-      ],
+      "label": "skill_lock",
+      "sourceStrip": "hoa/hoa_1/frames/08_stunned",
       "frameCount": 6,
       "equalFrameSize": {
-        "w": 151,
-        "h": 165
+        "w": 512,
+        "h": 512
       },
-      "independentSegmentGap": 80,
-      "equalSpacedStripFile": "equal_spaced_strips_webp/21_skill_lock_equal_spaced.webp",
-      "equalSpacedStripSize": {
-        "w": 1306,
-        "h": 165
-      },
-      "rawSeparatedSegmentsFolder": "spaced_segments_webp/21_skill_lock",
       "frames": [
         {
           "index": 1,
-          "name": "skill_lock_01",
-          "file": "frames_webp/21_skill_lock/21_skill_lock_01.webp",
-          "sourceXBounds": {
-            "x0": 0,
-            "x1": 124
-          },
-          "cropBoxInsideSeparatedSegment": {
-            "left": 0,
-            "top": 0,
-            "right": 124,
-            "bottom": 165
-          },
-          "equalCanvas": {
-            "w": 151,
-            "h": 165
-          },
-          "pastePosition": {
-            "x": 13,
-            "y": 0
-          }
+          "name": "08_stunned_01",
+          "file": "frames_webp/08_stunned/08_stunned_01.webp",
+          "width": 512,
+          "height": 512
         },
         {
           "index": 2,
-          "name": "skill_lock_02",
-          "file": "frames_webp/21_skill_lock/21_skill_lock_02.webp",
-          "sourceXBounds": {
-            "x0": 124,
-            "x1": 275
-          },
-          "cropBoxInsideSeparatedSegment": {
-            "left": 0,
-            "top": 0,
-            "right": 151,
-            "bottom": 165
-          },
-          "equalCanvas": {
-            "w": 151,
-            "h": 165
-          },
-          "pastePosition": {
-            "x": 0,
-            "y": 0
-          }
+          "name": "08_stunned_02",
+          "file": "frames_webp/08_stunned/08_stunned_02.webp",
+          "width": 512,
+          "height": 512
         },
         {
           "index": 3,
-          "name": "skill_lock_03",
-          "file": "frames_webp/21_skill_lock/21_skill_lock_03.webp",
-          "sourceXBounds": {
-            "x0": 275,
-            "x1": 404
-          },
-          "cropBoxInsideSeparatedSegment": {
-            "left": 0,
-            "top": 0,
-            "right": 129,
-            "bottom": 165
-          },
-          "equalCanvas": {
-            "w": 151,
-            "h": 165
-          },
-          "pastePosition": {
-            "x": 11,
-            "y": 0
-          }
+          "name": "08_stunned_03",
+          "file": "frames_webp/08_stunned/08_stunned_03.webp",
+          "width": 512,
+          "height": 512
         },
         {
           "index": 4,
-          "name": "skill_lock_04",
-          "file": "frames_webp/21_skill_lock/21_skill_lock_04.webp",
-          "sourceXBounds": {
-            "x0": 404,
-            "x1": 520
-          },
-          "cropBoxInsideSeparatedSegment": {
-            "left": 0,
-            "top": 0,
-            "right": 116,
-            "bottom": 165
-          },
-          "equalCanvas": {
-            "w": 151,
-            "h": 165
-          },
-          "pastePosition": {
-            "x": 17,
-            "y": 0
-          }
+          "name": "08_stunned_04",
+          "file": "frames_webp/08_stunned/08_stunned_04.webp",
+          "width": 512,
+          "height": 512
         },
         {
           "index": 5,
-          "name": "skill_lock_05",
-          "file": "frames_webp/21_skill_lock/21_skill_lock_05.webp",
-          "sourceXBounds": {
-            "x0": 520,
-            "x1": 652
-          },
-          "cropBoxInsideSeparatedSegment": {
-            "left": 0,
-            "top": 0,
-            "right": 132,
-            "bottom": 149
-          },
-          "equalCanvas": {
-            "w": 151,
-            "h": 165
-          },
-          "pastePosition": {
-            "x": 9,
-            "y": 16
-          }
+          "name": "08_stunned_05",
+          "file": "frames_webp/08_stunned/08_stunned_05.webp",
+          "width": 512,
+          "height": 512
         },
         {
           "index": 6,
-          "name": "skill_lock_06",
-          "file": "frames_webp/21_skill_lock/21_skill_lock_06.webp",
-          "sourceXBounds": {
-            "x0": 652,
-            "x1": 793
-          },
-          "cropBoxInsideSeparatedSegment": {
-            "left": 0,
-            "top": 25,
-            "right": 141,
-            "bottom": 147
-          },
-          "equalCanvas": {
-            "w": 151,
-            "h": 165
-          },
-          "pastePosition": {
-            "x": 5,
-            "y": 43
-          }
+          "name": "08_stunned_06",
+          "file": "frames_webp/08_stunned/08_stunned_06.webp",
+          "width": 512,
+          "height": 512
         }
-      ],
-      "index": 21
+      ]
     },
     {
       "id": "armor_break",
-      "label": "Phá giáp",
-      "sourceStrip": "hoa/rows_webp/22_armor_break.webp",
-      "sourceStripSize": {
-        "w": 793,
-        "h": 165
-      },
-      "detectedColumnBounds": [
-        0,
-        131,
-        275,
-        405,
-        534,
-        658,
-        793
-      ],
-      "detectedCentersX": [
-        68.94990046449901,
-        207.4808500562363,
-        341.61889272005726,
-        471.63765844350553,
-        592.7666155589627,
-        715.5871501718455
-      ],
+      "label": "armor_break",
+      "sourceStrip": "hoa/hoa_2/frames/19_armor_break",
       "frameCount": 6,
       "equalFrameSize": {
-        "w": 144,
-        "h": 165
+        "w": 512,
+        "h": 512
       },
-      "independentSegmentGap": 80,
-      "equalSpacedStripFile": "equal_spaced_strips_webp/22_armor_break_equal_spaced.webp",
-      "equalSpacedStripSize": {
-        "w": 1264,
-        "h": 165
-      },
-      "rawSeparatedSegmentsFolder": "spaced_segments_webp/22_armor_break",
       "frames": [
         {
           "index": 1,
-          "name": "armor_break_01",
-          "file": "frames_webp/22_armor_break/22_armor_break_01.webp",
-          "sourceXBounds": {
-            "x0": 0,
-            "x1": 131
-          },
-          "cropBoxInsideSeparatedSegment": {
-            "left": 0,
-            "top": 0,
-            "right": 131,
-            "bottom": 165
-          },
-          "equalCanvas": {
-            "w": 144,
-            "h": 165
-          },
-          "pastePosition": {
-            "x": 6,
-            "y": 0
-          }
+          "name": "18_armor_break_01",
+          "file": "frames_webp/18_armor_break/18_armor_break_01.webp",
+          "width": 512,
+          "height": 512
         },
         {
           "index": 2,
-          "name": "armor_break_02",
-          "file": "frames_webp/22_armor_break/22_armor_break_02.webp",
-          "sourceXBounds": {
-            "x0": 131,
-            "x1": 275
-          },
-          "cropBoxInsideSeparatedSegment": {
-            "left": 0,
-            "top": 0,
-            "right": 144,
-            "bottom": 165
-          },
-          "equalCanvas": {
-            "w": 144,
-            "h": 165
-          },
-          "pastePosition": {
-            "x": 0,
-            "y": 0
-          }
+          "name": "18_armor_break_02",
+          "file": "frames_webp/18_armor_break/18_armor_break_02.webp",
+          "width": 512,
+          "height": 512
         },
         {
           "index": 3,
-          "name": "armor_break_03",
-          "file": "frames_webp/22_armor_break/22_armor_break_03.webp",
-          "sourceXBounds": {
-            "x0": 275,
-            "x1": 405
-          },
-          "cropBoxInsideSeparatedSegment": {
-            "left": 0,
-            "top": 0,
-            "right": 130,
-            "bottom": 165
-          },
-          "equalCanvas": {
-            "w": 144,
-            "h": 165
-          },
-          "pastePosition": {
-            "x": 7,
-            "y": 0
-          }
+          "name": "18_armor_break_03",
+          "file": "frames_webp/18_armor_break/18_armor_break_03.webp",
+          "width": 512,
+          "height": 512
         },
         {
           "index": 4,
-          "name": "armor_break_04",
-          "file": "frames_webp/22_armor_break/22_armor_break_04.webp",
-          "sourceXBounds": {
-            "x0": 405,
-            "x1": 534
-          },
-          "cropBoxInsideSeparatedSegment": {
-            "left": 0,
-            "top": 0,
-            "right": 129,
-            "bottom": 165
-          },
-          "equalCanvas": {
-            "w": 144,
-            "h": 165
-          },
-          "pastePosition": {
-            "x": 7,
-            "y": 0
-          }
+          "name": "18_armor_break_04",
+          "file": "frames_webp/18_armor_break/18_armor_break_04.webp",
+          "width": 512,
+          "height": 512
         },
         {
           "index": 5,
-          "name": "armor_break_05",
-          "file": "frames_webp/22_armor_break/22_armor_break_05.webp",
-          "sourceXBounds": {
-            "x0": 534,
-            "x1": 658
-          },
-          "cropBoxInsideSeparatedSegment": {
-            "left": 0,
-            "top": 0,
-            "right": 124,
-            "bottom": 165
-          },
-          "equalCanvas": {
-            "w": 144,
-            "h": 165
-          },
-          "pastePosition": {
-            "x": 10,
-            "y": 0
-          }
+          "name": "18_armor_break_05",
+          "file": "frames_webp/18_armor_break/18_armor_break_05.webp",
+          "width": 512,
+          "height": 512
         },
         {
           "index": 6,
-          "name": "armor_break_06",
-          "file": "frames_webp/22_armor_break/22_armor_break_06.webp",
-          "sourceXBounds": {
-            "x0": 658,
-            "x1": 793
-          },
-          "cropBoxInsideSeparatedSegment": {
-            "left": 0,
-            "top": 0,
-            "right": 134,
-            "bottom": 165
-          },
-          "equalCanvas": {
-            "w": 144,
-            "h": 165
-          },
-          "pastePosition": {
-            "x": 5,
-            "y": 0
-          }
+          "name": "18_armor_break_06",
+          "file": "frames_webp/18_armor_break/18_armor_break_06.webp",
+          "width": 512,
+          "height": 512
         }
-      ],
-      "index": 22
+      ]
     },
     {
       "id": "skill_1",
-      "label": "Hỏa Vũ Liên Châu",
-      "sourceStrip": "hoa/rows_webp/23_skill_1.webp",
-      "sourceStripSize": {
-        "w": 793,
-        "h": 166
-      },
-      "detectedColumnBounds": [
-        0,
-        130,
-        293,
-        445,
-        593,
-        628,
-        793
-      ],
-      "detectedCentersX": [
-        71.84832885132539,
-        213.9869582550259,
-        363.36428445177637,
-        496.2827973122839,
-        609.2731098430813,
-        726.6574234892496
-      ],
+      "label": "skill_1",
+      "sourceStrip": "hoa/hoa_2/frames/12_normal_attack",
       "frameCount": 6,
       "equalFrameSize": {
-        "w": 165,
-        "h": 166
+        "w": 512,
+        "h": 512
       },
-      "independentSegmentGap": 80,
-      "equalSpacedStripFile": "equal_spaced_strips_webp/23_skill_1_equal_spaced.webp",
-      "equalSpacedStripSize": {
-        "w": 1390,
-        "h": 166
-      },
-      "rawSeparatedSegmentsFolder": "spaced_segments_webp/23_skill_1",
       "frames": [
         {
           "index": 1,
-          "name": "skill_1_01",
-          "file": "frames_webp/23_skill_1/23_skill_1_01.webp",
-          "sourceXBounds": {
-            "x0": 0,
-            "x1": 130
-          },
-          "cropBoxInsideSeparatedSegment": {
-            "left": 0,
-            "top": 0,
-            "right": 130,
-            "bottom": 166
-          },
-          "equalCanvas": {
-            "w": 165,
-            "h": 166
-          },
-          "pastePosition": {
-            "x": 17,
-            "y": 0
-          }
+          "name": "12_normal_attack_01",
+          "file": "frames_webp/12_normal_attack/12_normal_attack_01.webp",
+          "width": 512,
+          "height": 512
         },
         {
           "index": 2,
-          "name": "skill_1_02",
-          "file": "frames_webp/23_skill_1/23_skill_1_02.webp",
-          "sourceXBounds": {
-            "x0": 130,
-            "x1": 293
-          },
-          "cropBoxInsideSeparatedSegment": {
-            "left": 0,
-            "top": 0,
-            "right": 163,
-            "bottom": 166
-          },
-          "equalCanvas": {
-            "w": 165,
-            "h": 166
-          },
-          "pastePosition": {
-            "x": 1,
-            "y": 0
-          }
+          "name": "12_normal_attack_02",
+          "file": "frames_webp/12_normal_attack/12_normal_attack_02.webp",
+          "width": 512,
+          "height": 512
         },
         {
           "index": 3,
-          "name": "skill_1_03",
-          "file": "frames_webp/23_skill_1/23_skill_1_03.webp",
-          "sourceXBounds": {
-            "x0": 293,
-            "x1": 445
-          },
-          "cropBoxInsideSeparatedSegment": {
-            "left": 0,
-            "top": 0,
-            "right": 152,
-            "bottom": 166
-          },
-          "equalCanvas": {
-            "w": 165,
-            "h": 166
-          },
-          "pastePosition": {
-            "x": 6,
-            "y": 0
-          }
+          "name": "12_normal_attack_03",
+          "file": "frames_webp/12_normal_attack/12_normal_attack_03.webp",
+          "width": 512,
+          "height": 512
         },
         {
           "index": 4,
-          "name": "skill_1_04",
-          "file": "frames_webp/23_skill_1/23_skill_1_04.webp",
-          "sourceXBounds": {
-            "x0": 445,
-            "x1": 593
-          },
-          "cropBoxInsideSeparatedSegment": {
-            "left": 0,
-            "top": 0,
-            "right": 148,
-            "bottom": 166
-          },
-          "equalCanvas": {
-            "w": 165,
-            "h": 166
-          },
-          "pastePosition": {
-            "x": 8,
-            "y": 0
-          }
+          "name": "12_normal_attack_04",
+          "file": "frames_webp/12_normal_attack/12_normal_attack_04.webp",
+          "width": 512,
+          "height": 512
         },
         {
           "index": 5,
-          "name": "skill_1_05",
-          "file": "frames_webp/23_skill_1/23_skill_1_05.webp",
-          "sourceXBounds": {
-            "x0": 593,
-            "x1": 628
-          },
-          "cropBoxInsideSeparatedSegment": {
-            "left": 0,
-            "top": 0,
-            "right": 35,
-            "bottom": 135
-          },
-          "equalCanvas": {
-            "w": 165,
-            "h": 166
-          },
-          "pastePosition": {
-            "x": 65,
-            "y": 31
-          }
+          "name": "12_normal_attack_05",
+          "file": "frames_webp/12_normal_attack/12_normal_attack_05.webp",
+          "width": 512,
+          "height": 512
         },
         {
           "index": 6,
-          "name": "skill_1_06",
-          "file": "frames_webp/23_skill_1/23_skill_1_06.webp",
-          "sourceXBounds": {
-            "x0": 628,
-            "x1": 793
-          },
-          "cropBoxInsideSeparatedSegment": {
-            "left": 0,
-            "top": 0,
-            "right": 165,
-            "bottom": 166
-          },
-          "equalCanvas": {
-            "w": 165,
-            "h": 166
-          },
-          "pastePosition": {
-            "x": 0,
-            "y": 0
-          }
+          "name": "12_normal_attack_06",
+          "file": "frames_webp/12_normal_attack/12_normal_attack_06.webp",
+          "width": 512,
+          "height": 512
         }
-      ],
-      "index": 23
+      ]
     },
     {
       "id": "skill_2",
-      "label": "Phần Thiên Xạ Nhật",
-      "sourceStrip": "hoa/rows_webp/24_skill_2.webp",
-      "sourceStripSize": {
-        "w": 793,
-        "h": 200
-      },
-      "detectedColumnBounds": [
-        0,
-        138,
-        314,
-        458,
-        568,
-        624,
-        793
-      ],
-      "detectedCentersX": [
-        76.40374012391293,
-        225.2657223796034,
-        366.53617969821676,
-        485.04490931216316,
-        596.7193064942697,
-        718.8689424104108
-      ],
+      "label": "skill_2",
+      "sourceStrip": "hoa/hoa_2/frames/13_poison_cast",
       "frameCount": 6,
       "equalFrameSize": {
-        "w": 176,
-        "h": 183
+        "w": 512,
+        "h": 512
       },
-      "independentSegmentGap": 80,
-      "equalSpacedStripFile": "equal_spaced_strips_webp/24_skill_2_equal_spaced.webp",
-      "equalSpacedStripSize": {
-        "w": 1456,
-        "h": 183
-      },
-      "rawSeparatedSegmentsFolder": "spaced_segments_webp/24_skill_2",
       "frames": [
         {
           "index": 1,
-          "name": "skill_2_01",
-          "file": "frames_webp/24_skill_2/24_skill_2_01.webp",
-          "sourceXBounds": {
-            "x0": 0,
-            "x1": 138
-          },
-          "cropBoxInsideSeparatedSegment": {
-            "left": 0,
-            "top": 0,
-            "right": 138,
-            "bottom": 177
-          },
-          "equalCanvas": {
-            "w": 176,
-            "h": 183
-          },
-          "pastePosition": {
-            "x": 19,
-            "y": 6
-          }
+          "name": "13_poison_cast_01",
+          "file": "frames_webp/13_poison_cast/13_poison_cast_01.webp",
+          "width": 512,
+          "height": 512
         },
         {
           "index": 2,
-          "name": "skill_2_02",
-          "file": "frames_webp/24_skill_2/24_skill_2_02.webp",
-          "sourceXBounds": {
-            "x0": 138,
-            "x1": 314
-          },
-          "cropBoxInsideSeparatedSegment": {
-            "left": 0,
-            "top": 0,
-            "right": 176,
-            "bottom": 182
-          },
-          "equalCanvas": {
-            "w": 176,
-            "h": 183
-          },
-          "pastePosition": {
-            "x": 0,
-            "y": 1
-          }
+          "name": "13_poison_cast_02",
+          "file": "frames_webp/13_poison_cast/13_poison_cast_02.webp",
+          "width": 512,
+          "height": 512
         },
         {
           "index": 3,
-          "name": "skill_2_03",
-          "file": "frames_webp/24_skill_2/24_skill_2_03.webp",
-          "sourceXBounds": {
-            "x0": 314,
-            "x1": 458
-          },
-          "cropBoxInsideSeparatedSegment": {
-            "left": 0,
-            "top": 0,
-            "right": 144,
-            "bottom": 181
-          },
-          "equalCanvas": {
-            "w": 176,
-            "h": 183
-          },
-          "pastePosition": {
-            "x": 16,
-            "y": 2
-          }
+          "name": "13_poison_cast_03",
+          "file": "frames_webp/13_poison_cast/13_poison_cast_03.webp",
+          "width": 512,
+          "height": 512
         },
         {
           "index": 4,
-          "name": "skill_2_04",
-          "file": "frames_webp/24_skill_2/24_skill_2_04.webp",
-          "sourceXBounds": {
-            "x0": 458,
-            "x1": 568
-          },
-          "cropBoxInsideSeparatedSegment": {
-            "left": 0,
-            "top": 0,
-            "right": 110,
-            "bottom": 183
-          },
-          "equalCanvas": {
-            "w": 176,
-            "h": 183
-          },
-          "pastePosition": {
-            "x": 33,
-            "y": 0
-          }
+          "name": "13_poison_cast_04",
+          "file": "frames_webp/13_poison_cast/13_poison_cast_04.webp",
+          "width": 512,
+          "height": 512
         },
         {
           "index": 5,
-          "name": "skill_2_05",
-          "file": "frames_webp/24_skill_2/24_skill_2_05.webp",
-          "sourceXBounds": {
-            "x0": 568,
-            "x1": 624
-          },
-          "cropBoxInsideSeparatedSegment": {
-            "left": 0,
-            "top": 0,
-            "right": 56,
-            "bottom": 176
-          },
-          "equalCanvas": {
-            "w": 176,
-            "h": 183
-          },
-          "pastePosition": {
-            "x": 60,
-            "y": 7
-          }
+          "name": "13_poison_cast_05",
+          "file": "frames_webp/13_poison_cast/13_poison_cast_05.webp",
+          "width": 512,
+          "height": 512
         },
         {
           "index": 6,
-          "name": "skill_2_06",
-          "file": "frames_webp/24_skill_2/24_skill_2_06.webp",
-          "sourceXBounds": {
-            "x0": 624,
-            "x1": 793
-          },
-          "cropBoxInsideSeparatedSegment": {
-            "left": 0,
-            "top": 0,
-            "right": 169,
-            "bottom": 182
-          },
-          "equalCanvas": {
-            "w": 176,
-            "h": 183
-          },
-          "pastePosition": {
-            "x": 3,
-            "y": 1
-          }
+          "name": "13_poison_cast_06",
+          "file": "frames_webp/13_poison_cast/13_poison_cast_06.webp",
+          "width": 512,
+          "height": 512
         }
-      ],
-      "index": 24
+      ]
     }
   ]
 }

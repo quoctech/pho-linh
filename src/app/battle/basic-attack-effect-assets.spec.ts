@@ -19,6 +19,7 @@ describe('basic attack effect assets', () => {
       expect(effect.frameRate).toBe(12);
       expect(effect.textureKeys.every((key) => key.startsWith(`hero-basic-attack-effect-${element}`))).toBe(true);
     }
+    expect(BASIC_ATTACK_EFFECTS.water.rotationDegrees).toBe(-40);
   });
 
   it('preloads and creates one-shot animation only for the selected element', () => {
