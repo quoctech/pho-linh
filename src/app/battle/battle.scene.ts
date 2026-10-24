@@ -3195,7 +3195,7 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
 
   private playHeroSkillEffect(skillId: string): boolean {
     const effect = heroSkillEffectForSkill(skillId);
-    const target = this.combatPoint('monster');
+    const target = this.combatPoint(effect?.target ?? 'monster');
     if (!effect || !this.battleVfxPool || !this.anims.exists(effect.animationKey)) return false;
     const sprite = this.battleVfxPool.acquireSpriteVfx(effect.textureKeys[0]);
     if (!sprite) return false;

@@ -1,10 +1,13 @@
-# Sơn Nhạc Trấn Địa
+# Sơn Nhạc Trấn Địa — WebP 512 clean
 
 - **Skill ID:** `skill_son_nhac_tran_dia`
 - **Hệ:** tho
 - **Mô tả:** Đập đại đao xuống đất, gây sát thương Thổ diện rộng và có xác suất Choáng.
 - **Số frame:** 6
-- **Frame chuẩn:** 433 x 382px
+- **Frame chuẩn:** 512 x 512px
+- **Thời lượng:** 110ms/frame, phát một lần
+- **Vị trí phát:** mục tiêu/quái
+- **Nguồn:** PHO_LINH_THO_2_SKILLS_12_FRAME_WEBP512_CLEAN
 - **Nền:** Trong suốt (transparent)
 
 ## Quy ước file

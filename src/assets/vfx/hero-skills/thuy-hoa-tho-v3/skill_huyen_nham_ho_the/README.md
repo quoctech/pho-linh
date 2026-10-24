@@ -1,10 +1,13 @@
-# Huyền Nham Hộ Thể
+# Huyền Nham Hộ Thể — WebP 512 clean
 
 - **Skill ID:** `skill_huyen_nham_ho_the`
 - **Hệ:** tho
 - **Mô tả:** Triệu hồi lớp giáp đá tạo Khiên, giảm sát thương nhận vào và bảo vệ đồng đội.
 - **Số frame:** 6
-- **Frame chuẩn:** 410 x 467px
+- **Frame chuẩn:** 512 x 512px
+- **Thời lượng:** 110ms/frame, phát một lần
+- **Vị trí phát:** nhân vật người chơi
+- **Nguồn:** PHO_LINH_THO_2_SKILLS_12_FRAME_WEBP512_CLEAN
 - **Nền:** Trong suốt (transparent)
 
 ## Quy ước file

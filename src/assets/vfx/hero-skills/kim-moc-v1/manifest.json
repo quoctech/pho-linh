@@ -40,8 +40,8 @@
       "manifest": "skill_thanh_dang_troi_hon/skill_thanh_dang_troi_hon_manifest.json",
       "frameCount": 6,
       "standardFrameSize": {
-        "width": 449,
-        "height": 546
+        "width": 512,
+        "height": 512
       }
     },
     {
@@ -53,8 +53,8 @@
       "manifest": "skill_van_diep_doc_chu/skill_van_diep_doc_chu_manifest.json",
       "frameCount": 6,
       "standardFrameSize": {
-        "width": 441,
-        "height": 450
+        "width": 512,
+        "height": 512
       }
     }
   ]

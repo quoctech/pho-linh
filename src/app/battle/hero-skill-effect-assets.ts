@@ -25,6 +25,7 @@ export interface HeroSkillEffectDefinition {
   readonly animationKey: string;
   readonly frameRate: number;
   readonly displayWidth: number;
+  readonly target: 'player' | 'monster';
 }
 
 const assetRoots: Readonly<Record<HeroSkillEffectDefinition['element'], string>> = {
@@ -43,13 +44,16 @@ const definition = (
   folder: string,
   frameWidth: number,
   frameHeight: number,
+  frameRate = 12,
+  target: HeroSkillEffectDefinition['target'] = 'monster',
 ): HeroSkillEffectDefinition => {
   const animationKey = `hero-skill-effect-${id.replaceAll('_', '-')}`;
   return {
     id, skillId, label, element, folder, frameWidth, frameHeight,
     textureKeys: Array.from({ length: 6 }, (_, index) => `${animationKey}-frame-${index + 1}`),
     animationKey,
-    frameRate: 12,
+    frameRate,
+    target,
     displayWidth: 150,
   };
 };
@@ -57,14 +61,14 @@ const definition = (
 export const HERO_SKILL_EFFECTS: Readonly<Record<HeroSkillEffectId, HeroSkillEffectDefinition>> = {
   skill_kim_quang_pha_giap: definition('skill_kim_quang_pha_giap', 'kim_quang_pha_giap', 'Kim Quang Phá Giáp', 'metal', 'skill_kim_quang_pha_giap', 426, 391),
   skill_van_kiem_quy_tong: definition('skill_van_kiem_quy_tong', 'van_kiem_quy_tong', 'Vạn Kiếm Quy Tông', 'metal', 'skill_van_kiem_quy_tong', 447, 551),
-  skill_thanh_dang_troi_hon: definition('skill_thanh_dang_troi_hon', 'thanh_dang_troi_hon', 'Thanh Đằng Trói Hồn', 'wood', 'skill_thanh_dang_troi_hon', 449, 546),
-  skill_van_diep_doc_chu: definition('skill_van_diep_doc_chu', 'thanh_moc_hoi_xuan', 'Vạn Diệp Độc Chú', 'wood', 'skill_van_diep_doc_chu', 441, 450),
+  skill_thanh_dang_troi_hon: definition('skill_thanh_dang_troi_hon', 'thanh_dang_troi_hon', 'Thanh Đằng Trói Hồn', 'wood', 'skill_thanh_dang_troi_hon', 512, 512, 9),
+  skill_van_diep_doc_chu: definition('skill_van_diep_doc_chu', 'thanh_moc_hoi_xuan', 'Vạn Diệp Độc Chú', 'wood', 'skill_van_diep_doc_chu', 512, 512, 9),
   skill_han_trieu_pha_khong: definition('skill_han_trieu_pha_khong', 'han_trieu_pha_khong', 'Hàn Triều Phá Không', 'water', 'skill_han_trieu_pha_khong', 475, 398),
   skill_bang_phong_thien_ly: definition('skill_bang_phong_thien_ly', 'bang_phong_thien_ly', 'Băng Phong Thiên Lý', 'water', 'skill_bang_phong_thien_ly', 508, 423),
   skill_hoa_vu_lien_chau: definition('skill_hoa_vu_lien_chau', 'hoa_vu_lien_chau', 'Hỏa Vũ Liên Châu', 'fire', 'skill_hoa_vu_lien_chau', 408, 377),
   skill_phan_thien_xa_nhat: definition('skill_phan_thien_xa_nhat', 'phan_thien_xa_nhat', 'Phần Thiên Xạ Nhật', 'fire', 'skill_phan_thien_xa_nhat', 452, 420),
-  skill_son_nhac_tran_dia: definition('skill_son_nhac_tran_dia', 'son_nhac_tran_dia', 'Sơn Nhạc Trấn Địa', 'earth', 'skill_son_nhac_tran_dia', 433, 382),
-  skill_huyen_nham_ho_the: definition('skill_huyen_nham_ho_the', 'huyen_nham_ho_the', 'Huyền Nham Hộ Thể', 'earth', 'skill_huyen_nham_ho_the', 410, 467),
+  skill_son_nhac_tran_dia: definition('skill_son_nhac_tran_dia', 'son_nhac_tran_dia', 'Sơn Nhạc Trấn Địa', 'earth', 'skill_son_nhac_tran_dia', 512, 512, 9, 'monster'),
+  skill_huyen_nham_ho_the: definition('skill_huyen_nham_ho_the', 'huyen_nham_ho_the', 'Huyền Nham Hộ Thể', 'earth', 'skill_huyen_nham_ho_the', 512, 512, 9, 'player'),
 };
 
 export function heroSkillEffectForSkill(skillId: string): HeroSkillEffectDefinition | undefined {

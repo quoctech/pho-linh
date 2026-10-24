@@ -6,15 +6,15 @@ import {
 } from './hero-skill-effect-assets';
 
 describe('hero skill effect assets', () => {
-  it('maps four Kim/Mộc effects to six WebP frames with manifest dimensions', () => {
+  it('maps all element skill effects to six WebP frames with manifest dimensions', () => {
     expect(Object.keys(HERO_SKILL_EFFECTS)).toEqual([
       'skill_kim_quang_pha_giap', 'skill_van_kiem_quy_tong', 'skill_thanh_dang_troi_hon', 'skill_van_diep_doc_chu',
       'skill_han_trieu_pha_khong', 'skill_bang_phong_thien_ly', 'skill_hoa_vu_lien_chau', 'skill_phan_thien_xa_nhat',
       'skill_son_nhac_tran_dia', 'skill_huyen_nham_ho_the',
     ]);
     expect(Object.values(HERO_SKILL_EFFECTS).map(({ frameWidth, frameHeight }) => [frameWidth, frameHeight])).toEqual([
-      [426, 391], [447, 551], [449, 546], [441, 450], [475, 398], [508, 423],
-      [408, 377], [452, 420], [433, 382], [410, 467],
+      [426, 391], [447, 551], [512, 512], [512, 512], [475, 398], [508, 423],
+      [408, 377], [452, 420], [512, 512], [512, 512],
     ]);
     for (const effect of Object.values(HERO_SKILL_EFFECTS)) {
       expect(effect.textureKeys).toHaveLength(6);
@@ -45,12 +45,16 @@ describe('hero skill effect assets', () => {
     ensureHeroSkillEffectAnimations(scene, 'earth');
     expect(animations).toHaveLength(10);
     expect(animations.every((config) => (config as { repeat: number; frameRate: number }).repeat === 0)).toBe(true);
-    expect(animations.every((config) => (config as { repeat: number; frameRate: number }).frameRate === 12)).toBe(true);
+    expect(animations.filter((config) => (config as { frameRate: number }).frameRate === 9)).toHaveLength(4);
+    expect(animations.filter((config) => (config as { frameRate: number }).frameRate === 12)).toHaveLength(6);
   });
 
   it('preserves each effect aspect ratio', () => {
     expect(fitHeroSkillEffectDisplaySize(HERO_SKILL_EFFECTS.skill_van_kiem_quy_tong)).toEqual({ width: 150, height: 185 });
-    expect(fitHeroSkillEffectDisplaySize(HERO_SKILL_EFFECTS.skill_van_diep_doc_chu)).toEqual({ width: 150, height: 153 });
-    expect(fitHeroSkillEffectDisplaySize(HERO_SKILL_EFFECTS.skill_huyen_nham_ho_the)).toEqual({ width: 150, height: 171 });
+    expect(fitHeroSkillEffectDisplaySize(HERO_SKILL_EFFECTS.skill_van_diep_doc_chu)).toEqual({ width: 150, height: 150 });
+    expect(fitHeroSkillEffectDisplaySize(HERO_SKILL_EFFECTS.skill_son_nhac_tran_dia)).toEqual({ width: 150, height: 150 });
+    expect(fitHeroSkillEffectDisplaySize(HERO_SKILL_EFFECTS.skill_huyen_nham_ho_the)).toEqual({ width: 150, height: 150 });
+    expect(HERO_SKILL_EFFECTS.skill_son_nhac_tran_dia.target).toBe('monster');
+    expect(HERO_SKILL_EFFECTS.skill_huyen_nham_ho_the.target).toBe('player');
   });
 });

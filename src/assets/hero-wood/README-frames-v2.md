@@ -1,12 +1,10 @@
-# PHỐ LINH — Mộc — Frame tách rời WebP (V2)
+# PHỐ LINH — Nam hệ Mộc — Frame tách rời WebP (V3)
 
-Bộ này được xử lý theo cùng rule chuẩn với nam hệ Kim:
+Bộ frame runtime mới cho nhân vật nam hệ Mộc, thay thế bộ sprite V2 cũ.
 
-- tách frame theo khoảng trắng / ranh giới thực tế trước
-- sau đó crop alpha
-- lấy frame lớn nhất của từng dòng làm chuẩn
-- tạo strip mới với frame độc lập và khoảng cách rộng
-
-- Tổng strip: **24**
-- Tổng frame riêng: **144**
-- Gap giữa frame trong strip mới: **80px**
+- Nguồn runtime: moc_1 và moc_2.
+- 24 logical strips để giữ nguyên contract của battle/skin preview.
+- 108 frame vật lý WebP RGBA 512×512; mỗi animation có 6 frame.
+- Một số logical row dùng alias tới cùng frame mới để tránh nhân bản asset.
+- `frames-manifest.json` là manifest canonical của runtime.
+- Source sheet, ZIP và preview QA không được đưa vào bundle.

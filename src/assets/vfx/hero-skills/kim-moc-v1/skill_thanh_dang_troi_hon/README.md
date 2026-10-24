@@ -1,10 +1,12 @@
-# Thanh Đằng Trói Hồn
+# Thanh Đằng Trói Hồn — WebP 512 clean
 
 - **Skill ID:** `skill_thanh_dang_troi_hon`
 - **Hệ:** moc
 - **Mô tả:** Triệu hồi dây leo trói mục tiêu, gây sát thương Mộc và giảm tốc độ hành động.
 - **Số frame:** 6
-- **Kích thước frame chuẩn:** 449 x 546px
+- **Kích thước frame chuẩn:** 512 x 512px
+- **Thời lượng:** 110ms/frame, phát một lần
+- **Nguồn:** THANH_DANG_TROI_HON_FX_6_FRAME_WEBP512_CLEAN
 
 ## Quy ước file
 

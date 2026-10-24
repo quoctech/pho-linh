@@ -65,4 +65,25 @@ describe('separated V2 actor frames', () => {
       expect(height).toBe(Math.round(frame.height));
     }
   });
+
+  it('uses the new 512px Mộc package with 24 logical rows and aliased frames', () => {
+    const rows = actorRows('wood');
+    expect(rows).toHaveLength(24);
+    expect(new Set(rows.map((row) => row.id)).size).toBe(24);
+    expect(new Set(rows.flatMap((row) => actorRow('wood', row.id)?.frames.map((frame) => frame.file) ?? [])).size).toBe(108);
+    expect(actorRow('wood', 'idle')?.equalFrameSize).toEqual({ w: 512, h: 512 });
+    expect(actorRow('wood', 'idle')?.frames[0]?.file).toBe('frames_webp/01_idle/01_idle_01.webp');
+    expect(actorRow('wood', 'skill_1')?.frames[0]?.file).toBe('frames_webp/12_normal_attack/12_normal_attack_01.webp');
+    expect(actorRow('wood', 'skill_2')?.frames[0]?.file).toBe('frames_webp/13_poison_cast/13_poison_cast_01.webp');
+  });
+
+  it('uses the new 512px Thổ package with heal-reduction and skill aliases', () => {
+    const rows = actorRows('earth');
+    expect(rows).toHaveLength(24);
+    expect(new Set(rows.flatMap((row) => actorRow('earth', row.id)?.frames.map((frame) => frame.file) ?? [])).size).toBe(108);
+    expect(actorRow('earth', 'idle')?.equalFrameSize).toEqual({ w: 512, h: 512 });
+    expect(actorRow('earth', 'anti_heal')?.frames[0]?.file).toBe('frames_webp/06_heal_reduction/06_heal_reduction_01.webp');
+    expect(actorRow('earth', 'skill_1')?.frames[0]?.file).toBe('frames_webp/12_normal_attack/12_normal_attack_01.webp');
+    expect(actorRow('earth', 'skill_2')?.frames[0]?.file).toBe('frames_webp/13_poison_cast/13_poison_cast_01.webp');
+  });
 });

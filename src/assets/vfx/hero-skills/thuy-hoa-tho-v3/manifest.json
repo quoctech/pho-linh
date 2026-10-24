@@ -68,8 +68,8 @@
       "manifest": "skill_son_nhac_tran_dia/skill_son_nhac_tran_dia_manifest.json",
       "frameCount": 6,
       "standardFrameSize": {
-        "width": 433,
-        "height": 382
+        "width": 512,
+        "height": 512
       }
     },
     {
@@ -81,8 +81,8 @@
       "manifest": "skill_huyen_nham_ho_the/skill_huyen_nham_ho_the_manifest.json",
       "frameCount": 6,
       "standardFrameSize": {
-        "width": 410,
-        "height": 467
+        "width": 512,
+        "height": 512
       }
     }
   ],
