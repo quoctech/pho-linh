@@ -16,7 +16,7 @@ describe('Miêu Đèn behavior', () => {
   it('uses the updated attack/defense stats and prioritizes recovery resources', () => {
     const monster = createBattleState(20, 'lantern_cat').monster;
 
-    expect(monster.attack).toBe(1350);
+    expect(monster.attack).toBe(1050);
     expect(monster.defense).toBe(320);
     expect(monster.agi).toBe(300);
     expect(monster.tactics.heal).toBe(10);
@@ -143,29 +143,29 @@ describe('Miêu Đèn behavior', () => {
 
     const attack = result.events.find((event) => event.type === 'MONSTER_ATTACKED');
     expect(attack?.payload['action']).toBe('heavy');
-    expect(attack?.payload['baseDamage']).toBe(2295); // 1350 × 1.7
+    expect(attack?.payload['baseDamage']).toBe(1785); // 1050 × 1.7
   });
 
-  it('Long Miêu Liên Kích (80 nộ): 130% ATK qua khiên, Thiêu đốt 10% maxHP × 2 lượt, Choáng 1 lượt', () => {
+  it('Long Miêu Liên Kích (100 nộ): 130% ATK qua khiên, Thiêu đốt 6% maxHP × 2 lượt, Choáng 1 lượt', () => {
     const initial = createBattleState(23, 'lantern_cat');
     const state = {
       ...initial,
       player: { ...initial.player, currentHp: 9000, shield: 2000, energy: 50 },
-      monster: { ...initial.monster, energy: 80 },
+      monster: { ...initial.monster, energy: 100 },
     };
     const result = resolveBattleAction(state, { kind: 'timeout', actionId: 'lantern-long-mieu' });
     const skillUsed = result.events.find((event) => event.type === 'MONSTER_SKILL_USED');
     const hit = result.events.find((event) => event.type === 'DAMAGE_APPLIED' && event.payload['source'] === 'lantern_cat_long_mieu_lien_kich');
 
-    expect(skillUsed?.payload['energySpent']).toBe(80);
-    expect(hit?.payload['requested']).toBe(1450); // 1350 × 1.3 × (1 − 400 / 2300)
-    expect(hit?.payload['shieldAbsorbed']).toBe(1450);
+    expect(skillUsed?.payload['energySpent']).toBe(100);
+    expect(hit?.payload['requested']).toBe(1104); // 1050 × 1.3 × (1 − 450 / 2350)
+    expect(hit?.payload['shieldAbsorbed']).toBe(1104);
     expect(hit?.payload['amount']).toBe(0);
-    expect(result.events.some((event) => event.type === 'BURNING_APPLIED' && event.payload['target'] === 'player' && event.payload['amount'] === 900)).toBe(true);
+    expect(result.events.some((event) => event.type === 'BURNING_APPLIED' && event.payload['target'] === 'player' && event.payload['amount'] === 630)).toBe(true); // 6% × 10.500
     const skipped = result.events.find((event) => event.type === 'PLAYER_TURN_SKIPPED');
     expect(skipped?.payload['effect']).toBe('stun');
     // Lượt bị choáng tự chuyển sang lượt quái kế tiếp → thiêu đốt tick lần 1.
-    expect(result.events.find((event) => event.type === 'BURNING_TICKED' && event.payload['target'] === 'player')?.payload['amount']).toBe(900);
+    expect(result.events.find((event) => event.type === 'BURNING_TICKED' && event.payload['target'] === 'player')?.payload['amount']).toBe(630);
     expect(result.nextState.player.energy).toBeGreaterThanOrEqual(50); // không còn hút nộ
   });
 

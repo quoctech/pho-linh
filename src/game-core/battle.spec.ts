@@ -48,32 +48,32 @@ function resolveGemMatch(gem: GemType, overrides: Partial<BattleState> = {}, see
 }
 
 describe('M1 battle core', () => {
-  it('computes the level-one baseline stats per element (V6)', () => {
+  it('computes the level-one baseline stats per element (V7)', () => {
     const stats = computeDerivedStats({ str: 5, vit: 5, agi: 5, int: 5 });
 
-    expect(stats.maxHp).toBe(9000);
-    expect(stats.atk).toBe(1250);
-    expect(stats.defense).toBe(400);
+    expect(stats.maxHp).toBe(10500);
+    expect(stats.atk).toBe(1150);
+    expect(stats.defense).toBe(450);
     expect(stats.agi).toBe(180);
     expect(stats.dodgeChance).toBeCloseTo(180 / 2080);
     expect(stats.skillPower).toBe(20);
-    expect(computeDerivedStats({ str: 5, vit: 5, agi: 5, int: 5 }, {}, 'earth').maxHp).toBe(13000);
+    expect(computeDerivedStats({ str: 5, vit: 5, agi: 5, int: 5 }, {}, 'earth').maxHp).toBe(10500);
   });
 
   it('adds attribute points above level-one start and scaled equipment', () => {
     const stats = computeDerivedStats({ str: 7, vit: 6, agi: 8, int: 5 }, { atk: 5, agi: 2 }, 'fire');
 
-    expect(stats.atk).toBe(1300 + 2 * 25 + 5 * 25);
-    expect(stats.maxHp).toBe(8500 + 200);
+    expect(stats.atk).toBe(1050 + 2 * 30 + 5 * 25);
+    expect(stats.maxHp).toBe(10000 + 250);
     expect(stats.defense).toBe(350 + 10);
     expect(stats.agi).toBe(220 + 3 * 5 + 2 * 25);
   });
 
-  it('uses the V6 Sương Hồn combat stats', () => {
+  it('uses the V7 Sương Hồn combat stats', () => {
     const monster = createBattleState(100).monster;
 
-    expect(monster.maxHp).toBe(10500);
-    expect(monster.attack).toBe(950);
+    expect(monster.maxHp).toBe(9500);
+    expect(monster.attack).toBe(700);
     expect(monster.defense).toBe(600);
     expect(monster.agi).toBe(150);
     expect(monster.shieldCap).toBe(1500);
@@ -201,7 +201,10 @@ describe('M1 battle core', () => {
 
     expect(attack?.payload['actor']).toBe('monster');
     expect(attack?.payload['target']).toBe('player');
-    expect(result.nextState.player.currentHp).toBe(9000 - Number(attack?.payload['hpDamage']));
+    const playerHeal = result.events
+      .filter((event) => event.type === 'HEAL_APPLIED' && event.payload['target'] === 'player')
+      .reduce((total, event) => total + Number(event.payload['amount'] ?? 0), 0);
+    expect(result.nextState.player.currentHp).toBe(9000 + playerHeal - Number(attack?.payload['hpDamage']));
     expect(result.nextState.monster.currentHp).toBe(9999 - playerDamage - poisonDamage);
   });
 
@@ -219,8 +222,8 @@ describe('M1 battle core', () => {
     expect(result.accepted).toBe(true);
     const thinking = result.events.find((event) => event.type === 'MONSTER_THINKING');
     const thinkingSeconds = Number(thinking?.payload['seconds']);
-    expect(thinkingSeconds).toBeGreaterThanOrEqual(1.2);
-    expect(thinkingSeconds).toBeLessThanOrEqual(3);
+    expect(thinkingSeconds).toBeGreaterThanOrEqual(0.6);
+    expect(thinkingSeconds).toBeLessThanOrEqual(1.2);
     expect(selected).toBeDefined();
     expect(areAdjacent(from, to)).toBe(true);
     expect(result.events.some((event) => event.type === 'MONSTER_SWAP_STARTED')).toBe(true);
@@ -229,9 +232,9 @@ describe('M1 battle core', () => {
     expect(result.events.some((event) => event.type === 'MONSTER_ACTION_SKIPPED')).toBe(false);
     expect(selected?.payload['actor']).toBe('monster');
     expect(result.events.find((event) => event.type === 'MONSTER_ATTACKED')?.payload['actor']).toBe('monster');
-    expect(result.events.find((event) => event.type === 'MONSTER_ATTACKED')?.payload['baseDamage']).toBe(950);
-    // 950 × (1 − 400 / (400 + 1900)) = 784.8
-    expect(result.events.find((event) => event.type === 'MONSTER_ATTACKED')?.payload['amount']).toBe(785);
+    expect(result.events.find((event) => event.type === 'MONSTER_ATTACKED')?.payload['baseDamage']).toBe(700);
+    // 700 × (1 − 450 / (450 + 1900)) = 566.0
+    expect(result.events.find((event) => event.type === 'MONSTER_ATTACKED')?.payload['amount']).toBe(566);
     expect(result.events.find((event) => event.type === 'ENERGY_GAINED' && event.payload['target'] === 'player')?.payload['amount']).toBe(10);
     expect(result.events.find((event) => event.type === 'ENERGY_GAINED' && event.payload['target'] === 'monster')?.payload['amount']).toBe(15);
     expect(result.events.find((event) => event.type === 'GEMS_CLEARED')?.payload['actor']).toBe('monster');

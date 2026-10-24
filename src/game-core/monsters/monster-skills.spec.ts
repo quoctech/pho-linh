@@ -59,9 +59,9 @@ describe('Chọn skill quái theo nộ và ngưỡng HP', () => {
     expect(selectMonsterSkill(setup('mist_blob', { energy: 100 }).monster)?.id).toBe('mist_suong_mu_xam_thuc');
   });
 
-  it('Miêu Đèn dùng Long Miêu Liên Kích từ 80 nộ', () => {
-    expect(selectMonsterSkill(setup('lantern_cat', { energy: 79 }).monster)).toBeUndefined();
-    expect(selectMonsterSkill(setup('lantern_cat', { energy: 80 }).monster)?.id).toBe('lantern_cat_long_mieu_lien_kich');
+  it('Miêu Đèn dùng Long Miêu Liên Kích từ 100 nộ', () => {
+    expect(selectMonsterSkill(setup('lantern_cat', { energy: 99 }).monster)).toBeUndefined();
+    expect(selectMonsterSkill(setup('lantern_cat', { energy: 100 }).monster)?.id).toBe('lantern_cat_long_mieu_lien_kich');
   });
 
   it('Bọ Lá Tre: Trúc Diệp khi HP > 50%, Lục Diệp ưu tiên khi HP < 50%', () => {
@@ -110,24 +110,24 @@ describe('Hiệu ứng skill quái', () => {
   it('Trúc Diệp Độc Châm: 300 + 80% ATK và độc 20% ATK trong 1 lượt', () => {
     const result = cast(setup('bamboo_mantis', { energy: 60 }), skill('bamboo_mantis', 'bamboo_truc_diep_doc_cham'));
     const hit = result.events.find((e) => e.type === 'DAMAGE_APPLIED' && e.payload['target'] === 'player');
-    expect(hit?.payload['requested']).toBe(810); // (300 + 850 × 0.8) × (1 − 400 / 2300)
+    expect(hit?.payload['requested']).toBe(1245); // (300 + 1550 × 0.8) × (1 − 450 / 2350)
     const poison = result.events.find((e) => e.type === 'POISON_APPLIED' && e.payload['target'] === 'player');
-    expect(poison?.payload['requested']).toBe(170); // 850 × 20%
+    expect(poison?.payload['requested']).toBe(310); // 1550 × 20%
     expect(result.state.player.poisonTurns).toBe(1);
   });
 
-  it('Lục Diệp Ẩn Tung: hồi 10% maxHP ngay + 1 lượt sau, né +60% trong 2 lượt', () => {
+  it('Lục Diệp Ẩn Tung: hồi 5% maxHP ngay + 1 lượt sau, né +35% trong 2 lượt', () => {
     const state = setup('bamboo_mantis', { energy: 100, currentHp: 150 });
     const result = cast(state, skill('bamboo_mantis', 'bamboo_luc_diep_an_tung'));
     expect(result.events.some((e) => e.type === 'DAMAGE_APPLIED')).toBe(false);
-    expect(result.state.monster.currentHp).toBe(1300); // +1.150 (10% của 11.500)
+    expect(result.state.monster.currentHp).toBe(850); // +700 (5% của 14.000)
     expect(result.state.monster.healTurns).toBe(1);
     expect(result.state.monster.dodgeBonusTurns).toBe(2);
-    expect(monsterDodgeChance(result.state.monster)).toBeCloseTo(250 / 2150 + 0.6);
+    expect(monsterDodgeChance(result.state.monster)).toBeCloseTo(250 / 2150 + 0.35);
 
     const next = resolveBattleAction({ ...result.state, monster: { ...result.state.monster, energy: 0 } }, { kind: 'timeout', actionId: 'heal-tick' });
     const tick = next.events.find((e) => e.type === 'HEAL_APPLIED' && e.payload['source'] === 'monster_heal_over_time');
-    expect(tick?.payload['amount']).toBe(1150);
+    expect(tick?.payload['amount']).toBe(700);
     expect(next.nextState.monster.healTurns).toBe(0);
     expect(next.nextState.monster.dodgeBonusTurns).toBe(1); // hết giờ vẫn tính là 1 hành động
   });
@@ -138,7 +138,7 @@ describe('Hiệu ứng skill quái', () => {
       skill('cloud_fox_boss', 'cloud_fox_bich_van_bang_bang'),
     ));
     for (const result of outcomes) {
-      expect(result.events.find((e) => e.type === 'DAMAGE_APPLIED')?.payload['requested']).toBe(909); // 1100 × (1 − 400 / 2300)
+      expect(result.events.find((e) => e.type === 'DAMAGE_APPLIED')?.payload['requested']).toBe(1698); // 2100 × (1 − 450 / 2350)
       const control = result.events.find((e) => e.type === 'CONTROL_APPLIED')!;
       expect(control.payload['applied']).toBe(Number(control.payload['roll']) < 40);
       expect(result.state.playerSkipTurns).toBe(control.payload['applied'] ? 1 : 0);
@@ -150,7 +150,7 @@ describe('Hiệu ứng skill quái', () => {
 
   it('Bích Vân Băng Băng: nhân vật bị đóng băng mất lượt với effect freeze', () => {
     const frozen = Array.from({ length: 40 }, (_, index) => resolveBattleAction(
-      setup('cloud_fox_boss', { energy: 100, currentHp: 8800 }, {}, undefined, index + 1),
+      setup('cloud_fox_boss', { energy: 100, currentHp: hpAt('cloud_fox_boss', 1) }, {}, undefined, index + 1),
       { kind: 'timeout', actionId: `fox-freeze-${index}` },
     )).find((result) => result.events.some((e) => e.type === 'CONTROL_APPLIED' && e.payload['applied'] === true));
     expect(frozen).toBeDefined();
@@ -185,7 +185,7 @@ describe('Hiệu ứng skill quái', () => {
     const healState = setup('cloud_fox_boss', { currentHp: 999, maxHp: 999 }, { currentHp: 100, healReduction: 0.4, healReductionTurns: 1 }, healRow);
     const healed = resolveBattleAction(healState, { kind: 'swap', from: { row: 0, col: 0 }, to: { row: 0, col: 1 }, actionId: 'anti-heal' });
     const heal = healed.events.find((e) => e.type === 'HEAL_APPLIED' && e.payload['target'] === 'player');
-    expect(heal?.payload['requested']).toBe(810); // 9.000 × 5% × 3 × (1 − 40%)
+    expect(heal?.payload['requested']).toBe(567); // 10.500 × 3% × 3 × (1 − 40%)
     expect(healed.nextState.player.healReductionTurns).toBe(0);
     expect(healed.nextState.player.healReduction).toBe(0);
   });

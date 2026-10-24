@@ -18,6 +18,7 @@ import { nextInt } from './rng';
 import { CHARACTER_DATA, COMBAT_DATA, MONSTER_COMBAT_BALANCE, type PlayerSkillData } from './game-data';
 import { elementalModifier, elementRelationship } from './elements';
 import { applyDefense } from './combat-formulas';
+import { enrageDamageMultiplier, enrageMonsterHealMultiplier, enrageStacksForTurn } from './enrage';
 
 import {
   GEM_TYPES,
@@ -273,7 +274,9 @@ function applyMonsterGemEffects(
     const healCount = counts['heal'] ?? 0;
     if (healCount > 0) {
       const monsterHeal = CHARACTER_DATA.combat.monsterGems.heal;
-      const requested = Math.round(healCount * monster.maxHp * monsterHeal.maxHpRatioPerGem * multiplier);
+      const requested = Math.round(
+        healCount * monster.maxHp * monsterHeal.maxHpRatioPerGem * multiplier * enrageMonsterHealMultiplier(monster.enrageStacks),
+      );
       const amount = Math.min(monster.maxHp - monster.currentHp, requested);
       monster = { ...monster, currentHp: Math.min(monster.maxHp, monster.currentHp + requested) };
       events.push(event(state, actionId, sequence, 'HEAL_APPLIED', {
@@ -546,9 +549,10 @@ function tickPlayerDebuffs(player: PlayerBattleState): PlayerBattleState {
   };
 }
 
-/** Thiêu đốt của Phần Thiên Xạ Nhật: nhân direct damage (ngọc đỏ, skill) sau khi trừ DEF. */
+/** Phần Thiên Xạ Nhật + Cuồng Nộ: nhân direct damage (ngọc đỏ, skill) sau khi trừ DEF. */
 function applyDamageTakenBonus(monster: BattleState['monster'], amount: number): number {
-  const vulnerability = monster.damageTakenBonusTurns > 0 ? 1 + monster.damageTakenBonus : 1;
+  const vulnerability = (monster.damageTakenBonusTurns > 0 ? 1 + monster.damageTakenBonus : 1)
+    * enrageDamageMultiplier(monster.enrageStacks);
   // toFixed tránh sai số float (50 × 1.15 = 57.4999…) làm Math.round lệch 1 điểm.
   return Math.max(1, Math.round(Number((amount * vulnerability).toFixed(6))));
 }
@@ -1065,7 +1069,7 @@ function tickTurnStartDoTs(
 
   // Hồi máu theo lượt của quái (Lục Diệp Ẩn Tung).
   if (monster.healTurns > 0 && monster.healPerTurn > 0) {
-    const perTurn = monster.healPerTurn;
+    const perTurn = Math.max(1, Math.round(monster.healPerTurn * enrageMonsterHealMultiplier(monster.enrageStacks)));
     const healed = Math.min(monster.maxHp - monster.currentHp, perTurn);
     const remainingTurns = monster.healTurns - 1;
     monster = {
@@ -1164,6 +1168,8 @@ function resolveMonsterAction(
   // Skill đã telegraph nhưng hết đủ điều kiện (vd bị hút nộ) thì đánh thường.
   const action = monster.nextAction === 'long_mieu_lien_kich' || monster.nextAction === 'skill' ? 'basic' : monster.nextAction;
   const mistMatchedAttack = monster.id === 'mist_blob' && attackGemCount > 0;
+  // V7: dưới `gemlessAttackBelowHp` (boss) quái vẫn ra đòn khi không match được ngọc đỏ.
+  const gemlessAttack = monster.gemlessAttackBelowHp !== undefined && monster.currentHp < monster.maxHp * monster.gemlessAttackBelowHp;
   let attackAction: 'basic' | 'heavy' | 'poison' | undefined;
   if (action === 'telegraph') {
     if (mistMatchedAttack) {
@@ -1214,7 +1220,7 @@ function resolveMonsterAction(
     }
     sequence += 1;
     if (mistMatchedAttack) attackAction = 'basic';
-  } else if (attackGemCount <= 0 && action !== 'poison' && monster.id !== 'mist_blob') {
+  } else if (attackGemCount <= 0 && !gemlessAttack && action !== 'poison' && monster.id !== 'mist_blob') {
     events.push(event(state, actionId, sequence, 'MONSTER_ACTION_SKIPPED', {
       actor: 'monster',
       actionId: `${actionId}:monster:${monster.actionCount}`,
@@ -1229,7 +1235,7 @@ function resolveMonsterAction(
   }
 
   // Nhân vật né đòn thường/nặng theo AGI (skill quái và đòn gieo độc luôn trúng).
-  if (attackAction && (attackGemCount > 0 || monster.id === 'mist_blob') && (attackAction === 'basic' || attackAction === 'heavy')) {
+  if (attackAction && (attackGemCount > 0 || monster.id === 'mist_blob' || gemlessAttack) && (attackAction === 'basic' || attackAction === 'heavy')) {
     const dodge = rollPlayerDodge(player, rngState);
     rngState = dodge.rngState;
     if (dodge.dodged) {
@@ -1246,7 +1252,7 @@ function resolveMonsterAction(
     }
   }
 
-  if (attackAction && (attackGemCount > 0 || monster.id === 'mist_blob')) {
+  if (attackAction && (attackGemCount > 0 || monster.id === 'mist_blob' || gemlessAttack)) {
       const isMistBlob = monster.id === 'mist_blob';
       const actionMultiplier = attackAction === 'heavy' ? MONSTER_COMBAT_BALANCE.heavyDamageMultiplier : 1;
       const matchMultiplier = isMistBlob ? 1 : matchDamageMultiplier(attackGemCount);
@@ -1504,6 +1510,8 @@ export interface PlayerSkillPreview {
 /** Dùng chung công thức với resolver để tooltip hiển thị đúng damage thật. */
 export function previewPlayerSkill(state: BattleState, skillId: string): PlayerSkillPreview | undefined {
   const player = clampPlayerState(state.player);
+  // Tooltip mô tả hành động kế tiếp nên dùng tầng Cuồng Nộ của lượt đó.
+  state = { ...state, monster: { ...state.monster, enrageStacks: enrageStacksForTurn(state.turn + 1) } };
   const config = playerSkillData(player.element, skillId);
   if (!config) return undefined;
   const burningMultiplier = burningDamageMultiplier(player, state.monster);
@@ -1787,6 +1795,9 @@ export function resolveBattleAction(
       healPerTurn: nonNegativeInt(state.monster.healPerTurn),
       healTurns: nonNegativeInt(state.monster.healTurns),
       slowedTurns: nonNegativeInt(state.monster.slowedTurns),
+      // Cuồng Nộ áp cho cả hành động này (lượt người chơi lẫn phản đòn của quái).
+      enrageStacks: enrageStacksForTurn(state.turn + 1),
+      skillUses: state.monster.skillUses ?? {},
       // Snapshot cũ telegraph Long Miêu bằng action riêng; V5 gom vào 'skill'.
       nextAction: state.monster.nextAction === 'long_mieu_lien_kich' ? 'skill' : state.monster.nextAction,
     }),

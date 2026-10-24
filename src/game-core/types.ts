@@ -155,6 +155,8 @@ export interface MonsterDefinition {
   readonly goldReward: number;
   /** Skill tự động của quái (Balance V5), dữ liệu trong monsters.json. */
   readonly skills?: readonly MonsterSkillData[];
+  /** V7: HP dưới ngưỡng này thì đòn thường/nặng vẫn ra đòn dù quái không match ngọc đỏ. */
+  readonly gemlessAttackBelowHp?: number;
 }
 
 /**
@@ -169,6 +171,8 @@ export interface MonsterSkillData {
   readonly description: string;
   readonly energyCost: number;
   readonly priority: number;
+  /** V7: số lần tối đa mỗi trận; thiếu = không giới hạn. */
+  readonly maxUses?: number;
   readonly hpAbove?: number;
   readonly hpBelow?: number;
   /** Sát thương = baseDamage + ATK × attackMultiplier, rồi đi pipeline giảm sát thương/khiên của nhân vật. */
@@ -239,6 +243,10 @@ export interface MonsterBattleState extends MonsterDefinition {
   readonly healTurns: number;
   /** Quái vừa bị hoãn đòn (Thủy) — "Làm chậm" cho Hàn Tức Ngưng Kết; đếm theo hành động người chơi. */
   readonly slowedTurns: number;
+  /** Số tầng Cuồng Nộ của hành động đang resolve (tính lại từ `turn` mỗi hành động). */
+  readonly enrageStacks: number;
+  /** Số lần đã dùng từng skill quái trong trận (cho `maxUses`). */
+  readonly skillUses: Readonly<Record<string, number>>;
   /** Skill dự kiến dùng ở lượt tới khi nextAction = 'skill'. */
   readonly nextSkillId?: string;
   /** 'long_mieu_lien_kich' chỉ còn để đọc snapshot cũ; core coi như 'skill'. */

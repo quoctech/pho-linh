@@ -22,15 +22,15 @@ describe('Ngũ Hành (Balance V3)', () => {
     expect(elementRelationship('metal', 'water')).toBe('neutral');
   });
 
-  it('áp đúng modifier 130/100/80 cho sát thương', () => {
-    expect(elementalModifier('counter', 'damage')).toBe(1.3);
+  it('áp đúng modifier 120/100/85 cho sát thương', () => {
+    expect(elementalModifier('counter', 'damage')).toBe(1.2);
     expect(elementalModifier('neutral', 'damage')).toBe(1.0);
-    expect(elementalModifier('countered', 'damage')).toBe(0.8);
+    expect(elementalModifier('countered', 'damage')).toBe(0.85);
   });
 
   it('áp đúng modifier cho hồi máu/khiên và năng lượng', () => {
     expect(elementalModifier('counter', 'support')).toBe(1.0);
-    expect(elementalModifier('countered', 'support')).toBe(0.8);
+    expect(elementalModifier('countered', 'support')).toBe(0.9);
     expect(elementalModifier('counter', 'energy')).toBe(1.2);
     expect(elementalModifier('countered', 'energy')).toBe(1.0);
   });

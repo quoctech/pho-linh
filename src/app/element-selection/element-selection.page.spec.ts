@@ -34,6 +34,6 @@ describe('ElementSelectionPage', () => {
     expect(component.save?.settings.element).toBe('metal');
     expect(component.counters.strong.id).toBe('metal');
     expect(component.counters.weak.id).toBe('water');
-    expect(component.statBars[0].value).toBe('8.500');
+    expect(component.statBars[0].value).toBe('10.000');
   });
 });

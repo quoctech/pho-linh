@@ -9,7 +9,8 @@
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
-    "lint": "ng lint"
+    "lint": "ng lint",
+    "balance:sim": "esbuild tools/balance-sim.ts --bundle --platform=node --log-level=warning --outfile=node_modules/.cache/balance-sim.js && node node_modules/.cache/balance-sim.js"
   },
   "private": true,
   "dependencies": {

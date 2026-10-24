@@ -81,7 +81,7 @@
       "intro": "Cung thủ lửa: liên kích nhanh, thiêu đốt mục tiêu và xuyên thẳng qua khiên.",
       "boardPassive": {
         "name": "Hỏa Tiễn Xuyên Giáp",
-        "description": "Ngọc Đỏ tăng 20% sát thương, xuyên khiên đánh thẳng vào HP và gây Thiêu đốt."
+        "description": "Ngọc Đỏ tăng 10% sát thương, xuyên khiên đánh thẳng vào HP và gây Thiêu đốt."
       },
       "classPassive": {
         "name": "Liệt Diễm Chi Tâm",
@@ -97,7 +97,7 @@
       "intro": "Hộ vệ đất đá: máu trâu, giáp dày, biến Nộ thành Khiên và phản đòn kẻ địch.",
       "boardPassive": {
         "name": "Thổ Nộ Hóa Giáp",
-        "description": "Ăn ngọc Vàng nhận thêm Khiên bằng 50% số Nộ vừa tích × 30 (15 Nộ → 225 Khiên)."
+        "description": "Ăn ngọc Vàng nhận thêm Khiên bằng 35% số Nộ vừa tích × 30 (15 Nộ → 158 Khiên)."
       },
       "classPassive": {
         "name": "Bất Động Như Sơn",
@@ -106,18 +106,18 @@
     }
   },
   "elementBaseStats": {
-    "metal": {"maxHp": 9000, "atk": 1250, "defense": 400, "agi": 180},
-    "wood": {"maxHp": 11000, "atk": 950, "defense": 500, "agi": 120},
-    "water": {"maxHp": 10000, "atk": 1000, "defense": 550, "agi": 150},
-    "fire": {"maxHp": 8500, "atk": 1300, "defense": 350, "agi": 220},
-    "earth": {"maxHp": 13000, "atk": 750, "defense": 800, "agi": 60}
+    "metal": {"maxHp": 10500, "atk": 1150, "defense": 450, "agi": 180},
+    "wood": {"maxHp": 11000, "atk": 1050, "defense": 500, "agi": 120},
+    "water": {"maxHp": 10000, "atk": 1100, "defense": 550, "agi": 150},
+    "fire": {"maxHp": 10000, "atk": 1050, "defense": 350, "agi": 220},
+    "earth": {"maxHp": 10500, "atk": 1150, "defense": 550, "agi": 60}
   },
   "derivedStats": {
     "maxHp": {
-      "vitPerPoint": 200
+      "vitPerPoint": 250
     },
     "atk": {
-      "strPerPoint": 25
+      "strPerPoint": 30
     },
     "defense": {
       "vitPerPoint": 10
@@ -144,14 +144,14 @@
     "poisonMaxHpRatio": 0.2
   },
   "combat": {
-    "attackTileFactor": 0.4,
-    "poisonAtkFactor": 0.25,
+    "attackTileFactor": 0.45,
+    "poisonAtkFactor": 0.18,
     "poisonMaxStacks": 5,
     "heal": {
-      "maxHpFactor": 0.05
+      "maxHpFactor": 0.03
     },
     "shield": {
-      "defFactor": 1.5
+      "defFactor": 0.8
     },
     "poison": {
       "turns": 3
@@ -165,11 +165,11 @@
     },
     "monsterGems": {
       "heal": {
-        "maxHpRatioPerGem": 0.03
+        "maxHpRatioPerGem": 0.015
       },
       "shield": {
-        "base": 240,
-        "defMultiplier": 0.5
+        "base": 150,
+        "defMultiplier": 0.3
       },
       "energy": {
         "perGem": 8
@@ -196,7 +196,7 @@
       "slowedTurnsAfterDelay": 2
     },
     "fire": {
-      "redDamageBonus": 0.2,
+      "redDamageBonus": 0.1,
       "redPierceShield": true,
       "burningDamageBonus": 0.2,
       "burningTurns": 3,
@@ -204,7 +204,7 @@
     },
     "earth": {
       "shieldDamageReduction": 0.1,
-      "energyToShieldRatio": 0.5,
+      "energyToShieldRatio": 0.35,
       "energyToShieldScale": 30
     }
   },
@@ -249,8 +249,8 @@
       "primarySkillLabel": "Hàn Triều Phá Không",
       "primarySkillIcon": "thuy_han_trieu_pha_khong",
       "primarySkillFolder": "skill_1",
-      "primarySkill": { "energyCost": 50, "baseDamage": 0, "skillPowerMultiplier": 0, "defenseMultiplier": 0, "fixedDamage": 660, "fixedDamageTarget": "shield_or_hp" },
-      "secondarySkill": { "energyCost": 100, "baseDamage": 0, "skillPowerMultiplier": 0, "defenseMultiplier": 0, "attackMultiplier": 1.1, "controlEffect": "freeze", "controlChance": 1, "controlTurns": 1 },
+      "primarySkill": { "energyCost": 50, "baseDamage": 0, "skillPowerMultiplier": 0, "defenseMultiplier": 0, "fixedDamage": 1100, "fixedDamageTarget": "shield_or_hp" },
+      "secondarySkill": { "energyCost": 100, "baseDamage": 0, "skillPowerMultiplier": 0, "defenseMultiplier": 0, "attackMultiplier": 1.4, "controlEffect": "freeze", "controlChance": 1, "controlTurns": 1 },
       "secondarySkillId": "thuy_linh_ho_the",
       "secondarySkillLabel": "Băng Phong Thiên Lý",
       "secondarySkillIcon": "thuy_bang_phong_thien_ly",

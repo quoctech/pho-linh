@@ -1,9 +1,13 @@
 import Phaser from 'phaser';
 import { actorFrameKey, normalizeActorSprite, type ActorFrameId } from './actor-frame-assets';
+import { SWIPE_THRESHOLD_CELLS, swipeTarget } from './swipe-input';
 import {
   areAdjacent,
   CHARACTER_DATA,
+  COMBAT_DATA,
   DEFAULT_BATTLE_CONFIG,
+  enrageDamageMultiplier,
+  enrageStacksForTurn,
   findLegalMoves,
   describePlayerSkillEffects,
   monsterDodgeChance,
@@ -109,6 +113,14 @@ import {
 
 const GEM_TYPES: readonly GemType[] = ['attack', 'heal', 'shield', 'energy', 'poison'];
 const BOARD_SIZE = 6;
+
+interface BoardGesture {
+  readonly pointerId: number;
+  readonly cell: Coord;
+  readonly x: number;
+  readonly y: number;
+  swiped: boolean;
+}
 const GEM_FALL_DURATION = 200;
 const GEM_REFILL_DURATION = 160;
 const LOGICAL_GAME_WIDTH = 360;
@@ -198,7 +210,8 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
   private selection?: Phaser.GameObjects.Rectangle;
   private selectionRing?: Phaser.GameObjects.Sprite;
   private selectedCell?: Coord;
-  private pointerStart?: Coord;
+  /** Active board gesture, tracked per pointer so a second finger cannot hijack it. */
+  private boardGesture?: BoardGesture;
   private monsterVisual?: Phaser.GameObjects.Container;
   private monsterBody?: Phaser.GameObjects.Arc;
   private monsterArt?: Phaser.GameObjects.Image | Phaser.GameObjects.Sprite;
@@ -235,6 +248,8 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
   private battleBackgroundOverlay?: Phaser.GameObjects.Rectangle;
   private playerStunIcon?: Phaser.GameObjects.Image;
   private turnLabel?: Phaser.GameObjects.Text;
+  /** Lượt đã báo popup Cuồng Nộ, tránh báo lại khi render lại cùng state. */
+  private enrageAnnouncedTurn = -1;
   private countdownLabel?: Phaser.GameObjects.Text;
   private comboLabel?: Phaser.GameObjects.Text;
   private playerTurnPrompt?: Phaser.GameObjects.Text;
@@ -536,7 +551,10 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
     });
     this.syncTurnTimer();
     this.input.on('pointerdown', this.onPointerDown, this);
+    this.input.on('pointermove', this.onPointerMove, this);
     this.input.on('pointerup', this.onPointerUp, this);
+    this.input.on('pointerupoutside', this.onPointerUp, this);
+    this.input.on('pointercancel', this.onPointerCancel, this);
     this.events.once('shutdown', this.cleanup, this);
     const battleReady = this.registry.get('battleReady') as (() => void) | undefined;
     battleReady?.();
@@ -1331,7 +1349,7 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
     this.renderBars(state);
     this.syncMonsterEffectsFromState(state);
     this.telegraphLabel?.setText(this.formatMonsterPreparationText(state.telegraph));
-    this.turnLabel?.setText(state.maxTurns > 0 ? `${state.turn}/${state.maxTurns}` : `Lượt ${state.turn}`);
+    this.renderTurnLabel(state);
     this.updateSkillButtons(state);
     if (state.phase !== 'PLAYER_READY') {
       this.stopTurnTimer();
@@ -1983,47 +2001,64 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
   }
 
   private onPointerDown(pointer: Phaser.Input.Pointer): void {
-    if (this.controller.isLocked || this.controller.currentState.phase !== 'PLAYER_READY') return;
+    // Record the press even while the previous turn is still animating: a
+    // swipe started a few frames early must not be silently dropped. Actions
+    // are still gated by canPlayerAct() when the swipe/tap resolves.
+    if (this.boardGesture) return;
+    const cell = this.cellFromPoint(pointer.worldX, pointer.worldY);
+    if (!cell) return;
     this.stopMoveHint();
-    this.pointerStart = this.cellFromPoint(pointer.worldX, pointer.worldY);
+    this.boardGesture = { pointerId: pointer.id, cell, x: pointer.worldX, y: pointer.worldY, swiped: false };
+  }
+
+  private onPointerMove(pointer: Phaser.Input.Pointer): void {
+    const gesture = this.boardGesture;
+    if (!gesture || gesture.pointerId !== pointer.id || gesture.swiped || !pointer.isDown) return;
+    // Swap as soon as the finger has clearly moved, without waiting for release.
+    if (this.trySwipe(gesture, pointer)) gesture.swiped = true;
+  }
+
+  private onPointerCancel(pointer: Phaser.Input.Pointer): void {
+    if (this.boardGesture?.pointerId === pointer.id) this.boardGesture = undefined;
   }
 
   private onPointerUp(pointer: Phaser.Input.Pointer): void {
-    if (this.controller.isLocked || !this.pointerStart || this.controller.currentState.phase !== 'PLAYER_READY') {
-      this.pointerStart = undefined;
-      return;
-    }
-    const start = this.pointerStart;
-    const end = this.cellFromPoint(pointer.worldX, pointer.worldY);
-    this.pointerStart = undefined;
-    if (!end) return;
+    const gesture = this.boardGesture;
+    if (!gesture || gesture.pointerId !== pointer.id) return;
+    this.boardGesture = undefined;
+    if (gesture.swiped || this.trySwipe(gesture, pointer)) return;
+    if (!this.canPlayerAct()) return;
+    // Too little movement for a swipe: a tap on the start cell.
+    this.onCellTapped(gesture.cell);
+  }
 
-    if (
-      start.row === end.row
-      && start.col === end.col
-      && this.selectedCell
-      && areAdjacent(this.selectedCell, end)
-    ) {
-      void this.dispatchSwap(this.selectedCell, end);
-      return;
-    }
-
-    if (areAdjacent(start, end)) {
-      void this.dispatchSwap(start, end);
-      return;
-    }
-    if (start.row === end.row && start.col === end.col) {
-      if (this.selectedCell && this.selectedCell.row === end.row && this.selectedCell.col === end.col) {
-        this.selectedCell = undefined;
-        this.renderSelection();
-        this.statusLabel?.setText('Đã bỏ chọn ngọc');
-      } else {
-        this.selectedCell = end;
-        this.renderSelection();
-        this.statusLabel?.setText(`Đã chọn ${this.gemAt(end)} · chọn ô kề hoặc vuốt để đổi`);
-      }
-    } else {
+  /** Returns true when the gesture moved far enough to count as a swipe (handled or not). */
+  private trySwipe(gesture: BoardGesture, pointer: Phaser.Input.Pointer): boolean {
+    const dx = pointer.worldX - gesture.x;
+    const dy = pointer.worldY - gesture.y;
+    if (Math.max(Math.abs(dx), Math.abs(dy)) < this.cellSize * SWIPE_THRESHOLD_CELLS) return false;
+    const target = swipeTarget(gesture.cell, dx, dy, this.cellSize, BOARD_SIZE);
+    if (!target) {
       this.statusLabel?.setText('Chỉ vuốt sang ô kề nhau');
+      return true;
+    }
+    if (this.canPlayerAct()) void this.dispatchSwap(gesture.cell, target);
+    return true;
+  }
+
+  private onCellTapped(cell: Coord): void {
+    if (this.selectedCell && areAdjacent(this.selectedCell, cell)) {
+      void this.dispatchSwap(this.selectedCell, cell);
+      return;
+    }
+    if (this.selectedCell && this.selectedCell.row === cell.row && this.selectedCell.col === cell.col) {
+      this.selectedCell = undefined;
+      this.renderSelection();
+      this.statusLabel?.setText('Đã bỏ chọn ngọc');
+    } else {
+      this.selectedCell = cell;
+      this.renderSelection();
+      this.statusLabel?.setText(`Đã chọn ${this.gemAt(cell)} · chọn ô kề hoặc vuốt để đổi`);
     }
   }
 
@@ -3651,6 +3686,26 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
     }
   }
 
+  /**
+   * Lượt + Cuồng Nộ (V7): nhãn hiện % sát thương cộng thêm của hành động kế tiếp; popup báo trước
+   * 2 lượt và lúc bắt đầu.
+   */
+  private renderTurnLabel(state: BattleState): void {
+    const base = state.maxTurns > 0 ? `${state.turn}/${state.maxTurns}` : `Lượt ${state.turn}`;
+    const stacks = enrageStacksForTurn(state.turn + 1);
+    const bonus = Math.round((enrageDamageMultiplier(stacks) - 1) * 100);
+    this.turnLabel?.setText(stacks > 0 ? `${base} 🔥+${bonus}%` : base).setColor(stacks > 0 ? '#ffb36b' : '#ffffff');
+    if (state.phase !== 'PLAYER_READY' || this.enrageAnnouncedTurn === state.turn) return;
+    const remaining = COMBAT_DATA.battle.enrage.startTurn - state.turn;
+    if (stacks === 1) {
+      this.enrageAnnouncedTurn = state.turn;
+      this.floatNumber('🔥 CUỒNG NỘ! Sát thương tăng dần', this.logicalWidth / 2, 132, '#ffb36b', 1400);
+    } else if (COMBAT_DATA.battle.enrage.startTurn > 0 && remaining === 2) {
+      this.enrageAnnouncedTurn = state.turn;
+      this.floatNumber('⚠ Cuồng Nộ sau 2 lượt', this.logicalWidth / 2, 132, '#ffe98a', 1200);
+    }
+  }
+
   private floatNumber(text: string, x: number, y: number, color: string, duration = 550): void {
     // Số ≥ 4 chữ số hiển thị có dấu chấm ngăn nghìn (9.000) cho dễ đọc ở thang V6.
     text = text.replace(/\d{4,}/g, (digits) => formatGameNumber(Number(digits)));
@@ -3737,7 +3792,7 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
       case 'POISON_TICKED': return 520;
       case 'GEMS_FALLING': return GEM_FALL_DURATION;
       case 'GEMS_REFILLED': return GEM_REFILL_DURATION;
-      case 'MONSTER_ATTACKED': return event.payload['lethal'] === true ? 1400 : 1000;
+      case 'MONSTER_ATTACKED': return event.payload['lethal'] === true ? 1400 : 700;
       case 'MONSTER_ACTION_SKIPPED':
         return event.payload['reason'] === 'freeze' || event.payload['reason'] === 'stun' ? 700 : 260;
       case 'CONTROL_APPLIED': return 600;
@@ -3759,7 +3814,7 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
       case 'MONSTER_SKILL_USED': return this.reducedMotion ? 650 : 1150;
       case 'PLAYER_TURN_SKIPPED': return 700;
       case 'MONSTER_THINKING': return Number(event.payload['seconds'] ?? 1.2) * 1000;
-      case 'MONSTER_MOVE_SELECTED': return 500;
+      case 'MONSTER_MOVE_SELECTED': return 350;
       case 'MONSTER_SWAP_STARTED': return 220;
       case 'MONSTER_SWAP_RESOLVED': return 100;
       case 'TURN_TIMED_OUT': return 500;
@@ -3794,7 +3849,10 @@ export class BattleScene extends Phaser.Scene implements BattleEventPlayer {
     this.scale.off('resize', this.resizeBattleBackground, this);
     this.scale.off('resize', this.positionAbandonButton, this);
     this.input.off('pointerdown', this.onPointerDown, this);
+    this.input.off('pointermove', this.onPointerMove, this);
     this.input.off('pointerup', this.onPointerUp, this);
+    this.input.off('pointerupoutside', this.onPointerUp, this);
+    this.input.off('pointercancel', this.onPointerCancel, this);
     this.unsubscribe?.();
     this.unsubscribe = undefined;
     this.controller?.attachEventPlayer(undefined);

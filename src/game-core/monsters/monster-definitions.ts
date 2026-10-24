@@ -39,6 +39,8 @@ export function createMonsterBattleState(monsterId: string): MonsterBattleState 
     healPerTurn: 0,
     healTurns: 0,
     slowedTurns: 0,
+    enrageStacks: 0,
+    skillUses: {},
     nextAction: definition.behaviors[0] ?? 'basic',
     phase: 1,
     actionCount: 0,

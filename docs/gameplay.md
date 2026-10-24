@@ -99,8 +99,8 @@ Mở chương → săn trang bị có chỉ số hợp build → vượt boss �
 
 ## 6. Thời lượng và nhịp độ
 
-- Trận thường mục tiêu **2–3 phút**, boss **3–5 phút**.
-- Trận không được kéo dài vô hạn: MVP giới hạn **20 lượt người chơi**; hết lượt xét thắng nếu boss/quái đã bị hạ, ngược lại thua. Đây là thông số cân bằng thử nghiệm.
+- Trận thường mục tiêu **3,5–5 phút**, boss **4,5–5,5 phút** (Balance V7, đo bằng `npm run balance:sim` — xem `gameplay-balance-v2.md §11`).
+- Trận không được kéo dài vô hạn: không thua do hết lượt; thay vào đó từ lượt 21 bật **Cuồng Nộ** — sát thương trực tiếp hai bên +10%/lượt cộng dồn, hồi máu của quái −50% (`gameplay-balance-v2.md §6.1`).
 - Không dùng thời gian thực giới hạn mỗi lượt ở PvE MVP; có thể tạm dừng bất kỳ lúc nào.
 - **Thắng nhanh**: thưởng EXP/vàng cơ bản không phụ thuộc tốc độ để tránh ép người chậm; huy chương phụ dựa trên lượt/HP còn lại ở M3.
 
@@ -126,9 +126,9 @@ Mở chương → săn trang bị có chỉ số hợp build → vượt boss �
 
 ### 7.2. Luật thao tác
 
-1. Vuốt từ ô A sang ô B ở trên/dưới/trái/phải để đổi trực tiếp.
-2. Game chỉ cho swap nếu A và B là hai ô kề cạnh; không cho swap đường chéo.
-3. Tap đơn không tạo selection state; nếu swap không tạo nhóm ≥3, trả ngọc về chỗ cũ, không kích hoạt phản công.
+1. Vuốt từ ô A theo hướng trên/dưới/trái/phải để đổi với ô kề theo hướng đó. Hướng tính theo trục di chuyển nhiều hơn (vuốt hơi chéo vẫn nhận); chỉ cần kéo ≥30% cạnh ô, swap kích hoạt ngay khi đủ ngưỡng, không phụ thuộc ô nhấc tay (vuốt quá đà hay nhấc tay ngoài bàn cờ vẫn chỉ đổi với ô kề). Code: `src/app/battle/swipe-input.ts`.
+2. Game chỉ cho swap nếu A và B là hai ô kề cạnh; không cho swap đường chéo. Di chuyển dưới ngưỡng tính là tap (chọn ô, rồi tap ô kề để đổi).
+3. Nếu swap không tạo nhóm ≥3, trả ngọc về chỗ cũ, không kích hoạt phản công.
 4. Nếu hợp lệ, khóa input, tính **toàn bộ nhóm match** cùng lúc.
 5. Xóa nhóm; các viên phía trên rơi; sinh ngọc mới; kiểm tra cascade.
 6. Resolve tiếp cho đến khi không còn match; chỉ sau đó quái mới thực hiện một hành động.
@@ -359,13 +359,13 @@ Mọi skill quái khai báo trong `monsters.json → definitions.<id>.skills` v�
 
 | Quái | Skill | Nộ | Điều kiện | Hiệu ứng |
 |---|---|---:|---|---|
-| Sương Hồn | Sương Mù Xâm Thực | 100 | đủ nộ | Không sát thương; +35% né cho **2 lần** bị đánh bằng ngọc đỏ kế tiếp (25% → 60%) |
-| Miêu Đèn | Long Miêu Liên Kích | 80 | đủ nộ | 130% ATK; Thiêu đốt nhân vật 2 lượt × 10% HP tối đa; Choáng 1 lượt |
+| Sương Hồn | Sương Mù Xâm Thực | 100 | đủ nộ | Không sát thương; +35% né cho **2 lần** bị đánh bằng ngọc đỏ kế tiếp (7% → 42%) |
+| Miêu Đèn | Long Miêu Liên Kích | 100 | đủ nộ | 130% ATK; Thiêu đốt nhân vật 2 lượt × 6% HP tối đa; Choáng 1 lượt |
 | Bọ Lá Tre | Trúc Diệp Độc Châm | 60 | HP > 50% | 300 + 80% ATK; Dính độc 20% ATK trong 1 lượt |
-| Bọ Lá Tre | Lục Diệp Ẩn Tung | 100 | HP < 50% (ưu tiên) | +60% né trong 2 lượt; hồi 10% HP tối đa mỗi lượt × 2 lượt (ngay khi dùng + đầu lượt quái sau) |
+| Bọ Lá Tre | Lục Diệp Ẩn Tung | 100 | HP < 50% (ưu tiên) · **1 lần/trận** | +35% né trong 2 lượt; hồi 5% HP tối đa mỗi lượt × 2 lượt (ngay khi dùng + đầu lượt quái sau) |
 | Cáo Mây | Bích Vân Băng Băng | 100 | HP > 60% | 100% ATK; 40% Đóng băng nhân vật 1 lượt |
 | Cáo Mây | Vân Sương Ảo Ảo | 50 | HP < 60% | +30% né trong 2 lượt |
-| Cáo Mây | Vụ Lưu Thuẫn | 60 | HP < 30% (ưu tiên cao nhất) | Khiên sương 1.800; giảm 40% hồi máu của nhân vật trong 1 lượt |
+| Cáo Mây | Vụ Lưu Thuẫn | 60 | HP < 30% (ưu tiên cao nhất) · **1 lần/trận** | Khiên sương 1.800; giảm 40% hồi máu của nhân vật trong 1 lượt |
 
 ```text
 skillDamage = (baseDamage + monsterATK × attackMultiplier) × (1 − playerDEF / (playerDEF + 1900))

@@ -55,6 +55,7 @@ Thông tin animation của hero và quái là presentation metadata, tách khỏ
 - `match3.gemWeights`: trọng số sinh ngọc `{attack:25, poison:20, energy:20, heal:18, shield:17}` (tổng 100).
 - `match3.balanceVersion`: **3** — được ghi vào `BattleState` để replay/save biết bộ cân bằng đã dùng.
 - `battle.maxTurns`: giới hạn lượt mỗi trận; **0 = không giới hạn** (đang tạm bỏ).
+- `battle.enrage` (V7): `startTurn`, `damageBonusPerTurn`, `monsterHealMultiplier` — Cuồng Nộ chống kéo trận (`GAMEPLAY_BALANCE_V2.md §6.1`).
 - `energyByMatchLength`: nộ theo độ dài match ngọc vàng `{3:15, 4:25, 5:40, 6:50}` (không nhân cascade).
 - `elements.cycle`: vòng tương khắc `["metal","wood","earth","water","fire"]` (mỗi hệ khắc hệ kế tiếp).
 - `elements.modifier`: bảng hệ số theo nhóm `damage/support/energy` và quan hệ `counter/neutral/countered`.
@@ -82,7 +83,7 @@ Thông số kỹ năng hiện hành:
 |---|---|---|
 | Kim | Vạn Kiếm Quy Tông: 60, 120% ATK, chịu khiên | Kim Quang Phá Giáp: 100, 180% ATK xuyên khiên, giảm DEF 30%/2 lượt |
 | Mộc | Thanh Đằng Trói Hồn: 50, 80% ATK, hút 15 năng lượng | Vạn Diệp Độc Chú: 90, 90% ATK, độc 20% ATK/lượt trong 3 lượt |
-| Thủy | Hàn Triều Phá Không: 50, trừ 660 khiên; không có khiên thì trừ HP | Băng Phong Thiên Lý: 100, 110% ATK, đóng băng 1 lượt |
+| Thủy | Hàn Triều Phá Không: 50, trừ 1.100 khiên; không có khiên thì trừ HP | Băng Phong Thiên Lý: 100, 140% ATK, đóng băng 1 lượt |
 | Hỏa | Hỏa Vũ Liên Châu: 60, 3 × 40% ATK | Phần Thiên Xạ Nhật: 100, 150% ATK, mục tiêu nhận thêm 15% sát thương/2 lượt |
 | Thổ | Sơn Nhạc Trấn Địa: 65, 70% ATK, 40% choáng 1 lượt | Huyền Nham Hộ Thể: 80, khiên 200% DEF, giảm 25% sát thương, miễn khống chế, phản 35% trong 2 lượt |
 
@@ -94,17 +95,17 @@ Quy tắc resolver skill (balanceVersion 4):
 - `controlEffect` (`freeze`/`stun`): lượt quái kế tiếp bị bỏ trọn — không swap ngọc, không nhận hiệu ứng ngọc, không tấn công; độc/thiêu vẫn tick.
 - Độc của Vạn Diệp Độc Chú cộng dồn với độc tầng ngọc tím; phần của skill lưu ở `monster.skillPoisonPotency` để ngọc tím tính lại tầng không làm mất.
 - Skill thuần buff (Huyền Nham Hộ Thể) không gây hit lên quái.
-- Mọi đòn quái đánh người chơi (kể cả Miêu Đèn và Long Miêu Liên Kích) đi qua `resolveIncomingMonsterDamage` trong `monsters/monster-combat.ts`: nội tại Thủy × nội tại Thổ × giảm sát thương chủ động → khiên → HP, sau đó `reflectMonsterDamage` phản đòn.
+- Mọi đòn quái đánh người chơi (kể cả Miêu Đèn và Long Miêu Liên Kích) đi qua `resolveIncomingMonsterDamage` trong `monsters/monster-combat.ts`: Cuồng Nộ × nội tại Thổ × giảm sát thương chủ động → khiên → HP, sau đó `reflectMonsterDamage` phản đòn.
 - Tooltip lấy số từ `previewPlayerSkill()` — cùng công thức với resolver.
 
 ## Monster data
 
 `monsters.json` có hai phần:
 
-- `definitions`: record theo `monsterId` ổn định. Mỗi definition có tên hiển thị, `element` (hệ Ngũ Hành), level, `maxHp`, `attack`, `defense`, `agi` (V6: né = AGI / (AGI + 1900)), `shieldCap`, behavior, tactic, reward và điều kiện unlock.
+- `definitions`: record theo `monsterId` ổn định. Mỗi definition có tên hiển thị, `element` (hệ Ngũ Hành), level, `maxHp`, `attack`, `defense`, `agi` (V6: né = AGI / (AGI + 1900)), `shieldCap`, `gemlessAttackBelowHp` (V7, tùy chọn: dưới ngưỡng HP vẫn ra đòn khi không match ngọc đỏ), behavior, tactic, reward và điều kiện unlock.
 - `combat`: hệ số dùng chung cho heavy attack, guard (`guardDefenseRatio` = +% DEF gốc, `guardTurns`), độc quái `poisonAtkRatio`, khiên guard Sương Hồn `mistGuardShield`, hệ số sát thương theo số ngọc đỏ quái match (`matchDamageMultipliers`), năng lượng và thời lượng độc. Giảm sát thương theo DEF và trần né dùng chung `character.json → combat`.
 - `definitions.<id>.skills` (Balance V5): skill tự động của quái. Field:
-  - chung: `id` (ổn định, ghi trong event), `name`, `description` (UI chọn mục tiêu đọc trực tiếp), `vfxId` (thư mục VFX), `energyCost`, `priority`;
+  - chung: `id` (ổn định, ghi trong event), `name`, `description` (UI chọn mục tiêu đọc trực tiếp), `vfxId` (thư mục VFX), `energyCost`, `priority`, `maxUses` (V7, số lần tối đa mỗi trận);
   - điều kiện: `hpAbove` (HP > ngưỡng), `hpBelow` (HP < ngưỡng);
   - sát thương: `baseDamage`, `attackMultiplier`;
   - buff bản thân: `dodgeBonus` + `dodgeCharges` (số lần) hoặc `dodgeTurns` (số hành động người chơi), `healMaxHpRatio` + `healTurns`, `selfShield`;
@@ -152,6 +153,10 @@ GET /v1/game-data/snapshots/{dataVersion}
 ```
 
 Response nên trả về cả `schemaVersion`, `dataVersion`, `publishedAt`, checksum và payload. Client từ chối snapshot sai checksum hoặc thiếu field bắt buộc, sau đó dùng snapshot cache cuối cùng.
+
+## Mô phỏng cân bằng
+
+`npm run balance:sim` chạy bot trên game-core + JSON hiện hành và in tỉ lệ thắng, số lượt, HP còn lại, thời gian trận cho 5 hệ × 4 quái. Chạy sau mỗi lần đổi số; mục tiêu và cách đọc ở `GAMEPLAY_BALANCE_V2.md §11`.
 
 ## Validation CI đề xuất
 

@@ -215,6 +215,15 @@ export interface CombatData {
     /** Giới hạn lượt mỗi trận; 0 = không giới hạn. */
     readonly maxTurns: number;
     readonly playerTurnSeconds: number;
+    /**
+     * Cuồng Nộ (V7): sau `startTurn` lượt, mỗi lượt cả hai bên +`damageBonusPerTurn` sát thương
+     * trực tiếp (cộng dồn) và hồi máu của quái × `monsterHealMultiplier`. startTurn 0 = tắt.
+     */
+    readonly enrage: {
+      readonly startTurn: number;
+      readonly damageBonusPerTurn: number;
+      readonly monsterHealMultiplier: number;
+    };
   };
   readonly monsterRewards: {
     readonly dropChance: number;

@@ -3,6 +3,7 @@ import { nextInt } from '../rng';
 import { CHARACTER_DATA, MONSTER_COMBAT_BALANCE, MONSTER_DATA } from '../game-data';
 import { monsterAttackIncoming, reflectMonsterDamage, resolveIncomingMonsterDamage } from './monster-combat';
 import { dodgeChanceFromAgi } from '../combat-formulas';
+import { enrageMonsterHealMultiplier } from '../enrage';
 import type { BattleState, GameEvent, MonsterBattleState, MonsterSkillData } from '../types';
 
 export interface MonsterSkillContext {
@@ -34,13 +35,17 @@ export function monsterSkillById(monsterId: string, skillId: string | undefined)
   return skillId ? monsterSkills(monsterId).find((skill) => skill.id === skillId) : undefined;
 }
 
-/** Skill hợp lệ: đủ nộ và thỏa ngưỡng HP (`hpAbove`: HP > ngưỡng, `hpBelow`: HP < ngưỡng); ưu tiên `priority` cao nhất. */
+/**
+ * Skill hợp lệ: đủ nộ, thỏa ngưỡng HP (`hpAbove`: HP > ngưỡng, `hpBelow`: HP < ngưỡng) và chưa dùng
+ * hết `maxUses`; ưu tiên `priority` cao nhất.
+ */
 export function selectMonsterSkill(
-  monster: Pick<MonsterBattleState, 'id' | 'energy' | 'currentHp' | 'maxHp'>,
+  monster: Pick<MonsterBattleState, 'id' | 'energy' | 'currentHp' | 'maxHp'> & { readonly skillUses?: MonsterBattleState['skillUses'] },
 ): MonsterSkillData | undefined {
   const hpRatio = monster.maxHp > 0 ? monster.currentHp / monster.maxHp : 0;
   return monsterSkills(monster.id)
     .filter((skill) => monster.energy >= skill.energyCost)
+    .filter((skill) => skill.maxUses === undefined || (monster.skillUses?.[skill.id] ?? 0) < skill.maxUses)
     .filter((skill) => skill.hpAbove === undefined || hpRatio > skill.hpAbove)
     .filter((skill) => skill.hpBelow === undefined || hpRatio < skill.hpBelow)
     .reduce<MonsterSkillData | undefined>((best, skill) => (!best || skill.priority > best.priority ? skill : best), undefined);
@@ -59,6 +64,7 @@ export function resolveMonsterSkill(context: MonsterSkillContext): MonsterSkillR
     ...context.state.monster,
     energy: Math.max(0, context.state.monster.energy - skill.energyCost),
     nextSkillId: undefined,
+    skillUses: { ...context.state.monster.skillUses, [skill.id]: (context.state.monster.skillUses?.[skill.id] ?? 0) + 1 },
   };
   let rngState = context.state.rngState;
   let damageTakenStreak = 0;
@@ -182,11 +188,12 @@ export function resolveMonsterSkill(context: MonsterSkillContext): MonsterSkillR
 
   if (skill.healMaxHpRatio && skill.healTurns) {
     const perTurn = Math.max(1, Math.round(monster.maxHp * skill.healMaxHpRatio));
-    const healed = Math.min(monster.maxHp - monster.currentHp, perTurn);
-    // Hồi ngay lượt dùng skill; các lượt còn lại tick đầu lượt quái.
+    const now = Math.max(1, Math.round(perTurn * enrageMonsterHealMultiplier(monster.enrageStacks ?? 0)));
+    const healed = Math.min(monster.maxHp - monster.currentHp, now);
+    // Hồi ngay lượt dùng skill; các lượt còn lại tick đầu lượt quái (Cuồng Nộ áp lúc tick).
     monster = { ...monster, currentHp: monster.currentHp + healed, healPerTurn: perTurn, healTurns: skill.healTurns - 1 };
     events.push(createEvent(sequence++, 'HEAL_APPLIED', {
-      actor: 'monster', amount: healed, requested: perTurn, remainingTurns: monster.healTurns, target: 'monster', source: skill.id,
+      actor: 'monster', amount: healed, requested: now, remainingTurns: monster.healTurns, target: 'monster', source: skill.id,
     }));
   }
 

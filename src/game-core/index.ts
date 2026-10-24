@@ -8,6 +8,7 @@ export * from './monsters/monster-skills';
 export * from './player';
 export * from './elements';
 export * from './combat-formulas';
+export * from './enrage';
 export * from './skill-descriptions';
 export * from './resolve';
 export * from './rng';

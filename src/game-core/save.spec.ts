@@ -32,7 +32,7 @@ describe('M2 progression and save', () => {
     expect(isResumableBattle(stale)).toBe(false);
     expect(migrateSave({ ...createDefaultSave(), activeBattle: stale }).activeBattle).toBeUndefined();
     expect(migrateSave({ ...createDefaultSave(), activeBattle: current }).activeBattle?.battleId).toBe(current.battleId);
-    expect(current.player.stats.maxHp).toBe(9000);
+    expect(current.player.stats.maxHp).toBe(10500);
   });
 
   it('keeps old settings valid and defaults the new gender choice to male', () => {

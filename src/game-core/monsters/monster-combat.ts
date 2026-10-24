@@ -2,6 +2,7 @@ import { applyDefense, dodgeChanceFromAgi } from '../combat-formulas';
 import { clampPlayerState } from '../player';
 import { nextInt } from '../rng';
 import { CHARACTER_DATA, MONSTER_COMBAT_BALANCE } from '../game-data';
+import { enrageDamageMultiplier } from '../enrage';
 import type { GameEvent, MonsterBattleState, PlayerBattleState } from '../types';
 
 type CreateEvent = (
@@ -80,7 +81,7 @@ export interface IncomingMonsterDamageResult {
 
 /**
  * Pipeline chung cho mọi đòn quái đánh vào người chơi (sau khi đã trừ DEF):
- * nội tại Thổ (đang có khiên) × giảm sát thương chủ động
+ * Cuồng Nộ × nội tại Thổ (đang có khiên) × giảm sát thương chủ động
  * (Huyền Nham Hộ Thể) → khiên hấp thụ → HP. Phản đòn chạy riêng qua `reflectMonsterDamage`
  * để caller phát event theo đúng thứ tự sau MONSTER_ATTACKED.
  */
@@ -99,7 +100,7 @@ export function resolveIncomingMonsterDamage(
     ? 1 - (CHARACTER_DATA.passives.earth.shieldDamageReduction ?? 0)
     : 1;
   const activeReduction = player.damageReductionTurns > 0 ? 1 - player.damageReductionPercent : 1;
-  const damageMultiplier = earthReduction * activeReduction;
+  const damageMultiplier = enrageDamageMultiplier(monster.enrageStacks ?? 0) * earthReduction * activeReduction;
   if (earthReduction < 1) {
     events.push(createEvent(sequence++, 'PASSIVE_TRIGGERED', {
       passiveId: 'earth_shield_resistance',
